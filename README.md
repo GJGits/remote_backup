@@ -103,3 +103,9 @@ Permette di ottenere la checksum sull'intera directory utente, in questo modo è
 ### Processo 8 (status/all)
 
 Permette di recuperare tutte le checksum dei file memorizzati sul server, in questo modo è possibile capire quale file è outdated ed eseguire un aggiornamento.
+
+idee: 
+
+- challenge-response auth simmetrico (segreto memorizzato in locale da utente) viene richiesto ad avvio prima volta
+- utenti già memorizzati
+- limite dim_max cartella
