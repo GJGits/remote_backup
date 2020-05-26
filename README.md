@@ -69,6 +69,8 @@ Il processo di (registrazione/autenticazione/recover) avviene al momento del sta
 - `-q`: permette di chiudere in maniera ordinata l'applicativo
 - `-b`: chiude la finestra del menù e lascia lavorare il secondo processo in background.
 
+Presente
+
 
 una volta scelto il comando la console guiderà l'utente sui parametri da inserire, questi verranno inviati al server. In caso di esito positivo viene restituito un token di accesso per i primi due comandi e la password per il terzo, in caso negativo viene stampato il messaggio d'errore e viene permesso all'utente di selezionare nuovamente un'opzione dal menù. Il token ricevuto verrà memorizzato in un apposito file ed in una variabile e verrà utilizzato per le seguenti operazioni sul server. Se manca connessione ad internet, se il server non è raggiungibile o se non si effettua l'accesso l'applicativo continua a funzionare in locale. Questo implica che il client continua a memorizzare le informazioni necessarie per effettuare una sync nel momento in cui si riesca nuovamente a collegarsi al server.
 
