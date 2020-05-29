@@ -46,65 +46,11 @@ Descrivere DB (scelta tra MySql e MongoDB) engine scelta qui e motivare scelta.
 
 Le varie azioni possibili sono riassunte di seguito in tabella. Ad ogni azione viene assegnato un codice che rimanda al sottoparagrafo dove vengono spiegati i vari dettagli.
 
-| codice | nome | comando | parametri | risposta |
-| :----: | :--: | :-----: | :-------: | :------: |
-|   0    | signup | POST /signup | `{user:"username", pass1:"password", pass2:"password"}` | caso positivo: `{token:"server_token_here"}`, caso negativo: `{msg:"errore qui"}` |
-| 1 | signin | POST /signin | `{user:"username", pass:"password"}` | come sopra |
-| 2 | recover | POST /recover | `{user:"username"}`| in caso positivo `{pass:"password"}`, in caso negativo: `{msg:"errore qui"}`|
-| 3 | reset | DELETE /reset | `{token:"token_string"}` | 200 in caso positivo, 400 se non autorizzato |
-| 4 | file | POST /file | `{token:"token_string", filepath:"filepath", nparts:2, part: 1, data:"sdfsd"}` | come sopra |
-| 5 | file | PUT /file | `{token:"token_string", filepath:"filepath", part: 1, offset: 15, data:"sdfsd"}` | come sopra |
-| 6 | file | DELETE /file | `{token: "token_string", filepath: "filepath"}` | come sopra |
-| 7 | status | GET status | `{token:"token_string"}` | `{status:"hashed_status"}`
-| 8 | status | GET status/all | `{token:"token_string"}` | `[{filepath:"filepath1", status:"checksum1"}, {filepath:"filepath2", status:"checksum2"}]`
+Inserire tabella qui...
 
-### Processi [0,1,2] 
-
-Il processo di (registrazione/autenticazione/recover) avviene al momento del startup dell'applicazione, un client infatti deve essere autenticato per poter interagire con il server. All'avvio se un client non possiede un token valido da presentare al server, viene mostrato un menù che offre le possibilità di autenticarsi, registrarsi o recuperare una password. L'utente indica uno tra i seguenti comandi: 
-
-- `-n`: permette di creare un nuovo account
-- `-a`: permette di accedere con credenziali
-- `-r`: permette di recuperare una password dimenticata.
-- `-s`: permette di selezionare la cartella da sincronizzare
-- `-q`: permette di chiudere in maniera ordinata l'applicativo
-- `-b`: chiude la finestra del menù e lascia lavorare il secondo processo in background.
-
-Presente
+### Autenticazione
 
 
-una volta scelto il comando la console guiderà l'utente sui parametri da inserire, questi verranno inviati al server. In caso di esito positivo viene restituito un token di accesso per i primi due comandi e la password per il terzo, in caso negativo viene stampato il messaggio d'errore e viene permesso all'utente di selezionare nuovamente un'opzione dal menù. Il token ricevuto verrà memorizzato in un apposito file ed in una variabile e verrà utilizzato per le seguenti operazioni sul server. Se manca connessione ad internet, se il server non è raggiungibile o se non si effettua l'accesso l'applicativo continua a funzionare in locale. Questo implica che il client continua a memorizzare le informazioni necessarie per effettuare una sync nel momento in cui si riesca nuovamente a collegarsi al server.
-
-![](imgs/parziale-auth.png)
-
-Una volta lanciato il programma un utente potrà selezionare la cartella da sincronizzare, se non precedentemente fatto, ed in ogni momento può arrestare il processo con un apposito comando. Per semplicità quindi il client presenterà due processi, uno che serve a gestire l'interfaccia, il secondo invece serve ad interagire con il server.
-
-> **NB**: il processo di autenticazione è volutamente insicuro e poco flessibile, questo perché se l'autenticazione è necessaria non è punto cardine di questo progetto che non deve rappresentare un prodotto finale. Ad ogni modo si tenterà di garantire un approccio modulare che permetterà in futuro di sostituire questo modulo con uno più robusto.
-
-### Processo 3 (reset)
-
-Questo comando viene triggerato dall'opzione `-s <new directory to watch>` dal menù quando è presente già una cartella monitorata. Quando questa opzione sussiste prima di lanciare il comando è opportuno avvisare il client in quanto il contenuto sul server verrà eliminato per risparmiare spazio.
-
-> **NB** esiste un reset, ma non un bulk create, quando si seleziona una directory da sincronizzare sostanzialmente vengono lanciati a cascata messaggi di add file.
-
-### Processo 4 (add a file)
-
-Ogni qual volta che si aggiungue un nuovo file non viene creato semplicemente il file, ma tutto il percorso che porta al file, questo per evitare di dover separare la creazione dei file dalla creazione delle directory. Il file viene ricevuto in chunk di dimensione MAX fissa contenuti in un file JSON. Il fatto di dividere in chunk il file ci da diversi vantaggi, non si deve scrivere il file sul server in maniera totalmente sincrona, ci permette di mantenere la stessa struttura per i messaggi utilizzata per gli altri comandi e ci permette di non sforare la dimensione massima di un singolo file JSON. Il campo `nparts` ci fornisce l'informazione sul numero di chunk in quali è stata divisa la trasmissione, il campo `part` ci dice invece quale parte del file stiamo ricevendo. Una volta completata la scrittura si calcola una checksum che viene memorizzata nel database (campo `hashed_status`).
-
-### Processo 5 (update a file)
-
-Questo processo è analogo al precedente, in questo caso però si specifica anche l'`offset` dal quale inizia la modifica e i il campo `data` rappresenta solo la porzione modificata del file. Una volta completata la modifica si ricalcola la chesum del file e viene aggiornato il db (campo `hashed_status`).
-
-### Processo 6 (delete file)
-
-Questo processo permette di eliminare un file dalla directory. Una volta eliminato il file si elimina la rispettiva entry dalla tabella delle checksum e si ricalcola la checksum della directory dell'utente (campo `hashed_status`).
-
-### Processo 7 (get status)
-
-Permette di ottenere la checksum sull'intera directory utente, in questo modo è possibile sapere se sono state effettuate modifiche alla cartella ed in caso affermativo eseguire il seguente comando.
-
-### Processo 8 (status/all)
-
-Permette di recuperare tutte le checksum dei file memorizzati sul server, in questo modo è possibile capire quale file è outdated ed eseguire un aggiornamento.
 
 idee: 
 
