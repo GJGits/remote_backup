@@ -1,0 +1,10 @@
+#!/bin/bash
+
+g++ -g -Wall -Werror -std=c++17 ./*.cpp ./test/*.cpp -o ../bin/server -lstdc++fs
+valgrind --leak-check=full --show-leak-kinds=all ../bin/server
+
+if [ "$1" == "-r" ]
+then
+rm ../bin/server
+#rm ./--library=stdc++fs
+fi
