@@ -4,22 +4,22 @@ services:
         build: ./server
         ports: 
             - "3500:3500"
-        volumes: 
-            - ./server/src:/home/src
-            - ./server/bin:/home/bin
-        working_dir: /home/src
-        stdin_open: true
-        tty: true
+        #volumes: 
+            #- ./server/src:/home/src
+            #- ./server/bin:/home/bin
+        #working_dir: /home/src
+        #stdin_open: true
+        #tty: true
     client:
         build: ./client
         ports: 
             - "2800:2800"
-        volumes: 
-            - ./client/src:/home/src
-            - ./client/bin:/home/bin
-        working_dir: /home/src
-        stdin_open: true
-        tty: true
+        #volumes: 
+            #- ./client/src:/home/src
+            #- ./client/bin:/home/bin
+        #working_dir: /home/src
+        #stdin_open: true
+        #tty: true
     db:
         image: mysql
         command: --default-authentication-plugin=mysql_native_password

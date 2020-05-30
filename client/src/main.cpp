@@ -1,7 +1,11 @@
 #include <iostream>
+#include "unistd.h"
 
 int main()
 {
-    std::cout << "Hello from client!";
+    for (int i = 0; i < 10; i++) {
+        std::clog << "hello [" << i << "] by the client!\n";
+        sleep(8);
+    }
     return 0;
 }
