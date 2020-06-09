@@ -109,4 +109,4 @@ All'avvio dell'applicativo client se l'utente non è già registrato allora si p
 
 ```
 
-A questo punto si procede con il confronto tra i timestamp prediligendo il timestamp più recente, se il server possiede la copia più aggiornata del file, allora il client richiede tramite il comando `GET /file/filename` il file aggiornato, se è invece il client a possedere la versione aggiornata allora si procede con il comando `PUT /file/filename`, in questo caso il client invia
+A questo punto si procede con il confronto tra i timestamp prediligendo il timestamp più recente, se il server possiede la copia più aggiornata del file, allora il client richiede tramite il comando `GET /file/filename` il file aggiornato, se è invece il client a possedere la versione aggiornata allora si procede con il comando `PUT /file/filename`. In questo caso il client andrà a comparare nel file in questione, chunk per chunk, ricalcolandone l'hash, e verificando dove risiede la differenza. Qualora infatti dei 100 chunk di un file, solo il quinto e il ventesimo risultano avere un hash differente, il client provvederà a inviare SOLO questi ultimi, evitando di dover inviare l'intero file.
