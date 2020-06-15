@@ -56,6 +56,7 @@ Le varie azioni possibili sono riassunte di seguito in tabella. Ad ogni azione v
 | :--: | :--: | :--: | :--: | :--: |
 | 0 | POST /signup | endpoint che permette di registrare un nuovo utente. | `{"user":"username", "pass1":"password","pass2":"password"}` | in caso positivo HTTP 1.1 200 `{"access_token":"xxxxx.yyyyy.zzzzz"}`, in caso negativo HTTP 1.1 400 `{"err_msg":"message here"}` |
 | 1 | POST /signin | endpoint che permette di autenticare un utente precedentemente registrato | `{"user":"username", "pass1":"password"}` | come sopra |
+| 2 | POST /file | endpoint che permette di aggiungere un file appena creato | HTTP headers: MIME: application/octect-stream body: 'binary data here'
 
 ### Autenticazione
 
@@ -110,3 +111,47 @@ All'avvio dell'applicativo client se l'utente non è già registrato allora si p
 ```
 
 A questo punto si procede con il confronto tra i timestamp prediligendo il timestamp più recente, se il server possiede la copia più aggiornata del file, allora il client richiede tramite il comando `GET /file/filename` il file aggiornato, se è invece il client a possedere la versione aggiornata allora si procede con il comando `PUT /file/filename`. In questo caso il client andrà a comparare nel file in questione, chunk per chunk, ricalcolandone l'hash, e verificando dove risiede la differenza. Qualora infatti dei 100 chunk di un file, solo il quinto e il ventesimo risultano avere un hash differente, il client provvederà a inviare SOLO questi ultimi, evitando di dover inviare l'intero file.
+
+### Eventi da monitorare (ad applicazione accesa)
+
+Gli eventi da monitorare sono:
+
+- Creazione di un nuovo file
+- Modifica file esistente
+- Eliminazione file esistente
+
+#### Creazione file
+
+La creazione di un file genera le seguenti azioni.
+
+1. aggiornare il file `client-struct.json` aggiungendo un entry per il file creato
+
+2. ricalcolare hash totale cartella.
+
+3. lanciare il comando `POST file/` con body contenuto del file. Nella richiesta viene specificato anche il path del file, in questo modo se il path sul server non esiste viene creato. Questo permette di evitare di gestire espliciti comandi per la creazione di directory.
+
+Nel caso il file venga creato offline allora la procedura avviene a tempo di startup; se invece il file viene creato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::closed`. 
+
+#### Update a file
+
+L'aggiornamento di un file è simile alla creazione. Anche in questo caso vanno eseguiti i punti da 1 a 3 con le seguenti modifiche:
+
+1. aggiornare il file `client-struct.json` 
+
+2. ricalcolare hash totale cartella.
+
+3. lanciare il comando `PUT file/` con body i dati che riguardano i chunk modificati.
+
+Nel caso il file venga modificato offline allora la procedura avviene a tempo di startup; se invece il file viene modificato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::closed`. I punti 2 e 3 in questo caso vengono eseguiti soltanto se `last_mod` è più recente rispetto a il valore presente in `client-struct.json` questo perché un utente potrebbe chiudere senza modificare il file.
+
+#### Delete a file
+
+L'eliminazione consiste nei seguenti passaggi
+
+1. aggiornare il file `client-struct.json` 
+
+2. ricalcolare hash totale cartella.
+
+3. lanciare il comando `DELETE file/`.
+
+Nel caso il file venga eliminato offline allora la procedura avviene a tempo di startup; se invece il file viene eliminato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::deleted`.
