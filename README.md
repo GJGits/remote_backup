@@ -56,7 +56,7 @@ Le varie azioni possibili sono riassunte di seguito in tabella. Ad ogni azione v
 | :--: | :--: | :--: | :--: | :--: |
 | 0 | POST /signup | endpoint che permette di registrare un nuovo utente. | `{"user":"username", "pass1":"password","pass2":"password"}` | in caso positivo HTTP 1.1 200 `{"access_token":"xxxxx.yyyyy.zzzzz"}`, in caso negativo HTTP 1.1 400 `{"err_msg":"message here"}` |
 | 1 | POST /signin | endpoint che permette di autenticare un utente precedentemente registrato | `{"user":"username", "pass1":"password"}` | come sopra |
-| 2 | POST /file | endpoint che permette di aggiungere un file appena creato | HTTP headers: MIME: application/octect-stream body: 'binary data here'
+| 2 | POST /file/{chunk_id}/{chunk_size}/{file_pathBASE64}/{timestamp_locale} | endpoint che permette di aggiungere un file appena creato, `{chunk_id}` corrisponde al numero di chunk che stiamo inviando, 0 per il primo chunk. Il parametro `{chunk_size}` corrisponde alla dimensione del chunk che stiamo inviando, questo corrisponde a `full` se si invia un chunk di dimensione massima (4MB), altrimenti la dimensione in byte. | HTTP headers: MIME: application/octect-stream body: 'binary data here'
 
 ### Autenticazione
 
@@ -104,20 +104,19 @@ All'avvio dell'applicativo client se l'utente non è già registrato allora si p
 
 ```json
     [
-        {"path":"file1_path_here", "hash":"file1_hash_here", "last_mod":"timestamp_milliseconds", "chunks":["hash_a","hash_b"]},
+        {"path":"file1_path_here", "hash":"file1_hash_here", "last_mod":"timestamp_milliseconds", "chunks":["hash_a","hash_b"], "dim_last_chunk":1024},
         {"path":"file2_path_here", "hash":"file2_hash_here", "last_mod":"timestamp_milliseconds"}
     ]
 
 ```
 
-A questo punto si procede con il confronto tra i timestamp prediligendo il timestamp più recente, se il server possiede la copia più aggiornata del file, allora il client richiede tramite il comando `GET /file/filename` il file aggiornato, se è invece il client a possedere la versione aggiornata allora si procede con il comando `PUT /file/filename`. In questo caso il client andrà a comparare nel file in questione, chunk per chunk, ricalcolandone l'hash, e verificando dove risiede la differenza. Qualora infatti dei 100 chunk di un file, solo il quinto e il ventesimo risultano avere un hash differente, il client provvederà a inviare SOLO questi ultimi, evitando di dover inviare l'intero file.
+A questo punto si procede con il confronto tra i timestamp prediligendo il timestamp più recente, se il server possiede la copia più aggiornata del file, allora il client richiede tramite il comando `GET /file/{chunk_id}/{chunksize}/{file_pathBASE64}` il file aggiornato, se è invece il client a possedere la versione aggiornata allora si procede con il comando `PUT /file/{chunk_id}/{chunksize}/{file_pathBASE64}`. In questo caso il client andrà a comparare nel file in questione, chunk per chunk, ricalcolandone l'hash, e verificando dove risiede la differenza. Qualora infatti dei 100 chunk di un file, solo il quinto e il ventesimo risultano avere un hash differente, il client provvederà a inviare SOLO questi ultimi, evitando di dover inviare l'intero file.
 
 ### Eventi da monitorare (ad applicazione accesa)
 
 Gli eventi da monitorare sono:
 
-- Creazione di un nuovo file
-- Modifica file esistente
+- Close di un file
 - Eliminazione file esistente
 
 #### Creazione file
@@ -128,9 +127,9 @@ La creazione di un file genera le seguenti azioni.
 
 2. ricalcolare hash totale cartella.
 
-3. lanciare il comando `POST file/` con body contenuto del file. Nella richiesta viene specificato anche il path del file, in questo modo se il path sul server non esiste viene creato. Questo permette di evitare di gestire espliciti comandi per la creazione di directory.
+3. lanciare una serie di comandi `POST file/{chunk_id}/{chunk_size}/{file_pathBASE64}` con body contenuto del file. Nella richiesta viene specificato anche il path del file, in questo modo se il path sul server non esiste viene creato. Questo permette di evitare di gestire espliciti comandi per la creazione di directory.
 
-Nel caso il file venga creato offline allora la procedura avviene a tempo di startup; se invece il file viene creato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::closed`. 
+Nel caso il file venga creato offline, oppure si perde la connessione durante il trasferimento, allora la procedura avviene a tempo di startup; se invece il file viene creato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::closed`. 
 
 #### Update a file
 
@@ -140,9 +139,9 @@ L'aggiornamento di un file è simile alla creazione. Anche in questo caso vanno 
 
 2. ricalcolare hash totale cartella.
 
-3. lanciare il comando `PUT file/` con body i dati che riguardano i chunk modificati.
+3. lanciare una serie di comandi `PUT file/{chunk_id}/{chunk_size}/{file_pathBASE64}` con body i dati che riguardano i chunk modificati.
 
-Nel caso il file venga modificato offline allora la procedura avviene a tempo di startup; se invece il file viene modificato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::closed`. I punti 2 e 3 in questo caso vengono eseguiti soltanto se `last_mod` è più recente rispetto a il valore presente in `client-struct.json` questo perché un utente potrebbe chiudere senza modificare il file.
+Nel caso il file venga modificato offline, oppure si perde la connessione durante il trasferimento, allora la procedura avviene a tempo di startup; se invece il file viene modificato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::closed`. I punti 2 e 3 in questo caso vengono eseguiti soltanto se `last_mod` è più recente rispetto a il valore presente in `client-struct.json` questo perché un utente potrebbe chiudere senza modificare il file.
 
 #### Delete a file
 
