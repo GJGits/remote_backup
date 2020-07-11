@@ -1,6 +1,6 @@
 # Remote Backup
 
-Descrizione progetto qui....
+Descrizione progetto qui......
 
 ## Environment
 
