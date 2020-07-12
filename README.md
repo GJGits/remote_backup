@@ -28,7 +28,9 @@ Il supporto C++ alle varie componenti dell'applicazione viene fornito dalle libr
 
 ### Architettura Frontend
 
-L'applicativo lato client presenta due processi, uno serve a presentare l'interfaccia (un menù da console), il secondo invece svolge le operazioni di monitoring e serve a comunicare con il server. I due processi comunicano tramite IPC. La scelta di sdoppiare i processi risiede sia nel fatto che in questo modo l'applicazione è più manutenibile (si potrebbe passare da un'interfaccia da linea di comando ad una grafica in futuro), sia perché in questo modo è gestibile in maniera più ordinata sia la chiusura del programma che un eventuale messa in background del processo che lavora con il server. Con questa architettura quindi la logica applicativa è demandata al processo che interagisce con il server, l'interfaccia invece serve solo ed esclusivamente per rendere l'interazione più user-friendly, di conseguenza l'applicativo sarà utilizzabile sia da linea di comando che da interfaccia grafica.
+L'applicativo lato client presenta due processi, uno serve a presentare l'interfaccia (desktop app /tray app), il secondo invece svolge le operazioni di monitoring e serve a comunicare con il server. I due processi comunicano tramite IPC. La scelta di sdoppiare i processi risiede sia nel fatto che in questo modo l'applicazione è più manutenibile, sia perché in questo modo è gestibile in maniera più ordinata sia la chiusura del programma che un eventuale messa in background del processo che lavora con il server. Con questa architettura quindi la logica applicativa è demandata al processo che interagisce con il server, l'interfaccia invece serve solo ed esclusivamente per rendere l'interazione più user-friendly.
+
+> **Link utili per gestione IPC e tray app:** [menubar](https://github.com/maxogden/menubar), [electron tray](https://www.electronjs.org/docs/api/tray), [ipc main](https://www.electronjs.org/docs/api/ipc-main), [ipc render](https://www.electronjs.org/docs/api/ipc-renderer).
 
 ### Architettura Backend
 
@@ -38,7 +40,7 @@ L'architettura lato backend presenta un processo che serve a ricevere richieste 
 
 ### Architettura DB
 
-Descrivere DB (scelta tra MySql e MongoDB) engine scelta qui e motivare scelta.
+Scegliere DBMS. Le tabelle all'interno del DBMS sono le seguenti:
 
 **tabella username:** In questa tabella troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata memorizzata tramite hash, il sale e il campo più importante che è l'hashed_status, questo rappresenta lo stato della cartella di riferimento dell'utente. Tramite questo campo si riesce a capire se sono stati effettuati cambiamenti all'interno della cartella. Questo campo viene calcolato a partire da checksum di riferimento dei vari file e directory presenti all'interno della directory dell'utente.
 
@@ -64,8 +66,9 @@ L'autenticazione all'interno dell'applicazione si basa su [JWT](https://jwt.io/i
 
 ```json
 {   
-    "sync-path":"/path/to/folder",
-    "access_token":"xxxxx.yyyyy.zzzzz"
+    ...,
+    "access_token":"xxxxx.yyyyy.zzzzz",
+    ...
 }
 ```
 Lato server nel file di configurazione `server-conf.json`:
@@ -84,7 +87,7 @@ Lato server nel file di configurazione `server-conf.json`:
 
 ```
 
- L'autenticazione avviene solamente in due casi, al momento della registrazione e quando un token scade e va rinnovato. Per registrarsi un utente seleziona il comando `-r` dal menù, inserisce le informazioni necessarie ed invia il comando `/signup` al server.
+ L'autenticazione avviene solamente in due casi, al momento della registrazione e quando un token scade e va rinnovato. Per registrarsi un utente seleziona il  inserisce le informazioni necessarie ed invia il comando `/signup` al server.
 
 ![](imgs/signup.png)
 
@@ -100,7 +103,7 @@ Per verificare le credenziali del client il server recupera l'hash ed il sale co
 
 ### Startup
 
-All'avvio dell'applicativo client se l'utente non è già registrato allora si procede con la registrazione tramite menù. Se invece l'utente ha già un account le possibilità sono due: l'utente possiede un token valido oppure l'utente possiede un token scaduto. Nel secondo caso l'utente procede con il login tramite menù perché deve reinserire le credenziali per ricevere un nuovo token. Una volta ottenuto un token valido, tramite registrazione oppure tramite login, il client inizia la sua fase di sincronizzazione (dopo avere selezionato la cartella da sincronizzare nel caso di registrazione). Il client verifica la giusta corrispondenza tra struttura della cartella da sincronizzare e il file `client-struct.json` in qunato potrebbero esserci state delle modifica ad applicazione spenta. Una volta aggiornato il file `client-struct.json` se il file è stato modificato si procede con il ricalcolare l'hash complessivo del file. A questo punto il client chiede l'hash di status al server tramite il comando `GET /status`. Se l'hash ricevuto dal server non corrisponde con quello locale il client chiede le informazioni relative alla struttura remota al server che verrà presentata nel seguente modo (il client mantiene una struttura analoga in un apposito file):
+All'avvio dell'applicativo client se l'utente non è già registrato allora si procede con la registrazione. Se invece l'utente ha già un account le possibilità sono due: l'utente possiede un token valido oppure l'utente possiede un token scaduto. Nel secondo caso l'utente procede con il login tramite menù perché deve reinserire le credenziali per ricevere un nuovo token. Una volta ottenuto un token valido, tramite registrazione oppure tramite login, il client inizia la sua fase di sincronizzazione (dopo avere selezionato la cartella da sincronizzare nel caso di registrazione). Il client verifica la giusta corrispondenza tra struttura della cartella da sincronizzare e il file `client-struct.json` in qunato potrebbero esserci state delle modifica ad applicazione spenta. Una volta aggiornato il file `client-struct.json` se il file è stato modificato si procede con il ricalcolare l'hash complessivo del file. A questo punto il client chiede l'hash di status (campo hashed_status nel DB) al server tramite il comando `GET /status`. Se l'hash ricevuto dal server non corrisponde con quello locale il client chiede le informazioni relative alla struttura remota al server che verrà presentata nel seguente modo (il client mantiene una struttura analoga in un apposito file):
 
 ```json
     [
@@ -110,7 +113,7 @@ All'avvio dell'applicativo client se l'utente non è già registrato allora si p
 
 ```
 
-A questo punto si procede con il confronto tra i timestamp prediligendo il timestamp più recente, se il server possiede la copia più aggiornata del file, allora il client richiede tramite il comando `GET /file/{chunk_id}/{chunksize}/{file_pathBASE64}` il file aggiornato, se è invece il client a possedere la versione aggiornata allora si procede con il comando `PUT /file/{chunk_id}/{chunksize}/{file_pathBASE64}`. In questo caso il client andrà a comparare nel file in questione, chunk per chunk, ricalcolandone l'hash, e verificando dove risiede la differenza. Qualora infatti dei 100 chunk di un file, solo il quinto e il ventesimo risultano avere un hash differente, il client provvederà a inviare SOLO questi ultimi, evitando di dover inviare l'intero file.
+A questo punto si procede con il confronto tra i timestamp prediligendo il timestamp più recente, se il server possiede la copia più aggiornata del file, allora il client richiede tramite il comando `GET /file/{chunk_id}/{chunksize}/{file_pathBASE64}` il file aggiornato, se è invece il client a possedere la versione aggiornata allora si procede con il comando `PUT /file/{chunk_id}/{chunksize}/{file_pathBASE64}`. La scelta di lavorare per chunk risiede nel voler minimizzare il traffico e alleggerire il server. Qualora infatti dei 100 chunk di un file, solo il quinto e il ventesimo risultano avere un hash differente, il client provvederà a inviare SOLO questi ultimi, evitando di dover inviare l'intero file.
 
 ### Eventi da monitorare (ad applicazione accesa)
 
