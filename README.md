@@ -40,15 +40,34 @@ L'architettura lato backend presenta un processo che serve a ricevere richieste 
 
 ### Architettura DB
 
-Scegliere DBMS. Le tabelle all'interno del DBMS sono le seguenti:
+La scelta di utilizzare un DB come meccanismo di storage ha le seguenti motivazioni:
 
-**tabella username:** In questa tabella troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata memorizzata tramite hash, il sale e il campo più importante che è l'hashed_status, questo rappresenta lo stato della cartella di riferimento dell'utente. Tramite questo campo si riesce a capire se sono stati effettuati cambiamenti all'interno della cartella. Questo campo viene calcolato a partire da checksum di riferimento dei vari file e directory presenti all'interno della directory dell'utente.
+- **backup:**
+- **allegerimento carico server:**
+- **resilienza(ACID):**
+- **performance:**(spazio su disco, sistema distribuito, integrità)
 
-| id | username | password | sale | hashed_status |
-|:--:|:--------:|:--------:| :--: |:-------------:|
-| 0 | myuser | hash_value | 3 |ahjsdkfjh343! |
+Le tabelle all'interno del DBMS sono le seguenti:
 
+**collection username:** In questa collection troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata memorizzata tramite hash, il sale e il campo più importante che è l'hashed_status, questo rappresenta lo stato della cartella di riferimento dell'utente. Tramite questo campo si riesce a capire se sono stati effettuati cambiamenti all'interno della cartella. Questo campo viene calcolato a partire da checksum di riferimento dei vari file e directory presenti all'interno della directory dell'utente.
 
+```json
+[   
+    ...,
+    {"id":0, "username":"myuser", "password": "pass_hash_value", "salt": 3, "hashed_status": "123456898fgasd"},
+    ...
+]
+
+```
+
+**collection structure:** In questa collection viene rappresentata la struttura di una cartella utente. Il campo `path` indica il path assoluto del file , il campo `hash` indica il checksum dell'intero file, `last_mod` corrisponde al timestamp in unix time dell'ultima modifica sul file effettuata lato client. Il campo `chunks` rappresenta un array all'interno del quale troviamo i checksum dei vari blocchi di un file. Ogni blocco corrisponde ad una frazione fissa del valore di 0.5MB, di conseguenza l'hash di un chunk rappresenta un checksum relativo a questa porzione di dati. Infine il campo `dim_last_chunk` rappresenta la quantità di dati nell'ultimo blocco.
+
+```json
+[
+{"username":"myuser", "path":"file1_path_here", "hash":"file1_hash_here", "last_mod":"timestamp_milliseconds", "chunks":["hash_a","hash_b"], "dim_last_chunk":1024},
+]
+
+```
 
 ## Descrizione processi
 
@@ -58,11 +77,11 @@ Le varie azioni possibili sono riassunte di seguito in tabella. Ad ogni azione v
 | :--: | :--: | :--: | :--: | :--: |
 | 0 | POST /signup | endpoint che permette di registrare un nuovo utente. | `{"user":"username", "pass1":"password","pass2":"password"}` | in caso positivo HTTP 1.1 200 `{"access_token":"xxxxx.yyyyy.zzzzz"}`, in caso negativo HTTP 1.1 400 `{"err_msg":"message here"}` |
 | 1 | POST /signin | endpoint che permette di autenticare un utente precedentemente registrato | `{"user":"username", "pass1":"password"}` | come sopra |
-| 2 | POST /file/{chunk_id}/{chunk_size}/{file_pathBASE64}/{timestamp_locale} | endpoint che permette di aggiungere un file appena creato, `{chunk_id}` corrisponde al numero di chunk che stiamo inviando, 0 per il primo chunk. Il parametro `{chunk_size}` corrisponde alla dimensione del chunk che stiamo inviando, questo corrisponde a `full` se si invia un chunk di dimensione massima (4MB), altrimenti la dimensione in byte. | HTTP headers: MIME: application/octect-stream body: 'binary data here'
+| 2 | POST /file/{chunk_id}/{chunk_size}/{file_pathBASE64}/{timestamp_locale} | endpoint che permette di aggiungere un file appena creato, `{chunk_id}` corrisponde al numero di chunk che stiamo inviando, 0 per il primo chunk. Il parametro `{chunk_size}` corrisponde alla dimensione del chunk che stiamo inviando, questo corrisponde a `full` se si invia un chunk di dimensione massima (0.5MB), altrimenti la dimensione in byte. | HTTP headers: MIME: application/octect-stream body: 'binary data here'
 
 ### Autenticazione
 
-L'autenticazione all'interno dell'applicazione si basa su [JWT](https://jwt.io/introduction/). Le informazioni relative all'autenticazione vengono memorizzate sia lato client che lato server. Lato client viene memorizzato il token in un apposito file `client-conf.json` che si presenta nel seguente modo:
+L'autenticazione all'interno dell'applicazione si basa su [JWT](https://jwt.io/introduction/). Le informazioni relative all'autenticazione vengono memorizzate sia lato client che lato server. Lato client viene memorizzato il token in un apposito file **invisibile** `client-conf.json` che si presenta nel seguente modo:
 
 ```json
 {   
@@ -119,8 +138,14 @@ A questo punto si procede con il confronto tra i timestamp prediligendo il times
 
 Gli eventi da monitorare sono:
 
-- Close di un file
+- Creazione di un file
+- Aggiornamento file
 - Eliminazione file esistente
+- Rinominazione file
+- Error su FileWatcher
+
+- [link fileWatcher C++](https://solarianprogrammer.com/2019/01/13/cpp-17-filesystem-write-file-watcher-monitor/)
+- [link fileWatcher Windows](https://docs.microsoft.com/en-us/dotnet/api/system.io.filesystemwatcher?view=netcore-3.1)
 
 #### Creazione file
 
@@ -132,9 +157,9 @@ La creazione di un file genera le seguenti azioni.
 
 3. lanciare una serie di comandi `POST file/{chunk_id}/{chunk_size}/{file_pathBASE64}` con body contenuto del file. Nella richiesta viene specificato anche il path del file, in questo modo se il path sul server non esiste viene creato. Questo permette di evitare di gestire espliciti comandi per la creazione di directory.
 
-Nel caso il file venga creato offline, oppure si perde la connessione durante il trasferimento, allora la procedura avviene a tempo di startup; se invece il file viene creato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::closed`. 
+Nel caso il file venga creato offline, oppure si perde la connessione durante il trasferimento, allora la procedura avviene a tempo di startup (forzata quando il client riesce a riconnetersi); se invece il file viene creato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::created`. 
 
-#### Update a file
+#### Aggiornamento file
 
 L'aggiornamento di un file è simile alla creazione. Anche in questo caso vanno eseguiti i punti da 1 a 3 con le seguenti modifiche:
 
@@ -144,7 +169,7 @@ L'aggiornamento di un file è simile alla creazione. Anche in questo caso vanno 
 
 3. lanciare una serie di comandi `PUT file/{chunk_id}/{chunk_size}/{file_pathBASE64}` con body i dati che riguardano i chunk modificati.
 
-Nel caso il file venga modificato offline, oppure si perde la connessione durante il trasferimento, allora la procedura avviene a tempo di startup; se invece il file viene modificato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::closed`. I punti 2 e 3 in questo caso vengono eseguiti soltanto se `last_mod` è più recente rispetto a il valore presente in `client-struct.json` questo perché un utente potrebbe chiudere senza modificare il file.
+Nel caso il file venga modificato offline, oppure si perde la connessione durante il trasferimento, allora la procedura avviene a tempo di startup; se invece il file viene modificato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::changed`. I punti 2 e 3 in questo caso vengono eseguiti soltanto se `last_mod` è più recente rispetto a il valore presente in `client-struct.json` questo perché un utente potrebbe chiudere senza modificare il file.
 
 #### Delete a file
 
