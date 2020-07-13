@@ -4,25 +4,18 @@ services:
         build: ./server
         ports: 
             - "3500:3500"
-        #volumes: 
-            #- ./server/src:/home/src
-            #- ./server/bin:/home/bin
-        #working_dir: /home/src
-        #stdin_open: true
-        #tty: true
     client:
         build: ./client
         ports: 
             - "2800:2800"
-        #volumes: 
-            #- ./client/src:/home/src
-            #- ./client/bin:/home/bin
-        #working_dir: /home/src
-        #stdin_open: true
-        #tty: true
-    db:
-        image: mysql
-        command: --default-authentication-plugin=mysql_native_password
-        restart: always
+    mongodb:
+        image: mongo
+        container_name: mongo
         environment:
-            MYSQL_ROOT_PASSWORD: example
+            - MONGO_DATA_DIR=/data/db
+            - MONGO_LOG_DIR=/dev/null
+        volumes:
+            - ./db:/data/db
+        ports:
+            - 27018:27017
+        command: mongod --logpath=/dev/null # --quiet
