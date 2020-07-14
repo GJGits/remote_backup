@@ -1,4 +1,4 @@
-FROM gjcode/gjcode-pds:1.0.4
+FROM gjcode/gjcode-pds:1.0.5
 LABEL author="GJCode"
 COPY src /home/server
 WORKDIR /home/server/
