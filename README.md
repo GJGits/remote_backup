@@ -2,7 +2,7 @@
 
 Descrizione progetto qui......
 
-#### Team
+## Team
 
 - <img src="imgs/marco_nanci_clemente.png" width="32" height="32"/> Marco Nanci Clemente      
 
