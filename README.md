@@ -207,8 +207,8 @@ Nel caso il file venga eliminato offline allora la procedura avviene a tempo di 
 
 #### Team
 
-- <img src="team_members/marco_nanci_clemente.png" width="32" height="32"/> **Marco Nanci Clemente**    
+- <img src="imgs/marco_nanci_clemente.png" width="32" height="32"/> **Marco Nanci Clemente**    
 
-- <img src="team_members/alessandra_musone.png" width="32" height="32"/> **Alessandra Musone**    
+- <img src="imgs/alessandra_musone.png" width="32" height="32"/> **Alessandra Musone**    
 
-- <img src="team_members/piero_gangemi.png" width="32" height="32"/> **Piero Gangemi** 
+- <img src="imgs/piero_gangemi.png" width="32" height="32"/> **Piero Gangemi** 
