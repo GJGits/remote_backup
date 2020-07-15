@@ -204,3 +204,11 @@ L'eliminazione consiste nei seguenti passaggi
 3. lanciare il comando `DELETE file/`.
 
 Nel caso il file venga eliminato offline allora la procedura avviene a tempo di startup; se invece il file viene eliminato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::deleted`.
+
+#### Team
+
+- <img src="team_members/marco_nanci_clemente.png" width="32" height="32"/> **Marco Nanci Clemente**    
+
+- <img src="team_members/alessandra_musone.png" width="32" height="32"/> **Alessandra Musone**    
+
+- <img src="team_members/piero_gangemi.png" width="32" height="32"/> **Piero Gangemi** 
