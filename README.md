@@ -2,16 +2,21 @@
 
 Descrizione progetto qui......
 
-# Table of contents
+# Indice
 * [Team](#Team)
 * [Environment](#Environment)
     * [Utilizzare applicazione con Docker](#Utilizzare_applicazione_con_Docker)
 * [Architettura applicazione](#Architettura_applicazione)
     * [Architettura Frontend](#Architettura_Frontend)
     * [Architettura Backend](#Architettura_Backend)
-    * [Architettura DB](Architettura_DB)
-* [Descrizione processi](Descrizione_processi)    
-   
+    * [Architettura DB](#Architettura_DB)
+* [Descrizione processi](#Descrizione_processi) 
+    * [Autenticazione](#Autenticazione)
+    * [Startup](#Startup)
+    * [Eventi da monitorare](#Eventi_da_monitorare)
+         * [Creazione file](#Creazione_file)
+         * [Aggiornamento file](#Aggiornamento_file)
+         * [Eliminazione file](#Eliminazione_file)
 ## Team <a name="Team"></a>
 
 - <img src="imgs/marco_nanci_clemente.png" width="32" height="32"/> Marco Nanci Clemente      
@@ -119,7 +124,7 @@ Le tabelle all'interno del DBMS sono le seguenti:
 </details>
 <br />  
 
-### Autenticazione
+### Autenticazione<a name="Autenticazione"></a>
 
 L'autenticazione all'interno dell'applicazione si basa su [JWT](https://jwt.io/introduction/). Le informazioni relative all'autenticazione vengono memorizzate sia lato client che lato server. Lato client viene memorizzato il token in un apposito file **invisibile** `client-conf.json` che si presenta nel seguente modo:
 
@@ -160,7 +165,7 @@ Se il client ha già effettuato la registrazione, ma possiede un token scaduto a
 
 Per verificare le credenziali del client il server recupera l'hash ed il sale con cui è stato calcolato dal db, a questo punto procede a calcolare l'hash tramite algoritmo sha-256 e il sale recuperato, se le due stringhe coincidono allora l'utente è da considerarsi autenticato ed il server procederà con la generazione di un token.
 
-### Startup
+### Startup<a name="Startup"></a>
 
 All'avvio dell'applicativo client se l'utente non è già registrato allora si procede con la registrazione. Se invece l'utente ha già un account le possibilità sono due: l'utente possiede un token valido oppure l'utente possiede un token scaduto. Nel secondo caso l'utente procede con il login tramite menù perché deve reinserire le credenziali per ricevere un nuovo token. Una volta ottenuto un token valido, tramite registrazione oppure tramite login, il client inizia la sua fase di sincronizzazione (dopo avere selezionato la cartella da sincronizzare nel caso di registrazione). Il client verifica la giusta corrispondenza tra struttura della cartella da sincronizzare e il file `client-struct.json` in qunato potrebbero esserci state delle modifica ad applicazione spenta. Una volta aggiornato il file `client-struct.json` se il file è stato modificato si procede con il ricalcolare l'hash complessivo del file. A questo punto il client chiede l'hash di status (campo hashed_status nel DB) al server tramite il comando `GET /status`. Se l'hash ricevuto dal server non corrisponde con quello locale il client chiede le informazioni relative alla struttura remota al server che verrà presentata nel seguente modo (il client mantiene una struttura analoga in un apposito file):
 
@@ -174,7 +179,7 @@ All'avvio dell'applicativo client se l'utente non è già registrato allora si p
 
 A questo punto si procede con il confronto tra i timestamp prediligendo il timestamp più recente, se il server possiede la copia più aggiornata del file, allora il client richiede tramite il comando `GET /file/{chunk_id}/{chunksize}/{file_pathBASE64}` il file aggiornato, se è invece il client a possedere la versione aggiornata allora si procede con il comando `PUT /file/{chunk_id}/{chunksize}/{file_pathBASE64}`. La scelta di lavorare per chunk risiede nel voler minimizzare il traffico e alleggerire il server. Qualora infatti dei 100 chunk di un file, solo il quinto e il ventesimo risultano avere un hash differente, il client provvederà a inviare SOLO questi ultimi, evitando di dover inviare l'intero file.
 
-### Eventi da monitorare (ad applicazione accesa)
+### Eventi da monitorare (ad applicazione accesa)<a name="Eventi_da_monitorare"></a>
 
 Gli eventi da monitorare sono:
 
@@ -187,7 +192,7 @@ Gli eventi da monitorare sono:
 - [link fileWatcher C++](https://solarianprogrammer.com/2019/01/13/cpp-17-filesystem-write-file-watcher-monitor/)
 - [link fileWatcher Windows](https://docs.microsoft.com/en-us/dotnet/api/system.io.filesystemwatcher?view=netcore-3.1)
 
-#### Creazione file
+#### Creazione file<a name="Creazione_file"></a>
 
 La creazione di un file genera le seguenti azioni.
 
@@ -199,7 +204,7 @@ La creazione di un file genera le seguenti azioni.
 
 Nel caso il file venga creato offline, oppure si perde la connessione durante il trasferimento, allora la procedura avviene a tempo di startup (forzata quando il client riesce a riconnetersi); se invece il file viene creato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::created`. 
 
-#### Aggiornamento file
+#### Aggiornamento file<a name="Aggiornamento_file"></a>
 
 L'aggiornamento di un file è simile alla creazione. Anche in questo caso vanno eseguiti i punti da 1 a 3 con le seguenti modifiche:
 
@@ -211,7 +216,7 @@ L'aggiornamento di un file è simile alla creazione. Anche in questo caso vanno 
 
 Nel caso il file venga modificato offline, oppure si perde la connessione durante il trasferimento, allora la procedura avviene a tempo di startup; se invece il file viene modificato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::changed`. I punti 2 e 3 in questo caso vengono eseguiti soltanto se `last_mod` è più recente rispetto a il valore presente in `client-struct.json` questo perché un utente potrebbe chiudere senza modificare il file.
 
-#### Delete a file
+#### Eliminazione file<a name="Eliminazione_file"></a>
 
 L'eliminazione consiste nei seguenti passaggi
 
