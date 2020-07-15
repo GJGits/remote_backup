@@ -2,6 +2,14 @@
 
 Descrizione progetto qui......
 
+#### Team
+
+- <img src="imgs/marco_nanci_clemente.png" width="32" height="32"/> Marco Nanci Clemente      
+
+- <img src="imgs/alessandra_musone.png" width="32" height="32"/> Alessandra Musone      
+
+- <img src="imgs/piero_gangemi.png" width="32" height="32"/> Piero Gangemi   
+
 ## Environment
 
 L'environment scelto per lo sviluppo dell'applicativo si basa su [Docker](https://www.docker.com/why-docker) [container](https://www.docker.com/resources/what-container). La scelta ricade su questo tipo di tecnologia per i seguenti motivi:
@@ -205,10 +213,4 @@ L'eliminazione consiste nei seguenti passaggi
 
 Nel caso il file venga eliminato offline allora la procedura avviene a tempo di startup; se invece il file viene eliminato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::deleted`.
 
-#### Team
 
-- <img src="imgs/marco_nanci_clemente.png" width="32" height="32"/> Marco Nanci Clemente      
-
-- <img src="imgs/alessandra_musone.png" width="32" height="32"/> Alessandra Musone      
-
-- <img src="imgs/piero_gangemi.png" width="32" height="32"/> Piero Gangemi   
