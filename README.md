@@ -1,25 +1,17 @@
-# Table of contents
-1. [Team](#Team)
-2. [Some paragraph](#paragraph1)
-    1. [Sub paragraph](#subparagraph1)
-3. [Another paragraph](#paragraph2)
-
-## This is the introduction <a name="introduction"></a>
-Some introduction text, formatted in heading 2 style
-
-## Some paragraph <a name="paragraph1"></a>
-The first paragraph text
-
-### Sub paragraph <a name="subparagraph1"></a>
-This is a sub paragraph, formatted in heading 3 style
-
-## Another paragraph <a name="paragraph2"></a>
-The second paragraph text
-
 # Remote Backup
 
 Descrizione progetto qui......
 
+# Table of contents
+* [Team](#Team)
+* [Environment](#Environment)
+    * [Utilizzare applicazione con Docker](#Utilizzare_applicazione_con_Docker)
+* [Architettura applicazione](#Architettura_applicazione)
+    * [Architettura Frontend](#Architettura_Frontend)
+    * [Architettura Backend](#Architettura_Backend)
+    * [Architettura DB](Architettura_DB)
+* [Descrizione processi](Descrizione_processi)    
+   
 ## Team <a name="Team"></a>
 
 - <img src="imgs/marco_nanci_clemente.png" width="32" height="32"/> Marco Nanci Clemente      
@@ -28,7 +20,7 @@ Descrizione progetto qui......
 
 - <img src="imgs/piero_gangemi.png" width="32" height="32"/> Piero Gangemi   
 
-## Environment
+## Environment <a name="Environment"></a>
 
 L'environment scelto per lo sviluppo dell'applicativo si basa su [Docker](https://www.docker.com/why-docker) [container](https://www.docker.com/resources/what-container). La scelta ricade su questo tipo di tecnologia per i seguenti motivi:
 
@@ -40,11 +32,11 @@ L'environment scelto per lo sviluppo dell'applicativo si basa su [Docker](https:
 
 - **docker-compose:** [docker compose](https://docs.docker.com/compose/) è un tool che permette in maniera molto semplice di coordinare diversi container, in questo modo è possibile simulare diversi client che agiscono sul sistema, ma anche creare delle repliche del server nell'ottica di rendere più scalabile l'applicazione.
 
-### Utilizzare applicazione con Docker
+### Utilizzare applicazione con Docker <a name="Utilizzare_applicazione_con_Docker"></a>
 
 Una volta posizionati nella cartella relativa al progetto, eseguire `docker-compose up --build`. La terminazione può essere fatta tranquillamente in maniera ordinata con il comando `CTRL+C`.
 
-## Architettura applicazione
+## Architettura applicazione<a name="Architettura_applicazione"></a>
 
 L'archetettura ad alto livello delle componenti che compongono l'applicazione è la seguente.
 
@@ -52,19 +44,19 @@ L'archetettura ad alto livello delle componenti che compongono l'applicazione è
 
 Il supporto C++ alle varie componenti dell'applicazione viene fornito dalle librerie standard e da [boost](https://www.boost.org/), di conseguenza dove possibile viene preferita un'implementazione già fornita all'interno di questa collezione di librerie piuttosto che una custom. Le comunicazioni tra client e server avvengono tramite TCP/IP e le comunicazioni a livello applicativo avvengono tramite HTTP con preferenza JSON per la rappresentazione dei messaggi. La scelta ricade su queste tecnologie in quanto ormai sono di fatto uno standard ed ampiamente utilizzate in diversi contesti applicativi, oltre assere semplici, versatili e portabili. Il server a tale scopo espone un API con tutti i metodi necessari, descritti nel seguente paragrafo, ad erogare il servizio di sincronizzazione. Un ultimo modulo che troviamo è un DB che serve per memorizzare informazioni relative agli utenti, allo stato dei file ecc. (si rimanda per i dettagli alla sezione sul DB).
 
-### Architettura Frontend
+### Architettura Frontend<a name="Architettura_Frontend"></a>
 
 L'applicativo lato client presenta due processi, uno serve a presentare l'interfaccia (desktop app /tray app), il secondo invece svolge le operazioni di monitoring e serve a comunicare con il server. I due processi comunicano tramite IPC. La scelta di sdoppiare i processi risiede sia nel fatto che in questo modo l'applicazione è più manutenibile, sia perché in questo modo è gestibile in maniera più ordinata sia la chiusura del programma che un eventuale messa in background del processo che lavora con il server. Con questa architettura quindi la logica applicativa è demandata al processo che interagisce con il server, l'interfaccia invece serve solo ed esclusivamente per rendere l'interazione più user-friendly.
 
 > **Link utili per gestione IPC e tray app:** [menubar](https://github.com/maxogden/menubar), [electron tray](https://www.electronjs.org/docs/api/tray), [ipc main](https://www.electronjs.org/docs/api/ipc-main), [ipc render](https://www.electronjs.org/docs/api/ipc-renderer).
 
-### Architettura Backend
+### Architettura Backend<a name="Architettura_Backend"></a>
 
 L'architettura lato backend presenta un processo che serve a ricevere richieste da parte dall'utente e n processi che fungono da controller. Il numero di controller è dato dal numero di subpath di primo livello presenti nelle url dell'API esposta al client. Se le URL esposte sono per esempio: - `\foo \bar \foo\paz` al momento di startup l'applicazione creerà tre processi, un processo padre e due controller figli per rispondere alle richieste ricevute rispettivamente per - `\foo` e per `\bar`. Anche questo tipo di scelta deriva da una struttura abbastanza consolidata e che riguarda gli applicativi backend che ormai, a prescindire dal linguaggio utilizzato, sfruttano la suddivizione delle richieste tramite dei controller. Questo permette ovviamente di aumentare la modularità e di rendere l'applicativo più scalabile. L'informazione su quanti e quali processi creare viene letta in fase di startup da un apposito file di configurazione `server-conf.json`.
 
 > **Approfondimento:** valutare uso di load balancer, in questo caso il server esposto al client servirebbe solo da bilanciatore di carico, questo inoltrerebbe le richieste ai veri server che avrebbero la stessa struttura indicata prima, con la differenza che ora dovrebbero comunicare in qualche modo il loro stato di carico.
 
-### Architettura DB
+### Architettura DB<a name="Architettura_DB"></a>
 
 La scelta di utilizzare un DB come meccanismo di storage ha le seguenti motivazioni:
 
@@ -83,7 +75,7 @@ Le tabelle all'interno del DBMS sono le seguenti:
 
 
 
-## Descrizione processi
+## Descrizione processi<a name="Descrizione_processi"></a>
 
 <details>
   <summary>POST /signup</summary>
