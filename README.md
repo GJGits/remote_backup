@@ -1,6 +1,22 @@
-# Remote Backup
+<h1 align="center">
+  <a href="https://github.com/GJGits/remote_backup" title="Pedibus Documentation">
+    <img alt="Pedibus" src="imgs/remote-icon.png" height="100px" />
+  </a>
+  <br/>
+</h1>
 
-Descrizione progetto qui......
+<p align="center">
+  Sitema di backup remoto
+</p>
+
+<p align="center">
+ <img alt="Languages" src="https://img.shields.io/badge/Languages-C++ |  HTML | CSS | JS-orange"/>
+ <img alt="Framework" src="https://img.shields.io/badge/Framework-Docker | Electron | Boost.Asio-green"/>
+</p>
+
+# Introduzione
+
+L'applicazione ha il compito di fornire un sistema di incremental backup del contenuto di una cartella definita dall'utente. Una volta lanciata un processo in background provvede a sincronizzare il contenuto della cartella scelta dall'utente con un'analoga sul server.
 
 # Indice
 * [Team](#Team)
@@ -10,6 +26,7 @@ Descrizione progetto qui......
     * [Architettura Frontend](#Architettura_Frontend)
     * [Architettura Backend](#Architettura_Backend)
     * [Architettura DB](#Architettura_DB)
+* [REST API](#REST_API)
 * [Descrizione processi](#Descrizione_processi) 
     * [Autenticazione](#Autenticazione)
     * [Startup](#Startup)
@@ -43,7 +60,7 @@ Una volta posizionati nella cartella relativa al progetto, eseguire `docker-comp
 
 ## Architettura applicazione<a name="Architettura_applicazione"></a>
 
-L'archetettura ad alto livello delle componenti che compongono l'applicazione è la seguente.
+L'archetettura ad alto livello delle componenti che compongono l'applicazione è la seguente. Per ulteriori informazioni si rimanda alla sezione opportuna.
 
 ![](imgs/design.png)
 
@@ -51,15 +68,15 @@ Il supporto C++ alle varie componenti dell'applicazione viene fornito dalle libr
 
 ### Architettura Frontend<a name="Architettura_Frontend"></a>
 
-L'applicativo lato client presenta due processi, uno serve a presentare l'interfaccia (desktop app /tray app), il secondo invece svolge le operazioni di monitoring e serve a comunicare con il server. I due processi comunicano tramite IPC. La scelta di sdoppiare i processi risiede sia nel fatto che in questo modo l'applicazione è più manutenibile, sia perché in questo modo è gestibile in maniera più ordinata sia la chiusura del programma che un eventuale messa in background del processo che lavora con il server. Con questa architettura quindi la logica applicativa è demandata al processo che interagisce con il server, l'interfaccia invece serve solo ed esclusivamente per rendere l'interazione più user-friendly.
+L'applicativo lato client presenta una serie di  processi. Il primo processo, detto `launcher` serve esclusivamente a lanciare due sottoprocessi: `UI` e `core-client` che rappresentano rispettivamente l'interfaccia utente e la core application che serve al client per le operazioni di sincronizzazione. Una volta eseguito il suo compito il launcher si distacca rendendo indipendenti i processi figli. L'interfaccia utente è una tray app realizzata con il framework [Electron](https://www.electronjs.org/), un framework che permette di realizzare desktop app utilizzando un paradigma web (HTML, CSS, JS). Questo processo a sua volta è suddiviso in due sottoprocessi, detti `main` e `render`. Il primo sottoprocesso ha il compito di lanciare l'applicazione, ricevere e inviare messaggi da/a l'interfaccia e di interagire con l'esterno. Il secondo sottoprocesso invece ha il compito di effettuare il rendering dell'interfaccia. I due processi sono in grado di comunicare tramite tecniche di IPC basate su eventi ([ipc main](https://www.electronjs.org/docs/api/ipc-main), [ipc render](https://www.electronjs.org/docs/api/ipc-renderer)). Il `core-client` è il processo nel quale risiede la maggior parte della logica client. Questo ha il compito di comunicare con il processo `main` tramite un semplice protocollo custom basato su messaggi UDP e con il load-balancer tramite richieste HTTP. Inoltre è questo il processo che effettua il monitoring del filesystem dell'utente.
 
 > **Link utili per gestione IPC e tray app:** [menubar](https://github.com/maxogden/menubar), [electron tray](https://www.electronjs.org/docs/api/tray), [ipc main](https://www.electronjs.org/docs/api/ipc-main), [ipc render](https://www.electronjs.org/docs/api/ipc-renderer).
 
 ### Architettura Backend<a name="Architettura_Backend"></a>
 
-L'architettura lato backend presenta un processo che serve a ricevere richieste da parte dall'utente e n processi che fungono da controller. Il numero di controller è dato dal numero di subpath di primo livello presenti nelle url dell'API esposta al client. Se le URL esposte sono per esempio: - `\foo \bar \foo\paz` al momento di startup l'applicazione creerà tre processi, un processo padre e due controller figli per rispondere alle richieste ricevute rispettivamente per - `\foo` e per `\bar`. Anche questo tipo di scelta deriva da una struttura abbastanza consolidata e che riguarda gli applicativi backend che ormai, a prescindire dal linguaggio utilizzato, sfruttano la suddivizione delle richieste tramite dei controller. Questo permette ovviamente di aumentare la modularità e di rendere l'applicativo più scalabile. L'informazione su quanti e quali processi creare viene letta in fase di startup da un apposito file di configurazione `server-conf.json`.
+Il primo e unico contatto del client è rappresentato dal `load-balancer` che assume quindi funzionalità di reverse gateway. Questo riceve le richieste, esponendo un'apposita REST API, da parte dell'utente e le smista ad un apposito server di backend per poi aspettare una risposta da consegnare al client.
+Il load-balancer tiene memoria di quali server memorizzano le cartelle di un determinato utente, in questo modo può facilmente smistare le richieste in maniera opportuna. Per motivi di robustezza e consistenza il load-balncer inoltra le richieste anche al server adibito come backup per una determinata cartella  di un utente. La seconda richiesta partirà con priorità più bassa rispetto a quella destinata al server primario, queste quindi verranno servite nei momenti di maggiore idle. Alle spalle del load-balancer troviamo una serie di server che sono divisi in `server-primari` e `server-secondari`. I primi contengono le cartelle degli utenti ed interagiscono con il db, i secondi servono da backup.
 
-> **Approfondimento:** valutare uso di load balancer, in questo caso il server esposto al client servirebbe solo da bilanciatore di carico, questo inoltrerebbe le richieste ai veri server che avrebbero la stessa struttura indicata prima, con la differenza che ora dovrebbero comunicare in qualche modo il loro stato di carico.
 
 ### Architettura DB<a name="Architettura_DB"></a>
 
@@ -80,19 +97,21 @@ Le tabelle all'interno del DBMS sono le seguenti:
 
 
 
-## Descrizione processi<a name="Descrizione_processi"></a>
+## REST API<a name="REST_API"></a>
 
 <details>
   <summary>POST /signup</summary>
   <br />  
   
   * **Descrizione**:&nbsp;&nbsp;&nbsp;*Endpoint che permette di registrare un nuovo utente*  
-  <br />  
+
+  * **Authenticated**:&nbsp;&nbsp;&nbsp;`FALSE`
+  <br />
   
   * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{ user : username , pass1 : password , pass2 : password }`  
   <br />  
   
-  * **Risposta**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In caso negativo viene generato un messaggio HTTP 1.1 400 `{ err_msg : message here }`  
+  * **Risposta**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In caso negativo viene generato un messaggio HTTP 1.1 400 `{ err_msg : message here }`, in caso positivo invece viene inviata una risposta HTTP 1.1 200 OK con relativo token generato nell'header della risposta.   
 </details>
 <br />  
 
@@ -101,28 +120,71 @@ Le tabelle all'interno del DBMS sono le seguenti:
   <br />  
   
   * **Descrizione**:&nbsp;&nbsp;&nbsp;*Endpoint che permette di autenticare un utente precedentemente registrato*  
-  <br />  
+  
+  * **Authenticated**:&nbsp;&nbsp;&nbsp;`FALSE`
+  <br />
   
   * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{ user : username , pass1 : password }`
   <br />  
   
-  * **Risposta**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In caso negativo viene generato un messaggio HTTP 1.1 400  `{ err_msg : message here }`  
+  * **Risposta**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In caso negativo viene generato un messaggio HTTP 1.1 400  `{ err_msg : message here }`, in caso positivo invece viene inviata una risposta HTTP 1.1 200 OK con relativo token generato nell'header della risposta. 
 </details>
 <br />  
 
 <details>
-  <summary>POST /file/{chunk_id}/{chunk_size}/{file_pathBASE64}/{timestamp_locale}</summary>
+  <summary>POST {username}/file/{chunk_id}/{chunk_size}/{file_pathBASE64}/{timestamp_locale}</summary>
   <br />  
   
-  * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di aggiungere un file appena creato, `{chunk_id}` corrisponde al numero di chunk che stiamo inviando, 0 per il primo chunk. Il parametro `{chunk_size}` corrisponde alla dimensione del chunk che stiamo inviando, questo corrisponde a `full` se si invia un chunk di dimensione massima (0.5MB), altrimenti la dimensione in byte.*  
-  <br />  
+  * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette, se il client è autenticato, di aggiungere un file appena creato. `{chunk_id}` corrisponde al numero di chunk che stiamo inviando, 0 per il primo chunk. Il parametro `{chunk_size}` corrisponde alla dimensione del chunk che stiamo inviando, questo corrisponde a `full` se si invia un chunk di dimensione massima (0.5MB), altrimenti la dimensione in byte.*  
 
-  * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{ user : username , pass1 : password }`  
-  <br />  
-  
-  * **Risposta**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTTP headers: MIME: application/octect-stream body: `binary data here`  
+  * **Authenticated**:&nbsp;&nbsp;&nbsp;`TRUE`
+  <br /> 
+
+  * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTTP headers: MIME: application/octect-stream body: `binary data here` 
+  </details> 
+
+<br />
+<details>
+  <summary>PUT {username}/file/{chunk_id}/{chunksize}/{file_pathBASE64}</summary>  
+
+  * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di aggiornare, se l'utente è autenticato, il contenuto di un file.*
+
+  * **Authenticated**:&nbsp;&nbsp;&nbsp;`TRUE`
+  <br /> 
+
+  * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTTP headers: MIME: application/octect-stream body: `binary data here`
+
 </details>
 <br />  
+<details>
+<summary>GET /status</summary>
+
+* **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di ottenere una checksum dell'intera cartella monitorata.*
+
+* **Authenticated**:&nbsp;&nbsp;&nbsp;`TRUE`
+  <br /> 
+
+</details>
+<br />
+<details>
+<summary>GET /status/file</summary>
+
+* **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di ottenere il JSON file del server con i dettagli sullo stato della cartella remota.*
+
+* **Authenticated**:&nbsp;&nbsp;&nbsp;`TRUE`
+  <br /> 
+
+</details>
+<br />
+<details>
+<summary>GET /file/{chunk_id}/{chunksize}/{file_pathBASE64}</summary>
+
+* **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di ottenere un chunk di un file dal server.*
+
+* **Authenticated**:&nbsp;&nbsp;&nbsp;`TRUE`
+</details>
+
+## Descrizione processi<a name="Descrizione processi"></a>
 
 ### Autenticazione<a name="Autenticazione"></a>
 
