@@ -49,25 +49,13 @@ La scelta di utilizzare un DB come meccanismo di storage ha le seguenti motivazi
 
 Le tabelle all'interno del DBMS sono le seguenti:
 
-**collection username:** In questa collection troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata memorizzata tramite hash, il sale e il campo più importante che è l'hashed_status, questo rappresenta lo stato della cartella di riferimento dell'utente. Tramite questo campo si riesce a capire se sono stati effettuati cambiamenti all'interno della cartella. Questo campo viene calcolato a partire da checksum di riferimento dei vari file e directory presenti all'interno della directory dell'utente.
+**username:** In questa collection troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata memorizzata tramite hash, il sale e il campo più importante che è l'hashed_status, questo rappresenta lo stato della cartella di riferimento dell'utente. Tramite questo campo si riesce a capire se sono stati effettuati cambiamenti all'interno della cartella. Questo campo viene calcolato a partire da checksum di riferimento dei vari file e directory presenti all'interno della directory dell'utente.
 
-```json
-[   
-    ...,
-    {"id":0, "username":"myuser", "password": "pass_hash_value", "salt": 3, "hashed_status": "123456898fgasd"},
-    ...
-]
+| id | username | password | salt | hashed_status |
+| :---: | :---: | :---: | :---: | :---: |
+| 0 | myuser | pass_hash_value | 3 | 123456898fgasd |
 
-```
 
-**collection structure:** In questa collection viene rappresentata la struttura di una cartella utente. Il campo `path` indica il path assoluto del file , il campo `hash` indica il checksum dell'intero file, `last_mod` corrisponde al timestamp in unix time dell'ultima modifica sul file effettuata lato client. Il campo `chunks` rappresenta un array all'interno del quale troviamo i checksum dei vari blocchi di un file. Ogni blocco corrisponde ad una frazione fissa del valore di 0.5MB, di conseguenza l'hash di un chunk rappresenta un checksum relativo a questa porzione di dati. Infine il campo `dim_last_chunk` rappresenta la quantità di dati nell'ultimo blocco.
-
-```json
-[
-{"username":"myuser", "path":"file1_path_here", "hash":"file1_hash_here", "last_mod":"timestamp_milliseconds", "chunks":["hash_a","hash_b"], "dim_last_chunk":1024},
-]
-
-```
 
 ## Descrizione processi
 

@@ -1,4 +1,6 @@
 # BUILD A NEW IMAGE TO PUSH ON DOCKER HUB
 FROM gjcode/gjcode-pds:1.0.5
-#LABEL author="GJCode"
-#RUN apt-get install cmake -y
+LABEL author="GJCode"
+COPY ./ /
+RUN apt install ./libmysqlcppconn7_8.0.21-1ubuntu18.04_amd64.deb \
+    && apt-get install libmysqlcppconn-dev -y

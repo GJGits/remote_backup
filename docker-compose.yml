@@ -8,14 +8,22 @@ services:
         build: ./client
         ports: 
             - "2800:2800"
-    mongodb:
-        image: mongo
-        container_name: mongo
+    #mongodb:
+    #    image: mongo
+    #    container_name: mongo
+    #    environment:
+    #        - MONGO_DATA_DIR=/data/db
+    #        - MONGO_LOG_DIR=/dev/null
+    #    volumes:
+    #        - ./db:/data/db
+    #    ports:
+    #        - 27018:27017
+    #    command: mongod --logpath=/dev/null # --quiet
+    db:
+        image: mysql
+        command: --default-authentication-plugin=mysql_native_password
+        restart: always
+        #volumes: 
+            #- ./db:/var/lib/mysql
         environment:
-            - MONGO_DATA_DIR=/data/db
-            - MONGO_LOG_DIR=/dev/null
-        volumes:
-            - ./db:/data/db
-        ports:
-            - 27018:27017
-        command: mongod --logpath=/dev/null # --quiet
+            MYSQL_ROOT_PASSWORD: example
