@@ -82,17 +82,17 @@ Il load-balancer tiene memoria di quali server memorizzano le cartelle di un det
 
 Il Database sarà costituito da una implementazione tramite MySql, e consta di due diversi database:
 * **Database primario** che interagirà direttamente coi server preposti a comunicare col client.  
-* **Database secondario** che interagirà unicamente col database **primario** nell'ottica di garantire un mirror di quest'ultimo e quindi la sicurezza dei dati da perdite accidentali  
+* **Database secondario** che interagirà unicamente col **database primario** nell'ottica di garantire un mirror di quest'ultimo e quindi la sicurezza dei dati da perdite accidentali.  
 
 La scelta di utilizzare un DB come meccanismo di storage ha le seguenti motivazioni:
 
 - **backup più robusto:** avendo a disposizione un secondo DB con funzionalità puramente di backup, nei momenti di idle il contenuto del DB primario verrà dubplicato nel DB secondario, garantendo quindi un mirror, con le relative garanzie di sicurezza in caso di fault del database primario
-- **allegerimento carico server:** 
+- **allegerimento carico server:** evitando uno storage completo a carico del server, questi sarà soggetto a meno lavoro, e tale feature impatterà positivamente nei momenti di massimo stress.  
 - **resilienza(ACID):** la totalità delle operazioni avrà garanzia di atomicity, consistency, isolation, e durability, elementi non integrabili senza errori nel caso di un interazione custom coi dati tramite files.
 
 Le tabelle all'interno del DBMS sono le seguenti:
 
-**username:** In questa collection troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata memorizzata tramite hash, il sale e il campo più importante che è l'hashed_status, questo rappresenta lo stato della cartella di riferimento dell'utente. Tramite questo campo si riesce a capire se sono stati effettuati cambiamenti all'interno della cartella. Questo campo viene calcolato a partire da checksum di riferimento dei vari file e directory presenti all'interno della directory dell'utente.
+**username:** In questa collection troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata tramite hash, il sale e il campo più importante che è l'hashed_status, che rappresenta lo stato della cartella di riferimento dell'utente. Tramite questo campo si riesce a capire se sono stati effettuati cambiamenti all'interno della cartella. Questo campo viene calcolato a partire da un checksum di riferimento dei vari file e directory presenti all'interno della directory dell'utente.
 
 | id | username | password | salt | hashed_status |
 | :---: | :---: | :---: | :---: | :---: |
@@ -216,23 +216,23 @@ Lato server nel file di configurazione `server-conf.json`:
 
 ```
 
- L'autenticazione avviene solamente in due casi, al momento della registrazione e quando un token scade e va rinnovato. Per registrarsi un utente seleziona il  inserisce le informazioni necessarie ed invia il comando `/signup` al server.
+ L'autenticazione avviene solamente in due casi, al momento della registrazione e quando un token scade e va rinnovato. Per registrarsi un utente inserisce le informazioni necessarie ed invia il comando `/signup` al server.
 
 ![](imgs/signup.png)
 
-Una volta ottenuto un token dal server il client ha la possibilità di sfruttare i comandi offerti dal server. Una generica richiesta del client quindi viene autenticata nel seguente modo.
+Una volta ottenuto un token dal server, il client ha la possibilità di sfruttare i comandi offerti dal server. Una generica richiesta del client viene autenticata nel seguente modo.
 
 ![](imgs/tok-req.png)
 
-Se il client ha già effettuato la registrazione, ma possiede un token scaduto allora esso dovrà selezionare la voce `-a` dal menù per autenticarsi. Da console inserirà quindi username e password ed invierà una richiesta `/signin` al server. Questo dovrà verificare le credenziali ricevute interrogando un database e se l'autenticazione va a buon fine esso invierà un token all'utente.
+Se il client ha già effettuato la registrazione, ma possiede un token scaduto allora esso dovrà selezionare la voce `-a` dal menù per autenticarsi. Da console inserirà quindi username e password ed invierà una richiesta `/signin` al server. Questo dovrà verificare le credenziali ricevute interrogando un database e se l'autenticazione va a buon fine invierà un token all'utente.
 
 ![](imgs/sign-in.png)
 
-Per verificare le credenziali del client il server recupera l'hash ed il sale con cui è stato calcolato dal db, a questo punto procede a calcolare l'hash tramite algoritmo sha-256 e il sale recuperato, se le due stringhe coincidono allora l'utente è da considerarsi autenticato ed il server procederà con la generazione di un token.
+Per verificare le credenziali del client, il server recupera l'hash, ed il sale con cui è stato calcolato dal db, e procede a calcolare l'hash tramite algoritmo sha-256 e il sale recuperato; se le due stringhe coincidono allora l'utente è da considerarsi autenticato ed il server procederà con la generazione di un token.
 
 ### Startup<a name="Startup"></a>
 
-All'avvio dell'applicativo client se l'utente non è già registrato allora si procede con la registrazione. Se invece l'utente ha già un account le possibilità sono due: l'utente possiede un token valido oppure l'utente possiede un token scaduto. Nel secondo caso l'utente procede con il login tramite menù perché deve reinserire le credenziali per ricevere un nuovo token. Una volta ottenuto un token valido, tramite registrazione oppure tramite login, il client inizia la sua fase di sincronizzazione (dopo avere selezionato la cartella da sincronizzare nel caso di registrazione). Il client verifica la giusta corrispondenza tra struttura della cartella da sincronizzare e il file `client-struct.json` in qunato potrebbero esserci state delle modifica ad applicazione spenta. Una volta aggiornato il file `client-struct.json` se il file è stato modificato si procede con il ricalcolare l'hash complessivo del file. A questo punto il client chiede l'hash di status (campo hashed_status nel DB) al server tramite il comando `GET /status`. Se l'hash ricevuto dal server non corrisponde con quello locale il client chiede le informazioni relative alla struttura remota al server che verrà presentata nel seguente modo (il client mantiene una struttura analoga in un apposito file):
+All'avvio dell'applicativo client se l'utente non è già registrato allora si procede con la registrazione. Se invece l'utente ha già un account le possibilità sono due: l'utente possiede un token valido oppure l'utente possiede un token scaduto. Nel secondo caso l'utente procede con il login tramite menù perché deve reinserire le credenziali per ricevere un nuovo token. Una volta ottenuto un token valido, tramite registrazione oppure tramite login, il client inizia la sua fase di sincronizzazione (dopo avere selezionato la cartella da sincronizzare nel caso di registrazione). Il client verifica la giusta corrispondenza tra struttura della cartella da sincronizzare e il file `client-struct.json` in quanto potrebbero esserci state delle modifiche ad applicazione spenta. Una volta aggiornato il file `client-struct.json`, se il file è stato modificato si procede con il ricalcolare l'hash complessivo del file. A questo punto il client chiede l'hash di status (campo hashed_status nel DB) al server tramite il comando `GET /status`. Se l'hash ricevuto dal server non corrisponde con quello locale il client chiede le informazioni relative alla struttura remota al server che verrà presentata nel seguente modo (il client mantiene una struttura analoga in un apposito file):
 
 ```json
     [
@@ -242,7 +242,7 @@ All'avvio dell'applicativo client se l'utente non è già registrato allora si p
 
 ```
 
-A questo punto si procede con il confronto tra i timestamp prediligendo il timestamp più recente, se il server possiede la copia più aggiornata del file, allora il client richiede tramite il comando `GET /file/{chunk_id}/{chunksize}/{file_pathBASE64}` il file aggiornato, se è invece il client a possedere la versione aggiornata allora si procede con il comando `PUT /file/{chunk_id}/{chunksize}/{file_pathBASE64}`. La scelta di lavorare per chunk risiede nel voler minimizzare il traffico e alleggerire il server. Qualora infatti dei 100 chunk di un file, solo il quinto e il ventesimo risultano avere un hash differente, il client provvederà a inviare SOLO questi ultimi, evitando di dover inviare l'intero file.
+A questo punto si procede con il confronto tra i timestamp prediligendo il timestamp più recente; se il server possiede la copia più aggiornata del file, allora il client richiede tramite il comando `GET /file/{chunk_id}/{chunksize}/{file_pathBASE64}` il file aggiornato, se è invece il client a possedere la versione aggiornata allora si procede con il comando `PUT /file/{chunk_id}/{chunksize}/{file_pathBASE64}`. La scelta di lavorare per chunk risiede nel voler minimizzare il traffico e alleggerire il server. Qualora infatti dei 100 chunk di un file, solo il quinto e il ventesimo risultano avere un hash differente, il client provvederà a inviare SOLO questi ultimi, evitando di dover inviare l'intero file.
 
 ### Eventi da monitorare (ad applicazione accesa)<a name="Eventi_da_monitorare"></a>
 
@@ -265,7 +265,7 @@ La creazione di un file genera le seguenti azioni.
 
 2. ricalcolare hash totale cartella.
 
-3. lanciare una serie di comandi `POST file/{chunk_id}/{chunk_size}/{file_pathBASE64}` con body contenuto del file. Nella richiesta viene specificato anche il path del file, in questo modo se il path sul server non esiste viene creato. Questo permette di evitare di gestire espliciti comandi per la creazione di directory.
+3. lanciare una serie di comandi `POST file/{chunk_id}/{chunk_size}/{file_pathBASE64}` con body il contenuto del file. Nella richiesta viene specificato anche il path del file, in questo modo se il path sul server non esiste viene creato. Questo permette di evitare di gestire espliciti comandi per la creazione di directory.
 
 Nel caso il file venga creato offline, oppure si perde la connessione durante il trasferimento, allora la procedura avviene a tempo di startup (forzata quando il client riesce a riconnetersi); se invece il file viene creato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::created`. 
 
@@ -279,7 +279,7 @@ L'aggiornamento di un file è simile alla creazione. Anche in questo caso vanno 
 
 3. lanciare una serie di comandi `PUT file/{chunk_id}/{chunk_size}/{file_pathBASE64}` con body i dati che riguardano i chunk modificati.
 
-Nel caso il file venga modificato offline, oppure si perde la connessione durante il trasferimento, allora la procedura avviene a tempo di startup; se invece il file viene modificato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::changed`. I punti 2 e 3 in questo caso vengono eseguiti soltanto se `last_mod` è più recente rispetto a il valore presente in `client-struct.json` questo perché un utente potrebbe chiudere senza modificare il file.
+Nel caso il file venga modificato offline, oppure si perde la connessione durante il trasferimento, allora la procedura avviene a tempo di startup; se invece il file viene modificato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::changed`. I punti 2 e 3 in questo caso vengono eseguiti soltanto se `last_mod` è più recente rispetto al valore presente in `client-struct.json` perché un utente potrebbe chiudere senza modificare il file.
 
 #### Eliminazione file<a name="Eliminazione_file"></a>
 
