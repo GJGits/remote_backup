@@ -81,8 +81,9 @@ Il load-balancer tiene memoria di quali server memorizzano le cartelle di un det
 ### Architettura DB<a name="Architettura_DB"></a>
 
 Il Database sarà costituito da una implementazione tramite MySql, e consta di due diversi database:
-* **primario** che interagirà direttamente coi server preposti a comunicare col client.  
-* **secondario** che interagirà unicamente col database **primario** nell'ottica di garantire un mirror di quest'ultimo e quindi la sicurezza dei dati da perdite accidentali  
+* **Database primario** che interagirà direttamente coi server preposti a comunicare col client.  
+* **Database secondario** che interagirà unicamente col database **primario** nell'ottica di garantire un mirror di quest'ultimo e quindi la sicurezza dei dati da perdite accidentali  
+
 La scelta di utilizzare un DB come meccanismo di storage ha le seguenti motivazioni:
 
 - **backup più robusto:** avendo a disposizione un secondo DB con funzionalità puramente di backup, nei momenti di idle il contenuto del DB primario verrà dubplicato nel DB secondario, garantendo quindi un mirror, con le relative garanzie di sicurezza in caso di fault del database primario
