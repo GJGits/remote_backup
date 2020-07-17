@@ -92,7 +92,7 @@ La scelta di utilizzare un DB come meccanismo di storage ha le seguenti motivazi
 
 Le tabelle all'interno del DBMS sono le seguenti:
 
-**username:** In questa collection troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata memorizzata tramite hash, il sale e il campo più importante che è l'hashed_status, questo rappresenta lo stato della cartella di riferimento dell'utente. Tramite questo campo si riesce a capire se sono stati effettuati cambiamenti all'interno della cartella. Questo campo rappresenta l'hash calcolato sul file `server-struct.json` .
+**username:** In questa collection troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata memorizzata tramite hash, il sale.
 
 | id | username | password | salt |
 | :---: | :---: | :---: | :---: |
