@@ -191,7 +191,7 @@ Le tabelle all'interno del DBMS sono le seguenti:
 
 ### Autenticazione<a name="Autenticazione"></a>
 
-L'autenticazione all'interno dell'applicazione si basa su [JWT](https://jwt.io/introduction/). Le informazioni relative all'autenticazione vengono memorizzate sia lato client che lato server. Lato client viene memorizzato il token in un apposito file **invisibile** `client-conf.json` che si presenta nel seguente modo:
+L'autenticazione all'interno dell'applicazione si basa su [JWT](https://jwt.io/introduction/). Le informazioni relative all'autenticazione vengono memorizzate sia lato client che lato backend. Lato client viene memorizzato il token in un apposito file **invisibile** `client-conf.json` che si presenta nel seguente modo:
 
 ```json
 {   
@@ -200,7 +200,7 @@ L'autenticazione all'interno dell'applicazione si basa su [JWT](https://jwt.io/i
     ...
 }
 ```
-Lato server nel file di configurazione `server-conf.json`:
+Nel load-balancer nel file di configurazione `token-conf.json`:
 
 ```json
 {
