@@ -56,7 +56,26 @@ L'environment scelto per lo sviluppo dell'applicativo si basa su [Docker](https:
 
 ### Utilizzare applicazione con Docker <a name="Utilizzare_applicazione_con_Docker"></a>
 
-Una volta posizionati nella cartella relativa al progetto tramite terminale, eseguire `docker-compose up --build`. La terminazione può essere fatta tranquillamente in maniera ordinata con il comando `CTRL+C`.
+Una volta posizionati nella cartella relativa al progetto tramite terminale, eseguire `docker-compose up --build`. Questo comando permette di eseguire i vari servizi che compongono l'applicativo. La terminazione può essere fatta tranquillamente in maniera ordinata con il comando `CTRL+C`.
+
+#### Utilizzare MySQL con Docker <a name="Utilizzare_MySQL_con_Docker"></a>
+
+Dopo aver lanciato i vari servizi aprire una finestra di terminale ed eseguire i seguenti comandi in ordine:
+
+1. `docker exec -it <service name> /bin/bash`. Questo comando permette di utilizzare in maniera interattiva (tramite console) il container specificato. Nel nostro caso i servizi papabili sono: `db-attivo` e `db-passivo` sono queste infatti i servizi che sono preposti al conservare un database. Se l'operazione va a buon fine l'username della console dovrebbe risultare qualcosa del tipo: ``.
+
+2. Una volta entrati all'interno del container, loggarsi tramite il comando `mysql -u root -p`. A questo punto verrà richiesta la password che nel nostro caso è `example`. 
+
+3. Una volta effettuato il login è possibile eseguire comandi SQL a piacere. Alcuni comandi utili:
+  
+    - `show databases`: permette di visualizzare quali databases esistono all'interno del server.
+  
+    - `use db`: permette di porsi all'interno di un db, solo da qui sono eseguibili le query per questo determinato db.
+  
+    - `show tables`: permette di elencare le tabelle presenti all'interno del db precedentemente selezionato.
+
+    - `describe <tablename>`: permette di mostrare la struttura della tabella (nomi e tipo campi...) selezionata.
+
 
 ## Architettura applicazione<a name="Architettura_applicazione"></a>
 
