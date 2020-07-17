@@ -16,7 +16,7 @@
 
 # Introduzione
 
-L'applicazione ha il compito di fornire un sistema di incremental backup del contenuto di una cartella definita dall'utente. Una volta lanciata un processo in background provvede a sincronizzare il contenuto della cartella scelta dall'utente con un'analoga sul server.
+L'applicazione ha il compito di fornire un sistema di incremental backup del contenuto di una cartella definita dall'utente. Una volta lanciata, un processo in background provvede a sincronizzare il contenuto della cartella scelta dall'utente con un'analoga sul server.
 
 # Indice
 * [Team](#Team)
@@ -48,7 +48,7 @@ L'environment scelto per lo sviluppo dell'applicativo si basa su [Docker](https:
 
 - **virtualizzazione:** tramite virtualizzazione si abbattono le differenze provenienti dai vari sistemi, di conseguenza ogni sviluppatore può interagire con lo stesso identico environment che utilizzeranno anche gli altri. Questo permette di evitare conflitti dovuti a diverse versioni di librerie e permette di evitare il classico problema del *"Funziona sul mio pc"*.
 
-- **filesystem:** la tecnologia dei container si basa sul concetto di [image](https://docs.docker.com/get-started/overview/). Vista da un punto di vista molto astratto un immagine docker non è nient'altro che un filesystem, questo oltre a risolvere il problema di avere diverse versioni di librerie si presta molto al contesto di questa applicazione. Utilizzando diversi container infatti si può testare in maniera semplice la sincronizzazione di una cartella tra versione locale e remota. Ogni container infatti ha il suo filesystem che è isolato da quello degli altri.
+- **filesystem:** la tecnologia dei container si basa sul concetto di [image](https://docs.docker.com/get-started/overview/). Vista da un punto di vista molto astratto un immagine docker non è nient'altro che un filesystem; questo oltre a risolvere il problema di avere diverse versioni di librerie si presta molto al contesto dell'applicazione da sviluppare. Utilizzando diversi container infatti si può testare in maniera semplice la sincronizzazione di una cartella tra versione locale e remota. Ogni container infatti ha il suo filesystem che è isolato da quello degli altri.
 
 - **network:** la tecnologia docker permette di creare in maniera molto comoda delle reti sulle quali i container possono comunicare. In questo modo si possono simulare dei contesti di rete che sono fedeli a quelli nei quali si viene a trovare l'applicativo da distribuire.
 
@@ -56,7 +56,7 @@ L'environment scelto per lo sviluppo dell'applicativo si basa su [Docker](https:
 
 ### Utilizzare applicazione con Docker <a name="Utilizzare_applicazione_con_Docker"></a>
 
-Una volta posizionati nella cartella relativa al progetto, eseguire `docker-compose up --build`. La terminazione può essere fatta tranquillamente in maniera ordinata con il comando `CTRL+C`.
+Una volta posizionati nella cartella relativa al progetto tramite terminale, eseguire `docker-compose up --build`. La terminazione può essere fatta tranquillamente in maniera ordinata con il comando `CTRL+C`.
 
 ## Architettura applicazione<a name="Architettura_applicazione"></a>
 
@@ -75,17 +75,20 @@ L'applicativo lato client presenta una serie di  processi. Il primo processo, de
 ### Architettura Backend<a name="Architettura_Backend"></a>
 
 Il primo e unico contatto del client è rappresentato dal `load-balancer` che assume quindi funzionalità di reverse gateway. Questo riceve le richieste, esponendo un'apposita REST API, da parte dell'utente e le smista ad un apposito server di backend per poi aspettare una risposta da consegnare al client.
-Il load-balancer tiene memoria di quali server memorizzano le cartelle di un determinato utente, in questo modo può facilmente smistare le richieste in maniera opportuna. Per motivi di robustezza e consistenza il load-balncer inoltra le richieste anche al server adibito come backup per una determinata cartella  di un utente. La seconda richiesta partirà con priorità più bassa rispetto a quella destinata al server primario, queste quindi verranno servite nei momenti di maggiore idle. Alle spalle del load-balancer troviamo una serie di server che sono divisi in `server-primari` e `server-secondari`. I primi contengono le cartelle degli utenti ed interagiscono con il db, i secondi servono da backup.
+Il load-balancer tiene memoria di quali server memorizzano le cartelle di un determinato utente, in questo modo può facilmente smistare le richieste in maniera opportuna. Per motivi di robustezza e consistenza il load-balncer inoltra le richieste anche al server adibito come backup per una determinata cartella  di un utente. La seconda richiesta partirà con priorità più bassa rispetto a quella destinata al server primario, venendo quindi servita nei momenti di idle. Alle spalle del load-balancer troviamo una serie di server che sono divisi in `server-primari` e `server-secondari`. I primi contengono le cartelle degli utenti ed interagiscono con il db, i secondi servono da backup.
 
 
 ### Architettura DB<a name="Architettura_DB"></a>
 
+Il Database sarà costituito da una implementazione tramite MySql, e consta di due diversi database:
+* **Database primario** che interagirà direttamente coi server preposti a comunicare col client.  
+* **Database secondario** che interagirà unicamente col **database primario** nell'ottica di garantire un mirror di quest'ultimo e quindi la sicurezza dei dati da perdite accidentali.  
+
 La scelta di utilizzare un DB come meccanismo di storage ha le seguenti motivazioni:
 
-- **backup:**
-- **allegerimento carico server:**
-- **resilienza(ACID):**
-- **performance:**(spazio su disco, sistema distribuito, integrità)
+- **backup più robusto:** avendo a disposizione un secondo DB con funzionalità puramente di backup, nei momenti di idle il contenuto del DB primario verrà dubplicato nel DB secondario, garantendo quindi un mirror, con le relative garanzie di sicurezza in caso di fault del database primario
+- **allegerimento carico server:** evitando uno storage completo a carico del server, questi sarà soggetto a meno lavoro, e tale feature impatterà positivamente nei momenti di massimo stress.  
+- **resilienza(ACID):** la totalità delle operazioni avrà garanzia di atomicity, consistency, isolation, e durability, elementi non integrabili senza errori nel caso di un interazione custom coi dati tramite files.
 
 Le tabelle all'interno del DBMS sono le seguenti:
 
@@ -213,11 +216,11 @@ Lato server nel file di configurazione `server-conf.json`:
 
 ```
 
- L'autenticazione avviene solamente in due casi, al momento della registrazione e quando un token scade e va rinnovato. Per registrarsi un utente seleziona il  inserisce le informazioni necessarie ed invia il comando `/signup` al server.
+ L'autenticazione avviene solamente in due casi, al momento della registrazione e quando un token scade e va rinnovato. Per registrarsi un utente inserisce le informazioni necessarie ed invia il comando `/signup` al server.
 
 ![](imgs/signup.png)
 
-Una volta ottenuto un token dal server il client ha la possibilità di sfruttare i comandi offerti dal server. Una generica richiesta del client quindi viene autenticata nel seguente modo.
+Una volta ottenuto un token dal server, il client ha la possibilità di sfruttare i comandi offerti dal server. Una generica richiesta del client viene autenticata nel seguente modo.
 
 ![](imgs/tok-req.png)
 
@@ -225,7 +228,7 @@ Se il client ha già effettuato la registrazione, ma possiede un token scaduto a
 
 ![](imgs/sign-in.png)
 
-Per verificare le credenziali del client il server recupera l'hash ed il sale con cui è stato calcolato dal db, a questo punto procede a calcolare l'hash tramite algoritmo sha-256 e il sale recuperato, se le due stringhe coincidono allora l'utente è da considerarsi autenticato ed il server procederà con la generazione di un token.
+Per verificare le credenziali del client, il server recupera l'hash, ed il sale con cui è stato calcolato dal db, e procede a calcolare l'hash tramite algoritmo sha-256 e il sale recuperato; se le due stringhe coincidono allora l'utente è da considerarsi autenticato ed il server procederà con la generazione di un token.
 
 ### Startup<a name="Startup"></a>
 
@@ -272,7 +275,7 @@ La creazione di un file genera le seguenti azioni.
 
 2. ricalcolare hash totale cartella.
 
-3. lanciare una serie di comandi `POST file/{chunk_id}/{chunk_size}/{file_pathBASE64}` con body contenuto del file. Nella richiesta viene specificato anche il path del file, in questo modo se il path sul server non esiste viene creato. Questo permette di evitare di gestire espliciti comandi per la creazione di directory.
+3. lanciare una serie di comandi `POST file/{chunk_id}/{chunk_size}/{file_pathBASE64}` con body il contenuto del file. Nella richiesta viene specificato anche il path del file, in questo modo se il path sul server non esiste viene creato. Questo permette di evitare di gestire espliciti comandi per la creazione di directory.
 
 Nel caso il file venga creato offline, oppure si perde la connessione durante il trasferimento, allora la procedura avviene a tempo di startup (forzata quando il client riesce a riconnetersi); se invece il file viene creato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::created`. 
 
@@ -286,7 +289,7 @@ L'aggiornamento di un file è simile alla creazione. Anche in questo caso vanno 
 
 3. lanciare una serie di comandi `PUT file/{chunk_id}/{chunk_size}/{file_pathBASE64}` con body i dati che riguardano i chunk modificati.
 
-Nel caso il file venga modificato offline, oppure si perde la connessione durante il trasferimento, allora la procedura avviene a tempo di startup; se invece il file viene modificato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::changed`. I punti 2 e 3 in questo caso vengono eseguiti soltanto se `last_mod` è più recente rispetto a il valore presente in `client-struct.json` questo perché un utente potrebbe chiudere senza modificare il file.
+Nel caso il file venga modificato offline, oppure si perde la connessione durante il trasferimento, allora la procedura avviene a tempo di startup; se invece il file viene modificato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::changed`. I punti 2 e 3 in questo caso vengono eseguiti soltanto se `last_mod` è più recente rispetto al valore presente in `client-struct.json` perché un utente potrebbe chiudere senza modificare il file.
 
 #### Eliminazione file<a name="Eliminazione_file"></a>
 
