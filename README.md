@@ -21,7 +21,10 @@ L'applicazione ha il compito di fornire un sistema di incremental backup del con
 # Indice
 * [Team](#Team)
 * [Environment](#Environment)
-    * [Utilizzare applicazione con Docker](#Utilizzare_applicazione_con_Docker)
+    * [Utilizzare applicazione con Docker]
+    (#Utilizzare_applicazione_con_Docker)
+      * [Utilizzare MySQL con Docker]
+      (#Utilizzare_MySQL_con_Docker)
 * [Architettura applicazione](#Architettura_applicazione)
     * [Architettura Frontend](#Architettura_Frontend)
     * [Architettura Backend](#Architettura_Backend)
