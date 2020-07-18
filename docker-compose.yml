@@ -12,11 +12,7 @@ services:
         build: ./client
         ports: 
             - "2800:2800"
-    db-attivo:
-        build: ./db-attivo
-        ports: 
-            - "3305:3306"
-    db-passivo:
+    db:
         image: mysql
         command: --default-authentication-plugin=mysql_native_password
         restart: always
@@ -24,3 +20,5 @@ services:
             #- ./db:/var/lib/mysql
         environment:
             MYSQL_ROOT_PASSWORD: example
+        security_opt:
+            - seccomp:unconfined

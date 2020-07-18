@@ -1,10 +1,12 @@
 #include <iostream>
 #include "unistd.h"
+#include "lib/test.hpp"
 
 int main()
-{
+{   
+    sleep(5);
+    testAll();
     for (int i = 0; i < 1000; i++) {
-        std::clog << "hello [" << i << "] by the server!\n";
         sleep(10);
     }
     return 0;
