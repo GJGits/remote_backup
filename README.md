@@ -20,9 +20,10 @@ L'applicazione ha il compito di fornire un sistema di incremental backup del con
 
 # Indice
 * [Team](#Team)
-* [Environment](#Environment)
+* [Environment(Docker)](#Environment)
+    * [Aggiungere docker ad un gruppo (Linux)](Aggiungere_docker_ad_un_gruppo_(Linux))
     * [Utilizzare applicazione con Docker](#Utilizzare_applicazione_con_Docker)
-        * [Utilizzare MySQL con Docker](#Utilizzare_MySQL_con_Docker)
+    * [Utilizzare MySQL con Docker](#Utilizzare_MySQL_con_Docker)
 * [Architettura applicazione](#Architettura_applicazione)
     * [Architettura Frontend](#Architettura_Frontend)
     * [Architettura Backend](#Architettura_Backend)
@@ -43,7 +44,7 @@ L'applicazione ha il compito di fornire un sistema di incremental backup del con
 
 - <img src="imgs/piero_gangemi.png" width="32" height="32"/> Piero Gangemi   
 
-## Environment <a name="Environment"></a>
+## Environment(Docker) <a name="Environment"></a>
 
 L'environment scelto per lo sviluppo dell'applicativo si basa su [Docker](https://www.docker.com/why-docker) [container](https://www.docker.com/resources/what-container). La scelta ricade su questo tipo di tecnologia per i seguenti motivi:
 
@@ -55,11 +56,24 @@ L'environment scelto per lo sviluppo dell'applicativo si basa su [Docker](https:
 
 - **docker-compose:** [docker compose](https://docs.docker.com/compose/) è un tool che permette in maniera molto semplice di coordinare diversi container, in questo modo è possibile simulare diversi client che agiscono sul sistema, ma anche creare delle repliche del server nell'ottica di rendere più scalabile l'applicazione.
 
+### Aggiungere docker ad un gruppo (Linux) <a
+name="Aggiungere_docker_ad_un_gruppo_(Linux)"></a>
+
+Per utilizzare comodamente docker su Linux può risultare utile aggiungere docker ad un gruppo. 
+
+1. Creare il gruppo con il comando: `sudo groupadd docker`
+
+2. Aggiungere utente al gruppo docker: `sudo usermod -aG docker $USER`
+
+3. A questo punto effettuare logout e login per rendere effettive le modifiche, alternativamente eseguire il comando: `newgrp docker`
+
+4. Testare eseguendo il comando: `docker run hello-world`.
+
 ### Utilizzare applicazione con Docker <a name="Utilizzare_applicazione_con_Docker"></a>
 
 Una volta posizionati nella cartella relativa al progetto tramite terminale, eseguire `docker-compose up --build`. Questo comando permette di eseguire i vari servizi che compongono l'applicativo. La terminazione può essere fatta tranquillamente in maniera ordinata con il comando `CTRL+C`.
 
-#### Utilizzare MySQL con Docker <a name="Utilizzare_MySQL_con_Docker"></a>
+### Utilizzare MySQL con Docker <a name="Utilizzare_MySQL_con_Docker"></a>
 
 Dopo aver lanciato i vari servizi aprire una finestra di terminale ed eseguire i seguenti comandi in ordine:
 
