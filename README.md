@@ -77,7 +77,7 @@ Una volta posizionati nella cartella relativa al progetto tramite terminale, ese
 
 Dopo aver lanciato i vari servizi aprire una finestra di terminale ed eseguire i seguenti comandi in ordine:
 
-1. `docker exec -it remote_backup_<service name> /bin/bash`. Questo comando permette di utilizzare in maniera interattiva (tramite console) il container specificato. Nel nostro caso i servizi papabili sono: `db-attivo` e `db-passivo` sono queste infatti i servizi che sono preposti al conservare un database. Se l'operazione va a buon fine l'username della console dovrebbe risultare qualcosa del tipo: `root@xxxxxxxxxxxx:`.
+1. `docker exec -it remote_backup_db_1 /bin/bash`. Questo comando permette di utilizzare in maniera interattiva (tramite console) il container specificato. Se l'operazione va a buon fine l'username della console dovrebbe risultare qualcosa del tipo: `root@xxxxxxxxxxxx:`. Alle volte docker aggiunge un pedice alla fine del nome di un servizio, si consiglia di verificare il nome effettivo in caso di problemi eseguendo il comando `docker container ls`.
 
 2. Una volta entrati all'interno del container, loggarsi tramite il comando `mysql -u root -p`. A questo punto verrà richiesta la password che nel nostro caso è `example`. 
 
