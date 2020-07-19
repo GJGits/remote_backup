@@ -22,7 +22,6 @@ L'applicazione ha il compito di fornire un sistema di incremental backup del con
 * [Team](#Team)
 * [Environment(Docker)](#Environment)
     * [Aggiungere docker ad un gruppo (Linux)](Aggiungere_docker_ad_un_gruppo_(Linux))
-    * [Utilizzare applicazione con Docker](#Utilizzare_applicazione_con_Docker)
     * [Utilizzare MySQL con Docker](#Utilizzare_MySQL_con_Docker)
 * [Architettura applicazione](#Architettura_applicazione)
     * [Architettura Frontend](#Architettura_Frontend)
@@ -32,6 +31,8 @@ L'applicazione ha il compito di fornire un sistema di incremental backup del con
 * [Descrizione processi](#Descrizione_processi) 
     * [Autenticazione](#Autenticazione)
     * [Startup](#Startup)
+         * [Utilizzare interfaccia grafica](#Utilizzare_interfaccia_grafica)
+         * [Eseguire servizi Docker](#Eseguire_servizi_Docker)
     * [Eventi da monitorare](#Eventi_da_monitorare)
          * [Creazione file](#Creazione_file)
          * [Aggiornamento file](#Aggiornamento_file)
@@ -68,10 +69,6 @@ Per utilizzare comodamente docker su Linux può risultare utile aggiungere docke
 3. A questo punto effettuare logout e login per rendere effettive le modifiche, alternativamente eseguire il comando: `newgrp docker`
 
 4. Testare eseguendo il comando: `docker run hello-world`.
-
-### Utilizzare applicazione con Docker <a name="Utilizzare_applicazione_con_Docker"></a>
-
-Una volta posizionati nella cartella relativa al progetto tramite terminale, eseguire `docker-compose up --build`. Questo comando permette di eseguire i vari servizi che compongono l'applicativo. La terminazione può essere fatta tranquillamente in maniera ordinata con il comando `CTRL+C`.
 
 ### Utilizzare MySQL con Docker <a name="Utilizzare_MySQL_con_Docker"></a>
 
@@ -287,6 +284,20 @@ All'avvio dell'applicativo client se l'utente non è già registrato allora si p
 - **dim_last_chunk:** dimensione ultimo chunk
 
 A questo punto si procede con il confronto tra i timestamp prediligendo il timestamp più recente, se il server possiede la copia più aggiornata del file, allora il client richiede tramite il comando `GET /file/{chunk_id}/{chunksize}/{file_pathBASE64}` il file aggiornato, se è invece il client a possedere la versione aggiornata allora si procede con il comando `PUT /file/{chunk_id}/{chunksize}/{file_pathBASE64}`. La scelta di lavorare per chunk risiede nel voler minimizzare il traffico e alleggerire il server. Qualora infatti dei 100 chunk di un file, solo il quinto e il ventesimo risultano avere un hash differente, il client provvederà a inviare SOLO questi ultimi, evitando di dover inviare l'intero file.
+
+#### Utilizzare_interfaccia_grafica <a name="Utilizzare_interfaccia_grafica"></a>
+
+L'interfaccia grafica è rappresentata da una tray app creata utilizzando [Electron](https://www.electronjs.org/docs/tutorial/first-app). Essendo questo un framework basato su [node js](https://nodejs.org/it/) occorre soddisfare alcuni prerequisiti per poter essere utilizzata:
+
+- **node js**: testato con v10.17.0
+- **npm**: testato con v6.14.6
+- **yarn**: installato con comando `npm install -g yarn` per un'installazione globale
+
+Una volta verificati i prerequisiti posizionarsi nella cartella `ui` ed accertarsi che esista la cartella `node_modules`, altrimenti eseguire il comando `npm install`. A questo punto è possibile eseguire l'applicazione tramite il comando `npm start`.
+
+#### Eseguire servizi Docker <a name="Eseguire_servizi_Docker"></a>
+
+Una volta posizionati nella cartella relativa al progetto tramite terminale, eseguire `docker-compose up --build`. Questo comando permette di eseguire i vari servizi che compongono l'applicativo. La terminazione può essere fatta tranquillamente in maniera ordinata con il comando `CTRL+C`.
 
 ### Eventi da monitorare (ad applicazione accesa)<a name="Eventi_da_monitorare"></a>
 
