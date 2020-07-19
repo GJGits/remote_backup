@@ -1,22 +1,19 @@
 {
-  "name": "remote_backup_ui",
+  "name": "menu-example",
   "version": "1.0.0",
-  "description": "electron tray app to use remote_backup system",
+  "description": "test menubar",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron ."
   },
-  "keywords": [
-    "electron",
-    "tray"
-  ],
   "author": "GJCode",
   "license": "ISC",
   "devDependencies": {
     "electron": "^9.1.0"
   },
   "dependencies": {
+    "jquery": "^3.5.1",
     "menubar": "^9.0.1"
   }
 }
