@@ -4,6 +4,32 @@
     std::unique_ptr<sql::ResultSet> res;
     std::shared_ptr<sql::Connection> con;
     
+// La funzione selezionare il corretto id evitando buchi nel mezzo    
+    
+    unsigned int retrieve_id() {
+    std::unique_ptr<sql::PreparedStatement> stmt;
+    std::unique_ptr<sql::ResultSet> res;
+    std::shared_ptr<sql::Connection> con;
+    con = DBConnect::getConnection();
+    stmt = std::unique_ptr<sql::PreparedStatement>{std::move( con->prepareStatement("SELECT id from users;"))};
+    res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
+    unsigned int actual = 0;
+    unsigned int past = 0;
+    if(res->next()){
+    	while(1){
+	    	actual = res->getUInt(1);
+	    	if((actual - past) > 1) // c'è un foto
+	    		return past + 1; //inserisco l'elemento nel foro	
+	    	past = actual;
+	    	if(!res->next())  //se sono tutti pieni e finisce, ritorna il max trovato + 1
+	    		return actual + 1;
+	    }
+    }
+    else
+    	return 0;
+    	
+}
+    
 // Per la INSERT
 
     con = DBConnect::getConnection();
