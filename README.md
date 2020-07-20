@@ -80,14 +80,15 @@ Dopo aver lanciato i vari servizi aprire una finestra di terminale ed eseguire i
 
 3. Una volta effettuato il login è possibile eseguire comandi SQL a piacere. Alcuni comandi utili:
   
-    - `show databases`: permette di visualizzare quali databases esistono all'interno del server.
+    - `show databases;`: permette di visualizzare quali databases esistono all'interno del server.
   
-    - `use <db_name>`: permette di porsi all'interno di un db, solo da qui sono eseguibili le query per questo determinato db.
+    - `use <db_name>;`: permette di porsi all'interno di un db, solo da qui sono eseguibili le query per questo determinato db.
   
-    - `show tables`: permette di elencare le tabelle presenti all'interno del db precedentemente selezionato.
+    - `show tables;`: permette di elencare le tabelle presenti all'interno del db precedentemente selezionato.
 
-    - `describe <tablename>`: permette di mostrare la struttura della tabella (nomi e tipo campi...) selezionata.
+    - `describe <tablename>;`: permette di mostrare la struttura della tabella (nomi e tipo campi...) selezionata.
 
+    - `SELECT * from <tablename>;` : Permette di visualizzare il contenuto della tabella selezionata.
 
 ## Architettura applicazione<a name="Architettura_applicazione"></a>
 
