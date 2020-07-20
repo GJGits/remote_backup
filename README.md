@@ -144,7 +144,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
     * mysql/
       * **db-connect.cpp** : *logica di connessione al database mysql*
     * test/
-      * **test.cpp** : *codice dei test, il cui metodo va inserito e lanciato nel main.cpp*
+      * **test.cpp** : *codice dei test, il cui metodo può essere inserito e lanciato nel main.cpp*
     * **main.cpp** : *codice della cartella di livello superiore (server,client,load-balancer) a cui fa riferimento*
     * server-up
   * Dockerfile : *file di configurazione del container docker utilizzato*
