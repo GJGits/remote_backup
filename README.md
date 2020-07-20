@@ -27,6 +27,7 @@ L'applicazione ha il compito di fornire un sistema di incremental backup del con
     * [Architettura Frontend](#Architettura_Frontend)
     * [Architettura Backend](#Architettura_Backend)
     * [Architettura DB](#Architettura_DB)
+* [Descrizione della directory della repository](#Descrizione_della_directory_della_repository)
 * [REST API](#REST_API)
 * [Descrizione processi](#Descrizione_processi) 
     * [Autenticazione](#Autenticazione)
@@ -57,8 +58,7 @@ L'environment scelto per lo sviluppo dell'applicativo si basa su [Docker](https:
 
 - **docker-compose:** [docker compose](https://docs.docker.com/compose/) è un tool che permette in maniera molto semplice di coordinare diversi container, in questo modo è possibile simulare diversi client che agiscono sul sistema, ma anche creare delle repliche del server nell'ottica di rendere più scalabile l'applicazione.
 
-### Aggiungere docker ad un gruppo (Linux) <a
-name="Aggiungere_docker_ad_un_gruppo_(Linux)"></a>
+### Aggiungere docker ad un gruppo (Linux) <a name="Aggiungere_docker_ad_un_gruppo_(Linux)"></a>
 
 Per utilizzare comodamente docker su Linux può risultare utile aggiungere docker ad un gruppo. 
 
@@ -129,6 +129,25 @@ Le tabelle all'interno del DBMS sono le seguenti:
 | :---: | :---: | :---: | :---: |
 | 0 | myuser | pass_hash_value | 3 | 
 
+## Descrizione della directory della repository<a name="Descrizione_della_directory_della_repository"></a>
+
+La repository presenta una suddivisione dei files che si ripete rispettando una gerarchia delle cartelle fisso e definito:
+
+* (server/client/load-balancer)/
+  * config/
+    * server-struct.json
+  * src/
+    * lib/ : *files header (.hpp) richiamati dal codice principale e dai test*
+      * mysql/
+        * **db-connect.hpp**
+      * **test.hpp**
+    * mysql/
+      * **db-connect.cpp** : *logica di connessione al database mysql*
+    * test/
+      * **test.cpp** : *codice dei test, il cui metodo va inserito e lanciato nel main.cpp*
+    * **main.cpp** : *codice della cartella di livello superiore (server,client,load-balancer) a cui fa riferimento*
+    * server-up
+  * Dockerfile : *file di configurazione del container docker utilizzato*
 
 
 ## REST API<a name="REST_API"></a>
@@ -218,7 +237,7 @@ Le tabelle all'interno del DBMS sono le seguenti:
 * **Authenticated**:&nbsp;&nbsp;&nbsp;`TRUE`
 </details>
 
-## Descrizione processi<a name="Descrizione processi"></a>
+## Descrizione processi<a name="Descrizione_processi"></a>
 
 ### Autenticazione<a name="Autenticazione"></a>
 
