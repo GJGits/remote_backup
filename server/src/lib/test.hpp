@@ -7,7 +7,8 @@
   (and mysql_connection.h). This will reduce your build time!
 */
 #include "mysql_connection.h"
-#include "mysql/db-connect.hpp"
+#include "entities/user-entity.hpp"
+#include "repositories/user-repository.hpp"
 #include <array>
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
