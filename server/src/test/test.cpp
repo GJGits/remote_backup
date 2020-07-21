@@ -1,4 +1,4 @@
-#include "../lib/test.hpp"
+#include "../../include/test/test.hpp"
 
 void printResult(int tests, int errors)
 {

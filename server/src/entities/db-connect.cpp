@@ -1,4 +1,4 @@
-#include "../lib/entities/db-connect.hpp"
+#include "../../include/entities/db-connect.hpp"
 
 DBConnect* DBConnect::instance = nullptr;
 std::shared_ptr<sql::Connection>
@@ -18,7 +18,7 @@ DBConnect::getConnection()
                 // 1. print to debug
                 std::clog << " (MySQL error code: " << e.getErrorCode();
                 // 2. log to a file
-                std::cout << " (MySQL error code: " << e.getErrorCode();
+                Logger::log(" (MySQL error code: " + e.getErrorCode());
                 // 3. do something
             }
         }

@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 
+#include "../common/logger.hpp"
+
 class UserEntity {
 private:
   std::string username;

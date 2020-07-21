@@ -1,4 +1,4 @@
-#include "../lib/repositories/user-repository.hpp"
+#include "../../include/repositories/user-repository.hpp"
 
 bool UserRepository::insertUser(const UserEntity &user) {
 
@@ -14,12 +14,15 @@ bool UserRepository::insertUser(const UserEntity &user) {
         "INSERT INTO users(username, hashed_password, salt) VALUES(?, ?, ?)"))};
 
     stmt->setString(1, sql::SQLString{user.getUsername().c_str()});
-    stmt->setString(2, sql::SQLString{user.getHashedPassword().c_str()} );
+    stmt->setString(2, sql::SQLString{user.getHashedPassword().c_str()});
     stmt->setUInt(3, user.getSalt());
     return stmt->executeUpdate() == 1 ? true : false;
 
   } catch (sql::SQLException &e) {
-    std::clog << "insert mysql error: " << e.getErrorCode();
+    std::clog << "insert mysql error\n";
+    std::cout << Logger::log(std::string{"insert mysql error: "} + std::to_string(e.getErrorCode())) << std::endl;
+    // ce la caviamo con una generica not
+    return false;
   }
 
   return false;
@@ -50,7 +53,10 @@ UserRepository::getUserByUsername(const std::string &username) {
     return std::nullopt;
 
   } catch (sql::SQLException &e) {
-    std::clog << "select mysql error: " << e.getErrorCode();
+    std::clog << "select mysql error\n";
+    std::cout << Logger::log(std::string{"select mysql error: "} + std::to_string(e.getErrorCode())) << std::endl;
+    // ce la caviamo con un generico not found
+    return std::nullopt;
   }
 
   return std::nullopt;
@@ -70,7 +76,9 @@ bool UserRepository::deleteUserByUsername(const std::string &username) {
     return stmt->executeUpdate() == 1 ? true : false;
 
   } catch (sql::SQLException &e) {
-    std::clog << "delete error: " << e.getErrorCode();
+    std::clog << "delete mysql error\n";
+    std::cout << Logger::log(std::string{"delete mysql error: "} + std::to_string(e.getErrorCode())) << std::endl;
+    return false;
   }
 
   return false;

@@ -1,4 +1,4 @@
-#include "../lib/entities/user-entity.hpp"
+#include "../../include/entities/user-entity.hpp"
 
 UserEntity::UserEntity(std::string username,
                        std::string hashed_password, uint32_t salt)
