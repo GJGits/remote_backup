@@ -5,11 +5,10 @@ Test creation database
 2) use db_prova;
 
 3) CREATE TABLE users (
-	id INT UNSIGNED PRIMARY KEY,
-	username VARCHAR(50) NOT NULL,
-	password VARCHAR(128) NOT NULL,
-	salt INT UNSIGNED);
-	
+	username VARCHAR(50) PRIMARY KEY,
+	hashed_password VARCHAR(128) NOT NULL,
+	salt INT UNSIGNED NOT NULL);
+	 
 4) describe users;
 
 5) INSERT INTO users(id, username, password, salt) 
