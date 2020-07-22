@@ -27,7 +27,6 @@ void testSQLCRUD()
         errors++;
         std::clog << "expected true got false\n";
     }
-	        std::clog << "expectsdsdsdsed true got false\n";
     // test select
     std::optional<UserEntity> retrieved = userRepo.getUserByUsername(std::string{"Pippo"});
 

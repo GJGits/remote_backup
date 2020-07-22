@@ -20,7 +20,8 @@ bool UserRepository::insertUser(const UserEntity &user) {
 
   } catch (sql::SQLException &e) {
     std::clog << "insert mysql error\n";
-    std::cout << Logger::log(std::string{"insert mysql error: "} + std::to_string(e.getErrorCode())) << std::endl;
+    Logger::log(std::string{"insert mysql error("} +
+                std::to_string(e.getErrorCode()) + std::string{")"});
     // ce la caviamo con una generica not
     return false;
   }
@@ -54,7 +55,8 @@ UserRepository::getUserByUsername(const std::string &username) {
 
   } catch (sql::SQLException &e) {
     std::clog << "select mysql error\n";
-    std::cout << Logger::log(std::string{"select mysql error: "} + std::to_string(e.getErrorCode())) << std::endl;
+    Logger::log(std::string{"select mysql error("} +
+                std::to_string(e.getErrorCode()) + std::string{")"});
     // ce la caviamo con un generico not found
     return std::nullopt;
   }
@@ -77,7 +79,8 @@ bool UserRepository::deleteUserByUsername(const std::string &username) {
 
   } catch (sql::SQLException &e) {
     std::clog << "delete mysql error\n";
-    std::cout << Logger::log(std::string{"delete mysql error: "} + std::to_string(e.getErrorCode())) << std::endl;
+    Logger::log(std::string{"delete mysql error("} +
+                std::to_string(e.getErrorCode()) + std::string{")"});
     return false;
   }
 
