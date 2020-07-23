@@ -5,5 +5,5 @@ LABEL author="GJCode"
 COPY . /home/server
 WORKDIR /home/server/src
 # -I/usr/include/cppconn -L/usr/lib -lmysqlcppcon
-RUN g++ -std=c++17 -Wall -Werror -o server -I/usr/include/mysqlcppconn -L/usr/lib/mysqlcppconn -lmysqlcppconn $(find . -type f -iregex ".*\.cpp") -pthread -lstdc++fs
+RUN g++ -std=c++17 -Wall -Werror -o server -I/usr/include/mysqlcppconn -L/usr/lib/mysqlcppconn -lmysqlcppconn $(find . -type f -iregex ".*\.cpp") -pthread -lstdc++fs -lboost_system
 CMD ["valgrind", "--leak-check=full", "--show-leak-kinds=all", "./server"]
