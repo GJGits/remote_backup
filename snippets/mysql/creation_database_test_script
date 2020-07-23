@@ -1,0 +1,17 @@
+Test creation database
+
+1) CREATE DATABASE db_prova;
+
+2) use db_prova;
+
+3) CREATE TABLE users (
+	username VARCHAR(50) PRIMARY KEY,
+	hashed_password VARCHAR(128) NOT NULL,
+	salt INT UNSIGNED NOT NULL);
+	 
+4) describe users;
+
+5) INSERT INTO users(id, username, password, salt) 
+	VALUES(DEFAULT, "Pippo", "0000", 3);
+	
+

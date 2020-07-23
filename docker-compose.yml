@@ -6,6 +6,8 @@ services:
         restart: always
         environment:
             MYSQL_ROOT_PASSWORD: example
+        security_opt:
+            - seccomp:unconfined
     server:
         build: ./server
         ports: 
@@ -18,3 +20,4 @@ services:
         build: ./client
         ports: 
             - "2800:2800"
+
