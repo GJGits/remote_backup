@@ -20,16 +20,20 @@ L'applicazione ha il compito di fornire un sistema di incremental backup del con
 
 # Indice
 * [Team](#Team)
-* [Environment](#Environment)
-    * [Utilizzare applicazione con Docker](#Utilizzare_applicazione_con_Docker)
+* [Environment(Docker)](#Environment)
+    * [Aggiungere docker ad un gruppo (Linux)](Aggiungere_docker_ad_un_gruppo_(Linux))
+    * [Utilizzare MySQL con Docker](#Utilizzare_MySQL_con_Docker)
 * [Architettura applicazione](#Architettura_applicazione)
     * [Architettura Frontend](#Architettura_Frontend)
     * [Architettura Backend](#Architettura_Backend)
     * [Architettura DB](#Architettura_DB)
+* [Descrizione della directory della repository](#Descrizione_della_directory_della_repository)
 * [REST API](#REST_API)
 * [Descrizione processi](#Descrizione_processi) 
     * [Autenticazione](#Autenticazione)
     * [Startup](#Startup)
+         * [Utilizzare interfaccia grafica](#Utilizzare_interfaccia_grafica)
+         * [Eseguire servizi Docker](#Eseguire_servizi_Docker)
     * [Eventi da monitorare](#Eventi_da_monitorare)
          * [Creazione file](#Creazione_file)
          * [Aggiornamento file](#Aggiornamento_file)
@@ -42,7 +46,7 @@ L'applicazione ha il compito di fornire un sistema di incremental backup del con
 
 - <img src="imgs/piero_gangemi.png" width="32" height="32"/> Piero Gangemi   
 
-## Environment <a name="Environment"></a>
+## Environment(Docker) <a name="Environment"></a>
 
 L'environment scelto per lo sviluppo dell'applicativo si basa su [Docker](https://www.docker.com/why-docker) [container](https://www.docker.com/resources/what-container). La scelta ricade su questo tipo di tecnologia per i seguenti motivi:
 
@@ -54,9 +58,37 @@ L'environment scelto per lo sviluppo dell'applicativo si basa su [Docker](https:
 
 - **docker-compose:** [docker compose](https://docs.docker.com/compose/) è un tool che permette in maniera molto semplice di coordinare diversi container, in questo modo è possibile simulare diversi client che agiscono sul sistema, ma anche creare delle repliche del server nell'ottica di rendere più scalabile l'applicazione.
 
-### Utilizzare applicazione con Docker <a name="Utilizzare_applicazione_con_Docker"></a>
+### Aggiungere docker ad un gruppo (Linux) <a name="Aggiungere_docker_ad_un_gruppo_(Linux)"></a>
 
-Una volta posizionati nella cartella relativa al progetto tramite terminale, eseguire `docker-compose up --build`. La terminazione può essere fatta tranquillamente in maniera ordinata con il comando `CTRL+C`.
+Per utilizzare comodamente docker su Linux può risultare utile aggiungere docker ad un gruppo. 
+
+1. Creare il gruppo con il comando: `sudo groupadd docker`
+
+2. Aggiungere utente al gruppo docker: `sudo usermod -aG docker $USER`
+
+3. A questo punto effettuare logout e login per rendere effettive le modifiche, alternativamente eseguire il comando: `newgrp docker`
+
+4. Testare eseguendo il comando: `docker run hello-world`.
+
+### Utilizzare MySQL con Docker <a name="Utilizzare_MySQL_con_Docker"></a>
+
+Dopo aver lanciato i vari servizi aprire una finestra di terminale ed eseguire i seguenti comandi in ordine:
+
+1. `docker exec -it remote_backup_db_1 /bin/bash`. Questo comando permette di utilizzare in maniera interattiva (tramite console) il container specificato. Se l'operazione va a buon fine l'username della console dovrebbe risultare qualcosa del tipo: `root@xxxxxxxxxxxx:`. Alle volte docker aggiunge un pedice alla fine del nome di un servizio, si consiglia di verificare il nome effettivo in caso di problemi eseguendo il comando `docker container ls`.
+
+2. Una volta entrati all'interno del container, loggarsi tramite il comando `mysql -u root -p`. A questo punto verrà richiesta la password che nel nostro caso è `example`. 
+
+3. Una volta effettuato il login è possibile eseguire comandi SQL a piacere. Alcuni comandi utili:
+  
+    - `show databases;`: permette di visualizzare quali databases esistono all'interno del server.
+  
+    - `use <db_name>;`: permette di porsi all'interno di un db, solo da qui sono eseguibili le query per questo determinato db.
+  
+    - `show tables;`: permette di elencare le tabelle presenti all'interno del db precedentemente selezionato.
+
+    - `describe <tablename>;`: permette di mostrare la struttura della tabella (nomi e tipo campi...) selezionata.
+
+    - `SELECT * from <tablename>;` : Permette di visualizzare il contenuto della tabella selezionata.
 
 ## Architettura applicazione<a name="Architettura_applicazione"></a>
 
@@ -98,6 +130,25 @@ Le tabelle all'interno del DBMS sono le seguenti:
 | :---: | :---: | :---: | :---: |
 | 0 | myuser | pass_hash_value | 3 | 
 
+## Descrizione della directory della repository<a name="Descrizione_della_directory_della_repository"></a>
+
+La repository presenta una suddivisione dei files che si ripete rispettando una gerarchia delle cartelle fisso e definito:
+
+* (server/client/load-balancer)/
+  * config/
+    * server-struct.json
+  * src/
+    * lib/ : *files header (.hpp) richiamati dal codice principale e dai test*
+      * mysql/
+        * **db-connect.hpp**
+      * **test.hpp**
+    * mysql/
+      * **db-connect.cpp** : *logica di connessione al database mysql*
+    * test/
+      * **test.cpp** : *codice dei test, il cui metodo può essere inserito e lanciato nel main.cpp*
+    * **main.cpp** : *codice della cartella di livello superiore (server,client,load-balancer) a cui fa riferimento*
+    * server-up
+  * Dockerfile : *file di configurazione del container docker utilizzato*
 
 
 ## REST API<a name="REST_API"></a>
@@ -187,7 +238,7 @@ Le tabelle all'interno del DBMS sono le seguenti:
 * **Authenticated**:&nbsp;&nbsp;&nbsp;`TRUE`
 </details>
 
-## Descrizione processi<a name="Descrizione processi"></a>
+## Descrizione processi<a name="Descrizione_processi"></a>
 
 ### Autenticazione<a name="Autenticazione"></a>
 
@@ -253,6 +304,20 @@ All'avvio dell'applicativo client se l'utente non è già registrato allora si p
 - **dim_last_chunk:** dimensione ultimo chunk
 
 A questo punto si procede con il confronto tra i timestamp prediligendo il timestamp più recente, se il server possiede la copia più aggiornata del file, allora il client richiede tramite il comando `GET /file/{chunk_id}/{chunksize}/{file_pathBASE64}` il file aggiornato, se è invece il client a possedere la versione aggiornata allora si procede con il comando `PUT /file/{chunk_id}/{chunksize}/{file_pathBASE64}`. La scelta di lavorare per chunk risiede nel voler minimizzare il traffico e alleggerire il server. Qualora infatti dei 100 chunk di un file, solo il quinto e il ventesimo risultano avere un hash differente, il client provvederà a inviare SOLO questi ultimi, evitando di dover inviare l'intero file.
+
+#### Utilizzare_interfaccia_grafica <a name="Utilizzare_interfaccia_grafica"></a>
+
+L'interfaccia grafica è rappresentata da una tray app creata utilizzando [Electron](https://www.electronjs.org/docs/tutorial/first-app). Essendo questo un framework basato su [node js](https://nodejs.org/it/) occorre soddisfare alcuni prerequisiti per poter essere utilizzata:
+
+- **node js**: testato con v10.17.0
+- **npm**: testato con v6.14.6
+- **yarn**: installato con comando `npm install -g yarn` per un'installazione globale
+
+Una volta verificati i prerequisiti posizionarsi nella cartella `ui` ed accertarsi che esista la cartella `node_modules`, altrimenti eseguire il comando `npm install`. A questo punto è possibile eseguire l'applicazione tramite il comando `npm start`.
+
+#### Eseguire servizi Docker <a name="Eseguire_servizi_Docker"></a>
+
+Una volta posizionati nella cartella relativa al progetto tramite terminale, eseguire `docker-compose up --build`. Questo comando permette di eseguire i vari servizi che compongono l'applicativo. La terminazione può essere fatta tranquillamente in maniera ordinata con il comando `CTRL+C`.
 
 ### Eventi da monitorare (ad applicazione accesa)<a name="Eventi_da_monitorare"></a>
 
