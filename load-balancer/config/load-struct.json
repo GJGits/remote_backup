@@ -1,3 +1,8 @@
-{
-    
+{   
+    "servers": ["remote_backup_server_1"],
+    "token-conf": {
+        "kd_alg": "hmac-sha256",
+        "expiration": 172800000,
+        "secret": "alessandramarcopiero"
+    }
 }
