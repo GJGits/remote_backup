@@ -17,7 +17,7 @@ services:
         ports:
             - "3200:80"
         volumes: 
-            - './server/config/ngnix.conf:/etc/ngnix/nginx.conf'
+            - './server/config/nginx.conf:/etc/nginx/nginx.conf'
     load-balancer:
         build: ./load-balancer
         ports:
