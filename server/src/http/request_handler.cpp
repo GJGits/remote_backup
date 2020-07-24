@@ -16,8 +16,6 @@
 #include <sstream>
 #include <string>
 #include <iostream>
-#include <mutex>
-#include <vector>
 
 namespace http {
 namespace server {
@@ -36,7 +34,7 @@ void request_handler::handle_request(const request &req, reply &rep) {
   }
 
   // 2. inoltra a server di backend
-  smista_inoltra(req, rep);
+  //smista_inoltra(req, rep);
 
   /* CODICE CHE NON DOVREBBE SERVIRE
   if (!url_decode(req.uri, request_path)) {
@@ -90,6 +88,7 @@ void request_handler::handle_request(const request &req, reply &rep) {
   //rep.headers[2].name = "Authorization";
   //rep.headers[2].value = " Barear <tokenBASE64>";
   rep.content = std::string{"ciao"};
+  std::clog << "QUI DAL SERVER... TUTTO OK\n";
 }
 
 bool request_handler::url_decode(const std::string &in) { 
@@ -125,54 +124,6 @@ bool request_handler::url_decode(const std::string &in, std::string &out) {
 
 
 
-std::vector<std::string> servers{"server1, server2, server3"};
-int actual_counter=0;
-std::mutex m;
-
-reply request_handler::smista_inoltra(const request &req, reply &rep) {
-
-    std::unique_lock lk(m);
-    std::string server_to_use(servers[actual_counter]);
-    actual_counter++;
-    lk.unlock();
-
-    boost::asio::io_service io_service;
-    boost::asio::ip::tcp::socket socket(io_service);
-    /*
-    reply message_to_send;
-    
-    message_to_send.status = reply::ok;
- 
-  message_to_send.headers.resize(2);
-  message_to_send.headers[0].name = rep.headers[0].name;
-  message_to_send.headers[0].value = rep.headers[0].value ;
-  message_to_send.headers[1].name = rep.headers[1].name ;
-  message_to_send.headers[1].value = rep.headers[1].value;
-  message_to_send.content = std::string{"ciao"};
-    
-    */
-   
-    try{
-
-     socket.connect( boost::asio::ip::tcp::endpoint( boost::asio::ip::address::from_string("0.0.0.0"), 3500 )); // QUESTA RIGA E' IL PROBLEMA
- 
-     const std::string msg = "He";
-     boost::system::error_code error;
-     boost::asio::write( socket, boost::asio::buffer(msg), error );
-     if( !error ) {
-        std::clog << "Client sent hello message!" << std::endl;
-     }
-     else {
-        std::clog << "send failed: " << error.message() << std::endl;
-     }
-     
-     }
- 	catch(std::exception &e){
- 	
- 	std::cout << e.what() << std::endl;
- 	}   
-    return rep;
-}
 
 } // namespace server
 } // namespace http
