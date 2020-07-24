@@ -2,6 +2,7 @@
 #include "unistd.h"
 #include <boost/asio.hpp>
 #include <iostream>
+#include "../include/test/test.hpp"
 
 int main() {
   /*
@@ -10,6 +11,8 @@ int main() {
       sleep(10);
   }
   */
+
+ testAll();
   try {
 
     // Initialise the server.

@@ -121,7 +121,7 @@ bool request_handler::url_decode(const std::string &in, std::string &out) {
   return true;
 }
 
-reply smista_inoltra(const request &req, reply &rep) {
+reply request_handler::smista_inoltra(const request &req, reply &rep) {
   return reply::stock_reply(reply::ok);
 }
 
