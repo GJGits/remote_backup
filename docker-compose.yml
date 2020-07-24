@@ -12,6 +12,12 @@ services:
         build: ./server
         ports: 
             - "3500:3500"
+    ngnix-server:
+        image: nginx
+        ports:
+            - "3200:80"
+        volumes: 
+            - './server/config/ngnix.conf:/etc/ngnix/nginx.conf'
     load-balancer:
         build: ./load-balancer
         ports:

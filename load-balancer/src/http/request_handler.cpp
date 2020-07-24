@@ -30,13 +30,15 @@ void request_handler::handle_request(const request &req, reply &rep) {
   std::string request_path;
   
   // 1. check URL
+  /*
   if (!url_decode(req.uri)) {
     rep = reply::stock_reply(reply::bad_request);
     return;
   }
-
+  */
+ 
   // 2. inoltra a server di backend
-  smista_inoltra(req, rep);
+  //smista_inoltra(req, rep);
 
   /* CODICE CHE NON DOVREBBE SERVIRE
   if (!url_decode(req.uri, request_path)) {
