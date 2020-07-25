@@ -76,11 +76,20 @@ void request_handler::handle_request(const request &req, reply &rep) {
 
   /* Il handle request adesso lancia una richiesta alla get_status di gestire il prodotto */
   std::clog << "lancio all'utente\n";
+  
+  //esempio con get status
   rests_api_get_status *get_status = rests_api_get_status::getInstance();
-
   get_status->add_and_wakeup("roba uno");
 
+  //esempio con post signup
+  rests_api_post_signup *post_signup = rests_api_post_signup::getInstance();
+  post_signup->add_and_wakeup("roba uno");
 
+  //esempio con post signin
+  rests_api_post_signin *post_signin = rests_api_post_signin::getInstance();
+  post_signin->add_and_wakeup("roba uno");
+  
+  
   // Fill out the reply to be sent to the client.
   rep.status = reply::ok;
   /*

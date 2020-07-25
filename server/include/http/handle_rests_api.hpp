@@ -24,3 +24,49 @@ public:
 
 };
 
+
+class rests_api_post_signup{
+    static rests_api_post_signup *instance;
+    std::queue<std::string> requests;
+    std::queue<std::string> replies;
+    std::condition_variable cv;
+    std::mutex m;
+    rests_api_post_signup(){};
+public:
+    static rests_api_post_signup *getInstance(){
+         if(instance== nullptr)
+            instance = new rests_api_post_signup();
+        return instance;
+
+    };
+
+    std::string get_and_produce();
+
+
+    void add_and_wakeup(std::string req);
+
+};
+
+
+class rests_api_post_signin{
+    static rests_api_post_signin *instance;
+    std::queue<std::string> requests;
+    std::queue<std::string> replies;
+    std::condition_variable cv;
+    std::mutex m;
+    rests_api_post_signin(){};
+public:
+    static rests_api_post_signin *getInstance(){
+         if(instance== nullptr)
+            instance = new rests_api_post_signin();
+        return instance;
+
+    };
+
+    std::string get_and_produce();
+
+
+    void add_and_wakeup(std::string req);
+
+};
+
