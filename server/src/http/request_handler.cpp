@@ -12,6 +12,8 @@
 #include "../../include/http/mime_types.hpp"
 #include "../../include/http/reply.hpp"
 #include "../../include/http/request.hpp"
+#include "../../include/http/handle_rests_api.hpp"
+
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -71,6 +73,13 @@ void request_handler::handle_request(const request &req, reply &rep) {
   }
 
   */
+
+  /* Il handle request adesso lancia una richiesta alla get_status di gestire il prodotto */
+  std::clog << "lancio all'utente\n";
+  rests_api_get_status *get_status = rests_api_get_status::getInstance();
+
+  get_status->add_and_wakeup("roba uno");
+
 
   // Fill out the reply to be sent to the client.
   rep.status = reply::ok;
