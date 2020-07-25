@@ -1,4 +1,4 @@
-FROM gjcode/gjcode-pds:1.0.6
+FROM gjcode/gjcode-pds:1.0.7
 LABEL author="GJCode"
 
 # build app
