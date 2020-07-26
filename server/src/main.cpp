@@ -32,6 +32,7 @@ void handle_post_signin(){
 int main()
 {
 try {
+    testAll();
     std::thread get_status_thread(handle_get_status);
     std::thread post_signup_thread(handle_post_signup);
     std::thread post_signin_thread(handle_post_signin);

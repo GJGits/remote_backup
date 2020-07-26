@@ -26,12 +26,21 @@ void testBase64() {
 
   printResult(tests, errors);
 }
-/*
+
 void testSha256() {
     std::string message{"Ciao Mario!"};
-    std::clog << "hash: " << Sha256::getSha256(message);
+    std::clog << "hash: " << Sha256::getSha256(message) << "\n";
 }
-*/
+
+void testHamacSha256() {
+    const unsigned char *text = (const unsigned char *) "Ciao Mario!";
+    const unsigned char *secret = (const unsigned char *) "MySuperSecretHere!";
+    char kdigest[65];
+    HmacSha256::hmac_sha256(text, 11, secret, 17, kdigest);
+    std::clog << "kdigest = " << kdigest << "\n";
+    std::clog << "kdigest_base64 = " << macaron::Base64::Encode(std::string(kdigest)) << "\n";
+}
+
 void testSQLCRUD()
 {
 
@@ -71,4 +80,6 @@ void testAll()
 {
     std::clog << "Running tests...\n";
     testSQLCRUD();
+    testSha256();
+    testHamacSha256();
 }
