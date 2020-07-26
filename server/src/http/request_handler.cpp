@@ -9,15 +9,15 @@
 //
 
 #include "../../include/http/request_handler.hpp"
+#include "../../include/http/handle_rests_api.hpp"
 #include "../../include/http/mime_types.hpp"
 #include "../../include/http/reply.hpp"
 #include "../../include/http/request.hpp"
-#include "../../include/http/handle_rests_api.hpp"
 
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <string>
-#include <iostream>
 
 namespace http {
 namespace server {
@@ -28,127 +28,33 @@ request_handler::request_handler(const std::string &doc_root)
 void request_handler::handle_request(const request &req, reply &rep) {
   // Decode url to path.
   std::string request_path;
-  
-  // 1. check URL
-  if (!url_decode(req.uri)) {
-    rep = reply::stock_reply(reply::bad_request);
-    return;
-  }
 
-  // 2. inoltra a server di backend
-  //smista_inoltra(req, rep);
-
-  /* CODICE CHE NON DOVREBBE SERVIRE
-  if (!url_decode(req.uri, request_path)) {
-    rep = reply::stock_reply(reply::bad_request);
-    return;
-  }
-
-  // Request path must be absolute and not contain "..".
-  if (request_path.empty() || request_path[0] != '/' ||
-      request_path.find("..") != std::string::npos) {
-    rep = reply::stock_reply(reply::bad_request);
-    return;
-  }
-
-  // If path ends in slash (i.e. is a directory) then add "index.html".
-  if (request_path[request_path.size() - 1] == '/') {
-    request_path += "index.html";
-  }
-
-  // Determine the file extension.
-  std::size_t last_slash_pos = request_path.find_last_of("/");
-  std::size_t last_dot_pos = request_path.find_last_of(".");
-  std::string extension;
-  if (last_dot_pos != std::string::npos && last_dot_pos > last_slash_pos) {
-    extension = request_path.substr(last_dot_pos + 1);
-  }
-
-  // Open the file to send back.
-  std::string full_path = doc_root_ + request_path;
-  std::ifstream is(full_path.c_str(), std::ios::in | std::ios::binary);
-  if (!is) {
-    rep = reply::stock_reply(reply::not_found);
-    return;
-  }
-
-  */
-
-  /* Il handle request adesso lancia una richiesta alla get_status di gestire il prodotto */
+  /* Il handle request adesso lancia una richiesta alla get_status di gestire il
+   * prodotto */
 
   std::clog << "il method è: " << req.method << "\n";
   std::clog << "il uri è: " << req.uri << "\n";
-  if(req.method+req.uri == "GET/status"){
-  //esempio con get status
-  	rests_api_get_status *get_status = rests_api_get_status::getInstance();
-  	get_status->add_and_wakeup("roba uno");
+
+  /*
+  std::optional<Controller *> c = ControllerRouter::getController(req.uri);
+  if (c.has_value()) {
+    // qui ok
+    //rep = c.value().handle(req.method + req.uri);
+  } else {
+    //rep = reply::stock_reply(reply::bad_request);
+    //return;
   }
-  else if(req.method+req.uri == "POST/signup"){
-  //esempio con post signup
-  	rests_api_post_signup *post_signup = rests_api_post_signup::getInstance();
-  	post_signup->add_and_wakeup("roba uno");
-  }
-  else if(req.method+req.uri == "POST/signin"){
-  //esempio con post signin
-  	rests_api_post_signin *post_signin = rests_api_post_signin::getInstance();
-  	post_signin->add_and_wakeup("roba uno");
-  }
-  else{
-  	std::clog << "RICHIESTA NON VALIDA, RIPROVA\n";
-  }
-  
+*/
   // Fill out the reply to be sent to the client.
   rep.status = reply::ok;
-  /*
-  char buf[512];
-  while (is.read(buf, sizeof(buf)).gcount() > 0)
-    rep.content.append(buf, is.gcount());
-  */
   rep.headers.resize(2);
   rep.headers[0].name = "Content-Length";
   rep.headers[0].value = std::to_string(4);
   rep.headers[1].name = "Content-Type";
-  //rep.headers[1].value = mime_types::extension_to_type(extension);
   rep.headers[1].value = std::string{"text/plain"};
-  //rep.headers[2].name = "Authorization";
-  //rep.headers[2].value = " Barear <tokenBASE64>";
   rep.content = std::string{"ciao"};
   std::clog << "QUI DAL SERVER... TUTTO OK\n";
 }
-
-bool request_handler::url_decode(const std::string &in) { 
- //todo
- return true;
-}
-
-bool request_handler::url_decode(const std::string &in, std::string &out) {
-  out.clear();
-  out.reserve(in.size());
-  for (std::size_t i = 0; i < in.size(); ++i) {
-    if (in[i] == '%') {
-      if (i + 3 <= in.size()) {
-        int value = 0;
-        std::istringstream is(in.substr(i + 1, 2));
-        if (is >> std::hex >> value) {
-          out += static_cast<char>(value);
-          i += 2;
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    } else if (in[i] == '+') {
-      out += ' ';
-    } else {
-      out += in[i];
-    }
-  }
-  return true;
-}
-
-
-
 
 } // namespace server
 } // namespace http

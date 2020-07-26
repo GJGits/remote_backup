@@ -9,72 +9,93 @@
 //
 
 #include "../../include/http/connection.hpp"
-#include "../../include/http/connection_manager.hpp"
 #include "../../include/http/request_handler.hpp"
 #include <iostream>
 #include <utility>
 #include <vector>
+#include <boost/bind.hpp>
+#include "boost/logic/tribool.hpp"
 
 namespace http {
 namespace server {
 
-connection::connection(boost::asio::ip::tcp::socket socket,
-                       connection_manager &manager, request_handler &handler)
-    : socket_(std::move(socket)), connection_manager_(manager),
-      request_handler_(handler) {}
-
-void connection::start() { do_read(); }
-
-void connection::stop() { socket_.close(); }
-
-void connection::do_read() {
-  auto self(shared_from_this());
-  socket_.async_read_some(
-      boost::asio::buffer(buffer_),
-      [this, self](boost::system::error_code ec,
-                   std::size_t bytes_transferred) {
-        if (!ec) {
-          std::clog << "RICEVUTA RICHIESTA DA UTENTE\n"; 
-          request_parser::result_type result;
-          std::tie(result, std::ignore) = request_parser_.parse(
-              request_, buffer_.data(), buffer_.data() + bytes_transferred);
-
-          if (result == request_parser::good) {
-            // 1. verifiche su URL ed eventuale token
-            request_handler_.handle_request(request_, reply_);
-            // TODO:
-            // 2. se ok allora smisto verso un server
-            // 3. attendo la risposta dal sever ed inolro al client
-            do_write();
-          } else if (result == request_parser::bad) {
-            reply_ = reply::stock_reply(reply::bad_request);
-            do_write();
-          } else {
-            do_read();
-          }
-        } else if (ec != boost::asio::error::operation_aborted) {
-          connection_manager_.stop(shared_from_this());
-        }
-      });
+connection::connection(boost::asio::io_service& io_service,
+    request_handler& handler)
+  : strand_(io_service),
+    socket_(io_service),
+    request_handler_(handler)
+{
 }
 
-void connection::do_write() {
-  auto self(shared_from_this());
-  boost::asio::async_write(
-      socket_, reply_.to_buffers(),
-      [this, self](boost::system::error_code ec, std::size_t) {
-        if (!ec) {
-          // Initiate graceful connection closure.
-          boost::system::error_code ignored_ec;
-          socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both,
-                           ignored_ec);
-        }
-
-        if (ec != boost::asio::error::operation_aborted) {
-          connection_manager_.stop(shared_from_this());
-        }
-      });
+boost::asio::ip::tcp::socket& connection::socket()
+{
+  return socket_;
 }
 
-} // namespace server
+void connection::start()
+{
+  socket_.async_read_some(boost::asio::buffer(buffer_),
+      strand_.wrap(
+        boost::bind(&connection::handle_read, shared_from_this(),
+          boost::asio::placeholders::error,
+          boost::asio::placeholders::bytes_transferred)));
+}
+
+void connection::handle_read(const boost::system::error_code& e,
+    std::size_t bytes_transferred)
+{
+  if (!e)
+  {
+    boost::tribool result;
+    std::tie(result, std::ignore) = request_parser_.parse(
+        request_, buffer_.data(), buffer_.data() + bytes_transferred);
+
+    if (result == request_parser::good)
+    {
+      request_handler_.handle_request(request_, reply_);
+      boost::asio::async_write(socket_, reply_.to_buffers(),
+          strand_.wrap(
+            boost::bind(&connection::handle_write, shared_from_this(),
+              boost::asio::placeholders::error)));
+    }
+    else if (!result)
+    {
+      reply_ = reply::stock_reply(reply::bad_request);
+      boost::asio::async_write(socket_, reply_.to_buffers(),
+          strand_.wrap(
+            boost::bind(&connection::handle_write, shared_from_this(),
+              boost::asio::placeholders::error)));
+    }
+    else
+    {
+      socket_.async_read_some(boost::asio::buffer(buffer_),
+          strand_.wrap(
+            boost::bind(&connection::handle_read, shared_from_this(),
+              boost::asio::placeholders::error,
+              boost::asio::placeholders::bytes_transferred)));
+    }
+  }
+
+  // If an error occurs then no new asynchronous operations are started. This
+  // means that all shared_ptr references to the connection object will
+  // disappear and the object will be destroyed automatically after this
+  // handler returns. The connection class's destructor closes the socket.
+}
+
+void connection::handle_write(const boost::system::error_code& e)
+{
+  if (!e)
+  {
+    // Initiate graceful connection closure.
+    boost::system::error_code ignored_ec;
+    socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
+  }
+
+  // No new asynchronous operations are started. This means that all shared_ptr
+  // references to the connection object will disappear and the object will be
+  // destroyed automatically after this handler returns. The connection class's
+  // destructor closes the socket.
+}
+
+} // namespace server3
 } // namespace http

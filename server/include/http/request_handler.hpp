@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "controllers.hpp"
 #include <string>
 
 namespace http {
@@ -34,13 +35,6 @@ private:
   /// The directory containing the files to be served.
   std::string doc_root_;
 
-  /// Perform URL-decoding on a string. Returns false if the encoding was
-  /// invalid.
-  static bool url_decode(const std::string &in);
-  static bool url_decode(const std::string &in, std::string &out);
-
-  /// Restituisce la risposta ricevuta dal server
-  reply smista_inoltra(const request &req, reply &rep); 
 };
 
 } // namespace server
