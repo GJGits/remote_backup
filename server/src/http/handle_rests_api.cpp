@@ -15,7 +15,7 @@ std::string rests_api_get_status::get_and_produce(){
         if(!requests.empty()){
             std::string new_req = requests.front();
             requests.pop();
-            std::clog << "ok, sono nella GET STATUS\n";
+            std::clog << new_req<<"\n";
             /* Produzione di qualcosa con tale request */
             std::string new_rep = new_req + "helloooo\n";
             replies.push(new_rep);

@@ -35,16 +35,17 @@ void request_handler::handle_request(const request &req, reply &rep) {
   std::clog << "il method è: " << req.method << "\n";
   std::clog << "il uri è: " << req.uri << "\n";
 
-  /*
+ 
   std::optional<Controller *> c = ControllerRouter::getController(req.uri);
   if (c.has_value()) {
     // qui ok
-    //rep = c.value().handle(req.method + req.uri);
+    std::string rep_str = c.value()->handle(req);
+    std::clog << " Mi ha restituito : " << rep_str << "\n";
   } else {
-    //rep = reply::stock_reply(reply::bad_request);
-    //return;
+    rep = reply::stock_reply(reply::bad_request);
+    return;
   }
-*/
+
   // Fill out the reply to be sent to the client.
   rep.status = reply::ok;
   rep.headers.resize(2);
