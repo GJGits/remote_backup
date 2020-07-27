@@ -10,7 +10,9 @@
 
 #pragma once
 
-#include "controllers.hpp"
+#include "../controllers/auth-controller.hpp"
+#include "../controllers/status-controller.hpp"
+#include "../controllers/controller-router.hpp"
 #include <string>
 
 namespace http {

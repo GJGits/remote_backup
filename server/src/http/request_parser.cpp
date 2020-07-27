@@ -9,7 +9,7 @@
 //
 
 #include "../../include/http/request_parser.hpp"
-#include "../../include/http/request.hpp"
+#include <iostream>
 
 namespace http {
 namespace server {
@@ -195,6 +195,12 @@ request_parser::result_type request_parser::consume(request &req, char input) {
   default:
     return bad;
   }
+}
+
+request_parser::result_type request_parser::consume_body(request &req, char input, int &left) { 
+  left--;
+  req.body.push_back(input);
+  return left == 0 ? good : indeterminate;
 }
 
 bool request_parser::is_char(int c) { return c >= 0 && c <= 127; }

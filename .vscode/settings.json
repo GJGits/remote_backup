@@ -54,6 +54,15 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "bit": "cpp",
-        "bitset": "cpp"
+        "bitset": "cpp",
+        "csignal": "cpp",
+        "hash_map": "cpp",
+        "codecvt": "cpp",
+        "complex": "cpp",
+        "set": "cpp",
+        "future": "cpp",
+        "iomanip": "cpp",
+        "typeindex": "cpp",
+        "variant": "cpp"
     }
 }

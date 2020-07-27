@@ -29,24 +29,18 @@ void request_handler::handle_request(const request &req, reply &rep) {
   // Decode url to path.
   std::string request_path;
 
-  /* Il handle request adesso lancia una richiesta alla get_status di gestire il
-   * prodotto */
-
-  std::clog << "il method è: " << req.method << "\n";
-  std::clog << "il uri è: " << req.uri << "\n";
-
- 
   std::optional<Controller *> c = ControllerRouter::getController(req.uri);
   if (c.has_value()) {
     // qui ok
-    std::string rep_str = c.value()->handle(req);
-    std::clog << " Mi ha restituito : " << rep_str << "\n";
+    rep = c.value()->handle(req);
   } else {
+    // qui arriva solo se non esiste un controller
     rep = reply::stock_reply(reply::bad_request);
     return;
   }
 
   // Fill out the reply to be sent to the client.
+  /*
   rep.status = reply::ok;
   rep.headers.resize(2);
   rep.headers[0].name = "Content-Length";
@@ -55,6 +49,7 @@ void request_handler::handle_request(const request &req, reply &rep) {
   rep.headers[1].value = std::string{"text/plain"};
   rep.content = std::string{"ciao"};
   std::clog << "QUI DAL SERVER... TUTTO OK\n";
+  */
 }
 
 } // namespace server

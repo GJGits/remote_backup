@@ -10,8 +10,12 @@
 
 #pragma once
 
+#include <cstddef>
+#include <iostream>
 #include <tuple>
+#include <vector>
 
+#include "../../include/http/request.hpp"
 namespace http {
 namespace server {
 
@@ -36,10 +40,47 @@ public:
   template <typename InputIterator>
   std::tuple<result_type, InputIterator>
   parse(request &req, InputIterator begin, InputIterator end) {
+
+    int content_length = 0; // 0 richiesta con no body
+    bool body_start = false;
+    std::string search{"Content-Length"};
+    std::vector<std::byte> body;
+
+    // Ciclo while che consuma la richiesta carattere per carattere
+    // l'iteratore itera fino alla fine (comprende body se presente)
     while (begin != end) {
-      result_type result = consume(req, *begin++);
-      if (result == good || result == bad)
-        return std::make_tuple(result, begin);
+
+      if (!body_start) {
+        // Consumo header un carattere ed avanzo iteratore
+        result_type result = consume(req, *begin++);
+        // se header non buono restituisco bad
+        if (result == bad)
+          return std::make_tuple(result, begin);
+        // se header ok ho finito di leggere header ma devo controllare se
+        // esiste ancora un body da leggere
+        if (result == good) {
+          // ciclo sugli header per verificare se esiste un campo
+          // Content-Length e se questo e' maggiore di zero.
+          for (size_t i = 0; i < req.headers.size(); i++) {
+            std::string name = req.headers[i].name;
+            std::string value = req.headers[i].value;
+            // se entro esiste Content-Lenght e salvo la dimensione in un
+            // campo.
+            if (name.compare(search) == 0 && std::stoi(value) > 0) {
+              content_length = std::stoi(value);
+              body_start = true;
+            }
+          }
+          if (!body_start)
+            return std::make_tuple(good, begin);
+        }
+      }
+
+      if (body_start) {
+        result_type result = consume_body(req, *begin++, content_length);
+        if (result == good)
+          return std::make_tuple(good, begin);
+      }
     }
     return std::make_tuple(indeterminate, begin);
   }
@@ -47,6 +88,9 @@ public:
 private:
   /// Handle the next character of input.
   result_type consume(request &req, char input);
+
+  /// Handle next byte of body
+  result_type consume_body(request &req, char input, int &left);
 
   /// Check if a byte is an HTTP character.
   static bool is_char(int c);
