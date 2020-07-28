@@ -7,8 +7,9 @@ bool UserService::login(const UserLogDTO &user) {
     UserRepository user_rep;
     std::optional<UserEntity> user_returned = user_rep.getUserByUsername( user.getUsername() );
     if(user_returned.has_value()){
-
-        if(user_returned.value().getHashedPassword().compare(user.getPassword()) == 0)
+        unsigned int salt = user_returned.value().getSalt();
+        std::string hashed_password{Sha256::getSha256(std::to_string(salt) + user.getPassword() + std::to_string(salt))};
+        if(user_returned.value().getHashedPassword().compare(hashed_password) == 0)
             return true;
         else
             return false;
@@ -26,19 +27,10 @@ bool UserService::signup(const UserLogDTO &user) {
         return false;
 
     UserRepository user_rep;
-
     std::string username(user.getUsername());
-
-    /* Se */
-
-    unsigned int salt = rand() % 64;
-
-    /* Qui bisogna creare e inserire la hashed_passwor */
-    std::string hashedPassword(Sha256::getSha256(user.getPassword()));
-    /*                                                */
-
+    unsigned int salt = abs(rand()) ;
+    std::string hashedPassword{Sha256::getSha256(std::to_string(salt) + user.getPassword() + std::to_string(salt))};
     UserEntity user_to_insert{username, hashedPassword, salt};
-
     if(user_rep.insertUser( user_to_insert ))
         return true;
     else
