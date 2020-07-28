@@ -128,7 +128,7 @@ Le tabelle all'interno del DBMS sono le seguenti:
 
 **users:** In questa collection troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata memorizzata tramite hash, il sale.
 
-| username | password | salt |
+| username | hashed_password | salt |
 | :---: | :---: | :---: |
 myuser | pass_hash_value | 3 | 
 
@@ -253,7 +253,7 @@ L'autenticazione all'interno dell'applicazione si basa su [JWT](https://jwt.io/i
     ...
 }
 ```
-Nel load-balancer nel file di configurazione `token-conf.json`:
+Nel server, nel file di configurazione `token-conf.json`:
 
 ```json
 {
