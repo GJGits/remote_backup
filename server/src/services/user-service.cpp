@@ -54,3 +54,17 @@ bool UserService::signup(const UserLogDTO &user) {
 
 }
 
+std::string UserService::getStatus(const UserLogDTO &user) {
+    UserRepository user_rep;
+    std::optional<UserEntity> user_returned = user_rep.getUserByUsername( user.getUsername() );
+    /* Se viene fornito un username non esistente nel database, torna stringa vuota, che poi verrà tornata come bad::request */
+    if(user_returned.has_value()) {
+        std::string file_path{"../../filesystem/" + user.getUsername() + "/server-struct.json"};
+        boost::property_tree::ptree pt;
+        boost::property_tree::read_json(file_path, pt);
+        return pt.get<std::string>("hashed_status");
+    }
+    else{
+        return "";
+    }
+}
