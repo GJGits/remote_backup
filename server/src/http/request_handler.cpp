@@ -9,7 +9,6 @@
 //
 
 #include "../../include/http/request_handler.hpp"
-#include "../../include/http/handle_rests_api.hpp"
 #include "../../include/http/mime_types.hpp"
 #include "../../include/http/reply.hpp"
 #include "../../include/http/request.hpp"

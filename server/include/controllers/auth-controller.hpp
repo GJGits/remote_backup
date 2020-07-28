@@ -19,7 +19,7 @@ public:
     }
     return instance;
   }
-  const http::server::reply handle(const http::server::request &req);
+  virtual const http::server::reply handle(const http::server::request &req);
   const http::server::reply post_sigin(const UserLogDTO &req);
   const http::server::reply post_signup(const UserLogDTO &req);
 };

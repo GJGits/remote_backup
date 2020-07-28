@@ -5,7 +5,6 @@
 #include "../include/http/server.hpp"
 #include "unistd.h"
 #include <boost/asio.hpp>
-#include "../include/http/handle_rests_api.hpp"
 
 
 int main()

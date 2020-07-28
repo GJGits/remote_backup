@@ -16,6 +16,6 @@ public:
     }
     return instance;
   }
-  const http::server::reply handle(const http::server::request &req);
+  virtual const http::server::reply handle(const http::server::request &req);
   const http::server::reply get_status(const http::server::request &req);
 };
