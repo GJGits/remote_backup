@@ -1,5 +1,10 @@
 #include "../dtos/user-log-dto.hpp"
 #include "../common/sha256.hpp"
+#include "../../include/repositories/user-repository.hpp"
+#include <filesystem>
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
 
 class UserService {
     private:
