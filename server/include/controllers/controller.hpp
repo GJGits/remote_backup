@@ -10,7 +10,6 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <sstream>
-#include "../services/user-service.hpp"
 
 class Controller {
 

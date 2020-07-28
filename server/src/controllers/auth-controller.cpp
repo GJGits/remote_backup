@@ -1,4 +1,6 @@
 #include "../../include/controllers/auth-controller.hpp"
+#include "../../include/dtos/user-log-dto.hpp"
+#include "../../include/services/user-service.hpp"
 
 const http::server::reply
 AuthController::handle(const http::server::request &req) {
@@ -12,6 +14,7 @@ AuthController::handle(const http::server::request &req) {
       boost::property_tree::ptree pt;
       boost::property_tree::read_json(ss, pt);
       // todo: controllare che l'oggetto passato sia corretto
+
       UserLogDTO user_dto{pt.get<std::string>("username"),
                           pt.get<std::string>("password")};
       // std::clog << "sono in auth/signin della authcontroller\n";
@@ -28,8 +31,8 @@ AuthController::handle(const http::server::request &req) {
 const http::server::reply AuthController::post_sigin(const UserLogDTO &user) {
 
   // todo: sostituire con getInstance
-  UserService service{};
-  bool result = service.login(user);
+  UserService *user_service = UserService::getInstance();
+  bool result = user_service->login(user);
   if (result) {
     http::server::reply rep;
     rep.status = http::server::reply::ok;
