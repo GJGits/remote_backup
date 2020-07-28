@@ -12,6 +12,8 @@ services:
         build: ./server
         ports: 
             - "3500:3500"
+        volumes:
+            - filesystem:/home/filesystem
     ngnix-server:
         image: nginx
         ports:
@@ -22,4 +24,6 @@ services:
         build: ./client
         ports: 
             - "2800:2800"
+volumes: 
+    filesystem:
 

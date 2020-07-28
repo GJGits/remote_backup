@@ -34,7 +34,7 @@ bool UserService::signup(const UserLogDTO &user) {
     unsigned int salt = rand() % 64;
 
     /* Qui bisogna creare e inserire la hashed_passwor */
-    std::string hashedPassword(user.getPassword());
+    std::string hashedPassword(Sha256::getSha256(user.getPassword()));
     /*                                                */
 
     UserEntity user_to_insert{username, hashedPassword, salt};
