@@ -3,6 +3,7 @@ const { menubar } = require('menubar');
 const dgram = require('dgram');
 const server = dgram.createSocket('udp4');
 const { ipcMain } = require('electron');
+const textEncoding = require('text-encoding');
 
 // CONSTANTS
 const mb = menubar(
@@ -38,7 +39,10 @@ mb.on('ready', () => {
 
   server.on('message', (msg, rinfo) => {
     console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+    msg = new TextDecoder("utf-8").decode(msg);
     mb.window.webContents.send('asynchronous-message', msg);
+    //if (msg === "log-in" || msg === "log-off")
+      mb.window.webContents.send('status-changed', msg);
   });
 
   server.on('listening', () => {
@@ -48,8 +52,13 @@ mb.on('ready', () => {
 
   server.bind(41234);
 
+  // Appena app ok leggo token per verificare se utente logged-in e poi invio status
+  // al processo render
+  // todo: leggere da file...
+
 });
 
 mb.on('after-create-window', () => {
+  mb.window.webContents.send('status-changed', "log-off");
   mb.window.openDevTools();
 });

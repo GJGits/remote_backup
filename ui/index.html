@@ -6,9 +6,9 @@
 
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
     integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-    
-    <script>
-      window.jQuery = window.$ = require('jquery');
+
+  <script>
+    window.jQuery = window.$ = require('jquery');
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
@@ -24,9 +24,94 @@
 
 <body>
   <script> require('./render.js');</script>
-  <div id="test">
-    <p>static content inside html</p>
+
+  <!-- LOGIN PAGE -->
+
+  <div class="container" id="login">
+
+    <div class="row mt-5">
+      <img src="remote-icon.png" class="rounded mx-auto d-block" alt="remote icon" width="100" height="100">
+    </div>
+
+    <p class="text-center mt-4 font-weight-bold">Login to RemoteBackup</p>
+
+
+    <form class="offset-2 col-8">
+      <div class="form-group">
+        <input type="text" class="form-control" id="username" aria-describedby="emailHelp" placeholder="Username...">
+      </div>
+      <div class="form-group">
+        <input type="password" class="form-control" id="password">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Login</button>
+    </form>
+
+    <div class="row mt-3 ">
+      <a href="#" class="col-12 text-center">Password dimenticata?</a>
+      <a href="#" class="col-12 text-center mt-2" id="registrati">Registrati</a>
+    </div>
+
   </div>
+
+  <!-- END LOGIN PAGE-->
+
+  <!-- SIGNUP PAGE -->
+
+  <div class="container" id="signup">
+
+    <div class="row mt-5">
+      <img src="remote-icon.png" class="rounded mx-auto d-block" alt="remote icon" width="100" height="100">
+    </div>
+
+    <p class="text-center mt-4 font-weight-bold">Login to RemoteBackup</p>
+
+
+    <form class="offset-2 col-8">
+      <div class="form-group">
+        <input type="text" class="form-control" id="username" aria-describedby="emailHelp" placeholder="Username...">
+      </div>
+      <div class="form-group">
+        <input type="password" class="form-control" id="password" placeholder="Password">
+      </div>
+      <div class="form-group">
+        <input type="password" class="form-control" id="rip-password" placeholder="Ripeti password">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Registrati</button>
+    </form>
+
+    <div class="row mt-3 ">
+      <p class="col-12 text-center">Hai gi&agrave; un account ?</p>
+      <a href="#" class="col-12 text-center" id="accedi">Accedi</a>
+    </div>
+
+  </div>
+
+  <!-- END SIGNUP PAGE -->
+
+  <!-- LOGGED PAGE -->
+
+  <div class="container" id="logged">
+
+    <div class="row">
+      <img src="remote-icon.png" class="ml-1" alt="remote icon" width="50" height="50">
+      <span class="ml-1 font-weight-bold"> <h1>REMOTEBACKUP</h1> </span>
+    </div>
+    <hr>
+    <div class="row">
+      <p>trasferimenti in corso section qui...</p>
+    </div>
+    <hr>
+    <div class="row">
+      <p>trasferimenti recenti qui...</p>
+    </div>
+    <hr>
+    <div class="row">
+      <p>usage qui...</p>
+    </div>
+  </div>
+
+  <!-- END LOGGED PAGE -->
+
 </body>
 
 </html>
