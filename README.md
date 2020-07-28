@@ -122,13 +122,15 @@ La scelta di utilizzare un DB come meccanismo di storage ha le seguenti motivazi
 - **allegerimento carico server:** evitando uno storage completo a carico del server, questi sarà soggetto a meno lavoro, e tale feature impatterà positivamente nei momenti di massimo stress.  
 - **resilienza(ACID):** la totalità delle operazioni avrà garanzia di atomicity, consistency, isolation, e durability, elementi non integrabili senza errori nel caso di un interazione custom coi dati tramite files.
 
+Il db utilizzato si chiama: **db_utenti**  
+
 Le tabelle all'interno del DBMS sono le seguenti:
 
-**username:** In questa collection troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata memorizzata tramite hash, il sale.
+**users:** In questa collection troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata memorizzata tramite hash, il sale.
 
-| id | username | password | salt |
-| :---: | :---: | :---: | :---: |
-| 0 | myuser | pass_hash_value | 3 | 
+| username | password | salt |
+| :---: | :---: | :---: |
+myuser | pass_hash_value | 3 | 
 
 ## Descrizione della directory della repository<a name="Descrizione_della_directory_della_repository"></a>
 
