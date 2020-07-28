@@ -7,6 +7,7 @@ bool UserService::login(const UserLogDTO &user) {
     UserRepository user_rep;
     std::optional<UserEntity> user_returned = user_rep.getUserByUsername( user.getUsername() );
     if(user_returned.has_value()){
+
         if(user_returned.value().getHashedPassword().compare(user.getPassword()) == 0)
             return true;
         else
@@ -19,6 +20,10 @@ bool UserService::login(const UserLogDTO &user) {
 }
 
 bool UserService::signup(const UserLogDTO &user) {
+
+    /* Eventualmente tale check se deve essere fatto più avanti lo si sposta*/
+    if(user.getPassword().compare(user.getPasswordConfirm()) != 0)
+        return false;
 
     UserRepository user_rep;
 

@@ -37,9 +37,7 @@ AuthController::handle(const http::server::request &req) {
         if(username.size() == 0 || password.size() == 0 || password_confirm.size() == 0){
             return http::server::reply::stock_reply(http::server::reply::bad_request);
         }
-        /* Eventualmente tale check se deve essere fatto più avanti lo si sposta*/
-        if(password.compare(password_confirm)!=0)
-            return http::server::reply::stock_reply(http::server::reply::bad_request);
+
 
         UserLogDTO user_dto{username,password,password_confirm};
       return post_signup(user_dto);
