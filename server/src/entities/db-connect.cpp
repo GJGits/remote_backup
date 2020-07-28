@@ -12,7 +12,7 @@ DBConnect::getConnection()
             try {
                 sql::Connection* con;
                 con = driver->connect("tcp://remote_backup_db_1:3306", "root", "example");
-                con->setSchema("db_prova");
+                con->setSchema("db_utenti");
                 DBConnect::instance->connections[i] = std::shared_ptr<sql::Connection> { con };
             } catch (sql::SQLException& e) {
                 // 1. print to debug
