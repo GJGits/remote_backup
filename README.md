@@ -162,7 +162,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
   * **Authenticated**:&nbsp;&nbsp;&nbsp;`FALSE`
   <br />
   
-  * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{ user : username , pass1 : password , pass2 : password }`  
+  * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{ username : username , password : password , password : password }`  
   <br />  
   
   * **Risposta**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In caso negativo viene generato un messaggio HTTP 1.1 400 `{ err_msg : message here }`, in caso positivo invece viene inviata una risposta HTTP 1.1 200 OK con relativo token generato nell'header della risposta.   
@@ -178,7 +178,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
   * **Authenticated**:&nbsp;&nbsp;&nbsp;`FALSE`
   <br />
   
-  * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{ user : username , pass1 : password }`
+  * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{ username : username , password : password }`
   <br />  
   
   * **Risposta**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In caso negativo viene generato un messaggio HTTP 1.1 400  `{ err_msg : message here }`, in caso positivo invece viene inviata una risposta HTTP 1.1 200 OK con relativo token generato nell'header della risposta. 
