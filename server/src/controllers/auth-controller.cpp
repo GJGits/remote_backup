@@ -69,8 +69,17 @@ const http::server::reply AuthController::post_sigin(const UserLogDTO &user) {
 const http::server::reply
 AuthController::post_signup(const UserLogDTO &user) {
 
-  http::server::reply rep;
-  rep.status = http::server::reply::ok;
-  std::clog << "sono nella authcontroller::postsignup\n";
-  return rep;
+    UserService *user_service = UserService::getInstance();
+    bool result = user_service->signup(user);
+
+    if (result) {
+        http::server::reply rep;
+        rep.status = http::server::reply::ok;
+        std::clog << "sono nella authcontroller::postsignup\n";
+        return rep;
+    }
+    http::server::reply rep;
+    rep = http::server::reply::stock_reply(http::server::reply::bad_request);
+    rep.content = "{'error':'Impossibile inserire il nuovo utente'}";
+    return rep; // Sarà una rep vuota qui, ricordarsi
 }

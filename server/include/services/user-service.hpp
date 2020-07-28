@@ -15,4 +15,6 @@ class UserService {
     }
     
     bool login(const UserLogDTO &user);
-};
+    bool signup(const UserLogDTO &user);
+
+    };
