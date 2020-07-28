@@ -14,14 +14,35 @@ AuthController::handle(const http::server::request &req) {
       boost::property_tree::ptree pt;
       boost::property_tree::read_json(ss, pt);
       // todo: controllare che l'oggetto passato sia corretto
-
-      UserLogDTO user_dto{pt.get<std::string>("username"),
-                          pt.get<std::string>("password")};
-      // std::clog << "sono in auth/signin della authcontroller\n";
+      std::string username(pt.get<std::string>("username",""));
+      std::string password(pt.get<std::string>("password",""));
+      if(username.size() == 0 || password.size() == 0){
+          return http::server::reply::stock_reply(
+                  http::server::reply::bad_request);
+      }
+      UserLogDTO user_dto{username,password};
       return post_sigin(user_dto);
+
     } else if (req.uri == "/auth/signup") {
       // std::clog << "sono in auth/signup della authcontroller\n";
-      return post_signup(req);
+        std::stringstream ss;
+        for (auto c : req.body) {
+            ss << c;
+        }
+        boost::property_tree::ptree pt;
+        boost::property_tree::read_json(ss, pt);
+        std::string username(pt.get<std::string>("username",""));
+        std::string password(pt.get<std::string>("password",""));
+        std::string password_confirm(pt.get<std::string>("password_confirm",""));
+        if(username.size() == 0 || password.size() == 0 || password_confirm.size() == 0){
+            return http::server::reply::stock_reply(http::server::reply::bad_request);
+        }
+        /* Eventualmente tale check se deve essere fatto più avanti lo si sposta*/
+        if(password.compare(password_confirm)!=0)
+            return http::server::reply::stock_reply(http::server::reply::bad_request);
+
+        UserLogDTO user_dto{username,password,password_confirm};
+      return post_signup(user_dto);
     }
   }
   return http::server::reply::stock_reply(
@@ -46,7 +67,7 @@ const http::server::reply AuthController::post_sigin(const UserLogDTO &user) {
 }
 
 const http::server::reply
-AuthController::post_signup(const http::server::request &req) {
+AuthController::post_signup(const UserLogDTO &user) {
 
   http::server::reply rep;
   rep.status = http::server::reply::ok;
