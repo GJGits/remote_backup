@@ -63,6 +63,8 @@
         "future": "cpp",
         "iomanip": "cpp",
         "typeindex": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "regex": "cpp",
+        "shared_mutex": "cpp"
     }
 }
