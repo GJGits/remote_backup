@@ -1,5 +1,5 @@
-#include "../lib/test.hpp"
+#include "../../include/test/test.hpp"
 
 void testAll() {
-    std::cout << "Running tests...";
+    std::clog << "Running tests...";
 }
