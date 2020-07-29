@@ -12,12 +12,11 @@ services:
         build: ./server
         ports: 
             - "3500:3500"
-    load-balancer:
-        build: ./load-balancer
-        ports:
-            - "3100:3100"
     client:
         build: ./client
         ports: 
             - "2800:2800"
+        volumes: 
+            - "./client/sync:/home/client/sync"
+
 
