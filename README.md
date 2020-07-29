@@ -22,6 +22,7 @@ L'applicazione ha il compito di fornire un sistema di incremental backup del con
 * [Team](#Team)
 * [Environment(Docker)](#Environment)
     * [Aggiungere docker ad un gruppo (Linux)](Aggiungere_docker_ad_un_gruppo_(Linux))
+    * [Utilizzare la bash di docker per interagire col Server](#Utilizzare_bash_con_Server)
     * [Utilizzare MySQL con Docker](#Utilizzare_MySQL_con_Docker)
 * [Architettura applicazione](#Architettura_applicazione)
     * [Architettura Frontend](#Architettura_Frontend)
@@ -69,6 +70,12 @@ Per utilizzare comodamente docker su Linux può risultare utile aggiungere docke
 3. A questo punto effettuare logout e login per rendere effettive le modifiche, alternativamente eseguire il comando: `newgrp docker`
 
 4. Testare eseguendo il comando: `docker run hello-world`.
+
+### Utilizzare la bash di docker per interagire col Server <a name="Utilizzare_bash_con_Server"></a>
+
+Dopo aver lanciato i vari servizi aprire una finestra di terminale ed eseguire il seguente comando:
+
+`docker exec -it remote_backup_server_1 /bin/bash`
 
 ### Utilizzare MySQL con Docker <a name="Utilizzare_MySQL_con_Docker"></a>
 
@@ -136,7 +143,7 @@ myuser | pass_hash_value | 3 |
 
 La repository presenta una suddivisione dei files che si ripete rispettando una gerarchia delle cartelle fisso e definito:
 
-* (server/client/load-balancer)/
+* (server/client)/
   * config/
     * server-struct.json
   * src/
@@ -156,7 +163,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 ## REST API<a name="REST_API"></a>
 
 <details>
-  <summary>POST /signup</summary>
+  <summary>POST /auth/signup</summary>
   <br />  
   
   * **Descrizione**:&nbsp;&nbsp;&nbsp;*Endpoint che permette di registrare un nuovo utente*  
@@ -172,7 +179,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 <br />  
 
 <details>
-  <summary>POST /signin</summary>
+  <summary>POST /auth/signin</summary>
   <br />  
   
   * **Descrizione**:&nbsp;&nbsp;&nbsp;*Endpoint che permette di autenticare un utente precedentemente registrato*  
