@@ -22,6 +22,6 @@ class UserService {
     
     bool login(const UserLogDTO &user);
     bool signup(const UserLogDTO &user);
-    std::string getStatus(const UserLogDTO &user);
+    std::optional<std::string> getStatus(const UserLogDTO &user);
 
     };
