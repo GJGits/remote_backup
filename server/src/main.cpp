@@ -11,7 +11,7 @@ int main()
     std::streambuf * strm_buffer = std::cout.rdbuf();
     // redirect output into file
     std::cout.rdbuf(redirect_file.rdbuf());
-    testAll();
+    //testAll();
     for (int i = 0; i < 1000; i++) {
         sleep(10);
     }
