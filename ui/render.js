@@ -38,6 +38,18 @@ $(document).ready(function () {
             $("#signup").show();
             $("#logged").hide();
         }
+        username = $("#username").val();
+        password = $("#password").val();
+        confirm_password = $("#rip-password").val();
+        $.post("0.0.0.0:3200/signup", { username: username, password: password, confirm_password: confirm_password })
+            .done((data) => {
+                // todo: store jwt
+                console.log(data);
+            })
+            .fail((error) => {
+                // todo: show error message
+                console.log(error);
+            });
     });
 
     $("#accedi").click((event) => {
@@ -47,6 +59,17 @@ $(document).ready(function () {
             $("#signup").hide();
             $("#logged").hide();
         }
+        username = $("#username").val();
+        password = $("#password").val();
+        $.post("0.0.0.0:3200/sigin", { username: username, password: password})
+            .done((data) => {
+                // todo: store jwt
+                console.log(data);
+            })
+            .fail((error) => {
+                // todo: show error message
+                console.log(error);
+            });
     });
 
 });
