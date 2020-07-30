@@ -1,6 +1,11 @@
 #include "../../include/controllers/auth-controller.hpp"
 #include "../../include/dtos/user-log-dto.hpp"
 #include "../../include/services/user-service.hpp"
+#include "../../include/error_message/error-message.hpp"
+#include <regex>
+
+inline static std::regex user_rgx{"(\\w+)$"};
+
 
 const http::server::reply
 AuthController::handle(const http::server::request &req) {
@@ -16,7 +21,9 @@ AuthController::handle(const http::server::request &req) {
       // todo: controllare che l'oggetto passato sia corretto
       std::string username(pt.get<std::string>("username",""));
       std::string password(pt.get<std::string>("password",""));
-      if(username.size() == 0 || password.size() == 0){
+      std::smatch match;
+
+        if(username.size() == 0 || password.size() == 0 || !std::regex_match(username,match,user_rgx)){
           return http::server::reply::stock_reply(
                   http::server::reply::bad_request);
       }
@@ -34,7 +41,9 @@ AuthController::handle(const http::server::request &req) {
         std::string username(pt.get<std::string>("username",""));
         std::string password(pt.get<std::string>("password",""));
         std::string password_confirm(pt.get<std::string>("password_confirm",""));
-        if(username.size() == 0 || password.size() == 0 || password_confirm.size() == 0){
+        std::smatch match;
+
+        if(username.size() == 0 || password.size() == 0 || password_confirm.size() == 0 || !std::regex_match(username,match,user_rgx)){
             return http::server::reply::stock_reply(http::server::reply::bad_request);
         }
 
@@ -50,17 +59,26 @@ AuthController::handle(const http::server::request &req) {
 const http::server::reply AuthController::post_sigin(const UserLogDTO &user) {
 
   // todo: sostituire con getInstance
+
   UserService *user_service = UserService::getInstance();
-  bool result = user_service->login(user);
-  if (result) {
+  std::tuple<error_enum ,std::string> result = user_service->login(user);
+  if (std::get<0>(result)==ok) {
     http::server::reply rep;
     rep.status = http::server::reply::ok;
-    std::clog << "sono nella authcontroller::postsignin\n";
     return rep;
   }
   http::server::reply rep;
   rep = http::server::reply::stock_reply(http::server::reply::bad_request);
-  rep.content = "{'error':'credenziali non valide'}";
+    std::string reply_body = "{\"error\":\""+std::get<1>(result)+"\"}";
+    struct http::server::header con_len;
+    con_len.name = "Content-Length";
+    con_len.value = std::to_string(reply_body.size());
+    struct http::server::header con_type;
+    con_type.name = "Content-Type";
+    con_type.value = "application/json";
+    rep.headers.push_back(con_len);
+    rep.headers.push_back(con_type);
+    rep.content = reply_body;
   return rep; // Sarà una rep vuota qui, ricordarsi
 }
 
@@ -68,16 +86,24 @@ const http::server::reply
 AuthController::post_signup(const UserLogDTO &user) {
 
     UserService *user_service = UserService::getInstance();
-    bool result = user_service->signup(user);
+    std::tuple<error_enum ,std::string> result = user_service->signup(user);
 
-    if (result) {
+    if (std::get<0>(result)==ok) {
         http::server::reply rep;
         rep.status = http::server::reply::ok;
-        std::clog << "sono nella authcontroller::postsignup\n";
         return rep;
     }
     http::server::reply rep;
     rep = http::server::reply::stock_reply(http::server::reply::bad_request);
-    rep.content = "{'error':'Impossibile inserire il nuovo utente'}";
+    std::string reply_body = "{\"error\":\""+std::get<1>(result)+"\"}";
+    struct http::server::header con_len;
+    con_len.name = "Content-Length";
+    con_len.value = std::to_string(reply_body.size());
+    struct http::server::header con_type;
+    con_type.name = "Content-Type";
+    con_type.value = "application/json";
+    rep.headers.push_back(con_len);
+    rep.headers.push_back(con_type);
+    rep.content = reply_body;
     return rep; // Sarà una rep vuota qui, ricordarsi
 }

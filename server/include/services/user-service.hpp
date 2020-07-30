@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include "../../include/error_message/error-message.hpp"
 
 class UserService {
     private:
@@ -19,9 +20,9 @@ class UserService {
     }
     return instance;
     }
-    
-    bool login(const UserLogDTO &user);
-    bool signup(const UserLogDTO &user);
-    std::optional<std::string> getStatus(const UserLogDTO &user);
+
+    std::tuple<error_enum,std::string> login(const UserLogDTO &user);
+    std::tuple<error_enum,std::string> signup(const UserLogDTO &user);
+    std::tuple<error_enum,std::string> getStatus(const UserLogDTO &user);
 
     };

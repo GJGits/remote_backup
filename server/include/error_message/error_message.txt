@@ -1,0 +1,6 @@
+Ok
+The username already exists in the database, please use another username
+you have inserted wrong username or password, please try again
+The username inserted doesn't exist in our database, please try again
+Generic error, you should not be here!!!!
+Password and Password confirm are not equal, please try again

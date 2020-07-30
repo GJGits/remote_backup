@@ -5,10 +5,13 @@
 #include "../include/http/server.hpp"
 #include "unistd.h"
 #include <boost/asio.hpp>
+#include "../include/error_message/error-message.hpp"
 
 
 int main()
 {
+    Error_message *err = Error_message::getInstance();
+    std::cout << err->get_error_message(ok)<< "\n";
 try {
     testAll();
     // Initialise the server.
