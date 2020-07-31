@@ -1,10 +1,13 @@
-#include "unistd.h"
-#include <iostream>
 #include "../include/filesystem/directory.hpp"
 #include "../include/filesystem/file.hpp"
 #include "../include/filesystem/linux_watcher.hpp"
+#include "unistd.h"
+#include <iostream>
 
 int main() {
+
+  LinuxWatcher *watcher = LinuxWatcher::getInstance(
+      "./sync", IN_CREATE | IN_DELETE | IN_MODIFY | IN_MOVED_TO);
 
   std::shared_ptr<Directory> root = Directory::getRoot();
   std::shared_ptr<Directory> last_parent_dir{nullptr};
@@ -42,6 +45,8 @@ int main() {
 
     if (p.is_directory()) {
       last_parent_dir->addDirectory(p.path().filename().string());
+      watcher->add_watch(p.path().relative_path().string(),
+                         IN_CREATE | IN_DELETE | IN_MODIFY | IN_MOVED_TO);
     }
 
     if (p.is_regular_file()) {
@@ -53,8 +58,6 @@ int main() {
 
   root->ls(0);
 
-  LinuxWatcher *watcher = LinuxWatcher::getInstance(
-      "./sync", IN_CREATE | IN_DELETE | IN_MODIFY | IN_MOVED_TO);
   watcher->handle_events();
 
   return 0;
