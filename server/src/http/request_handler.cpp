@@ -9,6 +9,7 @@
 //
 
 #include "../../include/http/request_handler.hpp"
+#include "../../include/exceptions/exceptions.hpp"
 #include "../../include/http/mime_types.hpp"
 #include "../../include/http/reply.hpp"
 #include "../../include/http/request.hpp"
@@ -28,14 +29,35 @@ void request_handler::handle_request(const request &req, reply &rep) {
   // Decode url to path.
   std::string request_path;
 
-  std::optional<Controller *> c = ControllerRouter::getController(req.uri);
-  if (c.has_value()) {
-    // qui ok
-    rep = c.value()->handle(req);
-  } else {
-    // qui arriva solo se non esiste un controller
-    rep = reply::stock_reply(reply::bad_request);
+  try {
+
+    std::optional<Controller *> c = ControllerRouter::getController(req.uri);
+    if (c.has_value()) {
+      // qui ok
+      rep = c.value()->handle(req);
+    } else {
+      // qui arriva solo se non esiste un controller
+      rep = reply::stock_reply(reply::bad_request);
+      return;
+    }
+
+  } catch (MyException &e) {
+    rep = http::server::reply::stock_reply(
+        http::server::reply::internal_server_error);
+    std::string what{e.what()};
+    std::string reply_body = "{\"error\":\"" + what + "\"}";
+    struct http::server::header con_len;
+    con_len.name = "Content-Length";
+    con_len.value = std::to_string(reply_body.size());
+    struct http::server::header con_type;
+    con_type.name = "Content-Type";
+    con_type.value = "application/json";
+    rep.headers.push_back(con_len);
+    rep.headers.push_back(con_type);
+    rep.content = reply_body;
     return;
+  } catch (CredentialsNotValidException &e) {
+    // todo: ....
   }
 
   // Fill out the reply to be sent to the client.
