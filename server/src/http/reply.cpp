@@ -9,7 +9,6 @@
 //
 
 #include "../../include/http/reply.hpp"
-#include <string>
 
 namespace http {
 namespace server {

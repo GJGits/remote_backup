@@ -9,7 +9,6 @@
 //
 
 #include "../../include/http/request_parser.hpp"
-#include <iostream>
 
 namespace http {
 namespace server {

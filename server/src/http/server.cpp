@@ -10,10 +10,7 @@
 
 
 #include "../../include/http/server.hpp"
-#include <boost/thread/thread.hpp>
-#include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
-#include <vector>
+
 
 namespace http {
 namespace server {

@@ -1,11 +1,10 @@
 #pragma once
 #include "controller.hpp"
+#include "../dtos/user-log-dto.hpp"
+#include "../services/user-service.hpp"
+#include "../common/makereply.hpp"
+#include <regex>
 
-/**
- * Controller per richieste /auth:
- * /auth/signup
- * /auth/signin
- */
 class AuthController : public Controller {
 
 private:

@@ -1,8 +1,5 @@
 #include "../../include/controllers/auth-controller.hpp"
-#include "../../include/dtos/user-log-dto.hpp"
-#include "../../include/error_message/error-message.hpp"
-#include "../../include/services/user-service.hpp"
-#include <regex>
+
 
 inline static std::regex user_rgx{"(\\w+)$"};
 
@@ -60,51 +57,25 @@ AuthController::handle(const http::server::request &req) {
 
 const http::server::reply AuthController::post_sigin(const UserLogDTO &user) {
 
-  // todo: sostituire con getInstance
-
   UserService *user_service = UserService::getInstance();
-  std::tuple<error_enum, std::string> result = user_service->login(user);
-  if (std::get<0>(result) == ok) {
+  std::string result = user_service->login(user);
     http::server::reply rep;
     rep.status = http::server::reply::ok;
+    std::string reply_body = "{\"token\":\"" + result + "\"}";
+    MakeReply::makereply(rep,reply_body);
+
     return rep;
-  }
-  http::server::reply rep;
-  rep = http::server::reply::stock_reply(http::server::reply::bad_request);
-  std::string reply_body = "{\"error\":\"" + std::get<1>(result) + "\"}";
-  struct http::server::header con_len;
-  con_len.name = "Content-Length";
-  con_len.value = std::to_string(reply_body.size());
-  struct http::server::header con_type;
-  con_type.name = "Content-Type";
-  con_type.value = "application/json";
-  rep.headers.push_back(con_len);
-  rep.headers.push_back(con_type);
-  rep.content = reply_body;
-  return rep; // Sarà una rep vuota qui, ricordarsi
+
 }
 
 const http::server::reply AuthController::post_signup(const UserLogDTO &user) {
 
   UserService *user_service = UserService::getInstance();
-  std::tuple<error_enum, std::string> result = user_service->signup(user);
-
-  if (std::get<0>(result) == ok) {
+  std::string result = user_service->signup(user);
     http::server::reply rep;
     rep.status = http::server::reply::ok;
+    std::string reply_body = "{\"token\":\"" + result + "\"}";
+    MakeReply::makereply(rep,reply_body);
     return rep;
-  }
-  http::server::reply rep;
-  rep = http::server::reply::stock_reply(http::server::reply::bad_request);
-  std::string reply_body = "{\"error\":\"" + std::get<1>(result) + "\"}";
-  struct http::server::header con_len;
-  con_len.name = "Content-Length";
-  con_len.value = std::to_string(reply_body.size());
-  struct http::server::header con_type;
-  con_type.name = "Content-Type";
-  con_type.value = "application/json";
-  rep.headers.push_back(con_len);
-  rep.headers.push_back(con_type);
-  rep.content = reply_body;
-  return rep; // Sarà una rep vuota qui, ricordarsi
+
 }

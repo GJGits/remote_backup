@@ -25,6 +25,6 @@ DBConnect::getConnection()
     }
     int scelta = DBConnect::instance->index;
     DBConnect::instance->index == 15 ? 0 : DBConnect::instance->index++;
-    std::clog << "Restituita connection: @" << scelta << "\n";
+    //std::clog << "Restituita connection: @" << scelta << "\n";
     return DBConnect::instance->connections[scelta];
 }

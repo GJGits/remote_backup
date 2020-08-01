@@ -22,6 +22,12 @@
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include "../http/request_handler.hpp"
+#include <iostream>
+#include <utility>
+#include <vector>
+#include <boost/bind.hpp>
+#include "boost/logic/tribool.hpp"
 
 namespace http {
 namespace server {

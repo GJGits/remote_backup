@@ -1,11 +1,16 @@
+#pragma once
 #include "../dtos/user-log-dto.hpp"
 #include "../common/sha256.hpp"
-#include "../../include/repositories/user-repository.hpp"
+#include "../repositories/user-repository.hpp"
 #include <filesystem>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include "../../include/error_message/error-message.hpp"
+#include "../exceptions/exceptions.hpp"
+#include "../common/jwt.hpp"
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 class UserService {
     private:
@@ -21,8 +26,8 @@ class UserService {
     return instance;
     }
 
-    std::tuple<error_enum,std::string> login(const UserLogDTO &user);
-    std::tuple<error_enum,std::string> signup(const UserLogDTO &user);
-    std::tuple<error_enum,std::string> getStatus(const UserLogDTO &user);
+    std::string login(const UserLogDTO &user);
+    std::string signup(const UserLogDTO &user);
+    std::string getStatus(const UserLogDTO &user);
 
     };

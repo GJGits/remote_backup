@@ -1,14 +1,7 @@
-
 #include "../../include/services/user-service.hpp"
-#include "../../include/error_message/error-message.hpp"
-#include "../../include/exceptions/exceptions.hpp"
-#include "../../include/common/jwt.hpp"
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
 
-std::tuple<error_enum, std::string> UserService::login(const UserLogDTO &user) {
-  Error_message *err = Error_message::getInstance();
+
+std::string UserService::login(const UserLogDTO &user) {
   UserRepository user_rep;
   std::optional<UserEntity> user_returned =
       user_rep.getUserByUsername(user.getUsername());
@@ -16,28 +9,21 @@ std::tuple<error_enum, std::string> UserService::login(const UserLogDTO &user) {
     unsigned int salt = user_returned.value().getSalt();
     std::string hashed_password{Sha256::getSha256(
         std::to_string(salt) + user.getPassword() + std::to_string(salt))};
-    if (user_returned.value().getHashedPassword().compare(hashed_password) == 0) {
-      std::clog << "token: " << JWT::generateToken(user.getUsername()) << "\n"; 
-      return std::make_tuple(ok, err->get_error_message(ok));
-    }
-      
+    if (user_returned.value().getHashedPassword().compare(hashed_password) == 0)
+      return JWT::generateToken(user.getUsername());
     else
       throw CredentialsNotValidException();
   } else
-    return std::make_tuple(username_not_exist,
-                           err->get_error_message(username_not_exist));
+    throw UsernameNotExists();
 
-  return std::make_tuple(generic_error, err->get_error_message(generic_error));
+  throw UknownError();
 }
 
-std::tuple<error_enum, std::string>
-UserService::signup(const UserLogDTO &user) {
-  Error_message *err = Error_message::getInstance();
+std::string UserService::signup(const UserLogDTO &user) {
 
   /* Eventualmente tale check se deve essere fatto più avanti lo si sposta*/
   if (user.getPassword().compare(user.getPasswordConfirm()) != 0)
-    return std::make_tuple(pass_passconfirm_neq,
-                           err->get_error_message(pass_passconfirm_neq));
+      throw PasswordNeqConfirm();
 
   UserRepository user_rep;
   std::string username(user.getUsername());
@@ -50,23 +36,21 @@ UserService::signup(const UserLogDTO &user) {
     std::string path{"../../filesystem/" + username};
     std::filesystem::create_directories(path);
 
-    /* Create server-struct.json file */
-    std::string file_path{path + "/server-struct.json"};
+    /* Create client-struct.json file */
+    std::string file_path{path + "/client-struct.json"};
     std::ofstream init_file;
     std::string content{
         "{\n \"hashed_status\":\"empty_hashed_status\",\n \"entries\":[]\n}"};
     init_file.open(file_path);
     init_file << content;
     init_file.close();
-    return std::make_tuple(ok, err->get_error_message(ok));
+      return JWT::generateToken(user.getUsername());
   } else
-    return std::make_tuple(user_already_exist,
-                           err->get_error_message(user_already_exist));
+      throw UsernameAlreadyExists();
 }
 
-std::tuple<error_enum, std::string>
+std::string
 UserService::getStatus(const UserLogDTO &user) {
-  Error_message *err = Error_message::getInstance();
   UserRepository user_rep;
   std::optional<UserEntity> user_returned =
       user_rep.getUserByUsername(user.getUsername());
@@ -77,9 +61,8 @@ UserService::getStatus(const UserLogDTO &user) {
                           "/client-struct.json"};
     boost::property_tree::ptree pt;
     boost::property_tree::read_json(file_path, pt);
-    return std::make_tuple(ok, pt.get<std::string>("hashed_status"));
+    return pt.get<std::string>("hashed_status");
   } else {
-    return std::make_tuple(username_not_exist,
-                           err->get_error_message(username_not_exist));
+    throw UsernameNotExists();
   }
 }

@@ -17,6 +17,9 @@
 #include <boost/shared_ptr.hpp>
 #include "connection.hpp"
 #include "request_handler.hpp"
+#include <boost/thread/thread.hpp>
+#include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace http {
 namespace server {

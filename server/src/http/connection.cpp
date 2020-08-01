@@ -9,12 +9,7 @@
 //
 
 #include "../../include/http/connection.hpp"
-#include "../../include/http/request_handler.hpp"
-#include <iostream>
-#include <utility>
-#include <vector>
-#include <boost/bind.hpp>
-#include "boost/logic/tribool.hpp"
+
 
 namespace http {
 namespace server {

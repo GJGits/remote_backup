@@ -1,3 +1,5 @@
+#pragma once
+
 #include "base64.hpp"
 #include "hmac-sha256.hpp"
 #include <boost/algorithm/string/replace.hpp>

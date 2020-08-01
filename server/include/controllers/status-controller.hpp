@@ -1,9 +1,11 @@
 #pragma once
 #include "controller.hpp"
+#include "../dtos/user-log-dto.hpp"
+#include "../services/user-service.hpp"
+#include "../http/header.hpp"
+#include "../common/makereply.hpp"
+#include <regex>
 
-/**
- * Controller per richieste /status
- */
 class StatusController : public Controller {
 private:
   inline static StatusController *instance = nullptr;

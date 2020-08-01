@@ -14,6 +14,14 @@
 #include "../controllers/status-controller.hpp"
 #include "../controllers/controller-router.hpp"
 #include <string>
+#include "../exceptions/exceptions.hpp"
+#include "../http/mime_types.hpp"
+#include "../http/reply.hpp"
+#include "../http/request.hpp"
+#include "../common/makereply.hpp"
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
 namespace http {
 namespace server {
