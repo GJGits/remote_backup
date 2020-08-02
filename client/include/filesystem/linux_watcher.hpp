@@ -1,5 +1,5 @@
+#pragma once
 #include "handle_watcher.hpp"
-#include "unistd.h"
 #include <errno.h>
 #include <iostream>
 #include <poll.h>
@@ -18,13 +18,13 @@
 class LinuxWatcher {
 private:
   int inotify_descriptor;
+  std::string root_to_watch;
   std::unordered_map<std::string, int> path_wd_map;
   std::unordered_map<int, std::string> wd_path_map;
   std::unordered_map<int, std::string> cookie_map;
-  std::string root_to_watch;
   inline static LinuxWatcher *instance = nullptr;
 
-  LinuxWatcher(const std::string &root_path, uint32_t mask) {
+  LinuxWatcher(const std::string &root_to_watch) {
     // Richiedo un file descriptor al kernel da utilizzare
     // per la watch. L'API fornita prevede, come spesso avviene
     // in linux, che la comunicazione tra kernel e user avvenga
@@ -36,17 +36,12 @@ private:
       perror("inotify_init1");
       exit(-1);
     }
-    // Aggiungiamo una root to watch, senza questa il watcher non ha
-    // senso di esistere.
-    root_to_watch = root_path;
-    add_watch(root_path, mask);
   }
 
 public:
-  static LinuxWatcher *getInstance(const std::string &root_path,
-                                   uint32_t mask) {
+  static LinuxWatcher *getInstance(const std::string &root_path) {
     if (instance == nullptr) {
-      instance = new LinuxWatcher(root_path, mask);
+      instance = new LinuxWatcher{root_path};
     }
     return instance;
   }
@@ -102,7 +97,6 @@ public:
     std::clog << "Start monitoring...\n";
     for (;;) {
 
-      std::clog << "loop round\n";
       // Some systems cannot read integer variables if they are not
       // properly aligned. On other systems, incorrect alignment may
       // decrease performance. Hence, the buffer used for reading from
@@ -131,26 +125,31 @@ public:
         len = read(inotify_descriptor, buf, sizeof buf);
         // todo: check su read qui...
 
+        HandleWatcher *handlewatcher = HandleWatcher::getInstance();
+
         for (ptr = buf; ptr < buf + len;
              ptr += sizeof(struct inotify_event) + event->len) {
 
           event = (const struct inotify_event *)ptr;
-
-          Handle_watcher *handlewatcher = Handle_watcher::getInstance();
+          
+          std::string full_path =
+              wd_path_map[event->wd] + "/" + std::string{event->name};
 
           if (event->mask & IN_CREATE) {
-            // todo: aggiungere se necessario (solo se creo nuova cartella) watch appropriato
+            if (std::filesystem::is_directory(full_path))
+              add_watch(full_path, IN_ONLYDIR | IN_CREATE | IN_DELETE |
+                                       IN_MODIFY | IN_MOVED_TO);
             handlewatcher->handle_InCreate(event->name);
           }
 
-          // la Delete funziona solo da terminale e non capisco perchè
           if (event->mask & IN_DELETE) {
-            // todo: eliminare se necessario (solo se cartella) watch appropriato
+            if (std::filesystem::is_directory(full_path))
+              remove_watch(full_path);
             handlewatcher->handle_InDelete(event->name);
           }
 
           if (event->mask & IN_MODIFY)
-            handlewatcher->handle_InModify(event->name);
+            handlewatcher->handle_InModify(full_path);
 
           if (event->mask & IN_MOVED_FROM)
             cookie_map[event->cookie] = std::string{event->name};
@@ -159,8 +158,6 @@ public:
             handlewatcher->handle_InRename(cookie_map[event->cookie],
                                            event->name);
 
-          // print path su cui e' avvenuto l'evento
-          std::clog << "path: " << wd_path_map[event->wd];
         }
       }
     }

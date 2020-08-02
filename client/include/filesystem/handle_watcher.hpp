@@ -1,35 +1,18 @@
-//
-// Created by alessandra on 30/07/20.
-//
+#pragma once
 
-#ifndef REMOTE_BACKUP_HANDLE_WATCHER_H
-#define REMOTE_BACKUP_HANDLE_WATCHER_H
-
-#include "unistd.h"
-#include <errno.h>
-#include <iostream>
-#include <poll.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <string>
-#include <sys/inotify.h>
-#include <unistd.h>
-#include <unordered_map>
 #include <filesystem>
 #include <fstream>
 #include <regex>
 
-class Handle_watcher {
-  inline static Handle_watcher *instance = nullptr;
+class HandleWatcher {
+  inline static HandleWatcher *instance = nullptr;
 public:
-  static Handle_watcher *getInstance() {
+  static HandleWatcher *getInstance() {
     if (instance == nullptr) {
-      instance = new Handle_watcher();
+      instance = new HandleWatcher();
     }
     return instance;
   }
-  // eventi da monitorare
 
   void handle_InCreate(std::string);
 
@@ -50,5 +33,3 @@ public:
 
   // manca l'erros sul file watcher che non  so come monitorare
 };
-
-#endif // REMOTE_BACKUP_HANDLE_WATCHER_H
