@@ -43,7 +43,7 @@ $(document).ready(function () {
         confirm_password = $("#rip-password").val();
         $.post("0.0.0.0:3200/signup", { username: username, password: password, confirm_password: confirm_password })
             .done((data) => {
-                // todo: store jwt
+                ipcRenderer.sendSync('token', data.token);
                 console.log(data);
             })
             .fail((error) => {
