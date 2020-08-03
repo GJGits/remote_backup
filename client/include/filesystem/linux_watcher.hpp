@@ -139,7 +139,7 @@ public:
             if (std::filesystem::is_directory(full_path))
               add_watch(full_path, IN_ONLYDIR | IN_CREATE | IN_DELETE |
                                        IN_MODIFY | IN_MOVED_TO);
-            handlewatcher->handle_InCreate(event->name);
+            handlewatcher->handle_InCreate(full_path);
           }
 
           if (event->mask & IN_DELETE) {

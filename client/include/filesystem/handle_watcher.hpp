@@ -1,8 +1,12 @@
 #pragma once
 
+#include "../common/json.hpp"
+#include <iostream>
 #include <filesystem>
 #include <fstream>
 #include <regex>
+
+using json = nlohmann::json;
 
 class HandleWatcher {
   inline static HandleWatcher *instance = nullptr;
