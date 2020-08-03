@@ -35,31 +35,30 @@ void request_handler::handle_request(const request &req, reply &rep) {
   } catch (UsernameAlreadyExists &e) {
     std::string what{e.what()};
       rep = http::server::reply::stock_reply(http::server::reply::internal_server_error);
-      std::string reply_body = "{\"error\":\"" + what + "\"}";
+     json reply_body =  {"error", what};
     MakeReply::makereply(rep,reply_body);
     return;
   } catch (CredentialsNotValidException &e) {
       std::string what{e.what()};
       rep = http::server::reply::stock_reply(http::server::reply::internal_server_error);
-      std::string reply_body = "{\"error\":\"" + what + "\"}";
+     json reply_body =  {"error", what};
       MakeReply::makereply(rep,reply_body);
       return;
   }catch (UsernameNotExists &e) {
       std::string what{e.what()};
       rep = http::server::reply::stock_reply(http::server::reply::internal_server_error);
-      std::string reply_body = "{\"error\":\"" + what + "\"}";
-      MakeReply::makereply(rep,reply_body);
-      return;
+      json reply_body =  {"error", what};
+      return MakeReply::makereply(rep,reply_body);
   }catch (PasswordNeqConfirm &e) {
       std::string what{e.what()};
       rep = http::server::reply::stock_reply(http::server::reply::internal_server_error);
-      std::string reply_body = "{\"error\":\"" + what + "\"}";
+      json reply_body =  {"error", what};
       MakeReply::makereply(rep,reply_body);
       return;
   }catch (UknownError &e) {
       std::string what{e.what()};
       rep = http::server::reply::stock_reply(http::server::reply::internal_server_error);
-      std::string reply_body = "{\"error\":\"" + what + "\"}";
+      json reply_body =  {"error", what};
       MakeReply::makereply(rep,reply_body);
       return;
   }

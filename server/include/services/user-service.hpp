@@ -1,5 +1,6 @@
 #pragma once
-#include "../dtos/user-log-dto.hpp"
+#include "../dtos/signup_dto.hpp"
+#include "../dtos/signin_dto.hpp"
 #include "../common/sha256.hpp"
 #include "../repositories/user-repository.hpp"
 #include <filesystem>
@@ -26,8 +27,8 @@ class UserService {
     return instance;
     }
 
-    std::string login(const UserLogDTO &user);
-    std::string signup(const UserLogDTO &user);
-    std::string getStatus(const UserLogDTO &user);
+    std::string login(const SigninDTO &user);
+    std::string signup(const SignupDTO &user);
+    std::string getStatus(const std::string &username);
 
     };

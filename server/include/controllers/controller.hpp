@@ -2,7 +2,8 @@
 
 #include "../http/reply.hpp"
 #include "../http/request.hpp"
-#include "../dtos/user-log-dto.hpp"
+#include "../dtos/signup_dto.hpp"
+#include "../dtos/signin_dto.hpp"
 #include <optional>
 #include <string>
 #include <unordered_map>

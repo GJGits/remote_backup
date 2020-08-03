@@ -1,7 +1,6 @@
 #include "../../include/services/user-service.hpp"
 
-
-std::string UserService::login(const UserLogDTO &user) {
+std::string UserService::login(const SigninDTO &user) {
   UserRepository user_rep;
   std::optional<UserEntity> user_returned =
       user_rep.getUserByUsername(user.getUsername());
@@ -19,11 +18,11 @@ std::string UserService::login(const UserLogDTO &user) {
   throw UknownError();
 }
 
-std::string UserService::signup(const UserLogDTO &user) {
+std::string UserService::signup(const SignupDTO &user) {
 
   /* Eventualmente tale check se deve essere fatto più avanti lo si sposta*/
   if (user.getPassword().compare(user.getPasswordConfirm()) != 0)
-      throw PasswordNeqConfirm();
+    throw PasswordNeqConfirm();
 
   UserRepository user_rep;
   std::string username(user.getUsername());
@@ -37,31 +36,23 @@ std::string UserService::signup(const UserLogDTO &user) {
     std::filesystem::create_directories(path);
 
     /* Create client-struct.json file */
-    std::string file_path{path + "/client-struct.json"};
-    std::ofstream init_file;
-    std::string content{
-        "{\n \"hashed_status\":\"empty_hashed_status\",\n \"entries\":[]\n}"};
-    init_file.open(file_path);
-    init_file << content;
-    init_file.close();
-      return JWT::generateToken(user.getUsername());
+    json j ;
+    j["hashed_status"] = "empty_hashed_status";
+    j["entries"] = json::array();
+    std::ofstream o(path + "/client-struct.json");
+    o << std::setw(4) << j << std::endl;
+    return JWT::generateToken(user.getUsername());
   } else
-      throw UsernameAlreadyExists();
+    throw UsernameAlreadyExists();
 }
 
-std::string
-UserService::getStatus(const UserLogDTO &user) {
+std::string UserService::getStatus(const std::string &username) {
   UserRepository user_rep;
-  std::optional<UserEntity> user_returned =
-      user_rep.getUserByUsername(user.getUsername());
-  /* Se viene fornito un username non esistente nel database, torna stringa
-   * vuota, che poi verrà tornata come bad::request */
-  if (user_returned.has_value()) {
-    std::string file_path{"../../filesystem/" + user.getUsername() +
-                          "/client-struct.json"};
-    boost::property_tree::ptree pt;
-    boost::property_tree::read_json(file_path, pt);
-    return pt.get<std::string>("hashed_status");
+  if (user_rep.getUserByUsername(username).has_value()) {
+    json j;
+    std::ifstream i("../../filesystem/" + username + "/client-struct.json");
+    i >> j;
+    return j["hashed_status"];
   } else {
     throw UsernameNotExists();
   }

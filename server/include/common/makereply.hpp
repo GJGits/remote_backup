@@ -5,16 +5,17 @@
 class MakeReply
 {
 public:
-    static void makereply(http::server::reply &rep, std::string reply_body) {
+    static void makereply(http::server::reply &rep, const json &rep_body) {
         struct http::server::header con_len;
+        std::string rep_content = rep_body.dump();
         con_len.name = "Content-Length";
-        con_len.value = std::to_string(reply_body.size());
+        con_len.value = std::to_string(rep_content.size());
         struct http::server::header con_type;
         con_type.name = "Content-Type";
         con_type.value = "application/json";
         rep.headers.push_back(con_len);
         rep.headers.push_back(con_type);
-        rep.content = reply_body;
+        rep.content = rep_content;
         return;
     } // static member function
 };
