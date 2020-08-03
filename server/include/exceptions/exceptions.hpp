@@ -48,3 +48,12 @@ struct UknownError : public std::exception
     }
 
 };
+
+struct WrongRquestFormat : public std::exception
+{
+const char * what () const throw ()
+{
+    return "The format of the request is wrong, please contact administrator for further infos";
+}
+
+};

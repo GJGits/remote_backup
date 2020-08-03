@@ -9,8 +9,7 @@ private:
   std::string password_confirm;
 
 public:
-  SignupDTO(std::string username, std::string password,
-            std::string password_confirm);
+  SignupDTO(){};
 
   std::string getUsername() const;
   std::string getPassword() const;

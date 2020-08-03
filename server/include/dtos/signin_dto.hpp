@@ -7,7 +7,7 @@ private:
   std::string password;
 
 public:
-  SigninDTO(const std::string &username, const std::string &password);
+  SigninDTO(){};
   std::string getUsername() const;
   std::string getPassword() const;
 

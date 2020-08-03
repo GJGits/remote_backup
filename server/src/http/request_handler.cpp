@@ -10,6 +10,13 @@
 
 #include "../../include/http/request_handler.hpp"
 
+void make_1line_reply(std::string what,http::server::reply &rep){
+    rep = http::server::reply::stock_reply(http::server::reply::internal_server_error);
+    json reply_body ;
+    reply_body["error"]=  what;
+    MakeReply::makereply(rep,reply_body);
+    return;
+}
 
 namespace http {
 namespace server {
@@ -33,34 +40,24 @@ void request_handler::handle_request(const request &req, reply &rep) {
       return;
     }
   } catch (UsernameAlreadyExists &e) {
-    std::string what{e.what()};
-      rep = http::server::reply::stock_reply(http::server::reply::internal_server_error);
-     json reply_body =  {"error", what};
-    MakeReply::makereply(rep,reply_body);
-    return;
+      return make_1line_reply(e.what(), rep);
+
   } catch (CredentialsNotValidException &e) {
-      std::string what{e.what()};
-      rep = http::server::reply::stock_reply(http::server::reply::internal_server_error);
-     json reply_body =  {"error", what};
-      MakeReply::makereply(rep,reply_body);
-      return;
+      return make_1line_reply(e.what(), rep);
+
   }catch (UsernameNotExists &e) {
-      std::string what{e.what()};
-      rep = http::server::reply::stock_reply(http::server::reply::internal_server_error);
-      json reply_body =  {"error", what};
-      return MakeReply::makereply(rep,reply_body);
+      return make_1line_reply(e.what(), rep);
+
   }catch (PasswordNeqConfirm &e) {
-      std::string what{e.what()};
-      rep = http::server::reply::stock_reply(http::server::reply::internal_server_error);
-      json reply_body =  {"error", what};
-      MakeReply::makereply(rep,reply_body);
-      return;
-  }catch (UknownError &e) {
-      std::string what{e.what()};
-      rep = http::server::reply::stock_reply(http::server::reply::internal_server_error);
-      json reply_body =  {"error", what};
-      MakeReply::makereply(rep,reply_body);
-      return;
+      return make_1line_reply(e.what(), rep);
+
+  }catch (WrongRquestFormat &e) {
+      return make_1line_reply(e.what(), rep);
+
+  }
+  catch (UknownError &e) {
+      return make_1line_reply(e.what(), rep);
+
   }
 
 }

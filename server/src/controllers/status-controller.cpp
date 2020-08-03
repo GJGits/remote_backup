@@ -12,8 +12,10 @@ StatusController::handle(const http::server::request &req) {
       std::string username{std::move(match[1])};
       return get_status(username);
     }
+    else
+        throw WrongRquestFormat(); // todo: creare eccezione
   }
-  return http::server::reply::stock_reply(http::server::reply::bad_request);
+    throw WrongRquestFormat(); // todo: creare eccezione
 }
 
 const http::server::reply StatusController::get_status(const std::string &username) {
@@ -22,7 +24,8 @@ const http::server::reply StatusController::get_status(const std::string &userna
   std::string result = user_service->getStatus(username);
     http::server::reply rep;
     rep.status = http::server::reply::ok;
-    json reply_body = {"hashed_status", result};
+    json reply_body;
+    reply_body["hashed_status"] = result;
     MakeReply::makereply(rep,reply_body);
     return rep;
 

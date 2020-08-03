@@ -1,11 +1,7 @@
 #include "../../include/controllers/auth-controller.hpp"
 
-inline static std::regex signin_rgx{
-    "^{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\"}$"};
-inline static std::regex signup_rgx{
-    "^{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\",\\s?\"password_"
-    "confirm\":\\s?\"\\w+\"}$"};
-inline static std::regex user_rgx{"(\\w+)$"};
+inline static std::regex signin_rgx{"^\\{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\"\\}$"};
+inline static std::regex signup_rgx{"^\\{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\",\\s?\"password_confirm\":\\s?\"\\w+\"\\}$"};
 
 const http::server::reply
 AuthController::handle(const http::server::request &req) {
@@ -17,42 +13,48 @@ AuthController::handle(const http::server::request &req) {
       std::string req_body = std::string{req.body.begin(), req.body.end()};
       std::smatch match;
       if (!std::regex_match(req_body, match, signin_rgx))
-        throw CredentialsNotValidException(); // todo: creare eccezione
+        throw WrongRquestFormat(); // todo: creare eccezione
 
       SigninDTO user{};
-      return post_sigin(user.deserialize(req_body));
+      user.deserialize(req_body);
+      return post_signin(user);
 
     } else if (req.uri == "/auth/signup") {
 
       std::string req_body = std::string{req.body.begin(), req.body.end()};
       std::smatch match;
       if (!std::regex_match(req_body, match, signup_rgx))
-        throw CredentialsNotValidException(); // todo: creare eccezione
+        throw WrongRquestFormat(); // todo: creare eccezione
 
       SignupDTO user{}; // specifica
-      return post_signup(user.deserialize(req_body));
+      user.deserialize(req_body);
+      return post_signup(user);
     }
   }
-  return http::server::reply::stock_reply(
-      http::server::reply::bad_request); // Sarà una rep vuota qui, ricordarsi
+    throw WrongRquestFormat(); // todo: creare eccezione
+
 }
 
-const http::server::reply AuthController::post_sigin(const UserLogDTO &user) {
+const http::server::reply AuthController::post_signin(const SigninDTO &user) {
 
   UserService *user_service = UserService::getInstance();
   std::string result = user_service->login(user);
   http::server::reply rep;
   rep.status = http::server::reply::ok;
-  MakeReply::makereply(rep, user);
+  json reply_body;
+  reply_body["token"] = result;
+    MakeReply::makereply(rep, reply_body);
   return rep;
 }
 
-const http::server::reply AuthController::post_signup(const UserLogDTO &user) {
+const http::server::reply AuthController::post_signup(const SignupDTO &user) {
 
   UserService *user_service = UserService::getInstance();
   std::string result = user_service->signup(user);
   http::server::reply rep;
   rep.status = http::server::reply::ok;
-  MakeReply::makereply(rep, user);
+  json reply_body;
+  reply_body["token"] = result;
+    MakeReply::makereply(rep, reply_body);
   return rep;
 }
