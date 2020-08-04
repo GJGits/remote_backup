@@ -18,12 +18,6 @@ public:
     return instance;
   }
 
-  json hash_struct(json &structure);
-
-  json read_structure();
-
-  void write_structure(const json &structure);
-
   void handle_InCreate(std::string);
 
   /*File was modified (e.g., write(2), truncate(2)).*/
