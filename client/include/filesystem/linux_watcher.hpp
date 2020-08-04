@@ -145,7 +145,7 @@ public:
           if (event->mask & IN_DELETE) {
             if (std::filesystem::is_directory(full_path))
               remove_watch(full_path);
-            handlewatcher->handle_InDelete(event->name);
+            handlewatcher->handle_InDelete(full_path);
           }
 
           if (event->mask & IN_MODIFY)

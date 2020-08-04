@@ -1,11 +1,14 @@
 #pragma once
 #include <chrono>
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <math.h>
 #include <string>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <vector>
 
 #include "../common/sha256.hpp"
@@ -33,18 +36,15 @@ public:
       chunks.push_back(file_hash);
       dim_last_chunk = fsize < CHUNK_SIZE ? fsize : 0;
     } else {
-      int num_of_chunks = ceil(fsize / CHUNK_SIZE);
-      for (int i = 0; i < num_of_chunks - 1; i++) {
-        std::vector<char> chunk(
-            (std::istreambuf_iterator<char>(input)),
-            (std::istreambuf_iterator<char>(input.seekg(10))));
-        std::string chunk_hash = Sha256::getSha256(chunk);
-        chunks.push_back(chunk_hash);
-      }
+      // todo: aggiungere logica chunk per file con piu' chunks
     }
+    struct stat fileInfo;
+    stat(path.c_str(), &fileInfo);
+    last_mod = fileInfo.st_mtim.tv_sec;
   }
 
   std::string getFileHash() { return file_hash; }
   std::vector<std::string> getChunks() { return chunks; }
   int getLastChunk() { return dim_last_chunk; }
+  time_t getLastMod() { return last_mod; }
 };

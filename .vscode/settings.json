@@ -68,6 +68,8 @@
         "cfenv": "cpp",
         "typeindex": "cpp",
         "variant": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "*.ipp": "cpp",
+        "forward_list": "cpp"
     }
 }
