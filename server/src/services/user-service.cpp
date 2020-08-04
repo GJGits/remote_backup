@@ -2,18 +2,17 @@
 
 std::string UserService::login(const SigninDTO &user) {
   UserRepository user_rep;
-  std::optional<UserEntity> user_returned =
+  UserEntity user_returned =
       user_rep.getUserByUsername(user.getUsername());
-  if (user_returned.has_value()) {
-    unsigned int salt = user_returned.value().getSalt();
+
+    unsigned int salt = user_returned.getSalt();
     std::string hashed_password{Sha256::getSha256(
         std::to_string(salt) + user.getPassword() + std::to_string(salt))};
-    if (user_returned.value().getHashedPassword().compare(hashed_password) == 0)
+    if (user_returned.getHashedPassword().compare(hashed_password) == 0)
       return JWT::generateToken(user.getUsername());
     else
       throw CredentialsNotValidException();
-  } else
-    throw UsernameNotExists();
+
 
   throw UknownError();
 }
@@ -48,12 +47,10 @@ std::string UserService::signup(const SignupDTO &user) {
 
 std::string UserService::getStatus(const std::string &username) {
   UserRepository user_rep;
-  if (user_rep.getUserByUsername(username).has_value()) {
+  user_rep.getUserByUsername(username);
     json j;
     std::ifstream i("../../filesystem/" + username + "/client-struct.json");
     i >> j;
     return j["hashed_status"];
-  } else {
-    throw UsernameNotExists();
-  }
+
 }

@@ -51,8 +51,7 @@ void request_handler::handle_request(const request &req, reply &rep) {
   }catch (ControllerNotRetrievable &e) {
       return make_1line_exception(e.what(), rep);
 
-  }
-  catch (UknownError &e) {
+  }catch (UknownError &e) {
       return make_1line_exception(e.what(), rep);
 
   }
