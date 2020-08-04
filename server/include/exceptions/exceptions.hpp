@@ -44,6 +44,8 @@ struct UknownError : public std::exception
 {
     const char * what () const throw ()
     {
+        Logger::log(" An uknown error has occurred, please try again or contact your system administrator => ");
+
         return "An uknown error has occurred, please try again or contact your system administrator";
     }
 
@@ -53,6 +55,8 @@ struct WrongRquestFormat : public std::exception
 {
 const char * what () const throw ()
 {
+    Logger::log(" The format of the request is wrong, please contact administrator for further infos => ");
+
     return "The format of the request is wrong, please contact administrator for further infos";
 }
 
@@ -62,6 +66,8 @@ struct ControllerNotRetrievable : public std::exception
 {
     const char * what () const throw ()
     {
+        Logger::log(" The controller is not retrievable, please contact administrator for further infos => ");
+
         return "The controller is not retrievable, please contact administrator for further infos";
     }
 

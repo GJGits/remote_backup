@@ -11,12 +11,19 @@ int main()
 {
 
 try {
+    std::ofstream redirect_file("../logs/errors.log");
+    // save output buffer of cout
+    std::streambuf * strm_buffer = std::cout.rdbuf();
+    // redirect output into file
+    std::cout.rdbuf(redirect_file.rdbuf());
+
     testAll();
 
     std::size_t num_threads = 4;
     http::server::server s("0.0.0.0", "3500", "/", num_threads);
 
     s.run();
+    std::cout.rdbuf(strm_buffer);
 
 }
     catch (std::exception &e) {
