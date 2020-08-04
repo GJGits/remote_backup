@@ -5,7 +5,27 @@
 class MakeReply
 {
 public:
-    static void makereply(http::server::reply &rep, const json &rep_body) {
+
+
+    static http::server::reply make_1line_jsonAuthreply(std::string result){
+        http::server::reply rep;
+        rep.status = http::server::reply::ok;
+        json reply_body;
+        reply_body["token"] = result;
+        MakeReply::makejsonreply(rep, reply_body);
+        return rep;
+    }
+
+    static http::server::reply make_1line_jsonStatusreply(std::string result){
+        http::server::reply rep;
+        rep.status = http::server::reply::ok;
+        json reply_body;
+        reply_body["hashed_status"] = result;
+        MakeReply::makejsonreply(rep, reply_body);
+        return rep;
+    }
+
+    static void makejsonreply(http::server::reply &rep, const json &rep_body) {
         struct http::server::header con_len;
         std::string rep_content = rep_body.dump();
         con_len.name = "Content-Length";

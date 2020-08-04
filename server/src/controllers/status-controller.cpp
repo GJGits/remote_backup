@@ -3,6 +3,15 @@
 // regex utente: "^\\w+$"
 inline static std::regex user_rgx{"^/status/(\\w+)$"};
 
+http::server::reply make_1line_jsonreply(std::string result){
+    http::server::reply rep;
+    rep.status = http::server::reply::ok;
+    json reply_body;
+    reply_body["token"] = result;
+    MakeReply::makejsonreply(rep, reply_body);
+    return rep;
+}
+
 const http::server::reply
 StatusController::handle(const http::server::request &req) {
 
@@ -21,13 +30,7 @@ StatusController::handle(const http::server::request &req) {
 const http::server::reply StatusController::get_status(const std::string &username) {
 
   UserService *user_service = UserService::getInstance();
-  std::string result = user_service->getStatus(username);
-    http::server::reply rep;
-    rep.status = http::server::reply::ok;
-    json reply_body;
-    reply_body["hashed_status"] = result;
-    MakeReply::makereply(rep,reply_body);
-    return rep;
+  return MakeReply::make_1line_jsonAuthreply(user_service->getStatus(username));
 
 
 

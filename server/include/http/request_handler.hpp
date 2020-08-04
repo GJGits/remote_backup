@@ -18,7 +18,6 @@
 #include "../http/mime_types.hpp"
 #include "../http/reply.hpp"
 #include "../http/request.hpp"
-#include "../common/makereply.hpp"
 #include <fstream>
 #include <iostream>
 #include <sstream>

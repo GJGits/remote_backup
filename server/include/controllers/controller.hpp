@@ -12,8 +12,11 @@
 #include <boost/property_tree/ptree.hpp>
 #include <sstream>
 
+
+
 class Controller {
 
 public:
 	virtual const http::server::reply handle(const http::server::request &req) = 0;
+
 };

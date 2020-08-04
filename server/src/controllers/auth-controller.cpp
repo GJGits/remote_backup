@@ -3,6 +3,8 @@
 inline static std::regex signin_rgx{"^\\{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\"\\}$"};
 inline static std::regex signup_rgx{"^\\{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\",\\s?\"password_confirm\":\\s?\"\\w+\"\\}$"};
 
+
+
 const http::server::reply
 AuthController::handle(const http::server::request &req) {
 
@@ -38,23 +40,11 @@ AuthController::handle(const http::server::request &req) {
 const http::server::reply AuthController::post_signin(const SigninDTO &user) {
 
   UserService *user_service = UserService::getInstance();
-  std::string result = user_service->login(user);
-  http::server::reply rep;
-  rep.status = http::server::reply::ok;
-  json reply_body;
-  reply_body["token"] = result;
-    MakeReply::makereply(rep, reply_body);
-  return rep;
+  return MakeReply::make_1line_jsonAuthreply(user_service->login(user));
 }
 
 const http::server::reply AuthController::post_signup(const SignupDTO &user) {
 
   UserService *user_service = UserService::getInstance();
-  std::string result = user_service->signup(user);
-  http::server::reply rep;
-  rep.status = http::server::reply::ok;
-  json reply_body;
-  reply_body["token"] = result;
-    MakeReply::makereply(rep, reply_body);
-  return rep;
+  return MakeReply::make_1line_jsonAuthreply(user_service->signup(user));
 }

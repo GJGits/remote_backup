@@ -18,11 +18,6 @@ try {
 
     s.run();
 
-  } catch (const std::regex_error& e) {
-    std::clog << "regex_error caught: " << e.what() << '\n';
-    if (e.code() == std::regex_constants::error_brack) {
-        std::clog << "The code was error_brack\n";
-    }
 }
     catch (std::exception &e) {
     std::clog << "error on server start\n";
