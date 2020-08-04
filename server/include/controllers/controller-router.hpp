@@ -2,7 +2,7 @@
 #include "auth-controller.hpp"
 #include "controller.hpp"
 #include "status-controller.hpp"
-
+#include "../exceptions/exceptions.hpp"
 
 
 class ControllerRouter {
@@ -12,7 +12,7 @@ private:
 
 public:
 
-  static std::optional<Controller *> getController(const std::string &key) {
+  static Controller * getController(const std::string &key) {
     // se mappa non inizializzata
     if (instance == nullptr) {
       instance = new ControllerRouter();
@@ -27,10 +27,10 @@ public:
     std::clog << key << "\n";
     if (controller_map[res] != nullptr) {
       if (strcmp(res, "auth") == 0)
-        return std::optional<Controller *>(AuthController::getInstance());
+        return AuthController::getInstance();
       else if (strcmp(res, "status") == 0)
-        return std::optional<Controller *>(StatusController::getInstance());
+        return StatusController::getInstance();
     }
-    return std::nullopt;
+    throw ControllerNotRetrievable();
   }
 };

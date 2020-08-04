@@ -57,3 +57,12 @@ const char * what () const throw ()
 }
 
 };
+
+struct ControllerNotRetrievable : public std::exception
+{
+    const char * what () const throw ()
+    {
+        return "The controller is not retrievable, please contact administrator for further infos";
+    }
+
+};

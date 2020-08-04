@@ -30,15 +30,9 @@ void request_handler::handle_request(const request &req, reply &rep) {
 
   try {
 
-    std::optional<Controller *> c = ControllerRouter::getController(req.uri);
-    if (c.has_value()) {
-      // qui ok
-      rep = c.value()->handle(req);
-    } else {
-      // qui arriva solo se non esiste un controller
-      rep = reply::stock_reply(reply::bad_request);
-      return;
-    }
+    Controller * c = ControllerRouter::getController(req.uri);
+    rep = c->handle(req);
+
   } catch (UsernameAlreadyExists &e) {
       return make_1line_exception(e.what(), rep);
 
@@ -52,6 +46,9 @@ void request_handler::handle_request(const request &req, reply &rep) {
       return make_1line_exception(e.what(), rep);
 
   }catch (WrongRquestFormat &e) {
+      return make_1line_exception(e.what(), rep);
+
+  }catch (ControllerNotRetrievable &e) {
       return make_1line_exception(e.what(), rep);
 
   }
