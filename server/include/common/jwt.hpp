@@ -35,6 +35,7 @@ private:
       instance->token_header = macaron::Base64::Encode(jwt_header.dump());
       instance->secret = config["token-conf"]["secret"];
       instance->expiration = config["token-conf"]["expiration"];
+
     }
     return instance;
   }

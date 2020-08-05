@@ -22,6 +22,7 @@ L'applicazione ha il compito di fornire un sistema di incremental backup del con
 * [Team](#Team)
 * [Environment(Docker)](#Environment)
     * [Aggiungere docker ad un gruppo (Linux)](Aggiungere_docker_ad_un_gruppo_(Linux))
+    * [Utilizzare la bash di docker per interagire col Server](#Utilizzare_bash_con_Server)
     * [Utilizzare MySQL con Docker](#Utilizzare_MySQL_con_Docker)
 * [Architettura applicazione](#Architettura_applicazione)
     * [Architettura Frontend](#Architettura_Frontend)
@@ -69,6 +70,12 @@ Per utilizzare comodamente docker su Linux può risultare utile aggiungere docke
 3. A questo punto effettuare logout e login per rendere effettive le modifiche, alternativamente eseguire il comando: `newgrp docker`
 
 4. Testare eseguendo il comando: `docker run hello-world`.
+
+### Utilizzare la bash di docker per interagire col Server <a name="Utilizzare_bash_con_Server"></a>
+
+Dopo aver lanciato i vari servizi aprire una finestra di terminale ed eseguire il seguente comando:
+
+`docker exec -it remote_backup_server_1 /bin/bash`
 
 ### Utilizzare MySQL con Docker <a name="Utilizzare_MySQL_con_Docker"></a>
 
@@ -122,19 +129,21 @@ La scelta di utilizzare un DB come meccanismo di storage ha le seguenti motivazi
 - **allegerimento carico server:** evitando uno storage completo a carico del server, questi sarà soggetto a meno lavoro, e tale feature impatterà positivamente nei momenti di massimo stress.  
 - **resilienza(ACID):** la totalità delle operazioni avrà garanzia di atomicity, consistency, isolation, e durability, elementi non integrabili senza errori nel caso di un interazione custom coi dati tramite files.
 
+Il db utilizzato si chiama: **db_utenti**  
+
 Le tabelle all'interno del DBMS sono le seguenti:
 
-**username:** In questa collection troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata memorizzata tramite hash, il sale.
+**users:** In questa collection troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata memorizzata tramite hash, il sale.
 
-| id | username | password | salt |
-| :---: | :---: | :---: | :---: |
-| 0 | myuser | pass_hash_value | 3 | 
+| username | hashed_password | salt |
+| :---: | :---: | :---: |
+myuser | pass_hash_value | 3 | 
 
 ## Descrizione della directory della repository<a name="Descrizione_della_directory_della_repository"></a>
 
 La repository presenta una suddivisione dei files che si ripete rispettando una gerarchia delle cartelle fisso e definito:
 
-* (server/client/load-balancer)/
+* (server/client)/
   * config/
     * server-struct.json
   * src/
@@ -154,7 +163,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 ## REST API<a name="REST_API"></a>
 
 <details>
-  <summary>POST /signup</summary>
+  <summary>POST /auth/signup</summary>
   <br />  
   
   * **Descrizione**:&nbsp;&nbsp;&nbsp;*Endpoint che permette di registrare un nuovo utente*  
@@ -162,7 +171,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
   * **Authenticated**:&nbsp;&nbsp;&nbsp;`FALSE`
   <br />
   
-  * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{ user : username , pass1 : password , pass2 : password }`  
+  * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{ username : username , password : password , password : password }`  
   <br />  
   
   * **Risposta**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In caso negativo viene generato un messaggio HTTP 1.1 400 `{ err_msg : message here }`, in caso positivo invece viene inviata una risposta HTTP 1.1 200 OK con relativo token generato nell'header della risposta.   
@@ -170,7 +179,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 <br />  
 
 <details>
-  <summary>POST /signin</summary>
+  <summary>POST /auth/signin</summary>
   <br />  
   
   * **Descrizione**:&nbsp;&nbsp;&nbsp;*Endpoint che permette di autenticare un utente precedentemente registrato*  
@@ -178,7 +187,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
   * **Authenticated**:&nbsp;&nbsp;&nbsp;`FALSE`
   <br />
   
-  * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{ user : username , pass1 : password }`
+  * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`{ username : username , password : password }`
   <br />  
   
   * **Risposta**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In caso negativo viene generato un messaggio HTTP 1.1 400  `{ err_msg : message here }`, in caso positivo invece viene inviata una risposta HTTP 1.1 200 OK con relativo token generato nell'header della risposta. 
@@ -251,7 +260,7 @@ L'autenticazione all'interno dell'applicazione si basa su [JWT](https://jwt.io/i
     ...
 }
 ```
-Nel load-balancer nel file di configurazione `token-conf.json`:
+Nel server, nel file di configurazione `token-conf.json`:
 
 ```json
 {

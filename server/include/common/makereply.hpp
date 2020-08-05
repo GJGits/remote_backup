@@ -31,4 +31,5 @@ public:
     rep.content = rep_content;
     return;
   } // static member function
+
 };

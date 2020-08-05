@@ -21,6 +21,7 @@ AuthController::handle(const http::server::request &req) {
       user.deserialize(req_body);
       return MakeReply::make_1line_jsonReply<std::string>("token", post_signin(user), http::server::reply::ok);
 
+
     } else if (req.uri == "/auth/signup") {
 
       std::string req_body = std::string{req.body.begin(), req.body.end()};
@@ -47,4 +48,5 @@ const std::string AuthController::post_signup(const SignupDTO &user) {
 
   UserService *user_service = UserService::getInstance();
   return user_service->signup(user);
+
 }

@@ -61,6 +61,7 @@ void request_handler::handle_request(const request &req, reply &rep) {
         "error", e.what(), http::server::reply::internal_server_error);
     return;
   }
+
 }
 
 } // namespace server
