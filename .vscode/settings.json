@@ -53,6 +53,22 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "bit": "cpp"
+        "bit": "cpp",
+        "bitset": "cpp",
+        "csignal": "cpp",
+        "hash_map": "cpp",
+        "codecvt": "cpp",
+        "complex": "cpp",
+        "set": "cpp",
+        "future": "cpp",
+        "iomanip": "cpp",
+        "typeindex": "cpp",
+        "variant": "cpp",
+        "regex": "cpp",
+        "shared_mutex": "cpp",
+        "strstream": "cpp",
+        "forward_list": "cpp",
+        "cfenv": "cpp",
+        "valarray": "cpp"
     }
 }

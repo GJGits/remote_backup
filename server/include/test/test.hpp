@@ -9,6 +9,9 @@
 #include "mysql_connection.h"
 #include "../entities/user-entity.hpp"
 #include "../repositories/user-repository.hpp"
+#include "../common/base64.hpp"
+#include "../common/sha256.hpp"
+#include "../common/hmac-sha256.hpp"
 #include <array>
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
@@ -16,5 +19,8 @@
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
 
+void testBase64();
+void testSha256();
+void testHamacSha256();
 void testSQLCRUD();
 void testAll();

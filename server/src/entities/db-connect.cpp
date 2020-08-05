@@ -12,7 +12,7 @@ DBConnect::getConnection()
             try {
                 sql::Connection* con;
                 con = driver->connect("tcp://remote_backup_db_1:3306", "root", "example");
-                con->setSchema("db_prova");
+                con->setSchema("db_utenti");
                 DBConnect::instance->connections[i] = std::shared_ptr<sql::Connection> { con };
             } catch (sql::SQLException& e) {
                 // 1. print to debug
@@ -25,6 +25,6 @@ DBConnect::getConnection()
     }
     int scelta = DBConnect::instance->index;
     DBConnect::instance->index == 15 ? 0 : DBConnect::instance->index++;
-    std::clog << "Restituita connection: @" << scelta << "\n";
+    //std::clog << "Restituita connection: @" << scelta << "\n";
     return DBConnect::instance->connections[scelta];
 }

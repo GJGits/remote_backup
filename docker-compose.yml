@@ -12,12 +12,18 @@ services:
         build: ./server
         ports: 
             - "3500:3500"
-    load-balancer:
-        build: ./load-balancer
+        volumes:
+            - filesystem:/home/filesystem
+    ngnix-server:
+        image: nginx
         ports:
-            - "3100:3100"
+            - "3200:80"
+        volumes: 
+            - './server/config/nginx.conf:/etc/nginx/nginx.conf'
     client:
         build: ./client
         ports: 
             - "2800:2800"
+volumes: 
+    filesystem:
 
