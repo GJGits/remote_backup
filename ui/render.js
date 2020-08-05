@@ -5,12 +5,12 @@ var logged = false;
 $(document).ready(function () {
 
     ipcRenderer.on('asynchronous-message', (event, arg) => {
-        console.log("render receiced:", arg); // prints "ping"
+        console.log("render receiced:", arg); 
         //event.reply('asynchronous-reply', 'pong')
     });
 
     ipcRenderer.on('synchronous-message', (event, arg) => {
-        console.log("render receiced:", arg) // prints "ping"
+        console.log("render receiced:", arg);
         //event.returnValue = 'pong'
     });
 
