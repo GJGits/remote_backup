@@ -10,14 +10,6 @@
 
 #include "../../include/http/request_handler.hpp"
 
-void make_1line_exception(std::string what,http::server::reply &rep){
-    rep = http::server::reply::stock_reply(http::server::reply::internal_server_error);
-    json reply_body ;
-    reply_body["error"]=  what;
-    MakeReply::makejsonreply(rep,reply_body);
-    return;
-}
-
 namespace http {
 namespace server {
 
@@ -30,32 +22,45 @@ void request_handler::handle_request(const request &req, reply &rep) {
 
   try {
 
-    Controller * c = ControllerRouter::getController(req.uri);
+    Controller *c = ControllerRouter::getController(req.uri);
     rep = c->handle(req);
+    return;
 
   } catch (UsernameAlreadyExists &e) {
-      return make_1line_exception(e.what(), rep);
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
 
   } catch (CredentialsNotValidException &e) {
-      return make_1line_exception(e.what(), rep);
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
 
-  }catch (UsernameNotExists &e) {
-      return make_1line_exception(e.what(), rep);
+  } catch (UsernameNotExists &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
 
-  }catch (PasswordNeqConfirm &e) {
-      return make_1line_exception(e.what(), rep);
+  } catch (PasswordNeqConfirm &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
 
-  }catch (WrongRquestFormat &e) {
-      return make_1line_exception(e.what(), rep);
+  } catch (WrongRquestFormat &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
 
-  }catch (ControllerNotRetrievable &e) {
-      return make_1line_exception(e.what(), rep);
+  } catch (ControllerNotRetrievable &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
 
-  }catch (UknownError &e) {
-      return make_1line_exception(e.what(), rep);
-
+  } catch (UknownError &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
   }
-
 }
 
 } // namespace server

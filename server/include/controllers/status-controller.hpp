@@ -23,5 +23,5 @@ public:
     return instance;
   }
   virtual const http::server::reply handle(const http::server::request &req);
-  const http::server::reply get_status(const std::string &username);
+  const std::string get_status(const std::string &username);
 };

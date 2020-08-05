@@ -19,7 +19,7 @@ AuthController::handle(const http::server::request &req) {
 
       SigninDTO user{};
       user.deserialize(req_body);
-      return post_signin(user);
+      return MakeReply::make_1line_jsonReply<std::string>("token", post_signin(user), http::server::reply::ok);
 
     } else if (req.uri == "/auth/signup") {
 
@@ -30,21 +30,21 @@ AuthController::handle(const http::server::request &req) {
 
       SignupDTO user{}; // specifica
       user.deserialize(req_body);
-      return post_signup(user);
+      return MakeReply::make_1line_jsonReply<std::string>("token", post_signup(user), http::server::reply::ok);
     }
   }
     throw WrongRquestFormat(); // todo: creare eccezione
 
 }
 
-const http::server::reply AuthController::post_signin(const SigninDTO &user) {
+const std::string AuthController::post_signin(const SigninDTO &user) {
 
   UserService *user_service = UserService::getInstance();
-  return MakeReply::make_1line_jsonAuthreply(user_service->login(user));
+  return user_service->login(user);
 }
 
-const http::server::reply AuthController::post_signup(const SignupDTO &user) {
+const std::string AuthController::post_signup(const SignupDTO &user) {
 
   UserService *user_service = UserService::getInstance();
-  return MakeReply::make_1line_jsonAuthreply(user_service->signup(user));
+  return user_service->signup(user);
 }

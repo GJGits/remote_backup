@@ -69,6 +69,7 @@
         "strstream": "cpp",
         "forward_list": "cpp",
         "cfenv": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "*.ipp": "cpp"
     }
 }
