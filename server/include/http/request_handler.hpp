@@ -10,6 +10,8 @@
 
 #pragma once
 
+
+#include "../common/makereply.hpp"
 #include "../controllers/auth-controller.hpp"
 #include "../controllers/status-controller.hpp"
 #include "../controllers/controller-router.hpp"

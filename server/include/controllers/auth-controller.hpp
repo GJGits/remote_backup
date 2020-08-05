@@ -23,6 +23,7 @@ public:
     return instance;
   }
   virtual const http::server::reply handle(const http::server::request &req);
-  const http::server::reply post_signin(const SigninDTO &req);
-  const http::server::reply post_signup(const SignupDTO &req);
+  const std::string post_signin(const SigninDTO &req);
+  const std::string post_signup(const SignupDTO &req);
+
 };

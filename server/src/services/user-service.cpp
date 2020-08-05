@@ -9,7 +9,7 @@ std::string UserService::login(const SigninDTO &user) {
     std::string hashed_password{Sha256::getSha256(
         std::to_string(salt) + user.getPassword() + std::to_string(salt))};
     if (user_returned.getHashedPassword().compare(hashed_password) == 0)
-      return JWT::generateToken(user.getUsername());
+      return JWT::generateToken(user.getUsername(), JWT::getExpiration() + std::time(nullptr));
     else
       throw CredentialsNotValidException();
 
@@ -40,7 +40,7 @@ std::string UserService::signup(const SignupDTO &user) {
     j["entries"] = json::array();
     std::ofstream o(path + "/client-struct.json");
     o << std::setw(4) << j << std::endl;
-    return JWT::generateToken(user.getUsername());
+    return JWT::generateToken(user.getUsername(), JWT::getExpiration() + std::time(nullptr));
   } else
     throw UsernameAlreadyExists();
 }
