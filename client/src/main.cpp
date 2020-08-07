@@ -8,7 +8,7 @@ int main() {
   for (auto &p : std::filesystem::recursive_directory_iterator("./sync")) {
     if (p.is_directory()) {
       watcher->add_watch(p.path().string(), IN_ONLYDIR | IN_CREATE | IN_DELETE |
-                                                IN_MODIFY | IN_MOVED_TO);
+                                                IN_MODIFY | IN_MOVED_TO | IN_MOVED_FROM );
     }
   }
   watcher->handle_events();

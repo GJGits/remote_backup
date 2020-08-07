@@ -36,4 +36,7 @@ public:
   void handle_InRename(std::string, std::string);
 
   // manca l'erros sul file watcher che non  so come monitorare
+  
+  void handle_InMove(std::string);
+  
 };

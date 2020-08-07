@@ -6,6 +6,7 @@
 #include "../../include/filesystem/linux_watcher.hpp"
 #include "../../include/filesystem/sync_structure.hpp"
 
+
 void HandleWatcher::handle_InCreate(std::string path) {
   std::clog << " Evento: InCreate , cartella : " << path << "\n";
   SyncStructure *sync = SyncStructure::getInstance();
@@ -26,4 +27,8 @@ void HandleWatcher::handle_InRename(std::string old_path,
                                     std::string new_path) {
   std::clog << " Evento: InRename, old_path =" << old_path
             << ", new_path = " << new_path << "\n";
+}
+
+void HandleWatcher::handle_InMove(std::string path) {
+  std::clog << " Evento: InMove, old_path =" << path << "\n";
 }

@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <unordered_map>
 
+
 /**
  * Classe singleton che racchiude un metodo statico per ogni evento da
  * monitorare
@@ -102,7 +103,9 @@ public:
       // decrease performance. Hence, the buffer used for reading from
       // the inotify file descriptor should have the same alignment as
       // struct inotify_event.
+	
 
+	
       char buf[4096]
           __attribute__((aligned(__alignof__(struct inotify_event))));
       memset(buf, '\0', 4096);
@@ -135,6 +138,8 @@ public:
           std::string full_path =
               wd_path_map[event->wd] + "/" + std::string{event->name};
 
+try{
+
           if (event->mask & IN_CREATE) {
             if (std::filesystem::is_directory(full_path))
               add_watch(full_path, IN_ONLYDIR | IN_CREATE | IN_DELETE |
@@ -151,12 +156,29 @@ public:
           if (event->mask & IN_MODIFY)
             handlewatcher->handle_InModify(full_path);
 
-          if (event->mask & IN_MOVED_FROM)
+          // L'evento in basso, capisce che è stato eliminato un file da GUI    
+          // Una MOVED_FROM senza MOVED_TO è una cancellazione, mentre con MOVED_TO è rinominazione                             
+
+          if (event->mask & IN_MOVED_FROM ){
+          std::clog << "SONO in moved from \n";
             cookie_map[event->cookie] = std::string{event->name};
 
+}
           if (event->mask & IN_MOVED_TO)
             handlewatcher->handle_InRename(cookie_map[event->cookie],
                                            event->name);
+          
+          // L'evento in basso, capisce che è stato eliminato un file da GUI                                 
+          //if (event->mask & IN_MOVE)
+          //handlewatcher->handle_InMove(full_path);
+          
+
+}
+
+catch(const std::filesystem::filesystem_error& e){
+
+	std::clog << e.what() << "\n";
+}
 
         }
       }
