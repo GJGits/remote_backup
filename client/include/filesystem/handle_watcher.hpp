@@ -18,7 +18,7 @@ public:
     return instance;
   }
 
-  void handle_InCreate(std::string);
+  void handle_InCreate(std::string, bool); // true è file, false è cartella
 
   /*File was modified (e.g., write(2), truncate(2)).*/
   void handle_InModify(std::string);

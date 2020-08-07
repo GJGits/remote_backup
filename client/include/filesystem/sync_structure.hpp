@@ -1,6 +1,7 @@
 #pragma once
 #include "../common/json.hpp"
 #include "file_entry.hpp"
+#include "directory_entry.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -47,6 +48,13 @@ public:
   void add_entry(const std::string &path) {
     FileEntry fentry{path};
     json entry = fentry.getEntry();
+    structure["entries"].push_back(entry);
+    instance->write_structure();
+  }
+  
+    void add_entry_directory(const std::string &path) {
+    DirEntry dentry{path};
+    json entry = dentry.getEntry();
     structure["entries"].push_back(entry);
     instance->write_structure();
   }

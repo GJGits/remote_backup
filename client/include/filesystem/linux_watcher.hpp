@@ -141,10 +141,15 @@ public:
 try{
 
           if (event->mask & IN_CREATE) {
-            if (std::filesystem::is_directory(full_path))
+          std::clog << "SONO NELLA CREAZIONE\n";
+            if (event->mask & IN_ISDIR){
+
               add_watch(full_path, IN_ONLYDIR | IN_CREATE | IN_DELETE |
-                                       IN_MODIFY | IN_MOVED_TO);
-            handlewatcher->handle_InCreate(full_path);
+                                       IN_MODIFY | IN_MOVED_TO | IN_MOVED_FROM | IN_ISDIR);
+            handlewatcher->handle_InCreate(full_path,false);
+                                       }
+            else
+            handlewatcher->handle_InCreate(full_path,true);
           }
 
           if (event->mask & IN_DELETE) {
@@ -162,6 +167,7 @@ try{
           if (event->mask & IN_MOVED_FROM ){
           std::clog << "SONO in moved from \n";
             cookie_map[event->cookie] = std::string{event->name};
+            
 
 }
           if (event->mask & IN_MOVED_TO)
