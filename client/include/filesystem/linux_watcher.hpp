@@ -1,13 +1,16 @@
 #pragma once
 #include "handle_watcher.hpp"
 #include <errno.h>
+#include <future> // std::async, std::future
 #include <iostream>
 #include <poll.h>
+#include <queue>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <string>
 #include <sys/inotify.h>
+#include <thread>
 #include <unistd.h>
 #include <unordered_map>
 
@@ -20,6 +23,8 @@ private:
   int inotify_descriptor;
   std::string root_to_watch;
   uint32_t watcher_mask;
+  std::thread garbage_collector;
+  std::queue<int> mod_from_cookies;
   std::unordered_map<std::string, int> path_wd_map;
   std::unordered_map<int, std::string> wd_path_map;
   std::unordered_map<int, std::string> cookie_map;
@@ -41,11 +46,40 @@ private:
   }
 
 public:
+  std::queue<int> getCookieQueue() { return mod_from_cookies; }
+  std::unordered_map<int, std::string> getCookieMap() { return cookie_map; }
   static LinuxWatcher *getInstance(const std::string &root_path,
                                    uint32_t mask) {
     if (instance == nullptr) {
       instance = new LinuxWatcher{root_path, mask};
       instance->add_watch(root_path);
+      // garbage collector init
+      instance->garbage_collector = std::move(std::thread([&]() {
+        while (1) {
+          // todo: accesso con lock
+          if (instance->getCookieQueue().size() > 0) {
+            int cookie = instance->getCookieQueue().front();
+            // se il cookie e' ancora nella mappa allora
+            // una momoved_to NON E' STATA CHIAMATA quindi
+            // FORSE e' da eliminare, per assicurarsi che
+            // sia da eliminare faccio piu' tentativi prima
+            // di procedere.
+            int tentativi = 3;
+            while (tentativi > 0) {
+              if (instance->getCookieMap().find(cookie) !=
+                  instance->getCookieMap().end()) {
+                tentativi--;
+                sleep(100);
+              } else {
+                break;
+              }
+            }
+            if (tentativi == 0) {
+              // todo: elimina (watcher_handle->inDelete(...))
+            }
+          }
+        }
+      }));
     }
     return instance;
   }
@@ -55,6 +89,7 @@ public:
     // in questo modo il kernel ha la possibilità di riassegnarlo ad
     // un altro processo.
     close(inotify_descriptor);
+    garbage_collector.join();
   }
 
   /**
@@ -98,6 +133,7 @@ public:
    * event handler.
    */
   void handle_events() {
+
     std::clog << "Start monitoring...\n";
     for (;;) {
 
@@ -158,18 +194,19 @@ public:
             */
 
             if (event->mask & IN_CREATE) {
-              if (std::filesystem::is_directory(full_path))
+              if (event->mask & IN_ISDIR)
                 add_watch(full_path);
               else
                 handlewatcher->handle_InCreate(full_path);
             }
 
             if (event->mask & IN_DELETE) {
-              if (std::filesystem::is_directory(full_path) &&
-                  std::filesystem::is_empty(full_path))
-                remove_watch(full_path);
-              if (std::filesystem::is_directory(full_path) &&
-                  std::filesystem::is_regular_file(full_path))
+              if (event->mask & IN_ISDIR) {
+                bool res = remove_watch(full_path);
+                std::clog << "delete res = " << res << "\n";
+              }
+
+              else
                 handlewatcher->handle_InDelete(full_path);
             }
 
@@ -183,10 +220,16 @@ public:
             if (event->mask & IN_MOVED_FROM) {
               std::clog << "SONO in moved from \n";
               cookie_map[event->cookie] = std::string{event->name};
+              // todo: accesso con lock alla struttura
+              instance->mod_from_cookies.push(event->cookie);
             }
-            if (event->mask & IN_MOVED_TO)
+            if (event->mask & IN_MOVED_TO) {
+              // todo: se ripristino da cestino/drag and drop e si tratta di
+              // cartella va aggiunto il watch
               handlewatcher->handle_InRename(cookie_map[event->cookie],
                                              event->name);
+              cookie_map.erase(event->cookie);
+            }
 
             // L'evento in basso, capisce che è stato eliminato un file da GUI
             // if (event->mask & IN_MOVE)
