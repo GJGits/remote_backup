@@ -1,8 +1,11 @@
 #pragma once
 #include "handle_watcher.hpp"
+#include <chrono>
+#include <condition_variable>
 #include <errno.h>
 #include <future> // std::async, std::future
 #include <iostream>
+#include <mutex>
 #include <poll.h>
 #include <queue>
 #include <stdio.h>
@@ -29,7 +32,6 @@ private:
   std::unordered_map<int, std::string> wd_path_map;
   std::unordered_map<int, std::string> cookie_map;
   inline static LinuxWatcher *instance = nullptr;
-
   LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
       : watcher_mask{mask} {
     // Richiedo un file descriptor al kernel da utilizzare
@@ -46,40 +48,64 @@ private:
   }
 
 public:
+  std::mutex m;
+  std::condition_variable cv;
   std::queue<int> getCookieQueue() { return mod_from_cookies; }
   std::unordered_map<int, std::string> getCookieMap() { return cookie_map; }
+
+  void garbage_collect() {
+    std::clog << "size: " << instance->getCookieQueue().size() << "\n";
+    int cookie = mod_from_cookies.front();
+    // se il cookie e' ancora nella mappa allora
+    // una momoved_to NON E' STATA CHIAMATA quindi
+    // FORSE e' da eliminare, per assicurarsi che
+    // sia da eliminare faccio piu' tentativi prima
+    // di procedere.
+    int tentativi = 3;
+    while (tentativi > 0) {
+      if (cookie_map.find(cookie) != cookie_map.end()) {
+        tentativi--;
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      } else {
+        break;
+      }
+    }
+    if (tentativi == 0) {
+      HandleWatcher *handlewatcher = HandleWatcher::getInstance();
+      // todo: eliminare entry da struttura e non cercare da filesystem perche'
+      //       i file non esistono piu'
+      for (auto &p :
+           std::filesystem::recursive_directory_iterator(cookie_map[cookie])) {
+        if (!p.is_directory()) {
+          handlewatcher->handle_InDelete(p.path().string());
+        }
+      }
+      cookie_map.erase(cookie);
+    }
+    mod_from_cookies.pop();
+  }
+
+  void run_garbage_collector() {
+    instance->garbage_collector = std::move(std::thread([&]() {
+      while (1) {
+        std::unique_lock<std::mutex> lk{instance->m};
+        if (instance->getCookieQueue().empty()) {
+          instance->cv.wait(
+              lk, [&]() { return !instance->getCookieQueue().empty(); });
+        }
+        if (instance->getCookieQueue().size() > 0) {
+          garbage_collect();
+        }
+      }
+    }));
+  }
+
   static LinuxWatcher *getInstance(const std::string &root_path,
                                    uint32_t mask) {
     if (instance == nullptr) {
       instance = new LinuxWatcher{root_path, mask};
       instance->add_watch(root_path);
-      // garbage collector init
-      instance->garbage_collector = std::move(std::thread([&]() {
-        while (1) {
-          // todo: accesso con lock
-          if (instance->getCookieQueue().size() > 0) {
-            int cookie = instance->getCookieQueue().front();
-            // se il cookie e' ancora nella mappa allora
-            // una momoved_to NON E' STATA CHIAMATA quindi
-            // FORSE e' da eliminare, per assicurarsi che
-            // sia da eliminare faccio piu' tentativi prima
-            // di procedere.
-            int tentativi = 3;
-            while (tentativi > 0) {
-              if (instance->getCookieMap().find(cookie) !=
-                  instance->getCookieMap().end()) {
-                tentativi--;
-                sleep(100);
-              } else {
-                break;
-              }
-            }
-            if (tentativi == 0) {
-              // todo: elimina (watcher_handle->inDelete(...))
-            }
-          }
-        }
-      }));
+      instance->run_garbage_collector();
     }
     return instance;
   }
@@ -179,20 +205,6 @@ public:
 
           try {
 
-            /*
-            if (event->mask & IN_CREATE) {
-              std::clog << "SONO NELLA CREAZIONE\n";
-              if (event->mask & IN_ISDIR) {
-
-                add_watch(full_path, IN_ONLYDIR | IN_CREATE | IN_DELETE |
-                                         IN_MODIFY | IN_MOVED_TO |
-                                         IN_MOVED_FROM | IN_ISDIR);
-                handlewatcher->handle_InCreate(full_path, false);
-              } else
-                handlewatcher->handle_InCreate(full_path, true);
-            }
-            */
-
             if (event->mask & IN_CREATE) {
               if (event->mask & IN_ISDIR)
                 add_watch(full_path);
@@ -204,9 +216,13 @@ public:
               if (event->mask & IN_ISDIR) {
                 bool res = remove_watch(full_path);
                 std::clog << "delete res = " << res << "\n";
-              }
-
-              else
+                for (auto &p :
+                     std::filesystem::recursive_directory_iterator(full_path)) {
+                  if (!p.is_directory()) {
+                    handlewatcher->handle_InDelete(p.path().string());
+                  }
+                }
+              } else
                 handlewatcher->handle_InDelete(full_path);
             }
 
@@ -220,12 +236,17 @@ public:
             if (event->mask & IN_MOVED_FROM) {
               std::clog << "SONO in moved from \n";
               cookie_map[event->cookie] = std::string{event->name};
-              // todo: accesso con lock alla struttura
+              std::unique_lock lk{m};
               instance->mod_from_cookies.push(event->cookie);
+              cv.notify_all();
             }
             if (event->mask & IN_MOVED_TO) {
               // todo: se ripristino da cestino/drag and drop e si tratta di
               // cartella va aggiunto il watch
+              if (event->mask & IN_ISDIR &&
+                  cookie_map.find(event->cookie) == cookie_map.end()) {
+                add_watch(full_path);
+              }
               handlewatcher->handle_InRename(cookie_map[event->cookie],
                                              event->name);
               cookie_map.erase(event->cookie);

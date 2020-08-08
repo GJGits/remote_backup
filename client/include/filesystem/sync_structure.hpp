@@ -61,8 +61,9 @@ public:
   static SyncStructure *getInstance() {
     if (instance == nullptr) {
       instance = new SyncStructure{};
+      // todo: se il file client-struct.json non esiste crealo
       instance->read_structure();
-      //instance->prune_structure();
+      // todo: testa instance->prune_structure();
     }
     return instance;
   }
@@ -71,7 +72,7 @@ public:
     auto iter =
         std::find_if(structure["entries"].begin(), structure["entries"].end(),
                      [&](const json &x) { return x["path"] == path; });
-    if (iter != structure["entries"].end()) {
+    if (iter == structure["entries"].end()) {
       FileEntry fentry{path};
       json entry = fentry.getEntry();
       structure["entries"].push_back(entry);
@@ -88,11 +89,13 @@ public:
   }
 
   void remove_entry(std::string &path) {
-    structure["entries"].erase(
-        std::remove_if(structure["entries"].begin(), structure["entries"].end(),
-                       [&](const json &x) {
-                         return std::string{x["path"]}.compare(path) == 0;
-                       }));
-    instance->write_structure();
+    if (!structure["entries"].empty()) {
+      structure["entries"].erase(
+          std::remove_if(structure["entries"].begin(),
+                         structure["entries"].end(), [&](const json &x) {
+                           return std::string{x["path"]}.compare(path) == 0;
+                         }));
+      instance->write_structure();
+    }
   }
 };

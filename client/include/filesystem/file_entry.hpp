@@ -37,7 +37,6 @@ private:
       entry["chunks"].push_back(entry["file_hash"]);
       entry["dim_last_chunk"] = fsize < CHUNK_SIZE ? fsize : 0;
     } else {
-      // todo: aggiungere logica chunk per file con piu' chunks
       int seek_pos = 0;
       std::ifstream file(path, std::ios::binary);
       char read_buf[CHUNK_SIZE];

@@ -18,5 +18,6 @@ services:
             - "2800:2800"
         volumes: 
             - "./client/sync:/home/client/sync"
+            - "./client/config:/home/client/config"
 
 
