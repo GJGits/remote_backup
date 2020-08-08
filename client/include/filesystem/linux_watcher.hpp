@@ -11,7 +11,6 @@
 #include <unistd.h>
 #include <unordered_map>
 
-
 /**
  * Classe singleton che racchiude un metodo statico per ogni evento da
  * monitorare
@@ -20,12 +19,14 @@ class LinuxWatcher {
 private:
   int inotify_descriptor;
   std::string root_to_watch;
+  uint32_t watcher_mask;
   std::unordered_map<std::string, int> path_wd_map;
   std::unordered_map<int, std::string> wd_path_map;
   std::unordered_map<int, std::string> cookie_map;
   inline static LinuxWatcher *instance = nullptr;
 
-  LinuxWatcher(const std::string &root_to_watch) {
+  LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
+      : watcher_mask{mask} {
     // Richiedo un file descriptor al kernel da utilizzare
     // per la watch. L'API fornita prevede, come spesso avviene
     // in linux, che la comunicazione tra kernel e user avvenga
@@ -40,9 +41,11 @@ private:
   }
 
 public:
-  static LinuxWatcher *getInstance(const std::string &root_path) {
+  static LinuxWatcher *getInstance(const std::string &root_path,
+                                   uint32_t mask) {
     if (instance == nullptr) {
-      instance = new LinuxWatcher{root_path};
+      instance = new LinuxWatcher{root_path, mask};
+      instance->add_watch(root_path);
     }
     return instance;
   }
@@ -63,8 +66,8 @@ public:
    * @return: true se l'evento e' stato aggiunto alla lista del monitoring,
    *          false altrimenti.
    */
-  bool add_watch(const std::string &path, uint32_t mask) {
-    int wd = inotify_add_watch(inotify_descriptor, path.c_str(), mask);
+  bool add_watch(const std::string &path) {
+    int wd = inotify_add_watch(inotify_descriptor, path.c_str(), watcher_mask);
     if (wd == -1)
       return false;
     path_wd_map[path] = wd;
@@ -103,9 +106,7 @@ public:
       // decrease performance. Hence, the buffer used for reading from
       // the inotify file descriptor should have the same alignment as
       // struct inotify_event.
-	
 
-	
       char buf[4096]
           __attribute__((aligned(__alignof__(struct inotify_event))));
       memset(buf, '\0', 4096);
@@ -134,58 +135,69 @@ public:
              ptr += sizeof(struct inotify_event) + event->len) {
 
           event = (const struct inotify_event *)ptr;
-          
+
           std::string full_path =
               wd_path_map[event->wd] + "/" + std::string{event->name};
 
-try{
+          std::clog << "full_path: " << full_path << "\n";
 
-          if (event->mask & IN_CREATE) {
-          std::clog << "SONO NELLA CREAZIONE\n";
-            if (event->mask & IN_ISDIR){
+          try {
 
-              add_watch(full_path, IN_ONLYDIR | IN_CREATE | IN_DELETE |
-                                       IN_MODIFY | IN_MOVED_TO | IN_MOVED_FROM | IN_ISDIR);
-            handlewatcher->handle_InCreate(full_path,false);
-                                       }
-            else
-            handlewatcher->handle_InCreate(full_path,true);
+            /*
+            if (event->mask & IN_CREATE) {
+              std::clog << "SONO NELLA CREAZIONE\n";
+              if (event->mask & IN_ISDIR) {
+
+                add_watch(full_path, IN_ONLYDIR | IN_CREATE | IN_DELETE |
+                                         IN_MODIFY | IN_MOVED_TO |
+                                         IN_MOVED_FROM | IN_ISDIR);
+                handlewatcher->handle_InCreate(full_path, false);
+              } else
+                handlewatcher->handle_InCreate(full_path, true);
+            }
+            */
+
+            if (event->mask & IN_CREATE) {
+              if (std::filesystem::is_directory(full_path))
+                add_watch(full_path);
+              else
+                handlewatcher->handle_InCreate(full_path);
+            }
+
+            if (event->mask & IN_DELETE) {
+              if (std::filesystem::is_directory(full_path) &&
+                  std::filesystem::is_empty(full_path))
+                remove_watch(full_path);
+              if (std::filesystem::is_directory(full_path) &&
+                  std::filesystem::is_regular_file(full_path))
+                handlewatcher->handle_InDelete(full_path);
+            }
+
+            if (event->mask & IN_MODIFY)
+              handlewatcher->handle_InModify(full_path);
+
+            // L'evento in basso, capisce che è stato eliminato un file da GUI
+            // Una MOVED_FROM senza MOVED_TO è una cancellazione, mentre con
+            // MOVED_TO è rinominazione
+
+            if (event->mask & IN_MOVED_FROM) {
+              std::clog << "SONO in moved from \n";
+              cookie_map[event->cookie] = std::string{event->name};
+            }
+            if (event->mask & IN_MOVED_TO)
+              handlewatcher->handle_InRename(cookie_map[event->cookie],
+                                             event->name);
+
+            // L'evento in basso, capisce che è stato eliminato un file da GUI
+            // if (event->mask & IN_MOVE)
+            // handlewatcher->handle_InMove(full_path);
+
           }
 
-          if (event->mask & IN_DELETE) {
-            if (std::filesystem::is_directory(full_path))
-              remove_watch(full_path);
-            handlewatcher->handle_InDelete(full_path);
+          catch (const std::filesystem::filesystem_error &e) {
+
+            std::clog << e.what() << "\n";
           }
-
-          if (event->mask & IN_MODIFY)
-            handlewatcher->handle_InModify(full_path);
-
-          // L'evento in basso, capisce che è stato eliminato un file da GUI    
-          // Una MOVED_FROM senza MOVED_TO è una cancellazione, mentre con MOVED_TO è rinominazione                             
-
-          if (event->mask & IN_MOVED_FROM ){
-          std::clog << "SONO in moved from \n";
-            cookie_map[event->cookie] = std::string{event->name};
-            
-
-}
-          if (event->mask & IN_MOVED_TO)
-            handlewatcher->handle_InRename(cookie_map[event->cookie],
-                                           event->name);
-          
-          // L'evento in basso, capisce che è stato eliminato un file da GUI                                 
-          //if (event->mask & IN_MOVE)
-          //handlewatcher->handle_InMove(full_path);
-          
-
-}
-
-catch(const std::filesystem::filesystem_error& e){
-
-	std::clog << e.what() << "\n";
-}
-
         }
       }
     }

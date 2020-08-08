@@ -38,6 +38,21 @@ private:
       entry["dim_last_chunk"] = fsize < CHUNK_SIZE ? fsize : 0;
     } else {
       // todo: aggiungere logica chunk per file con piu' chunks
+      int seek_pos = 0;
+      std::ifstream file(path, std::ios::binary);
+      char read_buf[CHUNK_SIZE];
+      while (seek_pos < fsize) {
+        memset(read_buf, '\0', CHUNK_SIZE);
+        file.seekg(seek_pos);
+        size_t to_read =
+            (fsize - seek_pos) >= CHUNK_SIZE ? CHUNK_SIZE : (fsize - seek_pos);
+        file.read(read_buf, to_read); // todo: check su read
+        std::vector<char> chunk_buf{read_buf, read_buf + to_read};
+        entry["chunks"].push_back(Sha256::getSha256(chunk_buf));
+        seek_pos += to_read;
+        if (to_read < CHUNK_SIZE)
+          entry["dim_last_chunk"] = to_read;
+      }
     }
   }
 
@@ -55,6 +70,5 @@ public:
     fill_last_mod();
   }
 
-  json getEntry() {return entry;}
-
+  json getEntry() { return entry; }
 };

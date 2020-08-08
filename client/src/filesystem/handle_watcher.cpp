@@ -6,21 +6,26 @@
 #include "../../include/filesystem/linux_watcher.hpp"
 #include "../../include/filesystem/sync_structure.hpp"
 
-
 void HandleWatcher::handle_InCreate(std::string path, bool check) {
   std::clog << " Evento: InCreate , cartella : " << path << "\n";
   SyncStructure *sync = SyncStructure::getInstance();
   // La riga sync->add_entry funziona SOLO coi files, NON con le directory
-  if(check == true)
-  	sync->add_entry(path);
+  if (check == true)
+    sync->add_entry(path);
   else
-    	sync->add_entry_directory(path);
+    sync->add_entry_directory(path);
+}
+
+void HandleWatcher::handle_InCreate(std::string path) {
+  std::clog << " Evento: InCreate , cartella : " << path << "\n";
+  SyncStructure *sync = SyncStructure::getInstance();
+  sync->add_entry(path);
 }
 
 void HandleWatcher::handle_InDelete(std::string path) {
   std::clog << " Evento: InDelete, cartella :" << path << "\n";
-  SyncStructure *sync = SyncStructure::getInstance();
-  sync->remove_entry(path);
+  //SyncStructure *sync = SyncStructure::getInstance();
+  //sync->remove_entry(path);
 }
 
 void HandleWatcher::handle_InModify(std::string path) {
