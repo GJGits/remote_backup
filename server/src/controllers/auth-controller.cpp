@@ -13,6 +13,7 @@ AuthController::handle(const http::server::request &req) {
     if (req.uri == "/auth/signin") {
 
       std::string req_body = std::string{req.body.begin(), req.body.end()};
+      std::clog << "req_body = " << req_body << "\n";
       std::smatch match;
       if (!std::regex_match(req_body, match, signin_rgx))
         throw WrongRquestFormat(); // todo: creare eccezione

@@ -4,8 +4,10 @@ var logged = false;
 
 $(document).ready(function () {
 
+    console.log("page loaded");
+
     ipcRenderer.on('asynchronous-message', (event, arg) => {
-        console.log("render receiced:", arg); 
+        console.log("render receiced:", arg);
         //event.reply('asynchronous-reply', 'pong')
     });
 
@@ -31,45 +33,28 @@ $(document).ready(function () {
         }
     });
 
-    $("#registrati").click((event) => {
+    $("#signin-btn").click((event) => {
         event.preventDefault();
-        if (!logged) {
-            $("#login").hide();
-            $("#signup").show();
-            $("#logged").hide();
-        }
+        console.log("login clicked");
         username = $("#username").val();
         password = $("#password").val();
-        confirm_password = $("#rip-password").val();
-        $.post("0.0.0.0:3200/signup", { username: username, password: password, confirm_password: confirm_password })
-            .done((data) => {
-                ipcRenderer.sendSync('token', data.token);
-                console.log(data);
-            })
-            .fail((error) => {
-                // todo: show error message
-                console.log(error);
-            });
-    });
-
-    $("#accedi").click((event) => {
-        event.preventDefault();
-        if (!logged) {
-            $("#login").show();
-            $("#signup").hide();
-            $("#logged").hide();
-        }
-        username = $("#username").val();
-        password = $("#password").val();
-        $.post("0.0.0.0:3200/sigin", { username: username, password: password})
-            .done((data) => {
-                // todo: store jwt
-                console.log(data);
-            })
-            .fail((error) => {
-                // todo: show error message
-                console.log(error);
-            });
+        $.ajax({
+            url: "http://0.0.0.0:3200/auth/signin",
+            type: "POST",
+            data: JSON.stringify({ username: username, password: password.toString() }),
+            contentType: "application/json",
+            dataType: "json",
+            success: function (result) {
+                //ipcRenderer.sendSync('token', result.token);
+                console.log("result:", result);
+            },
+            statusCode: {
+                500: function (message) {
+                    $(".error").html(message);
+                    console.log(message);
+                }
+            }
+        });
     });
 
 });
