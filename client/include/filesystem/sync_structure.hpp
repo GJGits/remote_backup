@@ -8,8 +8,8 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-
-
+#include <regex>
+#include <boost/algorithm/string/replace.hpp>
 
 using json = nlohmann::json;
 
@@ -109,12 +109,6 @@ public:
     }
   }
 
-  void add_entry_directory(const std::string &path) {
-    DirEntry dentry{path};
-    json entry = dentry.getEntry();
-    structure["entries"].push_back(entry);
-    instance->write_structure();
-  }
 
   void remove_entry(std::string &path) {
     if (!structure["entries"].empty()) {
@@ -129,5 +123,28 @@ public:
 
         instance->write_structure();
     }
+  }
+
+  void remove_sub_entries(std::string &path){
+      const std::string input = "^"+path+"/.*$";
+      std::string output = boost::replace_all_copy(input, "/", "\\/");
+      std::regex delete_reg{output};
+      std::smatch match;
+
+      auto it = structure["entries"].begin();
+      while(it != structure["entries"].end()){
+          json entry = *it;
+          std::string entry_path = entry["path"].get<std::string>();
+          std::clog << "provo "<< entry["path"] << "\n";
+          std::clog << output << "\n";
+
+          if (std::regex_match(entry_path, match, delete_reg)) {
+              std::clog << "Matcho\n";
+              remove_entry(entry_path);
+          }
+          else{
+              it++;
+          }
+      }
   }
 };

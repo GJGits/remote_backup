@@ -16,6 +16,7 @@
 #include <thread>
 #include <unistd.h>
 #include <unordered_map>
+#include "sync_structure.hpp"
 
 /**
  * Classe singleton che racchiude un metodo statico per ogni evento da
@@ -71,15 +72,14 @@ public:
       }
     }
     if (tentativi == 0) {
-      HandleWatcher *handlewatcher = HandleWatcher::getInstance();
       // todo: eliminare entry da struttura e non cercare da filesystem perche'
       //       i file non esistono piu'
-      for (auto &p :
-           std::filesystem::recursive_directory_iterator(cookie_map[cookie])) {
-        if (!p.is_directory()) {
-          handlewatcher->handle_InDelete(p.path().string());
-        }
-      }
+      std::clog << "Il path è: " << cookie_map[cookie] << "\n";
+
+        SyncStructure *syn = SyncStructure::getInstance();
+        syn->remove_sub_entries(cookie_map[cookie]);
+
+
       cookie_map.erase(cookie);
     }
     mod_from_cookies.pop();
@@ -235,7 +235,7 @@ public:
 
             if (event->mask & IN_MOVED_FROM) {
               std::clog << "SONO in moved from \n";
-              cookie_map[event->cookie] = std::string{event->name};
+              cookie_map[event->cookie] = full_path;
               std::unique_lock lk{m};
               instance->mod_from_cookies.push(event->cookie);
               cv.notify_all();
