@@ -2,11 +2,14 @@
 #include "../common/json.hpp"
 #include "directory_entry.hpp"
 #include "file_entry.hpp"
+#include <string>
 
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <vector>
+
+
 
 using json = nlohmann::json;
 
@@ -33,7 +36,18 @@ private:
       if (std::filesystem::exists(entry["path"])) {
         // todo: check timestamp ed hash per capire
         //       se il file e' stato aggiornato
+          struct stat fileInfo;
+          std::string name_file = entry["path"].get<std::string>();
+          stat(name_file.c_str(), &fileInfo);
+          std::ifstream input(name_file, std::ios::binary);
+          std::vector<char> bytes((std::istreambuf_iterator<char>(input)),(std::istreambuf_iterator<char>()));
+          if(fileInfo.st_mtim.tv_sec > entry["last_mod"] && entry["file_hash"] != Sha256::getSha256(bytes)){
+              remove_entry(name_file);
+              add_entry(name_file);
+          }
+
       }
+
       // 2. se il file e' contenuto nella struttura, ma
       //    non appare nel filesystem allora il file
       //    e' stato eliminato
@@ -64,6 +78,7 @@ public:
       // todo: se il file client-struct.json non esiste crealo
       instance->read_structure();
       // todo: testa instance->prune_structure();
+      instance->prune_structure();
     }
     return instance;
   }
