@@ -10,7 +10,7 @@ const storage = require('electron-json-storage');
 const mb = menubar(
   {
     icon: "remote-icon.png",
-    tooltip: "tooltip-name",
+    tooltip: "show",
     browserWindow: {
       webPreferences: { nodeIntegration: true }
     }
@@ -34,9 +34,13 @@ mb.on('ready', () => {
 
   ipcMain.on('token', (event, arg) => {
     console.log(arg);
+    // todo: token check format
     storage.set('token', { token: arg }, (error) => {
-      mb.window.webContents.send('status-changed', "logg-off");
+      mb.window.webContents.send('status-changed', "log-off");
+      event.returnValue = "ko";
     });
+    event.returnValue = "ok";
+    mb.window.webContents.send('status-changed', "log-in");
   });
 
   // UDP INSTANCE DEFINITION
@@ -66,11 +70,20 @@ mb.on('after-create-window', () => {
   storage.get("token", (error, data) => {
     if (error) {
       mb.window.webContents.send('status-changed', "log-off");
-    } if(data.length) {
-      //todo: check se token scaduto
-      console.log(data);
-      mb.window.webContents.send('status-changed', "log-in");
+    } if (data.length) {
+      const buff = Buffer.from(data.split(".")[1], "base64");
+      const exp = JSON.parse(buff.toLocaleString("ascii")).exp;
+      const now = Math.round((new Date()).getTime() / 1000);
+      console.log("exp:", exp, "now:", now);
+      if (exp <= now) {
+        mb.window.webContents.send('status-changed', "log-off");
+        storage.remove("token", (error) => { console.log(error) });
+      } else {
+        // todo: send login
+      }
     }
   });
   mb.window.openDevTools();
+  // todo: inviato per test su signin/signup rimuovere
+  //mb.window.webContents.send('status-changed', "log-off");
 });
