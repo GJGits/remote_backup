@@ -15,7 +15,7 @@
 
 #include "../common/sha256.hpp"
 
-#define CHUNK_SIZE 100 // chunk size espressa in byte
+#define CHUNK_SIZE 524288 // chunk size espressa in byte
 
 using namespace std::chrono_literals;
 

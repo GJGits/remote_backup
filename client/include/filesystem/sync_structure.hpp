@@ -4,12 +4,12 @@
 #include "file_entry.hpp"
 #include <string>
 
+#include <boost/algorithm/string/replace.hpp>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <vector>
 #include <regex>
-#include <boost/algorithm/string/replace.hpp>
+#include <vector>
 
 using json = nlohmann::json;
 
@@ -18,12 +18,12 @@ class SyncStructure {
 private:
   inline static SyncStructure *instance = nullptr;
 
-  void create_clientstructjson(){
-      json j ;
-      j["hashed_status"] = "empty_hashed_status";
-      j["entries"] = json::array();
-      std::ofstream o("./config/client-struct.json");
-      o << std::setw(4) << j << std::endl;
+  void create_clientstructjson() {
+    json j;
+    j["hashed_status"] = "empty_hashed_status";
+    j["entries"] = json::array();
+    std::ofstream o("./config/client-struct.json");
+    o << std::setw(4) << j << std::endl;
   }
 
   void read_structure() {
@@ -38,41 +38,7 @@ private:
     o.close();
   }
 
-  void prune_structure() {
-      auto it = structure["entries"].begin();
-      while(it != structure["entries"].end()){
-          json entry = *it;
-      if (std::filesystem::exists(entry["path"])) {
-          std::clog << "C'E' il file " << entry["path"] << "\n";
-          struct stat fileInfo;
-          std::string name_file = entry["path"].get<std::string>();
-          stat(name_file.c_str(), &fileInfo);
-          std::ifstream input(name_file, std::ios::binary);
-          std::vector<char> bytes((std::istreambuf_iterator<char>(input)),(std::istreambuf_iterator<char>()));
-          if(fileInfo.st_mtim.tv_sec > entry["last_mod"] && entry["file_hash"] != Sha256::getSha256(bytes)){
-              std::clog << "Aggiorno il file " << entry["path"] << "\n";
-              remove_entry(name_file);
-              add_entry(name_file);
-          }
-          std::clog << "ci sono ancora\n " << entry["path"] << "\n";
-          ++it;
-
-      }
-
-      // 2. se il file e' contenuto nella struttura, ma
-      //    non appare nel filesystem allora il file
-      //    e' stato eliminato
-      else if (!std::filesystem::exists(entry["path"])) {
-          std::string name_file = entry["path"].get<std::string>();
-          remove_entry(name_file);
-          std::clog << "cancello il file " << entry["path"] << "\n";
-
-      }
-    }
-  }
-
   void hash_struct() {
-    std::clog << "size : " << structure["entries"].size() << "\n";
     if (structure["entries"].empty()) {
       structure["hashed_status"] = std::string{"empty_hashed_status"};
     } else {
@@ -89,12 +55,21 @@ public:
   static SyncStructure *getInstance() {
     if (instance == nullptr) {
       instance = new SyncStructure{};
-      if(!std::filesystem::exists("./config/client-struct.json"))
+      if (!std::filesystem::exists("./config/client-struct.json") ||
+          std::filesystem::is_empty("./config/client-struct.json"))
         instance->create_clientstructjson();
       instance->read_structure();
-      instance->prune_structure();
     }
     return instance;
+  }
+
+  json getEntries() const { return structure["entries"]; }
+
+  bool has_entry(const std::string &path) {
+    auto iter =
+        std::find_if(structure["entries"].begin(), structure["entries"].end(),
+                     [&](const json &x) { return x["path"] == path; });
+    return iter != structure["entries"].end();
   }
 
   void add_entry(const std::string &path) {
@@ -104,47 +79,69 @@ public:
     if (iter == structure["entries"].end()) {
       FileEntry fentry{path};
       json entry = fentry.getEntry();
-      structure["entries"].push_back(entry);
-      instance->write_structure();
+      if (entry["dim_last_chunk"] > 0) {
+        structure["entries"].push_back(entry);
+        instance->write_structure();
+      }
     }
   }
 
+  void update_entry(const std::string &path) {
+    auto iter =
+        std::find_if(structure["entries"].begin(), structure["entries"].end(),
+                     [&](const json &x) { return x["path"] == path; });
+    if (iter != structure["entries"].end()) {
+      FileEntry fentry{path};
+      json entry = fentry.getEntry();
+      json old_entry = *iter;
+      if (old_entry["file_hash"] != entry["file_hash"]) {
+        remove_entry(path);
+        add_entry(path);
+      }
+    } else {
+      add_entry(path);
+    }
+  }
 
-  void remove_entry(std::string &path) {
+  void update_entry(const std::string &old_path, const std::string &new_path) {
+    auto iter =
+        std::find_if(structure["entries"].begin(), structure["entries"].end(),
+                     [&](const json &x) { return x["path"] == old_path; });
+    if (iter != structure["entries"].end()) {
+      FileEntry fentry{new_path};
+      json entry = fentry.getEntry();
+      json old_entry = *iter;
+      remove_entry(old_path);
+      add_entry(new_path);
+    }
+  }
+
+  void remove_entry(const std::string &path) {
     if (!structure["entries"].empty()) {
-        std::clog << "PRIMA Sono in "<< path << "\n";
-
-        structure["entries"].erase(
+      structure["entries"].erase(
           std::remove_if(structure["entries"].begin(),
                          structure["entries"].end(), [&](const json &x) {
                            return std::string{x["path"]}.compare(path) == 0;
                          }));
-        std::clog << "Dopo Sono in "<< path << "\n";
-
-        instance->write_structure();
+      instance->write_structure();
     }
   }
 
-  void remove_sub_entries(std::string &path){
-      const std::string input = "^"+path+"/.*$";
-      std::string output = boost::replace_all_copy(input, "/", "\\/");
-      std::regex delete_reg{output};
-      std::smatch match;
+  void remove_sub_entries(std::string &path) {
+    const std::string input = "^" + path + "/.*$";
+    std::string output = boost::replace_all_copy(input, "/", "\\/");
+    std::regex delete_reg{output};
+    std::smatch match;
 
-      auto it = structure["entries"].begin();
-      while(it != structure["entries"].end()){
-          json entry = *it;
-          std::string entry_path = entry["path"].get<std::string>();
-          std::clog << "provo "<< entry["path"] << "\n";
-          std::clog << output << "\n";
-
-          if (std::regex_match(entry_path, match, delete_reg)) {
-              std::clog << "Matcho\n";
-              remove_entry(entry_path);
-          }
-          else{
-              it++;
-          }
+    auto it = structure["entries"].begin();
+    while (it != structure["entries"].end()) {
+      json entry = *it;
+      std::string entry_path = entry["path"].get<std::string>();
+      if (std::regex_match(entry_path, match, delete_reg)) {
+        remove_entry(entry_path);
+      } else {
+        it++;
       }
+    }
   }
 };

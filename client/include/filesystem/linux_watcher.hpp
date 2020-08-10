@@ -1,5 +1,6 @@
 #pragma once
 #include "handle_watcher.hpp"
+#include "sync_structure.hpp"
 #include <chrono>
 #include <condition_variable>
 #include <errno.h>
@@ -16,7 +17,6 @@
 #include <thread>
 #include <unistd.h>
 #include <unordered_map>
-#include "sync_structure.hpp"
 
 /**
  * Classe singleton che racchiude un metodo statico per ogni evento da
@@ -27,7 +27,7 @@ private:
   int inotify_descriptor;
   std::string root_to_watch;
   uint32_t watcher_mask;
-  std::thread garbage_collector;
+  std::thread scanner;
   std::queue<int> mod_from_cookies;
   std::unordered_map<std::string, int> path_wd_map;
   std::unordered_map<int, std::string> wd_path_map;
@@ -54,48 +54,34 @@ public:
   std::queue<int> getCookieQueue() { return mod_from_cookies; }
   std::unordered_map<int, std::string> getCookieMap() { return cookie_map; }
 
-  void garbage_collect() {
-    std::clog << "size: " << instance->getCookieQueue().size() << "\n";
-    int cookie = mod_from_cookies.front();
-    // se il cookie e' ancora nella mappa allora
-    // una momoved_to NON E' STATA CHIAMATA quindi
-    // FORSE e' da eliminare, per assicurarsi che
-    // sia da eliminare faccio piu' tentativi prima
-    // di procedere.
-    int tentativi = 3;
-    while (tentativi > 0) {
-      if (cookie_map.find(cookie) != cookie_map.end()) {
-        tentativi--;
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      } else {
-        break;
-      }
-    }
-    if (tentativi == 0) {
-      // todo: eliminare entry da struttura e non cercare da filesystem perche'
-      //       i file non esistono piu'
-      std::clog << "Il path è: " << cookie_map[cookie] << "\n";
-
-        SyncStructure *syn = SyncStructure::getInstance();
-        syn->remove_sub_entries(cookie_map[cookie]);
-
-
-      cookie_map.erase(cookie);
-    }
-    mod_from_cookies.pop();
-  }
-
-  void run_garbage_collector() {
-    instance->garbage_collector = std::move(std::thread([&]() {
+  void scan() {
+    scanner = std::move(std::thread([&]() {
+      SyncStructure *sync = SyncStructure::getInstance();
       while (1) {
-        std::unique_lock<std::mutex> lk{instance->m};
-        if (instance->getCookieQueue().empty()) {
-          instance->cv.wait(
-              lk, [&]() { return !instance->getCookieQueue().empty(); });
+        // 1. elimina da file se un entry e' presente in structure.json, ma non
+        //    nel filesystem
+        json entries = sync->getEntries();
+        auto it = entries.begin();
+        while (it != entries.end()) {
+          json entry = *it;
+          std::string entry_path = entry["path"].get<std::string>();
+          if (!std::filesystem::exists(entry_path)) {
+            sync->remove_entry(entry_path);
+          } else {
+            it++;
+          }
         }
-        if (instance->getCookieQueue().size() > 0) {
-          garbage_collect();
+        // 2. se nel filesystem esiste qualcosa che non e' presente nella
+        // structure
+        //    aggiungo.
+        for (auto &p :
+             std::filesystem::recursive_directory_iterator("./sync")) {
+          if (std::filesystem::is_regular_file(p.path().string())) {
+            sync->add_entry(p.path().string());
+            sync->update_entry(p.path().string());
+          }
         }
+        sleep(120); // todo: sincronizzare con watcher
       }
     }));
   }
@@ -105,7 +91,7 @@ public:
     if (instance == nullptr) {
       instance = new LinuxWatcher{root_path, mask};
       instance->add_watch(root_path);
-      instance->run_garbage_collector();
+      instance->scan();
     }
     return instance;
   }
@@ -115,7 +101,7 @@ public:
     // in questo modo il kernel ha la possibilità di riassegnarlo ad
     // un altro processo.
     close(inotify_descriptor);
-    garbage_collector.join();
+    scanner.join();
   }
 
   /**
@@ -133,6 +119,11 @@ public:
       return false;
     path_wd_map[path] = wd;
     wd_path_map[wd] = path;
+    for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
+      if (p.is_directory()) {
+        add_watch(p.path().string());
+      }
+    }
     return true;
   }
 
@@ -192,6 +183,7 @@ public:
         // todo: check su read qui...
 
         HandleWatcher *handlewatcher = HandleWatcher::getInstance();
+        SyncStructure *sync = SyncStructure::getInstance();
 
         for (ptr = buf; ptr < buf + len;
              ptr += sizeof(struct inotify_event) + event->len) {
@@ -201,60 +193,43 @@ public:
           std::string full_path =
               wd_path_map[event->wd] + "/" + std::string{event->name};
 
-          std::clog << "full_path: " << full_path << "\n";
-
           try {
 
             if (event->mask & IN_CREATE) {
               if (event->mask & IN_ISDIR)
                 add_watch(full_path);
-              else
-                handlewatcher->handle_InCreate(full_path);
+            }
+
+            if (event->mask & IN_CLOSE_WRITE) {
+              handlewatcher->handle_InCloseWrite(full_path);
             }
 
             if (event->mask & IN_DELETE) {
               if (event->mask & IN_ISDIR) {
-                bool res = remove_watch(full_path);
-                std::clog << "delete res = " << res << "\n";
-                for (auto &p :
-                     std::filesystem::recursive_directory_iterator(full_path)) {
-                  if (!p.is_directory()) {
-                    handlewatcher->handle_InDelete(p.path().string());
-                  }
-                }
+                remove_watch(full_path);
+                sync->remove_sub_entries(full_path);
               } else
                 handlewatcher->handle_InDelete(full_path);
             }
 
-            if (event->mask & IN_MODIFY)
-              handlewatcher->handle_InModify(full_path);
-
-            // L'evento in basso, capisce che è stato eliminato un file da GUI
-            // Una MOVED_FROM senza MOVED_TO è una cancellazione, mentre con
-            // MOVED_TO è rinominazione
-
             if (event->mask & IN_MOVED_FROM) {
-              std::clog << "SONO in moved from \n";
-              cookie_map[event->cookie] = full_path;
-              std::unique_lock lk{m};
-              instance->mod_from_cookies.push(event->cookie);
-              cv.notify_all();
+              if (event->cookie != 0)
+                cookie_map[event->cookie] = full_path;
             }
+
             if (event->mask & IN_MOVED_TO) {
-              // todo: se ripristino da cestino/drag and drop e si tratta di
-              // cartella va aggiunto il watch
               if (event->mask & IN_ISDIR &&
                   cookie_map.find(event->cookie) == cookie_map.end()) {
                 add_watch(full_path);
               }
-              handlewatcher->handle_InRename(cookie_map[event->cookie],
-                                             event->name);
-              cookie_map.erase(event->cookie);
+              if (cookie_map.find(event->cookie) == cookie_map.end()) {
+                handlewatcher->handle_InCloseWrite(full_path);
+              } else {
+                handlewatcher->handle_InRename(cookie_map[event->cookie],
+                                               event->name);
+                cookie_map.erase(event->cookie);
+              }
             }
-
-            // L'evento in basso, capisce che è stato eliminato un file da GUI
-            // if (event->mask & IN_MOVE)
-            // handlewatcher->handle_InMove(full_path);
 
           }
 

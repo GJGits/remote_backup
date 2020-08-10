@@ -1,1 +1,23 @@
-{"entries":[{"chunks":["e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"],"dim_last_chunk":0,"file_hash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","last_mod":1596969963,"path":"./sync/b/b.txt"},{"chunks":["e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"],"dim_last_chunk":0,"file_hash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","last_mod":1596969969,"path":"./sync/b/c.txt"}],"hashed_status":"c589ff7879ea60c999bfc36ceac0ded9084996e9dc8db78dadc71622cf2e3a1a"}
+{
+    "entries": [
+        {
+            "chunks": [
+                "25c73520e69f4bf229811e8e46ffe7d80471544b9bee15ed25044b86be4115ad"
+            ],
+            "dim_last_chunk": 4,
+            "file_hash": "25c73520e69f4bf229811e8e46ffe7d80471544b9bee15ed25044b86be4115ad",
+            "last_mod": 1597079431,
+            "path": "./sync/b.txt"
+        },
+        {
+            "chunks": [
+                "5eb07cacc7b331a91f3ad6cb7ce909e976cd40d40b549f8086b61757f1464fa7"
+            ],
+            "dim_last_chunk": 124,
+            "file_hash": "5eb07cacc7b331a91f3ad6cb7ce909e976cd40d40b549f8086b61757f1464fa7",
+            "last_mod": 1597074645,
+            "path": "./sync/b/a/a.txt"
+        }
+    ],
+    "hashed_status": "8c344f6324dbb5bbb74b668d502a1f1550bb0d5a226a4667635659812b18aa2f"
+}
