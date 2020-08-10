@@ -8,7 +8,6 @@
 #include <iostream>
 #include <mutex>
 #include <poll.h>
-#include <queue>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,7 +27,6 @@ private:
   std::string root_to_watch;
   uint32_t watcher_mask;
   std::thread scanner;
-  std::queue<int> mod_from_cookies;
   std::unordered_map<std::string, int> path_wd_map;
   std::unordered_map<int, std::string> wd_path_map;
   std::unordered_map<int, std::string> cookie_map;
@@ -49,39 +47,21 @@ private:
   }
 
 public:
-  std::mutex m;
-  std::condition_variable cv;
-  std::queue<int> getCookieQueue() { return mod_from_cookies; }
-  std::unordered_map<int, std::string> getCookieMap() { return cookie_map; }
-
   void scan() {
     scanner = std::move(std::thread([&]() {
-      SyncStructure *sync = SyncStructure::getInstance();
+      HandleWatcher *watcher = HandleWatcher::getInstance();
       while (1) {
         // 1. elimina da file se un entry e' presente in structure.json, ma non
         //    nel filesystem
-        json entries = sync->getEntries();
-        auto it = entries.begin();
-        while (it != entries.end()) {
-          json entry = *it;
-          std::string entry_path = entry["path"].get<std::string>();
-          if (!std::filesystem::exists(entry_path)) {
-            sync->remove_entry(entry_path);
-          } else {
-            it++;
-          }
-        }
+        watcher->handle_prune();
         // 2. se nel filesystem esiste qualcosa che non e' presente nella
         // structure
         //    aggiungo.
-        for (auto &p :
-             std::filesystem::recursive_directory_iterator("./sync")) {
-          if (std::filesystem::is_regular_file(p.path().string())) {
-            sync->add_entry(p.path().string());
-            sync->update_entry(p.path().string());
-          }
-        }
-        sleep(120); // todo: sincronizzare con watcher
+        watcher->handle_expand("./sync");
+        // todo: sincronizzare con watcher, la sincronizzazione e' da valutare
+        // nei
+        //       singoli metodi di handle
+        sleep(120);
       }
     }));
   }
@@ -91,7 +71,6 @@ public:
     if (instance == nullptr) {
       instance = new LinuxWatcher{root_path, mask};
       instance->add_watch(root_path);
-      instance->scan();
     }
     return instance;
   }
@@ -183,7 +162,6 @@ public:
         // todo: check su read qui...
 
         HandleWatcher *handlewatcher = HandleWatcher::getInstance();
-        SyncStructure *sync = SyncStructure::getInstance();
 
         for (ptr = buf; ptr < buf + len;
              ptr += sizeof(struct inotify_event) + event->len) {
@@ -196,8 +174,10 @@ public:
           try {
 
             if (event->mask & IN_CREATE) {
-              if (event->mask & IN_ISDIR)
+              if (event->mask & IN_ISDIR) {
                 add_watch(full_path);
+                handlewatcher->handle_expand(full_path);
+              }
             }
 
             if (event->mask & IN_CLOSE_WRITE) {
@@ -207,7 +187,7 @@ public:
             if (event->mask & IN_DELETE) {
               if (event->mask & IN_ISDIR) {
                 remove_watch(full_path);
-                sync->remove_sub_entries(full_path);
+                handlewatcher->handle_prune();
               } else
                 handlewatcher->handle_InDelete(full_path);
             }

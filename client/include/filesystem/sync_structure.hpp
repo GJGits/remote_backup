@@ -65,6 +65,8 @@ public:
 
   json getEntries() const { return structure["entries"]; }
 
+  // todo: trasformare questo in find_entry in modo tale da poter utilizzare
+  //       il metodo in add_entry e remove_entry
   bool has_entry(const std::string &path) {
     auto iter =
         std::find_if(structure["entries"].begin(), structure["entries"].end(),
@@ -72,45 +74,34 @@ public:
     return iter != structure["entries"].end();
   }
 
+  /**
+   * Aggiunge o aggiorna entry.
+   *
+   * @path: path del file aggiungere o aggiornare
+   */
+
   void add_entry(const std::string &path) {
     auto iter =
         std::find_if(structure["entries"].begin(), structure["entries"].end(),
                      [&](const json &x) { return x["path"] == path; });
-    if (iter == structure["entries"].end()) {
-      FileEntry fentry{path};
-      json entry = fentry.getEntry();
-      if (entry["dim_last_chunk"] > 0) {
-        structure["entries"].push_back(entry);
-        instance->write_structure();
-      }
-    }
-  }
-
-  void update_entry(const std::string &path) {
-    auto iter =
-        std::find_if(structure["entries"].begin(), structure["entries"].end(),
-                     [&](const json &x) { return x["path"] == path; });
-    if (iter != structure["entries"].end()) {
-      FileEntry fentry{path};
-      json entry = fentry.getEntry();
-      json old_entry = *iter;
-      if (old_entry["file_hash"] != entry["file_hash"]) {
+    FileEntry fentry{path};
+    json new_entry = fentry.getEntry();
+    if (new_entry["dim_last_chunk"] > 0) {
+      if (iter != structure["entries"].end())
         remove_entry(path);
-        add_entry(path);
-      }
-    } else {
-      add_entry(path);
+      structure["entries"].push_back(new_entry);
+      instance->write_structure();
     }
   }
 
-  void update_entry(const std::string &old_path, const std::string &new_path) {
+  /**
+   * Variante di add_entry necessaria per un rename
+   */
+  void add_entry(const std::string &old_path, const std::string new_path) {
     auto iter =
         std::find_if(structure["entries"].begin(), structure["entries"].end(),
                      [&](const json &x) { return x["path"] == old_path; });
     if (iter != structure["entries"].end()) {
-      FileEntry fentry{new_path};
-      json entry = fentry.getEntry();
-      json old_entry = *iter;
       remove_entry(old_path);
       add_entry(new_path);
     }
@@ -127,6 +118,23 @@ public:
     }
   }
 
+  /**
+   * Elimina dal file di struct tutte le entry presenti che non esistono piu'
+   * nel filesystem
+   */
+  void prune() {
+    auto it = structure["entries"].begin();
+    while (it != structure["entries"].end()) {
+      json entry = *it;
+      if (!std::filesystem::exists(entry["path"])) {
+        remove_entry(entry["path"]);
+      } else {
+        it++;
+      }
+    }
+  }
+
+  // todo: dato il metodo prune valutare eliminazione
   void remove_sub_entries(std::string &path) {
     const std::string input = "^" + path + "/.*$";
     std::string output = boost::replace_all_copy(input, "/", "\\/");

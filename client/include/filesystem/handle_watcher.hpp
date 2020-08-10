@@ -26,6 +26,10 @@ public:
   /*File/directory deleted from watched directory.*/
   void handle_InDelete(std::string);
 
+  void handle_prune();
+
+  void handle_expand(const std::string &path);
+
   /*     IN_MOVED_FROM (+)
                 Generated for the directory containing the old filename
                 when a file is renamed.
