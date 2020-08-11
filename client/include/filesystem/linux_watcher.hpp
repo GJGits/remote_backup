@@ -99,8 +99,9 @@ public:
     path_wd_map[path] = wd;
     wd_path_map[wd] = path;
     for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
+        std::clog << path << "\n";
       if (p.is_directory()) {
-        add_watch(p.path().string());
+          add_watch(p.path().string());
       }
     }
     return true;
@@ -180,35 +181,42 @@ public:
               }
             }
 
-            if (event->mask & IN_CLOSE_WRITE) {
-              handlewatcher->handle_InCloseWrite(full_path);
+            if (event->mask & IN_CLOSE_WRITE ) {
+                    handlewatcher->handle_InCloseWrite(full_path);
             }
 
             if (event->mask & IN_DELETE) {
               if (event->mask & IN_ISDIR) {
                 remove_watch(full_path);
                 handlewatcher->handle_prune();
-              } else
-                handlewatcher->handle_InDelete(full_path);
+              } else {
+                  handlewatcher->handle_InDelete(full_path);
+              }
             }
 
             if (event->mask & IN_MOVED_FROM) {
+                handlewatcher->handle_prune();
               if (event->cookie != 0)
                 cookie_map[event->cookie] = full_path;
             }
 
             if (event->mask & IN_MOVED_TO) {
-              if (event->mask & IN_ISDIR &&
-                  cookie_map.find(event->cookie) == cookie_map.end()) {
-                add_watch(full_path);
-              }
-              if (cookie_map.find(event->cookie) == cookie_map.end()) {
-                handlewatcher->handle_InCloseWrite(full_path);
-              } else {
-                handlewatcher->handle_InRename(cookie_map[event->cookie],
-                                               event->name);
-                cookie_map.erase(event->cookie);
-              }
+                if (event->mask & IN_ISDIR &&
+                    cookie_map.find(event->cookie) == cookie_map.end()) {
+                    /* Quando viene effettuato il taglia e incolla, o premuto CTRL+Z */
+                    add_watch(full_path);
+                    handlewatcher->handle_expand(full_path);
+
+                } else if(!(event->mask & IN_ISDIR)){
+                    if (cookie_map.find(event->cookie) == cookie_map.end()) {
+
+                        handlewatcher->handle_InCloseWrite(full_path);
+                    } else {
+                        handlewatcher->handle_InRename(cookie_map[event->cookie],
+                                                       event->name);
+                        cookie_map.erase(event->cookie);
+                    }
+                }
             }
 
           }
