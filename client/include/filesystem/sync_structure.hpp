@@ -1,4 +1,5 @@
 #pragma once
+#include "../common/duration.hpp"
 #include "../common/json.hpp"
 #include "directory_entry.hpp"
 #include "file_entry.hpp"
@@ -31,14 +32,8 @@ private:
     i >> structure;
   }
 
-  void write_structure() {
-    instance->hash_struct();
-    std::ofstream o("./config/client-struct.json");
-    o << structure << "\n";
-    o.close();
-  }
-
   void hash_struct() {
+    DurationLogger duration{"HASH_STRUCTURE"};
     if (structure["entries"].empty()) {
       structure["hashed_status"] = std::string{"empty_hashed_status"};
     } else {
@@ -63,7 +58,13 @@ public:
     return instance;
   }
 
-  json getEntries() const { return structure["entries"]; }
+  void write_structure() {
+    DurationLogger duration{"WRITE_STRUCTURE"};
+    instance->hash_struct();
+    std::ofstream o("./config/client-struct.json");
+    o << structure << "\n";
+    o.close();
+  }
 
   // todo: trasformare questo in find_entry in modo tale da poter utilizzare
   //       il metodo in add_entry e remove_entry
@@ -81,6 +82,7 @@ public:
    */
 
   void add_entry(const std::string &path) {
+    DurationLogger duration{"ADD_ENTRY"};
     auto iter =
         std::find_if(structure["entries"].begin(), structure["entries"].end(),
                      [&](const json &x) { return x["path"] == path; });
@@ -90,7 +92,6 @@ public:
       if (iter != structure["entries"].end())
         remove_entry(path);
       structure["entries"].push_back(new_entry);
-      instance->write_structure();
     }
   }
 
@@ -98,12 +99,11 @@ public:
    * Variante di add_entry necessaria per un rename
    */
   void rename_entry(const std::string path) {
-      FileEntry fentry{path};
-      json new_entry = fentry.getEntry();
-      if (new_entry["dim_last_chunk"] > 0) {
-          structure["entries"].push_back(new_entry);
-          instance->write_structure();
-      }
+    FileEntry fentry{path};
+    json new_entry = fentry.getEntry();
+    if (new_entry["dim_last_chunk"] > 0) {
+      structure["entries"].push_back(new_entry);
+    }
   }
 
   void remove_entry(const std::string &path) {
@@ -113,7 +113,6 @@ public:
                          structure["entries"].end(), [&](const json &x) {
                            return std::string{x["path"]}.compare(path) == 0;
                          }));
-      instance->write_structure();
     }
   }
 
@@ -122,6 +121,7 @@ public:
    * nel filesystem
    */
   void prune() {
+    DurationLogger duration{"PRUNE"};
     auto it = structure["entries"].begin();
     while (it != structure["entries"].end()) {
       json entry = *it;

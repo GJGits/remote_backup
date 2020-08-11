@@ -36,7 +36,7 @@ public:
       ss << std::hex << std::setw(2) << std::setfill('0')
          << (int)hash[i];
     }
-    return ss.str();
+    return std::move(ss.str());
   }
 };
 

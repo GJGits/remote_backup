@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <fstream>
 #include <regex>
+#include <future>
 
 using json = nlohmann::json;
 
@@ -18,7 +19,7 @@ public:
     return instance;
   }
 
-  void handle_InCloseWrite(std::string); // true è file, false è cartella
+  void handle_InCloseWrite(const std::string&); // true è file, false è cartella
 
   /*File was modified (e.g., write(2), truncate(2)).*/
   void handle_InModify(std::string);

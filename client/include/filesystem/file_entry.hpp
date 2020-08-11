@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <vector>
 
+#include "../common/duration.hpp"
 #include "../common/json.hpp"
 
 #include "../common/sha256.hpp"
@@ -23,15 +24,19 @@ class FileEntry {
 private:
   std::string path;
   json entry;
+  std::string hash_concats;
 
   void fill_file_hash() {
+    DurationLogger duration{"FILL_FILE_HASH"};
     std::ifstream input(path, std::ios::binary);
-    std::vector<char> bytes((std::istreambuf_iterator<char>(input)),
-                            (std::istreambuf_iterator<char>()));
+    std::vector<char> bytes;
+    std::copy(hash_concats.begin(), hash_concats.end(),
+              std::back_inserter(bytes));
     entry["file_hash"] = Sha256::getSha256(bytes);
   }
 
   void fill_chunks() {
+    DurationLogger duration{"FILL_CHUNKS"};
     int fsize = (int)std::filesystem::file_size(path);
     if (fsize <= CHUNK_SIZE) {
       entry["chunks"].push_back(entry["file_hash"]);
@@ -47,7 +52,9 @@ private:
             (fsize - seek_pos) >= CHUNK_SIZE ? CHUNK_SIZE : (fsize - seek_pos);
         file.read(read_buf, to_read); // todo: check su read
         std::vector<char> chunk_buf{read_buf, read_buf + to_read};
-        entry["chunks"].push_back(Sha256::getSha256(chunk_buf));
+        std::string hash_chunk = std::move(Sha256::getSha256(chunk_buf));
+        entry["chunks"].push_back(hash_chunk);
+        hash_concats += hash_chunk;
         seek_pos += to_read;
         if (to_read < CHUNK_SIZE)
           entry["dim_last_chunk"] = to_read;
@@ -64,8 +71,8 @@ private:
 public:
   FileEntry(const std::string &path) : path{path} {
     entry["path"] = path;
-    fill_file_hash();
     fill_chunks();
+    fill_file_hash();
     fill_last_mod();
   }
 

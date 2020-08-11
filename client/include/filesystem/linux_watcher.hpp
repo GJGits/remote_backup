@@ -1,4 +1,5 @@
 #pragma once
+#include "../common/duration.hpp"
 #include "handle_watcher.hpp"
 #include "sync_structure.hpp"
 #include <chrono>
@@ -61,7 +62,7 @@ public:
         // todo: sincronizzare con watcher, la sincronizzazione e' da valutare
         // nei
         //       singoli metodi di handle
-        sleep(120);
+        sleep(180);
       }
     }));
   }
@@ -100,7 +101,7 @@ public:
     wd_path_map[wd] = path;
     for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
       if (p.is_directory()) {
-          add_watch(p.path().string());
+        add_watch(p.path().string());
       }
     }
     return true;
@@ -132,7 +133,7 @@ public:
 
     std::clog << "Start monitoring...\n";
     for (;;) {
-
+      std::clog << "Wating for an event...\n";
       // Some systems cannot read integer variables if they are not
       // properly aligned. On other systems, incorrect alignment may
       // decrease performance. Hence, the buffer used for reading from
@@ -166,6 +167,8 @@ public:
         for (ptr = buf; ptr < buf + len;
              ptr += sizeof(struct inotify_event) + event->len) {
 
+          DurationLogger duration{"HANDLING_EVENT"};
+
           event = (const struct inotify_event *)ptr;
 
           std::string full_path =
@@ -177,44 +180,62 @@ public:
               if (event->mask & IN_ISDIR) {
                 add_watch(full_path);
                 handlewatcher->handle_expand(full_path);
+                // std::async(&HandleWatcher::handle_expand, handlewatcher,
+                // full_path);
+                continue;
               }
             }
 
-            if (event->mask & IN_CLOSE_WRITE ) {
-                    handlewatcher->handle_InCloseWrite(full_path);
+            if (event->mask & IN_CLOSE_WRITE) {
+              handlewatcher->handle_InCloseWrite(full_path);
+              // std::async(&HandleWatcher::handle_InCloseWrite, handlewatcher,
+              // full_path);
+              continue;
             }
 
             if (event->mask & IN_DELETE) {
               if (event->mask & IN_ISDIR) {
                 remove_watch(full_path);
                 handlewatcher->handle_prune();
+                continue;
               } else {
-                  handlewatcher->handle_InDelete(full_path);
+                handlewatcher->handle_InDelete(full_path);
+                continue;
               }
             }
 
             if (event->mask & IN_MOVED_FROM) {
-                handlewatcher->handle_prune();
+              handlewatcher->handle_prune();
               if (event->cookie != 0)
                 cookie_map[event->cookie] = full_path;
+              continue;
             }
 
             if (event->mask & IN_MOVED_TO) {
-                if (event->mask & IN_ISDIR &&
-                    cookie_map.find(event->cookie) == cookie_map.end()) {
-                    /* Quando viene effettuato il taglia e incolla, o premuto CTRL+Z */
-                    add_watch(full_path);
-                    handlewatcher->handle_expand(full_path);
+              if (event->mask & IN_ISDIR &&
+                  cookie_map.find(event->cookie) == cookie_map.end()) {
+                /* Quando viene effettuato il taglia e incolla, o premuto CTRL+Z
+                 */
+                add_watch(full_path);
+                handlewatcher->handle_expand(full_path);
+                // std::async(&HandleWatcher::handle_expand, handlewatcher,
+                // full_path);
+                continue;
+              } else if (!(event->mask & IN_ISDIR)) {
+                if (cookie_map.find(event->cookie) == cookie_map.end()) {
 
-                } else if(!(event->mask & IN_ISDIR)){
-                    if (cookie_map.find(event->cookie) == cookie_map.end()) {
-
-                        handlewatcher->handle_InCloseWrite(full_path);
-                    } else {
-                        handlewatcher->handle_InRename(full_path);
-                        cookie_map.erase(event->cookie); // todo: Valutarne eventuale cancellazione di questa riga
-                    }
+                  handlewatcher->handle_InCloseWrite(full_path);
+                  // std::async(&HandleWatcher::handle_InCloseWrite,
+                  // handlewatcher, full_path);
+                  continue;
+                } else {
+                  handlewatcher->handle_InRename(full_path);
+                  cookie_map.erase(
+                      event->cookie); // todo: Valutarne eventuale cancellazione
+                                      // di questa riga
+                  continue;
                 }
+              }
             }
 
           }

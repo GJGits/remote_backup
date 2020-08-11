@@ -1,3 +1,6 @@
 # non committare node modules
 node_modules/
-
+# non committare file con le seguenti estensioni
+*.txt
+*.pdf
+*.ppt
