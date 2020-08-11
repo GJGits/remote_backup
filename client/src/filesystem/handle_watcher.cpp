@@ -43,12 +43,10 @@ void HandleWatcher::handle_InModify(std::string path) {
   sync->add_entry(path);
 }
 
-void HandleWatcher::handle_InRename(std::string old_path,
-                                    std::string new_path) {
-  std::clog << " Evento: InRename, old_path =" << old_path
-            << ", new_path = " << new_path << "\n";
+void HandleWatcher::handle_InRename(std::string path) {
+  std::clog << " Evento: InRename, path :" << path << "\n";
   SyncStructure *sync = SyncStructure::getInstance();
-  sync->add_entry(old_path, new_path);
+  sync->rename_entry(path);
 }
 
 void HandleWatcher::handle_InMove(std::string path) {

@@ -1,5 +1,0 @@
-Non funziona il copia e incolla, secondo me è riga 227
-
-Quando tu elimini una cartella,prima di eliminare le sub entries, lancio per ogni entry che matcha la regex a scendere, lancio le delete per i files
-
-Ogni quavota aggiungo o tolgo cartelle, devo mandare sia in create, sia in delete

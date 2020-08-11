@@ -99,7 +99,6 @@ public:
     path_wd_map[path] = wd;
     wd_path_map[wd] = path;
     for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
-        std::clog << path << "\n";
       if (p.is_directory()) {
           add_watch(p.path().string());
       }
@@ -212,9 +211,8 @@ public:
 
                         handlewatcher->handle_InCloseWrite(full_path);
                     } else {
-                        handlewatcher->handle_InRename(cookie_map[event->cookie],
-                                                       event->name);
-                        cookie_map.erase(event->cookie);
+                        handlewatcher->handle_InRename(full_path);
+                        cookie_map.erase(event->cookie); // todo: Valutarne eventuale cancellazione di questa riga
                     }
                 }
             }

@@ -97,14 +97,13 @@ public:
   /**
    * Variante di add_entry necessaria per un rename
    */
-  void add_entry(const std::string &old_path, const std::string new_path) {
-    auto iter =
-        std::find_if(structure["entries"].begin(), structure["entries"].end(),
-                     [&](const json &x) { return x["path"] == old_path; });
-    if (iter != structure["entries"].end()) {
-      remove_entry(old_path);
-      add_entry(new_path);
-    }
+  void rename_entry(const std::string path) {
+      FileEntry fentry{path};
+      json new_entry = fentry.getEntry();
+      if (new_entry["dim_last_chunk"] > 0) {
+          structure["entries"].push_back(new_entry);
+          instance->write_structure();
+      }
   }
 
   void remove_entry(const std::string &path) {
