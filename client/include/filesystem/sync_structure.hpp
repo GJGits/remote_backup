@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <regex>
 #include <vector>
 
@@ -17,10 +18,11 @@ using json = nlohmann::json;
 class SyncStructure {
 
 private:
+  std::unique_ptr<json> structure;
   inline static SyncStructure *instance = nullptr;
 
   void create_clientstructjson() {
-    json j;
+     json j;
     j["hashed_status"] = "empty_hashed_status";
     j["entries"] = json::array();
     std::ofstream o("./config/client-struct.json");
@@ -28,25 +30,25 @@ private:
   }
 
   void read_structure() {
+    structure = std::make_unique<json>();
     std::ifstream i("./config/client-struct.json");
-    i >> structure;
+    i >> (*structure);
   }
 
   void hash_struct() {
     DurationLogger duration{"HASH_STRUCTURE"};
-    if (structure["entries"].empty()) {
-      structure["hashed_status"] = std::string{"empty_hashed_status"};
+    if ((*structure)["entries"].empty()) {
+      (*structure)["hashed_status"] = std::string{"empty_hashed_status"};
     } else {
-      std::string entries_dump = structure["entries"].dump();
+      std::string entries_dump = (*structure)["entries"].dump();
       std::vector<char> data(entries_dump.begin(), entries_dump.end());
-      structure["hashed_status"] = structure["entries"].empty()
-                                       ? std::string{"empty_hashed_status"}
-                                       : Sha256::getSha256(data);
+      (*structure)["hashed_status"] = (*structure)["entries"].empty()
+                                          ? std::string{"empty_hashed_status"}
+                                          : Sha256::getSha256(data);
     }
   }
 
 public:
-  json structure;
   static SyncStructure *getInstance() {
     if (instance == nullptr) {
       instance = new SyncStructure{};
@@ -62,17 +64,8 @@ public:
     DurationLogger duration{"WRITE_STRUCTURE"};
     instance->hash_struct();
     std::ofstream o("./config/client-struct.json");
-    o << structure << "\n";
+    o << (*structure) << "\n";
     o.close();
-  }
-
-  // todo: trasformare questo in find_entry in modo tale da poter utilizzare
-  //       il metodo in add_entry e remove_entry
-  bool has_entry(const std::string &path) {
-    auto iter =
-        std::find_if(structure["entries"].begin(), structure["entries"].end(),
-                     [&](const json &x) { return x["path"] == path; });
-    return iter != structure["entries"].end();
   }
 
   /**
@@ -84,14 +77,14 @@ public:
   void add_entry(const std::string &path) {
     DurationLogger duration{"ADD_ENTRY"};
     auto iter =
-        std::find_if(structure["entries"].begin(), structure["entries"].end(),
+        std::find_if((*structure)["entries"].begin(), (*structure)["entries"].end(),
                      [&](const json &x) { return x["path"] == path; });
     FileEntry fentry{path};
     json new_entry = fentry.getEntry();
     if (new_entry["dim_last_chunk"] > 0) {
-      if (iter != structure["entries"].end())
+      if (iter != (*structure)["entries"].end())
         remove_entry(path);
-      structure["entries"].push_back(new_entry);
+      (*structure)["entries"].push_back(new_entry);
     }
   }
 
@@ -102,15 +95,15 @@ public:
     FileEntry fentry{path};
     json new_entry = fentry.getEntry();
     if (new_entry["dim_last_chunk"] > 0) {
-      structure["entries"].push_back(new_entry);
+      (*structure)["entries"].push_back(new_entry);
     }
   }
 
   void remove_entry(const std::string &path) {
-    if (!structure["entries"].empty()) {
-      structure["entries"].erase(
-          std::remove_if(structure["entries"].begin(),
-                         structure["entries"].end(), [&](const json &x) {
+    if (!(*structure)["entries"].empty()) {
+      (*structure)["entries"].erase(
+          std::remove_if((*structure)["entries"].begin(),
+                         (*structure)["entries"].end(), [&](const json &x) {
                            return std::string{x["path"]}.compare(path) == 0;
                          }));
     }
@@ -122,8 +115,8 @@ public:
    */
   void prune() {
     DurationLogger duration{"PRUNE"};
-    auto it = structure["entries"].begin();
-    while (it != structure["entries"].end()) {
+    auto it = (*structure)["entries"].begin();
+    while (it != (*structure)["entries"].end()) {
       json entry = *it;
       if (!std::filesystem::exists(entry["path"])) {
         remove_entry(entry["path"]);
@@ -140,8 +133,8 @@ public:
     std::regex delete_reg{output};
     std::smatch match;
 
-    auto it = structure["entries"].begin();
-    while (it != structure["entries"].end()) {
+    auto it = (*structure)["entries"].begin();
+    while (it != (*structure)["entries"].end()) {
       json entry = *it;
       std::string entry_path = entry["path"].get<std::string>();
       if (std::regex_match(entry_path, match, delete_reg)) {

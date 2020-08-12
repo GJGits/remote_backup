@@ -8,6 +8,7 @@
 
 void HandleWatcher::handle_InCloseWrite(const std::string &path) {
   std::clog << " Evento: InCloseWrite , path : " << path << "\n";
+
   if (std::filesystem::exists(path)) {
     SyncStructure *sync = SyncStructure::getInstance();
     sync->add_entry(path);
@@ -50,7 +51,7 @@ void HandleWatcher::handle_InModify(std::string path) {
   sync->write_structure();
 }
 
-void HandleWatcher::handle_InRename(std::string path) {
+void HandleWatcher::handle_InRename(const std::string &path) {
   std::clog << " Evento: InRename, path :" << path << "\n";
   SyncStructure *sync = SyncStructure::getInstance();
   sync->rename_entry(path);

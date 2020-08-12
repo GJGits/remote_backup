@@ -5,10 +5,12 @@
 #include <chrono>
 #include <condition_variable>
 #include <errno.h>
+#include <functional>
 #include <future> // std::async, std::future
 #include <iostream>
 #include <mutex>
 #include <poll.h>
+#include <queue>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,10 +29,14 @@ private:
   int inotify_descriptor;
   std::string root_to_watch;
   uint32_t watcher_mask;
-  std::thread scanner;
   std::unordered_map<std::string, int> path_wd_map;
   std::unordered_map<int, std::string> wd_path_map;
   std::unordered_map<int, std::string> cookie_map;
+  std::queue<std::tuple<std::function<void(const std::string &)>, std::string>>
+      tasks;
+  std::vector<std::thread> thread_handlers;
+  std::condition_variable cv;
+  std::mutex m;
   inline static LinuxWatcher *instance = nullptr;
   LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
       : watcher_mask{mask} {
@@ -45,26 +51,33 @@ private:
       perror("inotify_init1");
       exit(-1);
     }
+    // Creo thread per eseguire handlers
+    for (int i = 0; i < 8; i++) {
+      thread_handlers.emplace_back([&]() {
+        std::unique_lock lk{m};
+        if (tasks.empty())
+          cv.wait(lk, [&]() { return !tasks.empty(); });
+        auto task = std::get<0>(tasks.front());
+        std::string argument = std::move(std::get<1>(tasks.front()));
+        task(argument);
+        tasks.pop();
+      });
+    }
   }
 
 public:
   void scan() {
-    scanner = std::move(std::thread([&]() {
-      HandleWatcher *watcher = HandleWatcher::getInstance();
-      while (1) {
-        // 1. elimina da file se un entry e' presente in structure.json, ma non
-        //    nel filesystem
-        watcher->handle_prune();
-        // 2. se nel filesystem esiste qualcosa che non e' presente nella
-        // structure
-        //    aggiungo.
-        watcher->handle_expand("./sync");
-        // todo: sincronizzare con watcher, la sincronizzazione e' da valutare
-        // nei
-        //       singoli metodi di handle
-        sleep(180);
-      }
-    }));
+    HandleWatcher *watcher = HandleWatcher::getInstance();
+    // 1. elimina da file se un entry e' presente in structure.json, ma non
+    //    nel filesystem
+    watcher->handle_prune();
+    // 2. se nel filesystem esiste qualcosa che non e' presente nella
+    // structure
+    //    aggiungo.
+    watcher->handle_expand("./sync");
+    // todo: sincronizzare con watcher, la sincronizzazione e' da valutare
+    // nei
+    //       singoli metodi di handle
   }
 
   static LinuxWatcher *getInstance(const std::string &root_path,
@@ -77,12 +90,17 @@ public:
   }
 
   ~LinuxWatcher() {
+    // join threads
+    for (int i = 0; i < 8; i++) {
+      thread_handlers[i].join();
+    }
     // Quando l'oggetto viene distrutto rilascio il file descriptor
     // in questo modo il kernel ha la possibilità di riassegnarlo ad
     // un altro processo.
     close(inotify_descriptor);
-    scanner.join();
   }
+
+  void fun(const std::string &) { return; }
 
   /**
    * Permette di aggiungere o modificare un watch all'inotify descriptor.
@@ -179,17 +197,28 @@ public:
             if (event->mask & IN_CREATE) {
               if (event->mask & IN_ISDIR) {
                 add_watch(full_path);
-                handlewatcher->handle_expand(full_path);
+                // handlewatcher->handle_expand(full_path);
                 // std::async(&HandleWatcher::handle_expand, handlewatcher,
-                // full_path);
+                //           full_path);
+                // std::function<void(const std::string&)> f =
+                // std::bind(&HandleWatcher::handle_expand, handlewatcher,
+                // std::placeholders::_1);
+                tasks.push(std::make_tuple(
+                    std::bind(&HandleWatcher::handle_expand, handlewatcher,
+                              std::placeholders::_1),
+                    full_path));
+                cv.notify_all();
                 continue;
               }
             }
 
             if (event->mask & IN_CLOSE_WRITE) {
-              handlewatcher->handle_InCloseWrite(full_path);
-              // std::async(&HandleWatcher::handle_InCloseWrite, handlewatcher,
-              // full_path);
+              // handlewatcher->handle_InCloseWrite(full_path);
+              tasks.push(std::make_tuple(
+                  std::bind(&HandleWatcher::handle_InCloseWrite, handlewatcher,
+                            std::placeholders::_1),
+                  full_path));
+              cv.notify_all();
               continue;
             }
 
@@ -217,16 +246,22 @@ public:
                 /* Quando viene effettuato il taglia e incolla, o premuto CTRL+Z
                  */
                 add_watch(full_path);
-                handlewatcher->handle_expand(full_path);
-                // std::async(&HandleWatcher::handle_expand, handlewatcher,
-                // full_path);
+                // handlewatcher->handle_expand(full_path);
+                tasks.push(std::make_tuple(
+                    std::bind(&HandleWatcher::handle_expand, handlewatcher,
+                              std::placeholders::_1),
+                    full_path));
+                cv.notify_all();
                 continue;
               } else if (!(event->mask & IN_ISDIR)) {
                 if (cookie_map.find(event->cookie) == cookie_map.end()) {
 
-                  handlewatcher->handle_InCloseWrite(full_path);
-                  // std::async(&HandleWatcher::handle_InCloseWrite,
-                  // handlewatcher, full_path);
+                  // handlewatcher->handle_InCloseWrite(full_path);
+                  tasks.push(std::make_tuple(
+                      std::bind(&HandleWatcher::handle_InCloseWrite,
+                                handlewatcher, std::placeholders::_1),
+                      full_path));
+                  cv.notify_all();
                   continue;
                 } else {
                   handlewatcher->handle_InRename(full_path);

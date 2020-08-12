@@ -10,13 +10,14 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <vector>
+#include <memory>
 
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
 
 #include "../common/sha256.hpp"
 
-#define CHUNK_SIZE 524288 // chunk size espressa in byte
+#define CHUNK_SIZE 2097152 // chunk size espressa in byte
 
 using namespace std::chrono_literals;
 
@@ -44,14 +45,15 @@ private:
     } else {
       int seek_pos = 0;
       std::ifstream file(path, std::ios::binary);
-      char read_buf[CHUNK_SIZE];
+      std::unique_ptr<char[]> read_buf(new char[CHUNK_SIZE + 1]);
+      //char *read_buf = new char[CHUNK_SIZE + 1];
       while (seek_pos < fsize) {
-        memset(read_buf, '\0', CHUNK_SIZE);
+        memset(read_buf.get(), '\0', CHUNK_SIZE);
         file.seekg(seek_pos);
         size_t to_read =
             (fsize - seek_pos) >= CHUNK_SIZE ? CHUNK_SIZE : (fsize - seek_pos);
-        file.read(read_buf, to_read); // todo: check su read
-        std::vector<char> chunk_buf{read_buf, read_buf + to_read};
+        file.read(read_buf.get(), to_read); // todo: check su read
+        std::vector<char> chunk_buf{read_buf.get(), read_buf.get() + to_read};
         std::string hash_chunk = std::move(Sha256::getSha256(chunk_buf));
         entry["chunks"].push_back(hash_chunk);
         hash_concats += hash_chunk;
@@ -73,7 +75,7 @@ public:
     entry["path"] = path;
     fill_chunks();
     fill_file_hash();
-    fill_last_mod();
+    //fill_last_mod();
   }
 
   json getEntry() { return entry; }

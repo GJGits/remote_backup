@@ -38,7 +38,7 @@ public:
          IN_MOVED_TO (+)
                 Generated for the directory containing the new filename
                 when a file is renamed.*/
-  void handle_InRename(std::string);
+  void handle_InRename(const std::string &);
 
   // manca l'erros sul file watcher che non  so come monitorare
   
