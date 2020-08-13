@@ -46,7 +46,6 @@ private:
       int seek_pos = 0;
       std::ifstream file(path, std::ios::binary);
       std::unique_ptr<char[]> read_buf(new char[CHUNK_SIZE + 1]);
-      //char *read_buf = new char[CHUNK_SIZE + 1];
       while (seek_pos < fsize) {
         memset(read_buf.get(), '\0', CHUNK_SIZE);
         file.seekg(seek_pos);
@@ -54,7 +53,7 @@ private:
             (fsize - seek_pos) >= CHUNK_SIZE ? CHUNK_SIZE : (fsize - seek_pos);
         file.read(read_buf.get(), to_read); // todo: check su read
         std::vector<char> chunk_buf{read_buf.get(), read_buf.get() + to_read};
-        std::string hash_chunk = std::move(Sha256::getSha256(chunk_buf));
+        std::string hash_chunk = Sha256::getSha256(chunk_buf);
         entry["chunks"].push_back(hash_chunk);
         hash_concats += hash_chunk;
         seek_pos += to_read;
@@ -73,9 +72,9 @@ private:
 public:
   FileEntry(const std::string &path) : path{path} {
     entry["path"] = path;
-    fill_chunks();
     fill_file_hash();
-    //fill_last_mod();
+    fill_chunks();
+    fill_last_mod();
   }
 
   json getEntry() { return entry; }

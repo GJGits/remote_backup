@@ -119,7 +119,10 @@ public:
     while (it != (*structure)["entries"].end()) {
       json entry = *it;
       if (!std::filesystem::exists(entry["path"])) {
-        remove_entry(entry["path"]);
+        // todo: creare variante remove_entry che accetti iteratore, in questo modo
+        //       non sara' piu' necessario fare ulteriore remove_if
+        (*structure)["entries"].erase(it);
+        //remove_entry(entry["path"]);
       } else {
         it++;
       }
