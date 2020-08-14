@@ -10,7 +10,10 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <regex>
+#include <tuple>
+#include <unordered_map>
 #include <vector>
 
 using json = nlohmann::json;
@@ -18,11 +21,14 @@ using json = nlohmann::json;
 class SyncStructure {
 
 private:
+  std::mutex entries_mutex;
+  int count;
+  std::unordered_map<std::string, std::tuple<int, json>> entries;
   std::unique_ptr<json> structure;
   inline static SyncStructure *instance = nullptr;
 
   void create_clientstructjson() {
-     json j;
+    json j;
     j["hashed_status"] = "empty_hashed_status";
     j["entries"] = json::array();
     std::ofstream o("./config/client-struct.json");
@@ -33,6 +39,13 @@ private:
     structure = std::make_unique<json>();
     std::ifstream i("./config/client-struct.json");
     i >> (*structure);
+    if (!(*structure)["entries"].empty()) {
+      for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
+        json tmp = (*structure)["entries"][i];
+        entries[tmp["path"]] = std::make_tuple((int)i, tmp);
+        count++;
+      }
+    }
   }
 
   void hash_struct() {
@@ -75,40 +88,47 @@ public:
    */
 
   void add_entry(const std::string &path) {
+    std::unique_lock lk{entries_mutex};
     DurationLogger duration{"ADD_ENTRY"};
-    auto iter =
-        std::find_if((*structure)["entries"].begin(), (*structure)["entries"].end(),
-                     [&](const json &x) { return x["path"] == path; });
     FileEntry fentry{path};
     json new_entry = fentry.getEntry();
-    if (new_entry["dim_last_chunk"] > 0) {
-      if (iter != (*structure)["entries"].end())
-        remove_entry(path);
-      (*structure)["entries"].push_back(new_entry);
+    if (entries.find(path) == entries.end()) {
+      if (new_entry["dim_last_chunk"] > 0) {
+        (*structure)["entries"].push_back(new_entry);
+        entries[path] = std::make_tuple(++count, new_entry);
+      }
+    }
+  }
+
+  void replace_entry(const std::string &path) {
+    std::unique_lock lk{entries_mutex};
+    int index = std::get<0>(entries[path]);
+    FileEntry fentry{path};
+    json new_entry = fentry.getEntry();
+    if (new_entry["dim_last_chunk"] >= 0) {
+      (*structure)["entries"][index] = new_entry;
     }
   }
 
   /**
    * Variante di add_entry necessaria per un rename
    */
-  void rename_entry(const std::string path) {
-    FileEntry fentry{path};
-    json new_entry = fentry.getEntry();
-    if (new_entry["dim_last_chunk"] > 0) {
-      (*structure)["entries"].push_back(new_entry);
-    }
+  void rename_entry(const std::string &old_path, const std::string &new_path) {
+    std::unique_lock lk{entries_mutex};
+    int index = std::get<0>(entries[old_path]);
+    json entry = std::get<1>(entries[old_path]);
+    (*structure)["entries"][index]["path"] = new_path;
+    entries[new_path] = std::make_tuple(index, entry);
+    entries.erase(old_path);
   }
 
   void remove_entry(const std::string &path) {
-    if (!(*structure)["entries"].empty()) {
-      (*structure)["entries"].erase(
-          std::remove_if((*structure)["entries"].begin(),
-                         (*structure)["entries"].end(), [&](const json &x) {
-                           return std::string{x["path"]}.compare(path) == 0;
-                         }));
-    }
+    std::unique_lock lk{entries_mutex};
+    int index = std::get<0>(entries[path]);
+    entries.erase(path);
+    (*structure)["entries"].erase(index);
+    count--;
   }
-
   /**
    * Elimina dal file di struct tutte le entry presenti che non esistono piu'
    * nel filesystem
@@ -119,10 +139,9 @@ public:
     while (it != (*structure)["entries"].end()) {
       json entry = *it;
       if (!std::filesystem::exists(entry["path"])) {
-        // todo: creare variante remove_entry che accetti iteratore, in questo modo
-        //       non sara' piu' necessario fare ulteriore remove_if
+        entries.erase(entry["path"]);
         (*structure)["entries"].erase(it);
-        //remove_entry(entry["path"]);
+        count--;
       } else {
         it++;
       }

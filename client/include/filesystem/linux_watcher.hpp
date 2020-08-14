@@ -47,7 +47,7 @@ public:
     HandleWatcher *watcher = HandleWatcher::getInstance();
     // 1. elimina da file se un entry e' presente in structure.json, ma non
     //    nel filesystem
-    watcher->push_event(Event(EVENT_TYPE::PRUNING, ""));
+    watcher->push_event(Event(EVENT_TYPE::PRUNING));
     // 2. se nel filesystem esiste qualcosa che non e' presente nella
     // structure
     //    aggiungo.
@@ -170,8 +170,8 @@ public:
             //    8          -> EVENTO IN_CLOSE_WRITE
             //    1073742080 -> EVENT HANDLE_EXPAND
             //    1073741888 -> PRUNING
-            //    64         -> PRUNING
-            //    128        -> RENAME
+            //    64         -> PRUNING (MOVED_FROM)
+            //    128        -> RENAME  (MOVED_TO)
             //    512        -> IN_DELETE
 
             switch (event->mask) {
@@ -187,10 +187,15 @@ public:
               break;
             case 64:
               remove_watch(full_path);
-              handlewatcher->push_event(Event(EVENT_TYPE::PRUNING, full_path));
+              cookie_map[event->cookie] = full_path;
+              handlewatcher->push_event(Event(EVENT_TYPE::PRUNING));
+              // todo: eliminare con pruning entry da cookie_map non associate a
+              // moved_to
               break;
             case 128:
-              handlewatcher->push_event(Event(EVENT_TYPE::RENAME, full_path));
+              handlewatcher->push_event(Event(
+                  EVENT_TYPE::RENAME, cookie_map[event->cookie], full_path));
+              cookie_map.erase(event->cookie);
               break;
             case 512:
               handlewatcher->push_event(Event(EVENT_TYPE::DELETE, full_path));

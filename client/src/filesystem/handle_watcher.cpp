@@ -28,18 +28,20 @@ void HandleWatcher::run_workers() {
         std::unique_lock lk{m};
         if (!events.empty()) {
           Event event = events.front();
+          events.pop();
+          lk.unlock();
           switch (event.getType()) {
           case EVENT_TYPE::CREATE:
-            handle_InCloseWrite(event.getArgument());
+            handle_InCloseWrite(event.getArgument1());
             break;
           case EVENT_TYPE::DELETE:
-            handle_InDelete(event.getArgument());
+            handle_InDelete(event.getArgument1());
             break;
           case EVENT_TYPE::EXPAND:
-            handle_expand(event.getArgument());
+            handle_expand(event.getArgument1());
             break;
           case EVENT_TYPE::RENAME:
-            handle_InRename(event.getArgument());
+            handle_InRename(event.getArgument1(), event.getArgument2());
             break;
           case EVENT_TYPE::PRUNING:
             handle_prune();
@@ -47,7 +49,6 @@ void HandleWatcher::run_workers() {
           default:
             break;
           }
-          events.pop();
         } else
           cv.wait(lk, [&]() { return !events.empty() || finish; });
       }
@@ -56,6 +57,7 @@ void HandleWatcher::run_workers() {
 }
 
 void HandleWatcher::push_event(const Event &event) {
+  std::unique_lock lk{m};
   events.push(event);
   cv.notify_all();
 }
@@ -104,10 +106,10 @@ void HandleWatcher::handle_InModify(const std::string &path) {
   sync->write_structure();
 }
 
-void HandleWatcher::handle_InRename(const std::string &path) {
-  std::clog << " Evento: InRename, path :" << path << "\n";
+void HandleWatcher::handle_InRename(const std::string &old_path, const std::string &new_path) {
+  std::clog << " Evento: InRename, old_path :" << old_path << ", new_path: " << new_path << "\n";
   SyncStructure *sync = SyncStructure::getInstance();
-  sync->rename_entry(path);
+  sync->rename_entry(old_path, new_path);
   sync->write_structure();
 }
 

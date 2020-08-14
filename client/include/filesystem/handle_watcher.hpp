@@ -29,7 +29,7 @@ class HandleWatcher {
   void handle_InDelete(const std::string &);
   void handle_prune();
   void handle_expand(const std::string &);
-  void handle_InRename(const std::string &);
+  void handle_InRename(const std::string &old_path, const std::string &new_path);
   void handle_InMove(const std::string &);
 
 public:

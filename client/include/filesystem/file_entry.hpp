@@ -6,11 +6,11 @@
 #include <iomanip>
 #include <iostream>
 #include <math.h>
+#include <memory>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <vector>
-#include <memory>
 
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
@@ -41,7 +41,6 @@ private:
     int fsize = (int)std::filesystem::file_size(path);
     if (fsize <= CHUNK_SIZE) {
       entry["chunks"].push_back(entry["file_hash"]);
-      entry["dim_last_chunk"] = fsize < CHUNK_SIZE ? fsize : 0;
     } else {
       int seek_pos = 0;
       std::ifstream file(path, std::ios::binary);
@@ -57,24 +56,23 @@ private:
         entry["chunks"].push_back(hash_chunk);
         hash_concats += hash_chunk;
         seek_pos += to_read;
-        if (to_read < CHUNK_SIZE)
-          entry["dim_last_chunk"] = to_read;
       }
     }
   }
 
-  void fill_last_mod() {
+  void fill_file_info() {
     struct stat fileInfo;
     stat(path.c_str(), &fileInfo);
+    entry["dim_last_chunk"] = fileInfo.st_size > 0 ? (int)(fileInfo.st_size % CHUNK_SIZE) : -1;
     entry["last_mod"] = fileInfo.st_mtim.tv_sec;
   }
 
 public:
   FileEntry(const std::string &path) : path{path} {
     entry["path"] = path;
-    fill_file_hash();
-    fill_chunks();
-    fill_last_mod();
+    // fill_file_hash();
+    // fill_chunks();
+    fill_file_info();
   }
 
   json getEntry() { return entry; }
