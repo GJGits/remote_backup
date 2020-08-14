@@ -45,12 +45,9 @@ private:
 public:
   void scan() {
     HandleWatcher *watcher = HandleWatcher::getInstance();
-    // 1. elimina da file se un entry e' presente in structure.json, ma non
-    //    nel filesystem
+
     watcher->push_event(Event(EVENT_TYPE::PRUNING));
-    // 2. se nel filesystem esiste qualcosa che non e' presente nella
-    // structure
-    //    aggiungo.
+
     watcher->push_event(Event(EVENT_TYPE::EXPAND, "./sync"));
   }
 
@@ -183,11 +180,11 @@ public:
               handlewatcher->push_event(Event(EVENT_TYPE::EXPAND, full_path));
               break;
             case 1073741888:
-              handlewatcher->push_event(Event(EVENT_TYPE::PRUNING, full_path));
+                    handlewatcher->push_event(Event(EVENT_TYPE::PRUNING));
               break;
             case 64:
               remove_watch(full_path);
-              cookie_map[event->cookie] = full_path;
+                    cookie_map[event->cookie] = full_path;
               handlewatcher->push_event(Event(EVENT_TYPE::PRUNING));
               // todo: eliminare con pruning entry da cookie_map non associate a
               // moved_to

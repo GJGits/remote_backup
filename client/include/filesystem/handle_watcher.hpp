@@ -20,9 +20,10 @@ class HandleWatcher {
   std::queue<Event> events;
   std::vector<std::thread> workers;
   std::mutex m;
+  std::mutex real_clean_mutex;
   std::condition_variable cv;
   bool finish;
-
+  bool to_clean;
   void run_workers();
   void handle_InCloseWrite(const std::string &);
   void handle_InModify(const std::string &);
@@ -36,4 +37,6 @@ public:
   static HandleWatcher *getInstance();
   ~HandleWatcher();
   void push_event(const Event &event);
+  void set_toclean(){ to_clean = true; };
+
 };

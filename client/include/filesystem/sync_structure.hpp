@@ -28,24 +28,31 @@ private:
   inline static SyncStructure *instance = nullptr;
 
   void create_clientstructjson() {
+
     json j;
     j["hashed_status"] = "empty_hashed_status";
     j["entries"] = json::array();
     std::ofstream o("./config/client-struct.json");
     o << std::setw(4) << j << std::endl;
+      std::clog <<" sono la create\n";
+
   }
 
   void read_structure() {
     structure = std::make_unique<json>();
     std::ifstream i("./config/client-struct.json");
     i >> (*structure);
-    if (!(*structure)["entries"].empty()) {
-      for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
-        json tmp = (*structure)["entries"][i];
+
+      if (!(*structure)["entries"].empty()) {
+
+        for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
+
+          json tmp = (*structure)["entries"][i];
         entries[tmp["path"]] = std::make_tuple((int)i, tmp);
         count++;
       }
     }
+
   }
 
   void hash_struct() {
@@ -93,9 +100,10 @@ public:
     FileEntry fentry{path};
     json new_entry = fentry.getEntry();
     if (entries.find(path) == entries.end()) {
-      if (new_entry["dim_last_chunk"] > 0) {
+      if (new_entry["dim_last_chunk"] >= 0) {
         (*structure)["entries"].push_back(new_entry);
-        entries[path] = std::make_tuple(++count, new_entry);
+        entries[path] = std::make_tuple(count++, new_entry);
+        std::clog << "Count: " << count << "\n";
       }
     }
   }
@@ -117,6 +125,7 @@ public:
     std::unique_lock lk{entries_mutex};
     int index = std::get<0>(entries[old_path]);
     json entry = std::get<1>(entries[old_path]);
+    std::clog << "Last mod: " << entry["last_mod"] << "\n";
     (*structure)["entries"][index]["path"] = new_path;
     entries[new_path] = std::make_tuple(index, entry);
     entries.erase(old_path);
@@ -125,6 +134,7 @@ public:
   void remove_entry(const std::string &path) {
     std::unique_lock lk{entries_mutex};
     int index = std::get<0>(entries[path]);
+    std::clog << "Index: " << index << " Count : " << count <<"\n";
     entries.erase(path);
     (*structure)["entries"].erase(index);
     count--;
@@ -134,14 +144,15 @@ public:
    * nel filesystem
    */
   void prune() {
-    DurationLogger duration{"PRUNE"};
-    auto it = (*structure)["entries"].begin();
-    while (it != (*structure)["entries"].end()) {
+      DurationLogger duration{"PRUNE"};
+      auto it = (*structure)["entries"].begin();
+      while (it != (*structure)["entries"].end()) {
       json entry = *it;
       if (!std::filesystem::exists(entry["path"])) {
-        entries.erase(entry["path"]);
-        (*structure)["entries"].erase(it);
+          entries.erase(entry["path"]);
+          (*structure)["entries"].erase(it);
         count--;
+        std::clog << count << "\n";
       } else {
         it++;
       }
