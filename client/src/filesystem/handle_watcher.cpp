@@ -63,8 +63,6 @@ void HandleWatcher::run_workers() {
                             std::clog << "Faccio pruning\n";
                             std::unique_lock lock_clean{real_clean_mutex};
                             to_clean = true;
-                            //cv.notify_all();
-                            lock_clean.unlock();
                             }
 
                             break;
@@ -76,11 +74,10 @@ void HandleWatcher::run_workers() {
 
                 }
                 else {
-                    std::unique_lock lk{m};
-                    //if (to_clean) {
+                    if (to_clean) {
                         handle_prune();
-                        to_clean = false;
-                    //}
+                        //to_clean = false;
+                    }
                     cv.wait(lk, [&]() { return !events.empty() || finish; });
 
                 }
@@ -93,7 +90,7 @@ void HandleWatcher::run_workers() {
 void HandleWatcher::push_event(const Event &event) {
     std::unique_lock lk{m};
     events.push(event);
-    cv.notify_all();
+    cv.notify_one();
 }
 
 void HandleWatcher::handle_InCloseWrite(const std::string &path) {

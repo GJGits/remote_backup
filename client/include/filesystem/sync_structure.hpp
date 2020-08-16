@@ -41,16 +41,15 @@ private:
     std::ifstream i("./config/client-struct.json");
     i >> (*structure);
 
-      if (!(*structure)["entries"].empty()) {
+    if (!(*structure)["entries"].empty()) {
 
-        for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
+      for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
 
-          json tmp = (*structure)["entries"][i];
+        json tmp = (*structure)["entries"][i];
         entries[tmp["path"]] = std::make_tuple((int)i, tmp);
         count++;
       }
     }
-
   }
 
   void hash_struct() {
@@ -119,7 +118,7 @@ public:
    * Variante di add_entry necessaria per un rename
    */
   void rename_entry(const std::string &old_path, const std::string &new_path) {
-      std::unique_lock lk{entries_mutex};
+    std::unique_lock lk{entries_mutex};
       int index = std::get<0>(entries[old_path]);
       json entry = std::get<1>(entries[old_path]);
       std::clog << "Last mod: " << entry["last_mod"] << "\n";
@@ -140,13 +139,13 @@ public:
    * nel filesystem
    */
   void prune() {
-      DurationLogger duration{"PRUNE"};
-      auto it = (*structure)["entries"].begin();
-      while (it != (*structure)["entries"].end()) {
+    DurationLogger duration{"PRUNE"};
+    auto it = (*structure)["entries"].begin();
+    while (it != (*structure)["entries"].end()) {
       json entry = *it;
       if (!std::filesystem::exists(entry["path"])) {
-          entries.erase(entry["path"]);
-          (*structure)["entries"].erase(it);
+        entries.erase(entry["path"]);
+        (*structure)["entries"].erase(it);
         count--;
       } else {
         it++;

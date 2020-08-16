@@ -1,1 +1,15 @@
-{"entries":[{"dim_last_chunk":830,"last_mod":1595313437,"path":"./sync/esrms/pippo.txt"},{"dim_last_chunk":14266,"last_mod":1580770506,"path":"./sync/esrms/kaka.php"},{"dim_last_chunk":14266,"last_mod":1580770506,"path":"./sync/esrms/aaaaaaaaaa.php"}],"hashed_status":"24ede7a9804287889ca35d767db56ae4b1578630b6e55977f552d9c2c7bd86d9"}
+{
+    "entries": [
+        {
+            "dim_last_chunk": 14266,
+            "last_mod": 1580770506,
+            "path": "./sync/SilbershatsDIFATTO.pdf"
+        },
+        {
+            "dim_last_chunk": 14266,
+            "last_mod": 1597587990,
+            "path": "./sync/esrms/kaka.php"
+        }
+    ],
+    "hashed_status": "6c0e942a4af1d263c316e910d7a8a1c3e69a68fd82837ef82f4ef20cdd3bdaf1"
+}
