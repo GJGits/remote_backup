@@ -23,69 +23,78 @@ HandleWatcher::~HandleWatcher() {
 }
 
 void HandleWatcher::run_workers() {
-    //handle_prune();
 
-    for (size_t i = 0; i < 8; i++) {
+        for (size_t i = 0; i < 8; i++) {
 
-        workers.emplace_back([&]() {
+            workers.emplace_back([&]() {
+            try {
+                while (!finish) {
+                    std::unique_lock lk{m};
 
-            while (!finish) {
-                std::unique_lock lk{m};
+                    if (!events.empty()) {
+                        Event event = events.front();
+                        events.pop();
+                        lk.unlock();
+                        switch (event.getType()) {
+                            case EVENT_TYPE::CREATE:
+                                handle_InCloseWrite(event.getArgument1());
+                                break;
+                            case EVENT_TYPE::DELETE:
+                                handle_InDelete(event.getArgument1());
+                                break;
+                            case EVENT_TYPE::EXPAND:
+                                handle_expand(event.getArgument1());
+                                break;
+                            case EVENT_TYPE::RENAME:
+                                std::clog << "Faccio Rename\n";
 
-                if (!events.empty()) {
-                    Event event = events.front();
-                    events.pop();
-                    lk.unlock();
-                    switch (event.getType()) {
-                        case EVENT_TYPE::CREATE:
-                            handle_InCloseWrite(event.getArgument1());
-                            break;
-                        case EVENT_TYPE::DELETE:
-                            handle_InDelete(event.getArgument1());
-                            break;
-                        case EVENT_TYPE::EXPAND:
-                            handle_expand(event.getArgument1());
-                            break;
-                        case EVENT_TYPE::RENAME:
-                            std::clog << "Faccio Rename\n";
+                                std::clog << "Event 1: " << event.getArgument1() << " " << "Event 2: "
+                                          << event.getArgument2() << "\n";
+                                if (event.getArgument1().size() == 0) {
+                                    handle_InCloseWrite(event.getArgument2());
 
-                            std::clog << "Event 1: " << event.getArgument1() << " " << "Event 2: " << event.getArgument2() << "\n";
-                            if(event.getArgument1().size() == 0){
-                                handle_InCloseWrite(event.getArgument2());
-
+                                } else {
+                                    std::clog << "sono in rename e lancio la handle in rename\n";
+                                    handle_InRename(event.getArgument1(), event.getArgument2());
+                                }
+                                break;
+                            case EVENT_TYPE::PRUNING: {
+                                std::clog << "Faccio pruning\n";
+                                std::unique_lock lock_clean{real_clean_mutex};
+                                to_clean = true;
                             }
-                            else {
-                                std::clog << "sono in rename e lancio la handle in rename\n";
-                                handle_InRename(event.getArgument1(), event.getArgument2());
-                            }
-                            break;
-                        case EVENT_TYPE::PRUNING: {
-                            std::clog << "Faccio pruning\n";
-                            std::unique_lock lock_clean{real_clean_mutex};
-                            to_clean = true;
-                            }
 
-                            break;
+                                break;
 
-                        default:
-                            break;
+                            default:
+                                break;
+
+                        }
+
+                    } else {
+                        if (to_clean) {
+                            std::clog << "STO PRUNANDOOOOOOOOOOOO\n";
+                            handle_prune();
+                            to_clean = false;
+                        }
+                        cv.wait(lk, [&]() { return !events.empty() || finish; });
 
                     }
 
-                }
-                else {
-                    if (to_clean) {
-                        handle_prune();
-                        //to_clean = false;
-                    }
-                    cv.wait(lk, [&]() { return !events.empty() || finish; });
 
                 }
-
             }
-        });
-    }
+            catch(std::filesystem::__cxx11::filesystem_error &e){
+                std::clog << e.what() << "\n";
+            }
+            catch(...){
+                std::clog << "Errore sconosciuto\n";
+            }
+            });
+        }
+
 }
+
 
 void HandleWatcher::push_event(const Event &event) {
     std::unique_lock lk{m};

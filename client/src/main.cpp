@@ -8,7 +8,9 @@ int main() {
   LinuxWatcher *watcher = LinuxWatcher::getInstance(
       "./sync", IN_CREATE | IN_ONLYDIR | IN_CLOSE_WRITE | IN_DELETE |
                     IN_MODIFY | IN_MOVED_TO | IN_MOVED_FROM | IN_ISDIR);
-  watcher->scan();
-  watcher->handle_events();
+
+     watcher->scan();
+     watcher->handle_events();
+
   return 0;
 }
