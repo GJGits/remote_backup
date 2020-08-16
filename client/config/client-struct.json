@@ -1,1 +1,15 @@
-{"entries":[{"dim_last_chunk":130269,"last_mod":1597130211,"path":"./sync/esrms/test_cartella/test/sss/sssss.png"},{"dim_last_chunk":130269,"last_mod":1597130211,"path":"./sync/esrms/test_cartella/test/JsonViewer.zip"},{"dim_last_chunk":2619,"last_mod":1577529536,"path":"./sync/esrms/test_cartella/test/add_teaching.php"}],"hashed_status":"86ab5d9fc79684bb492c23249da0d084d97adbf5612d1cdb2ac2a8572c888a08"}
+{
+    "entries": [
+        {
+            "dim_last_chunk": 0,
+            "last_mod": 1597168643,
+            "path": "./sync/ostechnix.txt"
+        },
+        {
+            "dim_last_chunk": 151,
+            "last_mod": 1583764542,
+            "path": "./sync/README.md"
+        }
+    ],
+    "hashed_status": "4dafa01930bac41552a13ac653b7dbda79a41b5722170717c590210ebdabfba8"
+}

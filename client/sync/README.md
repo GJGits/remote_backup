@@ -1,0 +1,3 @@
+- testo giallo: da riportare su appunti
+- descrizione immagine gialla: immagine da riportare su appunti
+- testo azzurro: interessante da approdondire 
