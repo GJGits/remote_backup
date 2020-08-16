@@ -9,7 +9,7 @@
 HandleWatcher *HandleWatcher::getInstance() {
     if (instance == nullptr) {
         instance = new HandleWatcher();
-        instance->set_toclean();
+        //instance->set_toclean();
         instance->run_workers();
     }
     return instance;
@@ -23,6 +23,7 @@ HandleWatcher::~HandleWatcher() {
 }
 
 void HandleWatcher::run_workers() {
+    //handle_prune();
 
     for (size_t i = 0; i < 8; i++) {
 
@@ -30,8 +31,6 @@ void HandleWatcher::run_workers() {
 
             while (!finish) {
                 std::unique_lock lk{m};
-
-                cv.wait(lk, [&]() { return !events.empty() || finish; });
 
                 if (!events.empty()) {
                     Event event = events.front();
@@ -48,14 +47,23 @@ void HandleWatcher::run_workers() {
                             handle_expand(event.getArgument1());
                             break;
                         case EVENT_TYPE::RENAME:
-                            std::clog << "sono in rename\n";
-                            std::clog << event.getArgument1() << " " << event.getArgument2() << "\n";
-                            handle_InRename(event.getArgument1(), event.getArgument2());
+                            std::clog << "Faccio Rename\n";
+
+                            std::clog << "Event 1: " << event.getArgument1() << " " << "Event 2: " << event.getArgument2() << "\n";
+                            if(event.getArgument1().size() == 0){
+                                handle_InCloseWrite(event.getArgument2());
+
+                            }
+                            else {
+                                std::clog << "sono in rename e lancio la handle in rename\n";
+                                handle_InRename(event.getArgument1(), event.getArgument2());
+                            }
                             break;
-                        case EVENT_TYPE::PRUNING:
-                            {
+                        case EVENT_TYPE::PRUNING: {
+                            std::clog << "Faccio pruning\n";
                             std::unique_lock lock_clean{real_clean_mutex};
                             to_clean = true;
+                            //cv.notify_all();
                             lock_clean.unlock();
                             }
 
@@ -63,15 +71,17 @@ void HandleWatcher::run_workers() {
 
                         default:
                             break;
+
                     }
-                } else {
-                    std::unique_lock lock_clean{real_clean_mutex};
-                    if (to_clean) {
-                        std::clog << "faccio la prune\n";
+
+                }
+                else {
+                    std::unique_lock lk{m};
+                    //if (to_clean) {
                         handle_prune();
                         to_clean = false;
-                    }
-                    lock_clean.unlock();
+                    //}
+                    cv.wait(lk, [&]() { return !events.empty() || finish; });
 
                 }
 
@@ -117,14 +127,9 @@ void HandleWatcher::handle_InDelete(const std::string &path) {
 
 void HandleWatcher::handle_prune() {
     std::clog << " Evento: Pruning\n";
-    std::clog << "e1bis\n";
-
     SyncStructure *sync = SyncStructure::getInstance();
-    std::clog << "e1\n";
     sync->prune();
-    std::clog << "e2\n";
     sync->write_structure();
-    std::clog << "e3\n";
     // todo: send bulk_delete to server
 }
 

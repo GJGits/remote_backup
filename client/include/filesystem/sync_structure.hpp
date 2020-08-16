@@ -34,8 +34,6 @@ private:
     j["entries"] = json::array();
     std::ofstream o("./config/client-struct.json");
     o << std::setw(4) << j << std::endl;
-      std::clog <<" sono la create\n";
-
   }
 
   void read_structure() {
@@ -103,7 +101,6 @@ public:
       if (new_entry["dim_last_chunk"] >= 0) {
         (*structure)["entries"].push_back(new_entry);
         entries[path] = std::make_tuple(count++, new_entry);
-        std::clog << "Count: " << count << "\n";
       }
     }
   }
@@ -122,19 +119,18 @@ public:
    * Variante di add_entry necessaria per un rename
    */
   void rename_entry(const std::string &old_path, const std::string &new_path) {
-    std::unique_lock lk{entries_mutex};
-    int index = std::get<0>(entries[old_path]);
-    json entry = std::get<1>(entries[old_path]);
-    std::clog << "Last mod: " << entry["last_mod"] << "\n";
-    (*structure)["entries"][index]["path"] = new_path;
-    entries[new_path] = std::make_tuple(index, entry);
-    entries.erase(old_path);
+      std::unique_lock lk{entries_mutex};
+      int index = std::get<0>(entries[old_path]);
+      json entry = std::get<1>(entries[old_path]);
+      std::clog << "Last mod: " << entry["last_mod"] << "\n";
+      (*structure)["entries"][index]["path"] = new_path;
+      entries[new_path] = std::make_tuple(index, entry);
+      entries.erase(old_path);
   }
 
   void remove_entry(const std::string &path) {
     std::unique_lock lk{entries_mutex};
     int index = std::get<0>(entries[path]);
-    std::clog << "Index: " << index << " Count : " << count <<"\n";
     entries.erase(path);
     (*structure)["entries"].erase(index);
     count--;
@@ -152,7 +148,6 @@ public:
           entries.erase(entry["path"]);
           (*structure)["entries"].erase(it);
         count--;
-        std::clog << count << "\n";
       } else {
         it++;
       }

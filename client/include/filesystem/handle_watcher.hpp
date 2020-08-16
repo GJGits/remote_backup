@@ -24,6 +24,7 @@ class HandleWatcher {
   std::condition_variable cv;
   bool finish;
   bool to_clean;
+  bool startup;
   void run_workers();
   void handle_InCloseWrite(const std::string &);
   void handle_InModify(const std::string &);
