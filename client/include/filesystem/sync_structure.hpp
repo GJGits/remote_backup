@@ -21,7 +21,6 @@ using json = nlohmann::json;
 class SyncStructure {
 
 private:
-  std::mutex entries_mutex;
   int count;
   std::unordered_map<std::string, std::tuple<int, json>> entries;
   std::unique_ptr<json> structure;
@@ -91,8 +90,7 @@ public:
    * @path: path del file aggiungere o aggiornare
    */
 
-  void add_entry(const std::string &path) {
-    std::unique_lock lk{entries_mutex};
+  FileEntry add_entry(const std::string &path) {
     DurationLogger duration{"ADD_ENTRY"};
     FileEntry fentry{path};
     json new_entry = fentry.getEntry();
@@ -101,11 +99,16 @@ public:
         (*structure)["entries"].push_back(new_entry);
         entries[path] = std::make_tuple(count++, new_entry);
       }
+    } else {
+      int index = std::get<0>(entries[path]);
+      if (new_entry["dim_last_chunk"] >= 0) {
+        (*structure)["entries"][index] = new_entry;
+      }
     }
+    return fentry;
   }
 
   void replace_entry(const std::string &path) {
-    std::unique_lock lk{entries_mutex};
     int index = std::get<0>(entries[path]);
     FileEntry fentry{path};
     json new_entry = fentry.getEntry();
@@ -118,13 +121,14 @@ public:
    * Variante di add_entry necessaria per un rename
    */
   void rename_entry(const std::string &old_path, const std::string &new_path) {
-    std::unique_lock lk{entries_mutex};
+    if (entries.find(old_path) != entries.end()) {
       int index = std::get<0>(entries[old_path]);
       json entry = std::get<1>(entries[old_path]);
       std::clog << "Last mod: " << entry["last_mod"] << "\n";
       (*structure)["entries"][index]["path"] = new_path;
       entries[new_path] = std::make_tuple(index, entry);
       entries.erase(old_path);
+    }
   }
 
   void remove_entry(const std::string &path) {
@@ -138,12 +142,15 @@ public:
    * Elimina dal file di struct tutte le entry presenti che non esistono piu'
    * nel filesystem
    */
-  void prune() {
+  std::vector<std::string> prune() {
+    std::vector<std::string> result;
+    std::unique_lock lk{entries_mutex};
     DurationLogger duration{"PRUNE"};
     auto it = (*structure)["entries"].begin();
     while (it != (*structure)["entries"].end()) {
       json entry = *it;
       if (!std::filesystem::exists(entry["path"])) {
+        result.push_back(entry["path"]);
         entries.erase(entry["path"]);
         (*structure)["entries"].erase(it);
         count--;
@@ -151,6 +158,7 @@ public:
         it++;
       }
     }
+    return result;
   }
 
   // todo: dato il metodo prune valutare eliminazione

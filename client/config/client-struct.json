@@ -1,15 +1,14 @@
 {
     "entries": [
         {
-            "dim_last_chunk": 0,
-            "last_mod": 1597168643,
-            "path": "./sync/ostechnix.txt"
-        },
-        {
-            "dim_last_chunk": 151,
-            "last_mod": 1583764542,
-            "path": "./sync/README.md"
+            "chunks": [
+                "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            ],
+            "dim_last_chunk": 5,
+            "file_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "last_mod": 1597679313,
+            "path": "./sync/a.txt"
         }
     ],
-    "hashed_status": "4dafa01930bac41552a13ac653b7dbda79a41b5722170717c590210ebdabfba8"
+    "hashed_status": "7d9b1d5cccd730827ca20eb68529dda8e676f73906d50425cd8f08c543765750"
 }

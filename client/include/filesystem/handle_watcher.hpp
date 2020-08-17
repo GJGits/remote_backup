@@ -17,27 +17,35 @@ using json = nlohmann::json;
 
 class HandleWatcher {
   inline static HandleWatcher *instance = nullptr;
+  int rename_counter;
   std::queue<Event> events;
-  std::vector<std::thread> workers;
+  std::queue<FileEntry> file_entries;
+  std::thread worker;
+  std::vector<std::thread> senders;
   std::mutex m;
-  std::mutex real_clean_mutex;
   std::condition_variable cv;
+  std::mutex m1;
+  std::condition_variable cv1;
   bool finish;
   bool to_clean;
   bool startup;
-  void run_workers();
+  void run_worker();
+  void run_senders();
   void handle_InCloseWrite(const std::string &);
   void handle_InModify(const std::string &);
   void handle_InDelete(const std::string &);
   void handle_prune();
   void handle_expand(const std::string &);
-  void handle_InRename(const std::string &old_path, const std::string &new_path);
+  void handle_InRename(const std::string &old_path,
+                       const std::string &new_path);
   void handle_InMove(const std::string &);
 
 public:
   static HandleWatcher *getInstance();
   ~HandleWatcher();
   void push_event(const Event &event);
-  void set_toclean(){ to_clean = true; };
-
+  void increase_counter() { rename_counter++; }
+  void decrease_counter() { rename_counter--; };
+  int get_count() const { return rename_counter; }
+  void reset_counter() { rename_counter = 0; }
 };

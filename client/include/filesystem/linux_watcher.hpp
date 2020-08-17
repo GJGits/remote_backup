@@ -2,6 +2,7 @@
 #include "../common/duration.hpp"
 #include "handle_watcher.hpp"
 #include "sync_structure.hpp"
+#include <bits/stdc++.h>
 #include <chrono>
 #include <errno.h>
 #include <iostream>
@@ -20,6 +21,7 @@
  **/
 class LinuxWatcher {
 private:
+  int timer;
   int inotify_descriptor;
   std::string root_to_watch;
   uint32_t watcher_mask;
@@ -29,6 +31,7 @@ private:
   inline static LinuxWatcher *instance = nullptr;
   LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
       : watcher_mask{mask} {
+    timer = 5000;
     // Richiedo un file descriptor al kernel da utilizzare
     // per la watch. L'API fornita prevede, come spesso avviene
     // in linux, che la comunicazione tra kernel e user avvenga
@@ -43,14 +46,10 @@ private:
   }
 
 public:
-
-
   void scan() {
     HandleWatcher *watcher = HandleWatcher::getInstance();
-
     watcher->push_event(Event(EVENT_TYPE::PRUNING));
-
-    watcher->push_event(Event(EVENT_TYPE::EXPAND, "./sync"));
+    watcher->push_event(Event(EVENT_TYPE::EXPAND, std::string{"./sync"}));
   }
 
   static LinuxWatcher *getInstance(const std::string &root_path,
@@ -140,14 +139,14 @@ public:
       fds[0].fd = inotify_descriptor;
       fds[0].events = POLLIN; // maschera generale per eventi su fd?
 
-      // poll until an event occurs (timeout = -1 -> BLOCKING)
-      poll_num = poll(fds, nfds, -1);
+      // poll until an event occurs.Timeout = -1 -> BLOCKING,
+      // else timeout expressed in milliseconds
+      HandleWatcher *handlewatcher = HandleWatcher::getInstance();
+      poll_num = poll(fds, nfds, timer);
       if (poll_num > 0) {
 
         len = read(inotify_descriptor, buf, sizeof buf);
         // todo: check su read qui...
-
-        HandleWatcher *handlewatcher = HandleWatcher::getInstance();
 
         for (ptr = buf; ptr < buf + len;
              ptr += sizeof(struct inotify_event) + event->len) {
@@ -167,9 +166,10 @@ public:
             //  TABELLA RIASSUNTIVA CODICI EVENTI:
 
             //    8          -> EVENTO IN_CLOSE_WRITE
+            //    1073741952 -> CTRL+Z CARTELLA ?
             //    1073742080 -> EVENT HANDLE_EXPAND
-            //    1073741888 -> PRUNING
-            //    64         -> PRUNING (MOVED_FROM)
+            //    1073741888 -> MOVED_FROM FOLDER
+            //    64         -> MOVED_FROM FILE
             //    128        -> RENAME  (MOVED_TO)
             //    512        -> IN_DELETE
 
@@ -181,15 +181,21 @@ public:
               add_watch(full_path);
               handlewatcher->push_event(Event(EVENT_TYPE::EXPAND, full_path));
               break;
+            case 1073741952:
+              add_watch(full_path);
+              handlewatcher->push_event(Event(EVENT_TYPE::EXPAND, full_path));
+              break;
             case 1073741888:
-                    handlewatcher->push_event(Event(EVENT_TYPE::PRUNING));
+              timer = 5000;
+              remove_watch(full_path);
+              handlewatcher->push_event(Event(EVENT_TYPE::MOVED));
               break;
             case 64:
-              remove_watch(full_path);
-                    cookie_map[event->cookie] = full_path;
-              handlewatcher->push_event(Event(EVENT_TYPE::PRUNING));
+              cookie_map[event->cookie] = full_path;
               // todo: eliminare con pruning entry da cookie_map non associate a
               // moved_to
+              timer = 5000;
+              handlewatcher->push_event(Event(EVENT_TYPE::MOVED));
               break;
             case 128:
               handlewatcher->push_event(Event(
@@ -209,6 +215,13 @@ public:
 
             std::clog << e.what() << "\n";
           }
+        }
+      }
+      if (poll_num == 0) {
+        handlewatcher->push_event(Event(EVENT_TYPE::PRUNING));
+        if (handlewatcher->get_count() == 0) {
+          timer = timer < INT_MAX  ? (timer + 30000) : INT_MAX;
+          cookie_map.clear();
         }
       }
     }

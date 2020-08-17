@@ -26,6 +26,7 @@ private:
   std::string path;
   json entry;
   std::string hash_concats;
+  std::vector<std::vector<char>> chunks;
 
   void fill_file_hash() {
     DurationLogger duration{"FILL_FILE_HASH"};
@@ -53,6 +54,7 @@ private:
         file.read(read_buf.get(), to_read); // todo: check su read
         std::vector<char> chunk_buf{read_buf.get(), read_buf.get() + to_read};
         std::string hash_chunk = Sha256::getSha256(chunk_buf);
+        chunks.push_back(std::move(chunk_buf));
         entry["chunks"].push_back(hash_chunk);
         hash_concats += hash_chunk;
         seek_pos += to_read;
@@ -63,15 +65,18 @@ private:
   void fill_file_info() {
     struct stat fileInfo;
     stat(path.c_str(), &fileInfo);
-    entry["dim_last_chunk"] = fileInfo.st_size > 0 ? (int)(fileInfo.st_size % CHUNK_SIZE) : -1;
+    entry["dim_last_chunk"] =
+        fileInfo.st_size > 0 ? (int)(fileInfo.st_size % CHUNK_SIZE) : -1;
     entry["last_mod"] = fileInfo.st_mtim.tv_sec;
   }
 
 public:
+  //todo: aggiungere costruttore movimento
+  FileEntry(){}
   FileEntry(const std::string &path) : path{path} {
     entry["path"] = path;
-    // fill_file_hash();
-    // fill_chunks();
+    fill_file_hash();
+    fill_chunks();
     fill_file_info();
   }
 
