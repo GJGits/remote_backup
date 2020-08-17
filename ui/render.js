@@ -46,39 +46,48 @@ const check_creds = (username, password, ripPassword) => {
     return true;
 };
 
-$(document).ready(function () {
-
-    console.log("page loaded");
-
-    /* MESSAGES HANDLERS */
-
-    ipcRenderer.on('asynchronous-message', (event, arg) => {
-        console.log("render receiced:", arg);
-        //event.reply('asynchronous-reply', 'pong')
-    });
-
-    ipcRenderer.on('synchronous-message', (event, arg) => {
-        console.log("render receiced:", arg);
-        //event.returnValue = 'pong'
-    });
-
-    ipcRenderer.on('status-changed', (event, arg) => {
-        arg = arg.replace("\n", "");
-        console.log(JSON.stringify(arg));
-        if (arg === "log-in") {
-            logged = true;
+var change_status = (status) => {
+    if ($("#login")) {
+        if (status) {
             $("#login").hide();
             $("#signup").hide();
             $("#logged").show();
             $(".alert.alert-danger.error").hide();
         } else {
-            logged = false;
             $("#login").show();
             $("#signup").hide();
             $("#logged").hide();
             $(".alert.alert-danger.error").hide();
         }
-    });
+    }
+}
+
+/* MESSAGES HANDLERS */
+
+ipcRenderer.on('asynchronous-message', (event, arg) => {
+    console.log("render receiced:", arg);
+    //event.reply('asynchronous-reply', 'pong')
+});
+
+ipcRenderer.on('synchronous-message', (event, arg) => {
+    console.log("render receiced:", arg);
+    //event.returnValue = 'pong'
+});
+
+ipcRenderer.on('status-changed', (event, arg) => {
+    arg = arg.replace("\n", "");
+    console.log(JSON.stringify(arg));
+    logged = arg === "log-in";
+    change_status(logged);
+});
+
+
+$(document).ready(function () {
+
+    console.log("page loaded:", new Date().getTime());
+
+    change_status(logged);
+
 
     /* EVENTS HANDLERS */
 

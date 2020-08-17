@@ -5,6 +5,7 @@ const server = dgram.createSocket('udp4');
 const { ipcMain } = require('electron');
 const textEncoding = require('text-encoding');
 const storage = require('electron-json-storage');
+const fs = require('fs');
 
 // CONSTANTS
 const mb = menubar(
@@ -16,10 +17,21 @@ const mb = menubar(
     }
   });
 
+var token = "";
+
 
 mb.on('ready', () => {
 
   console.log('app is ready');
+
+  fs.readFile('../client/config/token.json', 'utf8', (err, jsonString) => {
+    if (err) {
+      console.log("File read failed:", err)
+      return
+    }
+    console.log('File data:', jsonString)
+    token = JSON.parse(jsonString);
+  });
 
   // MESSAGE HANDLERS
   ipcMain.on('asynchronous-message', (event, arg) => {
@@ -67,11 +79,14 @@ mb.on('ready', () => {
 });
 
 mb.on('after-create-window', () => {
+  console.log("create window:", new Date().getTime());
   storage.get("token", (error, data) => {
+    console.log("data:", data);
     if (error) {
+      console.log("token not found");
       mb.window.webContents.send('status-changed', "log-off");
-    } if (data.length) {
-      const buff = Buffer.from(data.split(".")[1], "base64");
+    } if (data) {
+      const buff = Buffer.from(data.token.token.split(".")[1], "base64");
       const exp = JSON.parse(buff.toLocaleString("ascii")).exp;
       const now = Math.round((new Date()).getTime() / 1000);
       console.log("exp:", exp, "now:", now);
@@ -79,7 +94,7 @@ mb.on('after-create-window', () => {
         mb.window.webContents.send('status-changed', "log-off");
         storage.remove("token", (error) => { console.log(error) });
       } else {
-        // todo: send login
+        mb.window.webContents.send('status-changed', "log-in");
       }
     }
   });
