@@ -3,9 +3,7 @@ const { menubar } = require('menubar');
 const dgram = require('dgram');
 const server = dgram.createSocket('udp4');
 const { ipcMain } = require('electron');
-const textEncoding = require('text-encoding');
-const storage = require('electron-json-storage');
-const fs = require('fs');
+const Token = require('./modules/token.js');
 
 // CONSTANTS
 const mb = menubar(
@@ -17,42 +15,23 @@ const mb = menubar(
     }
   });
 
-var token = "";
+var token = new Token();
 
 
 mb.on('ready', () => {
 
   console.log('app is ready');
 
-  fs.readFile('../client/config/token.json', 'utf8', (err, jsonString) => {
-    if (err) {
-      console.log("File read failed:", err)
-      return
-    }
-    console.log('File data:', jsonString)
-    token = JSON.parse(jsonString);
-  });
-
   // MESSAGE HANDLERS
-  ipcMain.on('asynchronous-message', (event, arg) => {
-    console.log(arg) // prints "ping"
-    event.reply('asynchronous-reply', 'pong')
-  });
 
-  ipcMain.on('synchronous-message', (event, arg) => {
-    console.log(arg) // prints "ping"
-    event.returnValue = 'pong'
-  });
-
-  ipcMain.on('token', (event, arg) => {
-    console.log(arg);
-    // todo: token check format
-    storage.set('token', { token: arg }, (error) => {
-      mb.window.webContents.send('status-changed', "log-off");
+  ipcMain.on('token', (event, data) => {
+    if (data && data.token && token.set(data.token)) {
+      mb.window.webContents.send('status-changed', "log-in");
+      event.returnValue = "ok";
+    } else {
       event.returnValue = "ko";
-    });
-    event.returnValue = "ok";
-    mb.window.webContents.send('status-changed', "log-in");
+      mb.window.webContents.send('status-changed', "log-off");
+    }
   });
 
   // UDP INSTANCE DEFINITION
@@ -79,26 +58,11 @@ mb.on('ready', () => {
 });
 
 mb.on('after-create-window', () => {
-  console.log("create window:", new Date().getTime());
-  storage.get("token", (error, data) => {
-    console.log("data:", data);
-    if (error) {
-      console.log("token not found");
-      mb.window.webContents.send('status-changed', "log-off");
-    } if (data) {
-      const buff = Buffer.from(data.token.token.split(".")[1], "base64");
-      const exp = JSON.parse(buff.toLocaleString("ascii")).exp;
-      const now = Math.round((new Date()).getTime() / 1000);
-      console.log("exp:", exp, "now:", now);
-      if (exp <= now) {
-        mb.window.webContents.send('status-changed', "log-off");
-        storage.remove("token", (error) => { console.log(error) });
-      } else {
-        mb.window.webContents.send('status-changed', "log-in");
-      }
-    }
-  });
+  if (token && token.isValid()) {
+    mb.window.webContents.send('status-changed', "log-in");
+  } else {
+    token.reset();
+    mb.window.webContents.send('status-changed', "log-off");
+  }
   mb.window.openDevTools();
-  // todo: inviato per test su signin/signup rimuovere
-  //mb.window.webContents.send('status-changed', "log-off");
 });

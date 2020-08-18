@@ -84,10 +84,7 @@ ipcRenderer.on('status-changed', (event, arg) => {
 
 $(document).ready(function () {
 
-    console.log("page loaded:", new Date().getTime());
-
     change_status(logged);
-
 
     /* EVENTS HANDLERS */
 
@@ -119,7 +116,10 @@ $(document).ready(function () {
             contentType: "application/json",
             dataType: "json",
             success: function (result) {
-                ipcRenderer.sendSync('token', result);
+                if (result && result.token) {
+                    ipcRenderer.sendSync('token', result);
+                }
+
             },
             statusCode: {
                 500: function (message) {
