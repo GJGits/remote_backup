@@ -3,18 +3,19 @@ const { menubar } = require('menubar');
 const dgram = require('dgram');
 const server = dgram.createSocket('udp4');
 const { ipcMain } = require('electron');
-const textEncoding = require('text-encoding');
-const storage = require('electron-json-storage');
+const Token = require('./modules/token.js');
 
 // CONSTANTS
 const mb = menubar(
   {
     icon: "remote-icon.png",
-    tooltip: "tooltip-name",
+    tooltip: "show",
     browserWindow: {
       webPreferences: { nodeIntegration: true }
     }
   });
+
+var token = new Token();
 
 
 mb.on('ready', () => {
@@ -22,21 +23,15 @@ mb.on('ready', () => {
   console.log('app is ready');
 
   // MESSAGE HANDLERS
-  ipcMain.on('asynchronous-message', (event, arg) => {
-    console.log(arg) // prints "ping"
-    event.reply('asynchronous-reply', 'pong')
-  });
 
-  ipcMain.on('synchronous-message', (event, arg) => {
-    console.log(arg) // prints "ping"
-    event.returnValue = 'pong'
-  });
-
-  ipcMain.on('token', (event, arg) => {
-    console.log(arg);
-    storage.set('token', { token: arg }, (error) => {
-      mb.window.webContents.send('status-changed', "logg-off");
-    });
+  ipcMain.on('token', (event, data) => {
+    if (data && data.token && token.set(data.token)) {
+      mb.window.webContents.send('status-changed', "log-in");
+      event.returnValue = "ok";
+    } else {
+      event.returnValue = "ko";
+      mb.window.webContents.send('status-changed', "log-off");
+    }
   });
 
   // UDP INSTANCE DEFINITION
@@ -63,14 +58,11 @@ mb.on('ready', () => {
 });
 
 mb.on('after-create-window', () => {
-  storage.get("token", (error, data) => {
-    if (error) {
-      mb.window.webContents.send('status-changed', "log-off");
-    } if(data.length) {
-      //todo: check se token scaduto
-      console.log(data);
-      mb.window.webContents.send('status-changed', "log-in");
-    }
-  });
+  if (token && token.isValid()) {
+    mb.window.webContents.send('status-changed', "log-in");
+  } else {
+    token.reset();
+    mb.window.webContents.send('status-changed', "log-off");
+  }
   mb.window.openDevTools();
 });
