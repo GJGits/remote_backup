@@ -36,17 +36,16 @@ private:
   }
 
   void read_structure() {
-    structure = std::make_unique<json>();
-    std::ifstream i("./config/client-struct.json");
-    i >> (*structure);
-
-    if (!(*structure)["entries"].empty()) {
-
-      for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
-
-        json tmp = (*structure)["entries"][i];
-        entries[tmp["path"]] = std::make_tuple((int)i, tmp);
-        count++;
+    if (structure.get() == nullptr || (*structure).empty()) {
+      structure = std::make_unique<json>();
+      std::ifstream i("./config/client-struct.json");
+      i >> (*structure);
+      if (!(*structure)["entries"].empty()) {
+        for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
+          json tmp = (*structure)["entries"][i];
+          entries[tmp["path"]] = std::make_tuple((int)i, tmp);
+          count++;
+        }
       }
     }
   }
@@ -71,8 +70,8 @@ public:
       if (!std::filesystem::exists("./config/client-struct.json") ||
           std::filesystem::is_empty("./config/client-struct.json"))
         instance->create_clientstructjson();
-      instance->read_structure();
     }
+    instance->read_structure();
     return instance;
   }
 
@@ -82,6 +81,28 @@ public:
     std::ofstream o("./config/client-struct.json");
     o << (*structure) << "\n";
     o.close();
+    (*structure).clear();
+  }
+
+  bool has_entry(const std::string &path) {
+
+    if (entries.find(path) == entries.end()) {
+      return false;
+    }
+    FileEntry fentry{path};
+    json new_entry = fentry.getEntry();
+    json old_entry = std::get<1>(entries[path]);
+    if (new_entry["chunks"].size() != old_entry["chunks"].size()) {
+      return false;
+    }
+
+    for (size_t i = 0; i < new_entry["chunks"].size(); i++) {
+      if (new_entry["chunks"][i].get<std::string>().compare(
+              old_entry["chunks"][i].get<std::string>()) != 0) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -132,7 +153,6 @@ public:
   }
 
   void remove_entry(const std::string &path) {
-    std::unique_lock lk{entries_mutex};
     int index = std::get<0>(entries[path]);
     entries.erase(path);
     (*structure)["entries"].erase(index);
@@ -144,7 +164,6 @@ public:
    */
   std::vector<std::string> prune() {
     std::vector<std::string> result;
-    std::unique_lock lk{entries_mutex};
     DurationLogger duration{"PRUNE"};
     auto it = (*structure)["entries"].begin();
     while (it != (*structure)["entries"].end()) {

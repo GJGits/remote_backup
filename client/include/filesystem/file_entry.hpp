@@ -18,19 +18,17 @@
 #include "../common/sha256.hpp"
 
 #define CHUNK_SIZE 2097152 // chunk size espressa in byte
-
+using json = nlohmann::json;
 using namespace std::chrono_literals;
 
 class FileEntry {
 private:
   std::string path;
   json entry;
-  std::string hash_concats;
-  std::vector<std::vector<char>> chunks;
+  std::string hash_concats; //todo passa ad heap
 
   void fill_file_hash() {
     DurationLogger duration{"FILL_FILE_HASH"};
-    std::ifstream input(path, std::ios::binary);
     std::vector<char> bytes;
     std::copy(hash_concats.begin(), hash_concats.end(),
               std::back_inserter(bytes));
@@ -54,7 +52,6 @@ private:
         file.read(read_buf.get(), to_read); // todo: check su read
         std::vector<char> chunk_buf{read_buf.get(), read_buf.get() + to_read};
         std::string hash_chunk = Sha256::getSha256(chunk_buf);
-        chunks.push_back(std::move(chunk_buf));
         entry["chunks"].push_back(hash_chunk);
         hash_concats += hash_chunk;
         seek_pos += to_read;
@@ -71,12 +68,12 @@ private:
   }
 
 public:
-  //todo: aggiungere costruttore movimento
-  FileEntry(){}
+  // todo: aggiungere costruttore movimento
+  FileEntry() {}
   FileEntry(const std::string &path) : path{path} {
     entry["path"] = path;
-    fill_file_hash();
     fill_chunks();
+    fill_file_hash();
     fill_file_info();
   }
 

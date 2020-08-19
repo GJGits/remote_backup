@@ -31,7 +31,7 @@ private:
   inline static LinuxWatcher *instance = nullptr;
   LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
       : watcher_mask{mask} {
-    timer = 5000;
+    timer = -1;
     // Richiedo un file descriptor al kernel da utilizzare
     // per la watch. L'API fornita prevede, come spesso avviene
     // in linux, che la comunicazione tra kernel e user avvenga
@@ -175,6 +175,7 @@ public:
 
             switch (event->mask) {
             case 8:
+              timer = 5000;
               handlewatcher->push_event(Event(EVENT_TYPE::CREATE, full_path));
               break;
             case 1073742080:
@@ -191,18 +192,20 @@ public:
               handlewatcher->push_event(Event(EVENT_TYPE::MOVED));
               break;
             case 64:
+              timer = 5000;
               cookie_map[event->cookie] = full_path;
               // todo: eliminare con pruning entry da cookie_map non associate a
               // moved_to
-              timer = 5000;
               handlewatcher->push_event(Event(EVENT_TYPE::MOVED));
               break;
             case 128:
+              timer = 5000;
               handlewatcher->push_event(Event(
                   EVENT_TYPE::RENAME, cookie_map[event->cookie], full_path));
               cookie_map.erase(event->cookie);
               break;
             case 512:
+              timer = 5000;
               handlewatcher->push_event(Event(EVENT_TYPE::DELETE, full_path));
               break;
             default:
@@ -220,7 +223,7 @@ public:
       if (poll_num == 0) {
         handlewatcher->push_event(Event(EVENT_TYPE::PRUNING));
         if (handlewatcher->get_count() == 0) {
-          timer = timer < INT_MAX  ? (timer + 30000) : INT_MAX;
+          timer = -1;
           cookie_map.clear();
         }
       }

@@ -2,6 +2,7 @@
 
 #include "../common/json.hpp"
 #include "event.hpp"
+#include "file_entry.hpp"
 #include <condition_variable>
 #include <filesystem>
 #include <fstream>
@@ -22,10 +23,9 @@ class HandleWatcher {
   std::queue<FileEntry> file_entries;
   std::thread worker;
   std::vector<std::thread> senders;
-  std::mutex m;
-  std::condition_variable cv;
-  std::mutex m1;
-  std::condition_variable cv1;
+  std::mutex m, m1;
+  std::condition_variable cv, cv1;
+  bool dirty_file;
   bool finish;
   bool to_clean;
   bool startup;
@@ -48,4 +48,6 @@ public:
   void decrease_counter() { rename_counter--; };
   int get_count() const { return rename_counter; }
   void reset_counter() { rename_counter = 0; }
+  void set_dirty(bool flag) { dirty_file = flag; }
+  bool is_dirty() const { return dirty_file;}
 };
