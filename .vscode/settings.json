@@ -71,6 +71,12 @@
         "filesystem": "cpp",
         "*.ipp": "cpp",
         "forward_list": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "csetjmp": "cpp",
+        "any": "cpp",
+        "charconv": "cpp",
+        "cuchar": "cpp",
+        "unordered_set": "cpp",
+        "scoped_allocator": "cpp"
     }
 }

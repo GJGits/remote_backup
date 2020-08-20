@@ -21,6 +21,8 @@ using json = nlohmann::json;
 class SyncStructure {
 
 private:
+  bool dirty;
+  bool finish;
   int count;
   std::unordered_map<std::string, std::tuple<int, json>> entries;
   std::unique_ptr<json> structure;
@@ -76,12 +78,15 @@ public:
   }
 
   void write_structure() {
-    DurationLogger duration{"WRITE_STRUCTURE"};
-    instance->hash_struct();
-    std::ofstream o("./config/client-struct.json");
-    o << (*structure) << "\n";
-    o.close();
-    (*structure).clear();
+    if (dirty) {
+      DurationLogger duration{"WRITE_STRUCTURE"};
+      instance->hash_struct();
+      std::ofstream o("./config/client-struct.json");
+      o << (*structure) << "\n";
+      o.close();
+      (*structure).clear();
+      dirty = false;
+    }
   }
 
   bool has_entry(const std::string &path) {
@@ -117,6 +122,7 @@ public:
     json new_entry = fentry.getEntry();
     if (entries.find(path) == entries.end()) {
       if (new_entry["dim_last_chunk"] >= 0) {
+        dirty = true;
         (*structure)["entries"].push_back(new_entry);
         entries[path] = std::make_tuple(count++, new_entry);
       }
@@ -149,6 +155,7 @@ public:
       (*structure)["entries"][index]["path"] = new_path;
       entries[new_path] = std::make_tuple(index, entry);
       entries.erase(old_path);
+      dirty = true;
     }
   }
 
@@ -157,11 +164,9 @@ public:
     entries.erase(path);
     (*structure)["entries"].erase(index);
     count--;
+    dirty = true;
   }
-  /**
-   * Elimina dal file di struct tutte le entry presenti che non esistono piu'
-   * nel filesystem
-   */
+
   std::vector<std::string> prune() {
     std::vector<std::string> result;
     DurationLogger duration{"PRUNE"};
@@ -177,25 +182,13 @@ public:
         it++;
       }
     }
+    if (!result.empty())
+      dirty = true;
     return result;
   }
 
-  // todo: dato il metodo prune valutare eliminazione
-  void remove_sub_entries(std::string &path) {
-    const std::string input = "^" + path + "/.*$";
-    std::string output = boost::replace_all_copy(input, "/", "\\/");
-    std::regex delete_reg{output};
-    std::smatch match;
-
-    auto it = (*structure)["entries"].begin();
-    while (it != (*structure)["entries"].end()) {
-      json entry = *it;
-      std::string entry_path = entry["path"].get<std::string>();
-      if (std::regex_match(entry_path, match, delete_reg)) {
-        remove_entry(entry_path);
-      } else {
-        it++;
-      }
-    }
-  }
+  void increase_counter() { count++; }
+  void decrease_counter() { count--; }
+  void reset_counter() { count = 0; }
+  int get_count() const { return count;}
 };

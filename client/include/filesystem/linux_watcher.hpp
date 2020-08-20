@@ -46,11 +46,6 @@ private:
   }
 
 public:
-  void scan() {
-    HandleWatcher *watcher = HandleWatcher::getInstance();
-    watcher->push_event(Event(EVENT_TYPE::PRUNING));
-    watcher->push_event(Event(EVENT_TYPE::EXPAND, std::string{"./sync"}));
-  }
 
   static LinuxWatcher *getInstance(const std::string &root_path,
                                    uint32_t mask) {

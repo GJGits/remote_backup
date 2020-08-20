@@ -3,6 +3,7 @@
 #include "../common/json.hpp"
 #include "event.hpp"
 #include "file_entry.hpp"
+#include "message.hpp"
 #include <condition_variable>
 #include <filesystem>
 #include <fstream>
@@ -20,17 +21,15 @@ class HandleWatcher {
   inline static HandleWatcher *instance = nullptr;
   int rename_counter;
   std::queue<Event> events;
-  std::queue<FileEntry> file_entries;
-  std::thread worker;
-  std::vector<std::thread> senders;
-  std::mutex m, m1;
-  std::condition_variable cv, cv1;
+  std::queue<Message> messages;
+  std::thread dispatcher;
+  std::mutex m, mex_m;
+  std::condition_variable cv, mex_cv;
   bool dirty_file;
   bool finish;
   bool to_clean;
   bool startup;
-  void run_worker();
-  void run_senders();
+  void run_dispatcher();
   void handle_InCloseWrite(const std::string &);
   void handle_InModify(const std::string &);
   void handle_InDelete(const std::string &);
@@ -44,6 +43,8 @@ public:
   static HandleWatcher *getInstance();
   ~HandleWatcher();
   void push_event(const Event &event);
+  void push_message(const Message &message);
+  Message pop_message(bool structure);
   void increase_counter() { rename_counter++; }
   void decrease_counter() { rename_counter--; };
   int get_count() const { return rename_counter; }

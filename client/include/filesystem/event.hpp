@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 
 enum EVENT_TYPE { CREATE, EXPAND, MOVED, PRUNING, RENAME, DELETE };
