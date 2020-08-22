@@ -46,7 +46,6 @@ private:
   }
 
 public:
-
   static LinuxWatcher *getInstance(const std::string &root_path,
                                    uint32_t mask) {
     if (instance == nullptr) {
@@ -216,11 +215,8 @@ public:
         }
       }
       if (poll_num == 0) {
-        handlewatcher->push_event(Event(EVENT_TYPE::PRUNING));
-        if (handlewatcher->get_count() == 0) {
-          timer = -1;
-          cookie_map.clear();
-        }
+        cookie_map.clear();
+        timer = -1;
       }
     }
   }

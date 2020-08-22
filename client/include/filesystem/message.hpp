@@ -1,24 +1,65 @@
 #pragma once
 
+#include "../common/json.hpp"
+#include <optional>
 #include <string>
 #include <vector>
 
-enum MESSAGE_CODE { UPLOAD, PRUNING, REMOVE, NEW_ENTRY, STOP };
+using json = nlohmann::json;
+
+enum MESSAGE_CODE {
+  UPLOAD,
+  BULK_UPLOAD,
+  PRUNING,
+  REMOVE,
+  NEW_ENTRY,
+  UPDATE_PATH,
+  FILE_MOVED,
+  ADD_CHUNK,
+  BULK_DELETE,
+  STOP
+};
 
 class Message {
-private:
+protected:
   MESSAGE_CODE code;
-  std::vector<std::string> arguments;
-  bool struct_handled, sync_handled;
+  int type;
 
 public:
-  Message(MESSAGE_CODE code, std::vector<std::string> arguments)
-      : code{code}, arguments{std::move(arguments)} {}
+  Message(MESSAGE_CODE code, int type) : code{code}, type{type} {}
+  virtual ~Message() {}
+  virtual MESSAGE_CODE getCode() const = 0;
+  virtual int getType() const = 0;
+};
 
-  bool is_sync_handled() { return sync_handled; }
-  bool is_struct_handled() { return struct_handled; }
-  void set_sync(bool flag) { sync_handled = flag; }
-  void set_struct(bool flag) { struct_handled = flag; }
+class StructMessage : public Message {
+private:
+  json argument;
+
+public:
+  StructMessage(MESSAGE_CODE code, json arg) : Message(code, 0) {
+    this->argument = arg;
+  }
   MESSAGE_CODE getCode() const { return code; }
-  std::vector<std::string> getArguments() const { return arguments; }
+  int getType() const { return type; }
+  json getArgument() const { return argument; }
+};
+
+class SyncMessage : public Message {
+private:
+  std::vector<std::string> argument;
+
+public:
+  SyncMessage(MESSAGE_CODE code, std::vector<std::string> argument)
+      : Message(code, 1), argument{argument} {}
+  MESSAGE_CODE getCode() const { return code; }
+  int getType() const { return type; }
+  std::vector<std::string> getArgument() const { return argument; }
+};
+
+class SignalMessage : public Message {
+public:
+  SignalMessage(MESSAGE_CODE code) : Message(code, -1) {}
+  MESSAGE_CODE getCode() const { return code; }
+  int getType() const { return type; }
 };

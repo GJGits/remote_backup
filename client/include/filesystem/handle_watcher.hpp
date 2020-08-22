@@ -2,12 +2,11 @@
 
 #include "../common/json.hpp"
 #include "event.hpp"
-#include "file_entry.hpp"
+#include "linux_watcher.hpp"
 #include "message.hpp"
+#include "sync_structure.hpp"
 #include <condition_variable>
 #include <filesystem>
-#include <fstream>
-#include <future>
 #include <iostream>
 #include <memory>
 #include <queue>
@@ -18,37 +17,116 @@
 using json = nlohmann::json;
 
 class HandleWatcher {
+
+private:
   inline static HandleWatcher *instance = nullptr;
-  int rename_counter;
   std::queue<Event> events;
-  std::queue<Message> messages;
+  std::queue<std::shared_ptr<Message>> messages;
   std::thread dispatcher;
-  std::mutex m, mex_m;
-  std::condition_variable cv, mex_cv;
-  bool dirty_file;
+  std::mutex m;
+  std::mutex mex_m;
+  std::condition_variable cv, cv_mex;
   bool finish;
-  bool to_clean;
-  bool startup;
-  void run_dispatcher();
-  void handle_InCloseWrite(const std::string &);
-  void handle_InModify(const std::string &);
-  void handle_InDelete(const std::string &);
-  void handle_prune();
-  void handle_expand(const std::string &);
-  void handle_InRename(const std::string &old_path,
-                       const std::string &new_path);
-  void handle_InMove(const std::string &);
 
 public:
-  static HandleWatcher *getInstance();
-  ~HandleWatcher();
-  void push_event(const Event &event);
-  void push_message(const Message &message);
-  Message pop_message(bool structure);
-  void increase_counter() { rename_counter++; }
-  void decrease_counter() { rename_counter--; };
-  int get_count() const { return rename_counter; }
-  void reset_counter() { rename_counter = 0; }
-  void set_dirty(bool flag) { dirty_file = flag; }
-  bool is_dirty() const { return dirty_file;}
+  static HandleWatcher *getInstance() {
+    if (instance == nullptr) {
+      instance = new HandleWatcher{};
+    }
+    return instance;
+  }
+
+  ~HandleWatcher() {
+    finish = true;
+    dispatcher.join();
+  }
+
+  void run_dispatcher() {
+    finish = false;
+    dispatcher = std::move(std::thread{[&]() {
+      while (!finish) {
+
+        std::unique_lock lk{m};
+
+        if (!events.empty()) {
+
+          Event event = events.front();
+          events.pop();
+
+          switch (event.getType()) {
+
+          case EVENT_TYPE::CREATE:
+            // push_sync_message(
+            // SyncMessage{MESSAGE_CODE::UPLOAD,
+            //         std::vector<std::string>{event.getArgument1()}});
+            break;
+
+          case EVENT_TYPE::EXPAND:
+            // push_sync_message(SyncMessage{MESSAGE_CODE::BULK_UPLOAD,
+            //                          std::vector<std::string>{event.getArgument1()}});
+
+            break;
+
+          case EVENT_TYPE::MOVED:
+            // push_struct_message(
+            // StructMessage{MESSAGE_CODE::FILE_MOVED,
+            // std::vector<std::string>{}});
+            break;
+
+          case EVENT_TYPE::DELETE:
+            //  push_sync_message(
+            //    SyncMessage{MESSAGE_CODE::REMOVE,
+            //              std::vector<std::string>{event.getArgument1()}});
+            break;
+
+          case EVENT_TYPE::RENAME:
+            if (event.getArgument1().empty()) {
+              // push_sync_message(SyncMessage{
+              //   MESSAGE_CODE::UPLOAD,
+              // std::vector<std::string>{event.getArgument2()}});
+            } else {
+              // push_sync_message(SyncMessage{
+              // MESSAGE_CODE::UPDATE_PATH,
+              // std::vector<std::string>{event.getArgument1(),
+              //                      event.getArgument2()}});
+            }
+
+            break;
+
+          default:
+            break;
+          }
+        } else {
+          cv.wait(lk, [&]() { return !events.empty() || finish; });
+        }
+      }
+    }});
+  }
+
+  void push_event(const Event &event) {
+    std::unique_lock lk{m};
+    events.push(event);
+    cv.notify_one();
+  }
+
+  void push_message(std::shared_ptr<Message> message) {
+    std::unique_lock lk{mex_m};
+    messages.push(message);
+    cv_mex.notify_all();
+  }
+
+  std::shared_ptr<Message> pop_message(int type) {
+    std::unique_lock lk{mex_m};
+    if (messages.empty() || messages.front()->getType() != type)
+      cv_mex.wait(lk, [&]() {
+        return (!messages.empty() && messages.front()->getType() == type) ||
+               finish;
+      });
+    if (!messages.empty()) {
+      std::shared_ptr<Message> message = messages.front();
+      messages.pop();
+      return message;
+    }
+    return std::make_shared<SignalMessage>(SignalMessage{MESSAGE_CODE::STOP});
+  }
 };

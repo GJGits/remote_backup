@@ -1,9 +1,12 @@
 #pragma once
 
+#include <condition_variable>
 #include <filesystem>
+#include <mutex>
 #include <string>
 #include <thread>
 
+#include "../common/json.hpp"
 #include "handle_watcher.hpp"
 #include "sync_structure.hpp"
 
@@ -12,6 +15,8 @@ private:
   bool finish;
   std::thread worker;
   static inline StructWorker *instance = nullptr;
+  std::mutex m;
+  std::condition_variable cv;
 
 public:
   ~StructWorker() {
@@ -27,79 +32,42 @@ public:
   }
 
   void run_worker() {
+    finish = false;
     worker = std::move(std::thread{[&]() {
-      HandleWatcher *event_handler = HandleWatcher::getInstance();
-      SyncStructure *sync_structure = SyncStructure::getInstance();
+      HandleWatcher *dispatcher = HandleWatcher::getInstance();
       while (!finish) {
-        try {
-          Message mex = event_handler->pop_message(true);
-          switch (mex.getCode()) {
 
-          case MESSAGE_CODE::INSERT:
-            handle_InCloseWrite(mex.getArguments()[0]);
+        std::shared_ptr<Message> raw_message = dispatcher->pop_message(0);
+
+        if (raw_message->getType() != -1) {
+          std::shared_ptr<StructMessage> message =
+              std::dynamic_pointer_cast<StructMessage>(raw_message);
+          switch (message->getCode()) {
+
+          case MESSAGE_CODE::ADD_CHUNK:
+            add_chunk(message->getArgument());
             break;
 
-          case MESSAGE_CODE::BULK_INSERT:
-            handle_expand(mex.getArguments()[0]);
-            break;
-
-          case MESSAGE_CODE::MOVED:
-            sync_structure->increase_counter();
-            break;
-
-          case MESSAGE_CODE::REMOVE:
-            handle_InDelete(mex.getArguments()[0]);
-            break;
-
-          case MESSAGE_CODE::RENAME:
-            if (mex.getArguments()[0].empty()) {
-              handle_InCloseWrite(mex.getArguments()[1]);
-            } else {
-              handle_InRename(mex.getArguments()[0], mex.getArguments()[1]);
-              sync_structure->decrease_counter();
-            }
-
-            break;
-
+          /*
           case MESSAGE_CODE::PRUNING:
             handle_prune();
-            break;
-
+          break;
+          */
           default:
             break;
           }
-
-        } catch (std::filesystem::__cxx11::filesystem_error &e) {
-          std::clog << e.what() << "\n";
-        } catch (...) {
-          std::clog << "Errore sconosciuto\n";
         }
       }
     }});
   }
 
-  void handle_InCloseWrite(const std::string &path) {
-    std::clog << " Evento: InCloseWrite , path : " << path << "\n";
-
-    if (std::filesystem::exists(path) && !std::filesystem::is_empty(path)) {
+  void add_chunk(const json &entry) {
+    std::clog << "add_chunk\n";
+    std::clog << "entry_path: " << entry["path"] << "\n";
+    if (std::filesystem::exists(entry["path"]) &&
+        !std::filesystem::is_empty(entry["path"])) {
       SyncStructure *sync = SyncStructure::getInstance();
-      FileEntry entry = std::move(sync->add_entry(path));
-    }
-  }
-
-  void handle_expand(const std::string &path) {
-    std::clog << " Evento: expand , path : " << path << "\n";
-    if (std::filesystem::is_directory(path) &&
-        !std::filesystem::is_empty(path)) {
-      SyncStructure *sync = SyncStructure::getInstance();
-      for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
-        // todo: check anche se file_entry modificata
-        if (std::filesystem::is_regular_file(p.path().string()) &&
-            !sync->has_entry(p.path().string()) &&
-            !std::filesystem::is_empty(p.path().string())) {
-          FileEntry entry = std::move(sync->add_entry(p.path().string()));
-        }
-      }
+      sync->add_entry(entry);
       sync->write_structure();
     }
   }
@@ -112,17 +80,20 @@ public:
 
   void handle_prune() {
     std::clog << " Evento: Pruning\n";
+    HandleWatcher *dispatcher = HandleWatcher::getInstance();
     SyncStructure *sync = SyncStructure::getInstance();
     if (sync->get_count() > 0) {
       std::vector<std::string> deleted = sync->prune();
       sync->reset_counter();
       if (!deleted.empty()) {
-        // todo invia al server
+        dispatcher->push_message(std::make_shared<SyncMessage>(
+            SyncMessage{MESSAGE_CODE::BULK_DELETE, deleted}));
       }
     }
     sync->write_structure();
   }
 
+  /*
   void handle_InModify(const std::string &path) {
     std::clog << " Evento: InModify, path :" << path << "\n";
     SyncStructure *sync = SyncStructure::getInstance();
@@ -136,4 +107,5 @@ public:
     SyncStructure *sync = SyncStructure::getInstance();
     sync->rename_entry(old_path, new_path);
   }
+  */
 };

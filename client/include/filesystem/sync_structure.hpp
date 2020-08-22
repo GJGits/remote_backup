@@ -94,18 +94,12 @@ public:
     if (entries.find(path) == entries.end()) {
       return false;
     }
-    FileEntry fentry{path};
-    json new_entry = fentry.getEntry();
-    json old_entry = std::get<1>(entries[path]);
-    if (new_entry["chunks"].size() != old_entry["chunks"].size()) {
-      return false;
-    }
+    return std::get<1>(entries[path])["validity"];
+  }
 
-    for (size_t i = 0; i < new_entry["chunks"].size(); i++) {
-      if (new_entry["chunks"][i].get<std::string>().compare(
-              old_entry["chunks"][i].get<std::string>()) != 0) {
-        return false;
-      }
+  bool is_updated(const std::string &path, int last_mod) {
+    if (has_entry(path)) {
+      return std::get<1>(entries[path])["last_mod"] < last_mod;
     }
     return true;
   }
@@ -116,23 +110,33 @@ public:
    * @path: path del file aggiungere o aggiornare
    */
 
-  FileEntry add_entry(const std::string &path) {
+  void add_entry(const json &entry) {
     DurationLogger duration{"ADD_ENTRY"};
-    FileEntry fentry{path};
-    json new_entry = fentry.getEntry();
-    if (entries.find(path) == entries.end()) {
-      if (new_entry["dim_last_chunk"] >= 0) {
+    std::clog << "e0\n";
+    if (entry["size"] >= 0) {
+      std::clog << "e1\n";
+      if (entries.find(entry["path"]) == entries.end()) {
+        std::clog << "e2\n";
         dirty = true;
-        (*structure)["entries"].push_back(new_entry);
-        entries[path] = std::make_tuple(count++, new_entry);
-      }
-    } else {
-      int index = std::get<0>(entries[path]);
-      if (new_entry["dim_last_chunk"] >= 0) {
-        (*structure)["entries"][index] = new_entry;
+        (*structure)["entries"].push_back(entry);
+        entries[entry["path"]] = std::make_tuple(count++, entry);
+      } else {
+        std::clog << "e2.1\n";
+        json chunk = entry["chunks"][0]; // entry viene inviata sempre con un solo chunk
+        int index = std::get<0>(entries[entry["path"]]);
+        bool found = false;
+        for (size_t i = 0; i < (*structure)["entries"][index]["chunks"].size();
+             i++) {
+          if ((*structure)["entries"][index]["chunks"][i]["id"] == chunk["id"]) {
+            found = true;
+            (*structure)["entries"][index]["chunks"][i] = chunk;
+          }
+        }
+        if (!found) {
+          (*structure)["entries"][index]["chunks"].push_back(chunk);
+        }
       }
     }
-    return fentry;
   }
 
   void replace_entry(const std::string &path) {
@@ -190,5 +194,5 @@ public:
   void increase_counter() { count++; }
   void decrease_counter() { count--; }
   void reset_counter() { count = 0; }
-  int get_count() const { return count;}
+  int get_count() const { return count; }
 };

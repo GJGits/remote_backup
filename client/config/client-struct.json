@@ -1,1 +1,31 @@
-{"entries":[],"hashed_status":"empty_hashed_status"}
+{
+    "entries": [
+        {
+            "chunks": [
+                {
+                    "hash": "c1783d1a0599834e498a59085f93a1a3645036cf74138771a2f3e3f756fb651b",
+                    "id": 0
+                }
+            ],
+            "dim_last_chunk": 583741,
+            "last_mod": 1529874638,
+            "path": "./sync/c++ - generali.pdf",
+            "size": 583741,
+            "validity": false
+        },
+        {
+            "chunks": [
+                {
+                    "hash": "d196b84bb508dcfde5f13009e7cb100cbb40cac9a8d1ab0f8440613507b08489",
+                    "id": 0
+                }
+            ],
+            "dim_last_chunk": 441793,
+            "last_mod": 1529875720,
+            "path": "./sync/c++ - thread.pdf",
+            "size": 441793,
+            "validity": false
+        }
+    ],
+    "hashed_status": "1ca92d063418e95f9500e8fd29a93688aec641aa389a131b92809ea4c3200dae"
+}
