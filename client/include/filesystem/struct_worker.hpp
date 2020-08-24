@@ -2,9 +2,11 @@
 
 #include <condition_variable>
 #include <filesystem>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "../common/json.hpp"
 #include "handle_watcher.hpp"
@@ -33,8 +35,11 @@ public:
 
   void run_worker() {
     finish = false;
+    expand("./sync");
+    prune();
     worker = std::move(std::thread{[&]() {
       HandleWatcher *dispatcher = HandleWatcher::getInstance();
+      SyncStructure *sync = SyncStructure::getInstance();
       while (!finish) {
 
         std::shared_ptr<Message> raw_message = dispatcher->pop_message(0);
@@ -48,11 +53,26 @@ public:
             add_chunk(message->getArgument());
             break;
 
-          /*
+          case MESSAGE_CODE::EXPAND:
+            expand(message->getArgument()["name"]);
+            break;
+
+          case MESSAGE_CODE::INCREASE_COUNTER:
+            sync->increase_counter();
+            break;
+
           case MESSAGE_CODE::PRUNING:
-            handle_prune();
-          break;
-          */
+            prune();
+            break;
+
+          case MESSAGE_CODE::REMOVE:
+            delete_entry(message->getArgument());
+            break;
+
+          case MESSAGE_CODE::UPDATE_PATH:
+            rename(message->getArgument());
+            break;
+
           default:
             break;
           }
@@ -61,9 +81,33 @@ public:
     }});
   }
 
+  void expand(const std::string &path) {
+    HandleWatcher *dispatcher = HandleWatcher::getInstance();
+    SyncStructure *sync_structure = SyncStructure::getInstance();
+    std::vector<std::string> added;
+    if (std::filesystem::is_directory(path) &&
+        !std::filesystem::is_empty(path)) {
+      for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
+        std::string sub_path = p.path().string();
+        struct stat fileInfo;
+        stat(path.c_str(), &fileInfo);
+        int last_mod = (int)fileInfo.st_mtim.tv_sec;
+        if (std::filesystem::is_regular_file(sub_path) &&
+            !sync_structure->has_entry(sub_path) &&
+            sync_structure->is_updated(sub_path, last_mod) &&
+            !std::filesystem::is_empty(sub_path)) {
+          added.push_back(sub_path);
+        }
+      }
+    }
+    if (!added.empty()) {
+      dispatcher->push_message(std::make_shared<SyncMessage>(
+          SyncMessage{MESSAGE_CODE::BULK_UPLOAD, added}));
+    }
+  }
+
   void add_chunk(const json &entry) {
-    std::clog << "add_chunk\n";
-    std::clog << "entry_path: " << entry["path"] << "\n";
+    DurationLogger duration{"ADD_CHUNK"};
     if (std::filesystem::exists(entry["path"]) &&
         !std::filesystem::is_empty(entry["path"])) {
       SyncStructure *sync = SyncStructure::getInstance();
@@ -72,13 +116,13 @@ public:
     }
   }
 
-  void handle_InDelete(const std::string &path) {
-    std::clog << " Evento: InDelete, path :" << path << "\n";
+  void delete_entry(const json &entry) {
+    std::clog << " Evento: InDelete, path :" << entry["name"] << "\n";
     SyncStructure *sync = SyncStructure::getInstance();
-    sync->remove_entry(path);
+    sync->remove_entry(entry["name"]);
   }
 
-  void handle_prune() {
+  void prune() {
     std::clog << " Evento: Pruning\n";
     HandleWatcher *dispatcher = HandleWatcher::getInstance();
     SyncStructure *sync = SyncStructure::getInstance();
@@ -99,13 +143,12 @@ public:
     SyncStructure *sync = SyncStructure::getInstance();
     FileEntry entry = std::move(sync->add_entry(path));
   }
+*/
 
-  void handle_InRename(const std::string &old_path,
-                       const std::string &new_path) {
-    std::clog << " Evento: InRename, old_path :" << old_path
-              << ", new_path: " << new_path << "\n";
+  void rename(const json &entry) {
+    std::clog << " Evento: InRename, old_path :" << entry["old"]
+              << ", new_path: " << entry["new"] << "\n";
     SyncStructure *sync = SyncStructure::getInstance();
-    sync->rename_entry(old_path, new_path);
+    sync->rename_entry(entry["old"], entry["new"]);
   }
-  */
 };

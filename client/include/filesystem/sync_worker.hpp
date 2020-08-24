@@ -25,8 +25,8 @@ private:
   std::queue<HTTPReq> down_reqs;
   std::queue<HTTPReq> up_reqs;
   std::mutex mex_m;
-  std::mutex cache_m; 
-  std::mutex down_m; 
+  std::mutex cache_m;
+  std::mutex down_m;
   std::mutex up_m;
   std::condition_variable mex_cv, cache_cv, down_cv, up_cv;
   std::thread sync_worker;
@@ -56,25 +56,33 @@ public:
   }
 
   void run_sync_worker() {
-    HandleWatcher *dispatcher = HandleWatcher::getInstance();
     finish = false;
-    bulk_upload("./sync");
-    json empty;
-    empty["key"] = "value";
-    StructMessage prune_mex{MESSAGE_CODE::PRUNING, empty};
-    dispatcher->push_message(std::make_shared<StructMessage>(StructMessage{MESSAGE_CODE::PRUNING, empty}));
     sync_worker = std::move(std::thread{[&]() {
-       HandleWatcher *dispatcher = HandleWatcher::getInstance();
+      HandleWatcher *dispatcher = HandleWatcher::getInstance();
       while (!finish) {
 
         std::shared_ptr<Message> raw_message = dispatcher->pop_message(1);
 
         if (raw_message->getType() != -1) {
-          std::shared_ptr<SyncMessage> message = std::dynamic_pointer_cast<SyncMessage>(raw_message);
+
+          std::shared_ptr<SyncMessage> message =
+              std::dynamic_pointer_cast<SyncMessage>(raw_message);
+
           switch (message->getCode()) {
+          case MESSAGE_CODE::UPLOAD:
+            upload(message->getArgument()[0]);
+          case MESSAGE_CODE::BULK_UPLOAD:
+            bulk_upload(message->getArgument());
+            break;
           case MESSAGE_CODE::BULK_DELETE:
             bulk_delete(message->getArgument());
             break;
+          case MESSAGE_CODE::REMOVE:
+            remove(message->getArgument()[0]);
+          break;
+          case MESSAGE_CODE::UPDATE_PATH:
+            rename(message->getArgument()[0], message->getArgument()[1]);
+          break;
 
           default:
             break;
@@ -82,8 +90,6 @@ public:
         }
       }
     }});
-
-
   }
 
   void run_down_workers() {
@@ -105,24 +111,9 @@ public:
     });
   }
 
-  void bulk_upload(const std::string &path) {
-    SyncStructure *sync_structure = SyncStructure::getInstance();
-    if (std::filesystem::is_directory(path) &&
-        !std::filesystem::is_empty(path)) {
-      for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
-        std::string sub_path = p.path().string();
-        struct stat fileInfo;
-        stat(path.c_str(), &fileInfo);
-        int last_mod = (int)fileInfo.st_mtim.tv_sec;
-        if (std::filesystem::is_regular_file(sub_path) &&
-            !sync_structure->has_entry(sub_path) &&
-            sync_structure->is_updated(sub_path, last_mod) &&
-            !std::filesystem::is_empty(sub_path)) {
-          // todo: non catcha possibili modifiche offline
-          upload(sub_path);
-        }
-      }
-    }
+  void bulk_upload(const std::vector<std::string> &paths) {
+    for (std::string path : paths)
+      upload(path);
   }
 
   void upload(const std::string &path) {
@@ -155,7 +146,8 @@ public:
       chunk["id"] = i;
       chunk["hash"] = hash_chunk;
       entry["chunks"].push_back(chunk);
-      dispatcher->push_message(std::make_shared<StructMessage>(StructMessage{MESSAGE_CODE::ADD_CHUNK, entry}));
+      dispatcher->push_message(std::make_shared<StructMessage>(
+          StructMessage{MESSAGE_CODE::ADD_CHUNK, entry}));
       seek_pos += to_read;
       i++;
       entry["chunks"].clear();
@@ -164,5 +156,13 @@ public:
 
   void bulk_delete(std::vector<std::string> paths) {
     // todo: creare delete request
+  }
+
+  void remove(const std::string & path) {
+    // todo: eliminare da server
+  }
+
+  void rename(const std::string &old_path, const std::string &new_path) {
+
   }
 };

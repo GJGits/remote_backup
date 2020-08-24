@@ -55,42 +55,61 @@ public:
 
           switch (event.getType()) {
 
-          case EVENT_TYPE::CREATE:
-            // push_sync_message(
-            // SyncMessage{MESSAGE_CODE::UPLOAD,
-            //         std::vector<std::string>{event.getArgument1()}});
+          case EVENT_TYPE::NEW_FILE:
+            push_message(std::make_shared<SyncMessage>(
+                SyncMessage{MESSAGE_CODE::UPLOAD,
+                            std::vector<std::string>{event.getArgument1()}}));
             break;
 
-          case EVENT_TYPE::EXPAND:
-            // push_sync_message(SyncMessage{MESSAGE_CODE::BULK_UPLOAD,
-            //                          std::vector<std::string>{event.getArgument1()}});
+          case EVENT_TYPE::NEW_FOLDER: {
+            json folder;
+            folder["name"] = event.getArgument1();
+            push_message(std::make_shared<StructMessage>(
+                StructMessage{MESSAGE_CODE::EXPAND, folder}));
+          }
 
-            break;
+          break;
 
           case EVENT_TYPE::MOVED:
-            // push_struct_message(
-            // StructMessage{MESSAGE_CODE::FILE_MOVED,
-            // std::vector<std::string>{}});
+            push_message(std::make_shared<StructMessage>(
+                StructMessage{MESSAGE_CODE::INCREASE_COUNTER}));
             break;
 
-          case EVENT_TYPE::DELETE:
-            //  push_sync_message(
-            //    SyncMessage{MESSAGE_CODE::REMOVE,
-            //              std::vector<std::string>{event.getArgument1()}});
-            break;
+          case EVENT_TYPE::DELETE: {
+            json file;
+            file["name"] = event.getArgument1();
+            push_message(std::make_shared<StructMessage>(
+                StructMessage{MESSAGE_CODE::REMOVE, file}));
+            push_message(std::make_shared<SyncMessage>(
+                SyncMessage{MESSAGE_CODE::REMOVE,
+                            std::vector<std::string>{event.getArgument1()}}));
+
+          }
+
+          break;
 
           case EVENT_TYPE::RENAME:
             if (event.getArgument1().empty()) {
-              // push_sync_message(SyncMessage{
-              //   MESSAGE_CODE::UPLOAD,
-              // std::vector<std::string>{event.getArgument2()}});
+              push_message(std::make_shared<SyncMessage>(
+                  SyncMessage{MESSAGE_CODE::UPLOAD,
+                              std::vector<std::string>{event.getArgument2()}}));
             } else {
-              // push_sync_message(SyncMessage{
-              // MESSAGE_CODE::UPDATE_PATH,
-              // std::vector<std::string>{event.getArgument1(),
-              //                      event.getArgument2()}});
-            }
+              json entry;
+              entry["old"] = event.getArgument1();
+              entry["new"] = event.getArgument2();
+              push_message(std::make_shared<StructMessage>(
+                  StructMessage{MESSAGE_CODE::UPDATE_PATH, entry}));
 
+              push_message(std::make_shared<SyncMessage>(
+                  SyncMessage{MESSAGE_CODE::UPDATE_PATH,
+                              std::vector<std::string>{event.getArgument1(),
+                                                       event.getArgument2()}}));
+            }
+            break;
+
+          case EVENT_TYPE::TIME_OUT:
+            push_message(std::make_shared<StructMessage>(
+                StructMessage{MESSAGE_CODE::PRUNING}));
             break;
 
           default:
@@ -117,6 +136,7 @@ public:
 
   std::shared_ptr<Message> pop_message(int type) {
     std::unique_lock lk{mex_m};
+
     if (messages.empty() || messages.front()->getType() != type)
       cv_mex.wait(lk, [&]() {
         return (!messages.empty() && messages.front()->getType() == type) ||

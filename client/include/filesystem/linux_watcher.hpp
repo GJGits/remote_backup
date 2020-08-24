@@ -170,15 +170,15 @@ public:
             switch (event->mask) {
             case 8:
               timer = 5000;
-              handlewatcher->push_event(Event(EVENT_TYPE::CREATE, full_path));
+              handlewatcher->push_event(Event(EVENT_TYPE::NEW_FILE, full_path));
               break;
             case 1073742080:
               add_watch(full_path);
-              handlewatcher->push_event(Event(EVENT_TYPE::EXPAND, full_path));
+              handlewatcher->push_event(Event(EVENT_TYPE::NEW_FOLDER, full_path));
               break;
             case 1073741952:
               add_watch(full_path);
-              handlewatcher->push_event(Event(EVENT_TYPE::EXPAND, full_path));
+              handlewatcher->push_event(Event(EVENT_TYPE::NEW_FOLDER, full_path));
               break;
             case 1073741888:
               timer = 5000;
@@ -188,8 +188,6 @@ public:
             case 64:
               timer = 5000;
               cookie_map[event->cookie] = full_path;
-              // todo: eliminare con pruning entry da cookie_map non associate a
-              // moved_to
               handlewatcher->push_event(Event(EVENT_TYPE::MOVED));
               break;
             case 128:
@@ -216,6 +214,7 @@ public:
       }
       if (poll_num == 0) {
         cookie_map.clear();
+         handlewatcher->push_event(Event(EVENT_TYPE::TIME_OUT));
         timer = -1;
       }
     }

@@ -17,6 +17,8 @@ enum MESSAGE_CODE {
   FILE_MOVED,
   ADD_CHUNK,
   BULK_DELETE,
+  EXPAND,
+  INCREASE_COUNTER,
   STOP
 };
 
@@ -37,6 +39,7 @@ private:
   json argument;
 
 public:
+  StructMessage(MESSAGE_CODE code) : Message(code, 0) {}
   StructMessage(MESSAGE_CODE code, json arg) : Message(code, 0) {
     this->argument = arg;
   }
@@ -50,6 +53,7 @@ private:
   std::vector<std::string> argument;
 
 public:
+  SyncMessage(MESSAGE_CODE code) : Message(code, 1) {}
   SyncMessage(MESSAGE_CODE code, std::vector<std::string> argument)
       : Message(code, 1), argument{argument} {}
   MESSAGE_CODE getCode() const { return code; }

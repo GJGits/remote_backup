@@ -111,17 +111,12 @@ public:
    */
 
   void add_entry(const json &entry) {
-    DurationLogger duration{"ADD_ENTRY"};
-    std::clog << "e0\n";
     if (entry["size"] >= 0) {
-      std::clog << "e1\n";
       if (entries.find(entry["path"]) == entries.end()) {
-        std::clog << "e2\n";
         dirty = true;
         (*structure)["entries"].push_back(entry);
         entries[entry["path"]] = std::make_tuple(count++, entry);
       } else {
-        std::clog << "e2.1\n";
         json chunk = entry["chunks"][0]; // entry viene inviata sempre con un solo chunk
         int index = std::get<0>(entries[entry["path"]]);
         bool found = false;

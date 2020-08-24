@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-enum EVENT_TYPE { CREATE, EXPAND, MOVED, RENAME, DELETE };
+enum EVENT_TYPE { NEW_FILE, NEW_FOLDER, MOVED, RENAME, DELETE,TIME_OUT };
 
 class Event {
 private:
