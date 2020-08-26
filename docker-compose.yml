@@ -12,6 +12,14 @@ services:
         build: ./server
         ports: 
             - "3500:3500"
+        volumes:
+            - filesystem:/home/filesystem
+    ngnix-server:
+        image: nginx
+        ports:
+            - "3200:80"
+        volumes: 
+            - './server/config/nginx.conf:/etc/nginx/nginx.conf'
     client:
         build: ./client
         ports: 
@@ -19,5 +27,6 @@ services:
         volumes: 
             - "./client/sync:/home/client/sync"
             - "./client/config:/home/client/config"
-
+volumes: 
+    filesystem:
 
