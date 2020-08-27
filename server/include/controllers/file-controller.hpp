@@ -5,6 +5,7 @@
 #include "../common/sha256.hpp"
 #include "../dtos/signup_dto.hpp"
 #include "../dtos/signin_dto.hpp"
+#include "../dtos/get_file_dto.hpp"
 #include "../dtos/post_file_dto.hpp"
 #include "../services/user-service.hpp"
 #include <regex>
@@ -26,4 +27,5 @@ public:
     virtual const http::server::reply handle(const http::server::request &req);
     std::string post_file_chunk(const PostFileDTO &post_file);
     std::string put_file_chunk(const PutFileDTO &put_file);
+    std::string get_file_chunk(const GetFileDTO &get_file);
 };

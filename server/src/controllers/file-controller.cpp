@@ -2,6 +2,7 @@
 
 inline static std::regex post_file_rgx{"^\\/file\\/.*\\/.*\\/.*$"};
 inline static std::regex put_file_rgx{"^\\/file\\/.*\\/.*\\/.*$"};
+inline static std::regex get_file_rgx{"^\\/file\\/.*\\/.*\\/.*$"};
 
 const http::server::reply
 FileController::handle(const http::server::request &req) {
@@ -29,6 +30,13 @@ FileController::handle(const http::server::request &req) {
         std::clog << "Sono in file-controller PUT\n";
     }
     if (req.method == "GET"){
+        std::smatch match;
+        if (std::regex_search(req.uri.begin(), req.uri.end(), match, get_file_rgx)) { //todo: La regex prende un pò tutto, migliorare
+
+            GetFileDTO get_file{};
+            get_file.fill(req.uri);
+            get_file_chunk(get_file);
+        }
         std::clog << "Sono in file-controller GET\n";
     }
     return MakeReply::make_1line_jsonReply<std::string>("token", "tutto ok", http::server::reply::ok);
@@ -48,4 +56,10 @@ std::string FileController::put_file_chunk(const PutFileDTO &put_file) {
 
     UserService *user_service = UserService::getInstance();
     return user_service->file_chunk_update(put_file);
+}
+
+std::string FileController::get_file_chunk(const GetFileDTO &get_file) {
+
+    UserService *user_service = UserService::getInstance();
+    return user_service->file_chunk_get(get_file);
 }

@@ -57,6 +57,16 @@ std::string UserService::getStatus(const std::string &username) {
 
 }
 
+std::string UserService::getStatusFile(const std::string &username) {
+    UserRepository user_rep;
+    user_rep.getUserByUsername(username);
+    json j;
+    std::ifstream i("../../filesystem/" + username + "/client-struct.json");
+    i >> j;
+    return j.dump();
+
+}
+
 std::string UserService::file_chunk_add(const PostFileDTO &post_file) {
 
     if(1) { //todo: verificare che il client sia autenticato
@@ -213,5 +223,54 @@ std::string UserService::file_chunk_update(const PutFileDTO &put_file) {
     }
 
     return "ciao";
+
+}
+
+std::string UserService::file_chunk_get(const GetFileDTO &get_file) {
+
+    if(1) { //todo: verificare che il client sia autenticato
+
+
+        std::string path{"../../filesystem/" + get_file.getusername() + "/client-struct.json"};
+        if (std::filesystem::exists(path)) { //todo: In teoria esiste sempre, capirne la necessità
+            bool file_found = false;
+
+            std::unique_ptr<json> structure;
+            int index = 0;
+            structure = std::make_unique<json>();
+            std::ifstream i(path);
+            i >> (*structure);
+            std::clog << "Il file da trovare è: " << get_file.getfile_path() << "\n";
+            if (!(*structure)["entries"].empty()) {
+                for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
+                    json tmp = (*structure)["entries"][i];
+                    std::clog << "provo su " << tmp["path"] << "\n";
+                    if (tmp["path"].get<std::string>().compare(get_file.getfile_path()) ==
+                        0) { // C'è già il path nel client-struct.json
+                        file_found = true;
+                        break;
+                        std::clog << "file trovato\n";
+                    }
+                    index++;
+                }
+            }
+            if (file_found) {
+                std::clog << "il file c'è e dobbiamo tornare i bytes relativi\n";
+
+                //todo: calcolare e ritornare il chunk corrispondente
+
+            } else { // File appena creato, nuovo, non ci stava prima
+
+                //todo: ritornare qualcosa di vuoto in termini di blocco dati
+
+            }
+
+        }
+        return "è la vita\n";
+
+    }
+
+    return "ciao";
+
 
 }
