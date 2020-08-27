@@ -6,8 +6,9 @@ std::string UserService::login(const SigninDTO &user) {
       user_rep.getUserByUsername(user.getUsername());
 
     unsigned int salt = user_returned.getSalt();
-    std::string hashed_password{Sha256::getSha256(
-        std::to_string(salt) + user.getPassword() + std::to_string(salt))};
+    std::string password_to_hash{std::to_string(salt) + user.getPassword() + std::to_string(salt)};
+    std::vector<char> vec(password_to_hash.begin(), password_to_hash.end());
+    std::string hashed_password{Sha256::getSha256(vec)};
     if (user_returned.getHashedPassword().compare(hashed_password) == 0)
       return JWT::generateToken(user.getUsername(), JWT::getExpiration() + std::time(nullptr));
     else
@@ -26,8 +27,9 @@ std::string UserService::signup(const SignupDTO &user) {
   UserRepository user_rep;
   std::string username(user.getUsername());
   unsigned int salt = abs(rand());
-  std::string hashedPassword{Sha256::getSha256(
-      std::to_string(salt) + user.getPassword() + std::to_string(salt))};
+    std::string password_to_hash{std::to_string(salt) + user.getPassword() + std::to_string(salt)};
+    std::vector<char> vec(password_to_hash.begin(), password_to_hash.end());
+    std::string hashedPassword{Sha256::getSha256(vec)};
   UserEntity user_to_insert{username, hashedPassword, salt};
   if (user_rep.insertUser(user_to_insert)) {
     /* Create user directory */

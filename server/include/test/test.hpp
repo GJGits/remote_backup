@@ -20,7 +20,7 @@
 #include <cppconn/prepared_statement.h>
 
 void testBase64();
-void testSha256();
+//void testSha256();
 void testHamacSha256();
 void testSQLCRUD();
 void testAll();
