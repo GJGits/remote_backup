@@ -56,3 +56,162 @@ std::string UserService::getStatus(const std::string &username) {
     return j["hashed_status"];
 
 }
+
+std::string UserService::file_chunk_add(const PostFileDTO &post_file) {
+
+    if(1) { //todo: verificare che il client sia autenticato
+
+
+        std::string path{"../../filesystem/" + post_file.getusername() + "/client-struct.json"};
+        if (std::filesystem::exists(path)) { //todo: In teoria esiste sempre, capirne la necessità
+            bool file_found = false;
+
+            std::unique_ptr<json> structure;
+            int index = 0;
+            structure = std::make_unique<json>();
+            std::ifstream i(path);
+            i >> (*structure);
+            std::clog << "Il file da trovare è: " << post_file.getfile_path() << "\n";
+            if (!(*structure)["entries"].empty()) {
+                for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
+                    json tmp = (*structure)["entries"][i];
+                    std::clog << "provo su " << tmp["path"] << "\n";
+                    if (tmp["path"].get<std::string>().compare(post_file.getfile_path()) ==
+                        0) { // C'è già il path nel client-struct.json
+                        file_found = true;
+                        break;
+                        std::clog << "file trovato\n";
+                    }
+                    index++;
+                }
+            }
+            if (file_found) {
+                std::clog << "il file c'è già e dobbiamo solo aggiungere i chunks e fare le modifiche\n";
+                json chunk;
+                chunk["id"] = post_file.getchunk_id();
+                chunk["hash"] = Sha256::getSha256(post_file.getchunk_body()); //todo: ok calcolare l'hash dal blocco di dati, ma confrontarlo con l'hash ricevuto
+                bool found_chunk = false;
+                for (size_t i = 0; i < (*structure)["entries"][index]["chunks"].size();
+                     i++) {
+                    if ((*structure)["entries"][index]["chunks"][i]["id"] == chunk["id"]) {
+                        found_chunk = true;
+                        (*structure)["entries"][index]["chunks"][i] = chunk;
+                    }
+                }
+                if (!found_chunk) {
+                    (*structure)["entries"][index]["chunks"].push_back(chunk);
+                }
+
+                (*structure)["entries"][index]["size"] = -1; //todo: mettere il file size senzato, quando capirò come creare effettivamente i files dal chunk
+                (*structure)["entries"][index]["validity"] = false;
+                (*structure)["entries"][index]["dim_last_chunk"] = post_file.getchunk_size();
+
+
+            } else { // File appena creato, nuovo, non ci stava prima
+                json entry;
+                json chunk;
+                std::string hash_chunk = Sha256::getSha256(post_file.getchunk_body());
+                chunk["id"] = post_file.getchunk_id();
+                chunk["hash"] = hash_chunk;
+                entry["chunks"].push_back(chunk);
+                entry["path"] = post_file.getfile_path();
+                entry["size"] = -1; //todo: mettere il file size senzato, quando capirò come creare effettivamente i files dal chunk
+                entry["validity"] = false;
+                entry["dim_last_chunk"] = post_file.getchunk_size();
+                entry["last_mod"] = post_file.gettimestamp_locale();
+
+                (*structure)["entries"].push_back(entry);
+
+
+
+
+
+            }
+
+            // Aggiorno il file_status
+            std::string entries_dump = (*structure)["entries"].dump();
+            std::vector<char> data(entries_dump.begin(), entries_dump.end());
+            (*structure)["hashed_status"] = (*structure)["entries"].empty()
+                                            ? std::string{"empty_hashed_status"}
+                                            : Sha256::getSha256(data);
+
+            std::ofstream o(path);
+            o << (*structure) << "\n";
+            o.close();
+            (*structure).clear();
+
+        }
+        return "è la vita\n";
+
+    }
+
+    return "ciao";
+
+}
+
+
+
+std::string UserService::file_chunk_update(const PutFileDTO &put_file) {
+
+    if(1) { //todo: verificare che il client sia autenticato
+    std::clog << "Sono in file_chunk_update\n";
+
+        std::string path{"../../filesystem/" + put_file.getusername() + "/client-struct.json"};
+        if (std::filesystem::exists(path)) { //todo: In teoria esiste sempre, capirne la necessità
+            std::unique_ptr<json> structure;
+            int index = 0;
+            structure = std::make_unique<json>();
+            std::ifstream i(path);
+            i >> (*structure);
+            if (!(*structure)["entries"].empty()) {
+                for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
+                    json tmp = (*structure)["entries"][i];
+                    if (tmp["path"].get<std::string>().compare(put_file.getfile_path()) ==
+                        0) { // C'è già il path nel client-struct.json
+                        std::clog << "file trovato\n";
+                        break;
+                    }
+                    index++;
+                }
+            }
+
+                json chunk;
+                chunk["id"] = put_file.getchunk_id();
+                chunk["hash"] = Sha256::getSha256(put_file.getchunk_body()); //todo: ok calcolare l'hash dal blocco di dati, ma confrontarlo con l'hash ricevuto
+                bool found_chunk = false;
+                for (size_t i = 0; i < (*structure)["entries"][index]["chunks"].size();
+                     i++) {
+                    if ((*structure)["entries"][index]["chunks"][i]["id"] == chunk["id"]) {
+                        found_chunk = true;
+                        (*structure)["entries"][index]["chunks"][i] = chunk;
+                    }
+                }
+                if (!found_chunk) {
+                    (*structure)["entries"][index]["chunks"].push_back(chunk);
+                }
+
+            (*structure)["entries"][index]["size"] = -1; //todo: mettere il file size senzato, quando capirò come creare effettivamente i files dal chunk
+            (*structure)["entries"][index]["validity"] = false;
+            (*structure)["entries"][index]["dim_last_chunk"] = put_file.getchunk_size();
+
+
+            // Aggiorno il file_status
+            std::string entries_dump = (*structure)["entries"].dump();
+            std::vector<char> data(entries_dump.begin(), entries_dump.end());
+            (*structure)["hashed_status"] = (*structure)["entries"].empty()
+                                            ? std::string{"empty_hashed_status"}
+                                            : Sha256::getSha256(data);
+
+            std::ofstream o(path);
+            o << (*structure) << "\n";
+            o.close();
+            (*structure).clear();
+
+        }
+        return "è la vita\n";
+
+    }
+
+    return "ciao";
+
+}

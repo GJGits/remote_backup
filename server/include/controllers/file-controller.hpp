@@ -24,5 +24,6 @@ public:
         return instance;
     }
     virtual const http::server::reply handle(const http::server::request &req);
-
+    std::string post_file_chunk(const PostFileDTO &post_file);
+    std::string put_file_chunk(const PutFileDTO &put_file);
 };
