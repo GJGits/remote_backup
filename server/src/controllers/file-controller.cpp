@@ -1,8 +1,7 @@
 #include "../../include/controllers/file-controller.hpp"
 
-inline static std::regex post_file_rgx{"^\\/file\\/.*\\/.*\\/.*$"};
-inline static std::regex put_file_rgx{"^\\/file\\/.*\\/.*\\/.*$"};
-inline static std::regex get_file_rgx{"^\\/file\\/.*\\/.*\\/.*$"};
+inline static std::regex post_file_rgx{"^\\/file\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)$"};
+inline static std::regex put_get_file_rgx{"^\\/file\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)$"};
 
 const http::server::reply
 FileController::handle(const http::server::request &req) {
@@ -12,32 +11,47 @@ FileController::handle(const http::server::request &req) {
         std::smatch match;
         if (std::regex_search(req.uri.begin(), req.uri.end(), match, post_file_rgx)) { //todo: La regex prende un pò tutto, migliorare
 
-            PostFileDTO post_file{};
-            post_file.fill(req.uri,req.body);
-            post_file_chunk(post_file);
+           // if (JWT::validateToken(req)) {
+                PostFileDTO post_file{};
+                post_file.fill(req.uri, req.body);
+                post_file_chunk(post_file);
+           /* }
+            else
+                throw CredentialsExpired();*/
         }
+        else
+            throw WrongRquestFormat();
 
-    std::clog << "Sono in file-controller POST\n";
     }
     if (req.method == "PUT"){
         std::smatch match;
-        if (std::regex_search(req.uri.begin(), req.uri.end(), match, put_file_rgx)) { //todo: La regex prende un pò tutto, migliorare
+        if (std::regex_search(req.uri.begin(), req.uri.end(), match, put_get_file_rgx)) { //todo: La regex prende un pò tutto, migliorare
 
+           // if (JWT::validateToken(req)) {
             PutFileDTO put_file{};
             put_file.fill(req.uri,req.body);
             put_file_chunk(put_file);
+            /*}
+            else
+                throw CredentialsExpired();*/
         }
-        std::clog << "Sono in file-controller PUT\n";
+        else
+            throw WrongRquestFormat();
     }
     if (req.method == "GET"){
         std::smatch match;
-        if (std::regex_search(req.uri.begin(), req.uri.end(), match, get_file_rgx)) { //todo: La regex prende un pò tutto, migliorare
+        if (std::regex_search(req.uri.begin(), req.uri.end(), match, put_get_file_rgx)) { //todo: La regex prende un pò tutto, migliorare
 
+            //if (JWT::validateToken(req)) {
             GetFileDTO get_file{};
             get_file.fill(req.uri);
             get_file_chunk(get_file);
+            /*}
+            else
+                throw CredentialsExpired();*/
         }
-        std::clog << "Sono in file-controller GET\n";
+        else
+            throw WrongRquestFormat();
     }
     return MakeReply::make_1line_jsonReply<std::string>("token", "tutto ok", http::server::reply::ok);
 
