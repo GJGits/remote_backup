@@ -88,64 +88,11 @@ std::string UserService::file_chunk_add(const PostFileDTO &post_file) {
 
 std::string UserService::file_chunk_update(const PutFileDTO &put_file) {
 
-    if(1) { //todo: verificare che il client sia autenticato
-    std::clog << "Sono in file_chunk_update\n";
-
-        std::string path{"../../filesystem/" + put_file.getusername() + "/client-struct.json"};
-        if (std::filesystem::exists(path)) { //todo: In teoria esiste sempre, capirne la necessità
-            std::unique_ptr<json> structure;
-            int index = 0;
-            structure = std::make_unique<json>();
-            std::ifstream i(path);
-            i >> (*structure);
-            if (!(*structure)["entries"].empty()) {
-                for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
-                    json tmp = (*structure)["entries"][i];
-                    if (tmp["path"].get<std::string>().compare(put_file.getfile_path()) ==
-                        0) { // C'è già il path nel client-struct.json
-                        std::clog << "file trovato\n";
-                        break;
-                    }
-                    index++;
-                }
-            }
-
-                json chunk;
-                chunk["id"] = put_file.getchunk_id();
-                chunk["hash"] = Sha256::getSha256(put_file.getchunk_body()); //todo: ok calcolare l'hash dal blocco di dati, ma confrontarlo con l'hash ricevuto
-                bool found_chunk = false;
-                for (size_t i = 0; i < (*structure)["entries"][index]["chunks"].size();
-                     i++) {
-                    if ((*structure)["entries"][index]["chunks"][i]["id"] == chunk["id"]) {
-                        found_chunk = true;
-                        (*structure)["entries"][index]["chunks"][i] = chunk;
-                    }
-                }
-                if (!found_chunk) {
-                    (*structure)["entries"][index]["chunks"].push_back(chunk);
-                }
-
-            (*structure)["entries"][index]["size"] = -1; //todo: mettere il file size senzato, quando capirò come creare effettivamente i files dal chunk
-            (*structure)["entries"][index]["validity"] = false;
-            (*structure)["entries"][index]["dim_last_chunk"] = put_file.getchunk_size();
-
-
-            // Aggiorno il file_status
-            std::string entries_dump = (*structure)["entries"].dump();
-            std::vector<char> data(entries_dump.begin(), entries_dump.end());
-            (*structure)["hashed_status"] = (*structure)["entries"].empty()
-                                            ? std::string{"empty_hashed_status"}
-                                            : Sha256::getSha256(data);
-
-            std::ofstream o(path);
-            o << (*structure) << "\n";
-            o.close();
-            (*structure).clear();
-
-        }
-        return "è la vita\n";
-
-    }
+    ClientStruct clientstr(put_file.getusername());
+    clientstr.research_file(put_file.getfile_path());
+    clientstr.add_or_modify_chunk(put_file.getchunk_id(),Sha256::getSha256(put_file.getchunk_body()),put_file.getchunk_size());
+    clientstr.update_total_file_status();
+    clientstr.write_structure();
 
     return "ciao";
 
@@ -153,33 +100,10 @@ std::string UserService::file_chunk_update(const PutFileDTO &put_file) {
 
 std::string UserService::file_chunk_get(const GetFileDTO &get_file) {
 
-    if(1) { //todo: verificare che il client sia autenticato
+    ClientStruct clientstr(get_file.getusername());
+    clientstr.research_file(get_file.getfile_path());
 
-
-        std::string path{"../../filesystem/" + get_file.getusername() + "/client-struct.json"};
-        if (std::filesystem::exists(path)) { //todo: In teoria esiste sempre, capirne la necessità
-            bool file_found = false;
-
-            std::unique_ptr<json> structure;
-            int index = 0;
-            structure = std::make_unique<json>();
-            std::ifstream i(path);
-            i >> (*structure);
-            std::clog << "Il file da trovare è: " << get_file.getfile_path() << "\n";
-            if (!(*structure)["entries"].empty()) {
-                for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
-                    json tmp = (*structure)["entries"][i];
-                    std::clog << "provo su " << tmp["path"] << "\n";
-                    if (tmp["path"].get<std::string>().compare(get_file.getfile_path()) ==
-                        0) { // C'è già il path nel client-struct.json
-                        file_found = true;
-                        break;
-                        std::clog << "file trovato\n";
-                    }
-                    index++;
-                }
-            }
-            if (file_found) {
+    if (clientstr.get_file_found()){
                 std::clog << "il file c'è e dobbiamo tornare i bytes relativi\n";
 
                 //todo: calcolare e ritornare il chunk corrispondente
@@ -190,10 +114,9 @@ std::string UserService::file_chunk_get(const GetFileDTO &get_file) {
 
             }
 
-        }
-        return "è la vita\n";
 
-    }
+
+
 
     return "ciao";
 
