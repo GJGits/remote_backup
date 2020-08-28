@@ -5,6 +5,7 @@
 #include "../dtos/put_file_dto.hpp"
 #include "../dtos/get_file_dto.hpp"
 #include "../common/sha256.hpp"
+#include "../filesystem/client_struct.hpp"
 #include "../repositories/user-repository.hpp"
 #include <filesystem>
 #include <cstdlib>
