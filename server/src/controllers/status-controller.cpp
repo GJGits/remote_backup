@@ -20,8 +20,9 @@ StatusController::handle(const http::server::request &req) {
         std::clog << "sono dentro\n";
         //if (JWT::validateToken(req)) { sto codice è per l'autenticazione, rimetterlo poi
             std::string username{std::move(match[1])};
-            return MakeReply::make_1line_jsonReply<std::string>(
-                    std::string{"file_status"}, get_status_file(username), //todo: al momento ritorna una roba strana, aggiustare il return tornando solo il json del file
+
+            return MakeReply::make_1line_dump_jsonReply<std::string>(
+                   get_status_file(username), //todo: al momento ritorna una roba strana, aggiustare il return tornando solo il json del file
                     http::server::reply::ok);
        // }
     }

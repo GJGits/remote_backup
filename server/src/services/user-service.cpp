@@ -63,6 +63,7 @@ std::string UserService::getStatusFile(const std::string &username) {
     json j;
     std::ifstream i("../../filesystem/" + username + "/client-struct.json");
     i >> j;
+    std::clog <<"il dump è : " << j.dump() << "\n";
     return j.dump();
 
 }
