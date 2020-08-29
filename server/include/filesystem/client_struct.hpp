@@ -50,7 +50,7 @@ public:
             std::clog << "e4\n";
             std::clog << "la dimensione e': " << (*structure)["entries"].size() << "\n";
             for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
-                std::clog << "il dump è: " <<(*structure)["entries"][0].dump() << "\n";
+                std::clog << "il dump è: " << (*structure)["entries"][0].dump() << "\n";
                 json tmp = (*structure)["entries"][i];
                 std::clog << "provo su " << tmp["path"] << "\n";
                 if (tmp["path"].get<std::string>().compare(path) ==

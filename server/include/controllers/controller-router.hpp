@@ -2,7 +2,7 @@
 #include "auth-controller.hpp"
 #include "controller.hpp"
 #include "status-controller.hpp"
-#include "file-controller.hpp"
+#include "chunk-controller.hpp"
 #include "../exceptions/exceptions.hpp"
 
 
@@ -19,7 +19,7 @@ public:
       instance = new ControllerRouter();
       controller_map["auth"] = AuthController::getInstance();
       controller_map["status"] = StatusController::getInstance();
-      controller_map["file"] = StatusController::getInstance();
+      controller_map["chunk"] = ChunkController::getInstance();
 
         // todo: inizializza
     }
@@ -33,8 +33,8 @@ public:
         return AuthController::getInstance();
       else if (strcmp(res, "status") == 0)
         return StatusController::getInstance();
-      else if (strcmp(res, "file") == 0)
-          return FileController::getInstance();
+      else if (strcmp(res, "Chunk") == 0)
+          return ChunkController::getInstance();
     }
     throw ControllerNotRetrievable();
   }

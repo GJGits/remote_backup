@@ -4,7 +4,7 @@
 #include "../common/base64.hpp"
 
 
-class GetFileDTO{
+class GetChunkDTO{
 private:
     std::string username;
     std::string chunk_id;
@@ -12,7 +12,7 @@ private:
     std::string file_path;
 
 public:
-    GetFileDTO(){};
+    GetChunkDTO(){};
     std::string getusername() const;
     std::string getchunk_id() const;
     std::string getchunk_size() const;

@@ -68,7 +68,7 @@ std::string UserService::getStatusFile(const std::string &username) {
 
 }
 
-std::string UserService::file_chunk_add(const PostFileDTO &post_file) {
+std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
 
     ClientStruct clientstr(post_file.getusername());
     clientstr.research_file(post_file.getfile_path());
@@ -87,7 +87,7 @@ std::string UserService::file_chunk_add(const PostFileDTO &post_file) {
 
 
 
-std::string UserService::file_chunk_update(const PutFileDTO &put_file) {
+std::string UserService::file_chunk_update(const PutChunkDTO &put_file) {
 
     ClientStruct clientstr(put_file.getusername());
     clientstr.research_file(put_file.getfile_path());
@@ -99,7 +99,7 @@ std::string UserService::file_chunk_update(const PutFileDTO &put_file) {
 
 }
 
-std::string UserService::file_chunk_get(const GetFileDTO &get_file) {
+std::string UserService::file_chunk_get(const GetChunkDTO &get_file) {
 
     ClientStruct clientstr(get_file.getusername());
     clientstr.research_file(get_file.getfile_path());

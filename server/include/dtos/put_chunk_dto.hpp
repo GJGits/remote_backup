@@ -4,7 +4,7 @@
 #include "../common/base64.hpp"
 
 
-class PutFileDTO{
+class PutChunkDTO{
 private:
     std::string username;
     std::string chunk_id;
@@ -14,12 +14,12 @@ private:
     //POST /file/{username}/{chunk_id}/{chunk_size}/{file_pathBASE64}/{timestamp_locale}
 
 public:
-    PutFileDTO(){};
+    PutChunkDTO(){};
     std::string getusername() const;
     std::string getchunk_id() const;
     std::string getchunk_size() const;
     std::string getfile_path() const;
-    std::vector<char> getchunk_body() const;
+    std::vector<char> getchunk_body() const; //todo: attenzione, passare all'heap
 
     const void fill( std::string requri, std::vector<char> reqbody) { //todo: passarlo per riferimento, non per copia
         std::vector<std::string> uri_elements = Utility::split(requri, '/');

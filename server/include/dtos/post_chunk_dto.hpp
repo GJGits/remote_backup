@@ -4,7 +4,7 @@
 #include "../common/base64.hpp"
 
 
-class PostFileDTO{
+class PostChunkDTO{
 private:
     std::string username;
     std::string chunk_id;
@@ -12,10 +12,9 @@ private:
     std::string file_path;
     std::string timestamp_locale;
     std::vector<char> chunk_body;
-    //POST /file/{username}/{chunk_id}/{chunk_size}/{file_pathBASE64}/{timestamp_locale}
 
 public:
-    PostFileDTO(){};
+    PostChunkDTO(){};
     std::string getusername() const;
     std::string getchunk_id() const;
     std::string getchunk_size() const;
