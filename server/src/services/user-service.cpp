@@ -73,6 +73,10 @@ std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
     ClientStruct clientstr(post_file.getusername());
     clientstr.research_file(post_file.getfile_path());
 
+    // Il server controlla inizialmente l'hash del chunk ricevuto, e nel caso ritorna errore
+    std::clog << "l'hash vero è: "<< Sha256::getSha256(post_file.getchunk_body()) << "\n";
+    if(Sha256::getSha256(post_file.getchunk_body()).compare(post_file.getchunk_hash()) == 0){
+
     if (clientstr.get_file_found())
         clientstr.add_or_modify_chunk(post_file.getchunk_id(),Sha256::getSha256(post_file.getchunk_body()),post_file.getchunk_size());
     else
@@ -80,8 +84,12 @@ std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
 
     clientstr.update_total_file_status();
     clientstr.write_structure();
-
+    std::clog << "Hash corretto\n";
     return "ciao";
+    }
+    std::clog << "Hash SBAGLAITO\n";
+
+    return "hash diverso da quello ricevuto";
 
 }
 

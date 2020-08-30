@@ -33,7 +33,7 @@ public:
         return AuthController::getInstance();
       else if (strcmp(res, "status") == 0)
         return StatusController::getInstance();
-      else if (strcmp(res, "Chunk") == 0)
+      else if (strcmp(res, "chunk") == 0)
           return ChunkController::getInstance();
     }
     throw ControllerNotRetrievable();
