@@ -14,7 +14,7 @@ services:
             - "3500:3500"
         volumes:
             - filesystem:/home/filesystem
-    ngnix-server:
+    nginx-server:
         image: nginx
         ports:
             - "3200:80"

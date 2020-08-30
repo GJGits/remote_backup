@@ -6,6 +6,12 @@
 
 int main() {
 
+  std::clog << "Using Boost "     
+          << BOOST_VERSION / 100000     << "."  // major version
+          << BOOST_VERSION / 100 % 1000 << "."  // minor version
+          << BOOST_VERSION % 100                // patch level
+          << "\n";
+
   StructWorker *struct_worker = StructWorker::getInstance();
   SyncWorker *sync_worker = SyncWorker::getInstance();
   HandleWatcher *dispatcher = HandleWatcher::getInstance();

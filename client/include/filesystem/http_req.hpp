@@ -1,1 +1,2 @@
-class HTTPReq {};
+class HTTPReq {
+};

@@ -3,7 +3,7 @@ const { menubar } = require('menubar');
 const dgram = require('dgram');
 const server = dgram.createSocket('udp4');
 const { ipcMain } = require('electron');
-const Token = require('./modules/token.js');
+const ClientConf = require('./modules/client-conf.js');
 
 // CONSTANTS
 const mb = menubar(
@@ -15,7 +15,7 @@ const mb = menubar(
     }
   });
 
-var token = new Token();
+var conf = new ClientConf();
 
 
 mb.on('ready', () => {
@@ -25,7 +25,7 @@ mb.on('ready', () => {
   // MESSAGE HANDLERS
 
   ipcMain.on('token', (event, data) => {
-    if (data && data.token && token.set(data.token)) {
+    if (data && data.username && data.token && conf.set(data)) {
       mb.window.webContents.send('status-changed', "log-in");
       event.returnValue = "ok";
     } else {
