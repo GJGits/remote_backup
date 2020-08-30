@@ -204,6 +204,10 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
   <br /> 
 
   * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTTP headers: MIME: application/octect-stream body: `binary data here` 
+  <br />  
+  
+  * **Risposta**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In caso negativo viene generato un messaggio HTTP 1.1 400 `{ err_msg : message here }`, in caso positivo invece viene inviata una risposta HTTP 1.1 200 OK senza alcun body all'interno.   
+
   </details> 
 
 <br />
@@ -216,7 +220,9 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
   <br /> 
 
   * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTTP headers: MIME: application/octect-stream body: `binary data here`
-
+  <br />  
+  
+  * **Risposta**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In caso negativo viene generato un messaggio HTTP 1.1 400 `{ err_msg : message here }`, in caso positivo invece viene inviata una risposta HTTP 1.1 200 OK senza alcun body all'interno.   
 </details>
 <br />  
 
