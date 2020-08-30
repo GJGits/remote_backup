@@ -69,41 +69,48 @@ std::string UserService::getStatusFile(const std::string &username) {
 }
 
 std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
-
-    ClientStruct clientstr(post_file.getusername());
-    clientstr.research_file(post_file.getfile_path());
-
-    // Il server controlla inizialmente l'hash del chunk ricevuto, e nel caso ritorna errore
     std::clog << "l'hash vero è: "<< Sha256::getSha256(post_file.getchunk_body()) << "\n";
+
     if(Sha256::getSha256(post_file.getchunk_body()).compare(post_file.getchunk_hash()) == 0){
 
-    if (clientstr.get_file_found())
-        clientstr.add_or_modify_chunk(post_file.getchunk_id(),Sha256::getSha256(post_file.getchunk_body()),post_file.getchunk_size());
-    else
-        clientstr.created_new_file(Sha256::getSha256(post_file.getchunk_body()), post_file.getchunk_id(),post_file.getfile_path(), "-1", false, post_file.getchunk_size(), post_file.gettimestamp_locale());
+        ClientStruct clientstr(post_file.getusername());
+        clientstr.research_file(post_file.getfile_path());
 
-    clientstr.update_total_file_status();
-    clientstr.write_structure();
-    std::clog << "Hash corretto\n";
-    return "ciao";
+        // Il server controlla inizialmente l'hash del chunk ricevuto, e nel caso ritorna errore
+
+        if (clientstr.get_file_found())
+            clientstr.add_chunk(post_file.getchunk_body(),post_file.getfile_path(),post_file.getchunk_id(),post_file.getchunk_hash(),post_file.getchunk_size());
+        else
+            clientstr.created_new_file(post_file.getusername(),post_file.getchunk_hash(), post_file.getchunk_id(),post_file.getfile_path(), "-1", false, post_file.getchunk_size(), post_file.gettimestamp_locale(), post_file.getchunk_body());
+
+        clientstr.update_total_file_status();
+        clientstr.write_structure();
+
+        return "200_OK";
     }
-    std::clog << "Hash SBAGLAITO\n";
 
-    return "hash diverso da quello ricevuto";
+    return "chunk_corrupted";
 
 }
 
 
 
 std::string UserService::file_chunk_update(const PutChunkDTO &put_file) {
+    std::clog << "l'hash vero è: "<< Sha256::getSha256(put_file.getchunk_body()) << "\n";
 
-    ClientStruct clientstr(put_file.getusername());
-    clientstr.research_file(put_file.getfile_path());
-    clientstr.add_or_modify_chunk(put_file.getchunk_id(),Sha256::getSha256(put_file.getchunk_body()),put_file.getchunk_size());
-    clientstr.update_total_file_status();
-    clientstr.write_structure();
+    if(Sha256::getSha256(put_file.getchunk_body()).compare(put_file.getchunk_hash()) == 0) {
 
-    return "ciao";
+        ClientStruct clientstr(put_file.getusername());
+        clientstr.research_file(put_file.getfile_path());
+        clientstr.modify_chunk(put_file.getchunk_body(),put_file.getchunk_id(), put_file.getchunk_hash(),
+                                      put_file.getchunk_size());
+        clientstr.update_total_file_status();
+        clientstr.write_structure();
+
+        return "200_OK";
+    }
+    else
+        return "chunk_corrupted";
 
 }
 

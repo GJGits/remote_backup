@@ -13,11 +13,17 @@ ChunkController::handle(const http::server::request &req) {
 
            // if (JWT::validateToken(req)) {
                 PostChunkDTO post_chunk{};
-            post_chunk.fill(req.uri, req.body);
-                post_file_chunk(post_chunk);
+                post_chunk.fill(req.uri, req.body);
+                std::string response = post_file_chunk(post_chunk);
+                if(response.compare("200_OK")==0)
+                    return http::server::reply::stock_reply(http::server::reply::ok);
+                else
+                    return MakeReply::make_1line_jsonReply<std::string>("err_msg", response, http::server::reply::bad_request);
+
            /* }
             else
                 throw CredentialsExpired();*/
+
         }
         else
             throw WrongRquestFormat();
@@ -30,7 +36,12 @@ ChunkController::handle(const http::server::request &req) {
            // if (JWT::validateToken(req)) {
             PutChunkDTO put_chunk{};
             put_chunk.fill(req.uri,req.body);
-            put_file_chunk(put_chunk);
+            std::string response = put_file_chunk(put_chunk);
+            if(response.compare("200_OK")==0)
+                return http::server::reply::stock_reply(http::server::reply::ok);
+            else
+                return MakeReply::make_1line_jsonReply<std::string>("err_msg", response, http::server::reply::bad_request);
+
             /*}
             else
                 throw CredentialsExpired();*/
@@ -53,7 +64,7 @@ ChunkController::handle(const http::server::request &req) {
         else
             throw WrongRquestFormat();
     }
-    return MakeReply::make_1line_jsonReply<std::string>("token", "tutto ok", http::server::reply::ok);
+    return MakeReply::make_1line_jsonReply<std::string>("token", "tutto ok", http::server::reply::bad_request);
 
 
     throw WrongRquestFormat(); // todo: creare eccezione

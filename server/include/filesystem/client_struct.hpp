@@ -7,6 +7,7 @@
 #include <iostream>
 
 
+
 using json = nlohmann::json;
 
 class ClientStruct {
@@ -64,8 +65,36 @@ public:
         }
     }
 
-    void add_or_modify_chunk(std::string chunk_id, std::string chunk_hash, std::string chunk_size){
-        std::clog << "il file c'è già e dobbiamo solo aggiungere i chunks e fare le modifiche\n";
+
+    void add_chunk(std::vector<char> chunk_body,std::string file_path, std::string chunk_id, std::string chunk_hash, std::string chunk_size){
+        std::clog << "il file c'è già e dobbiamo solo aggiungere i chunks \n";
+
+        json chunk;
+        chunk["id"] = chunk_id;
+        chunk["hash"] = chunk_hash; //todo: ok calcolare l'hash dal blocco di dati, ma confrontarlo con l'hash ricevuto
+        /*bool found_chunk = false;
+        for (size_t i = 0; i < (*structure)["entries"][index]["chunks"].size();
+             i++) {
+            if ((*structure)["entries"][index]["chunks"][i]["id"] == chunk["id"]) {
+                found_chunk = true;
+                (*structure)["entries"][index]["chunks"][i] = chunk;
+            }
+        }
+        if (!found_chunk) {
+         */
+            (*structure)["entries"][index]["chunks"].push_back(chunk);
+
+        //}
+
+        (*structure)["entries"][index]["size"] = -1; //todo: mettere il file size senzato, quando capirò come creare effettivamente i files dal chunk
+        (*structure)["entries"][index]["validity"] = false;
+        (*structure)["entries"][index]["dim_last_chunk"] = chunk_size;
+
+    }
+
+    void modify_chunk(std::vector<char> chunk_body, std::string chunk_id, std::string chunk_hash, std::string chunk_size){
+        std::clog << "il file c'è già e dobbiamo solo aggiungere i chunks \n";
+
         json chunk;
         chunk["id"] = chunk_id;
         chunk["hash"] = chunk_hash; //todo: ok calcolare l'hash dal blocco di dati, ma confrontarlo con l'hash ricevuto
@@ -88,11 +117,11 @@ public:
     }
 
 
-    void created_new_file(std::string chunk_hash, std::string chunk_id, std::string path, std::string file_size, bool validity, std::string chunk_size, std::string timestamp_locale ){
+    void created_new_file(std::string username, std::string chunk_hash, std::string chunk_id, std::string path, std::string file_size, bool validity, std::string chunk_size, std::string timestamp_locale, std::vector<char> chunk_body){
         json entry;
         json chunk;
         std::clog << "e5\n";
-
+        int full_chunk_size = 50;
         chunk["id"] = chunk_id;
         chunk["hash"] = chunk_hash;
 
@@ -103,6 +132,21 @@ public:
         entry["dim_last_chunk"] = chunk_size;
         entry["last_mod"] = timestamp_locale;
         std::clog << "e6\n";
+
+        std::ofstream outfile;
+        outfile.open("../../filesystem/"+username+"/"+path);
+
+        std::vector<char> padding(full_chunk_size, '0'); //todo: recuperare la vera chunk size
+        for(int i = 0 ; i <= std::stoi(chunk_id) ; i++){
+            if(i == std::stoi(chunk_id))
+                for(auto b : chunk_body)
+                outfile << b;
+            else{
+                outfile << padding.data();
+            }
+        }
+        outfile.close();
+
 
         (*structure)["entries"].push_back(entry);
     }
