@@ -5,27 +5,27 @@
 #include "../common/sha256.hpp"
 #include "../dtos/signup_dto.hpp"
 #include "../dtos/signin_dto.hpp"
-#include "../dtos/get_file_dto.hpp"
-#include "../dtos/post_file_dto.hpp"
+#include "../dtos/get_chunk_dto.hpp"
+#include "../dtos/post_chunk_dto.hpp"
 #include "../services/user-service.hpp"
 #include <regex>
 #include "../common/utility.hpp"
 
-class FileController : public Controller {
+class ChunkController : public Controller {
 
 private:
-    inline static FileController *instance = nullptr;
+    inline static ChunkController *instance = nullptr;
 
 public:
     // contiene switch_case per inoltrare al metodo corretto
-    static FileController *getInstance() {
+    static ChunkController *getInstance() {
         if (instance == nullptr) {
-            instance = new FileController();
+            instance = new ChunkController();
         }
         return instance;
     }
     virtual const http::server::reply handle(const http::server::request &req);
-    std::string post_file_chunk(const PostFileDTO &post_file);
-    std::string put_file_chunk(const PutFileDTO &put_file);
-    std::string get_file_chunk(const GetFileDTO &get_file);
+    std::string post_file_chunk(const PostChunkDTO &post_chunk);
+    std::string put_file_chunk(const PutChunkDTO &put_chunk);
+    std::string get_file_chunk(const GetChunkDTO &get_chunk);
 };
