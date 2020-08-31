@@ -1,7 +1,8 @@
 #include "../../include/controllers/chunk-controller.hpp"
 
 inline static std::regex post_chunk_rgx{"^\\/chunk\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)$"};
-inline static std::regex put_get_chunk_rgx{"^\\/chunk\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)$"};
+inline static std::regex put_chunk_rgx{"^\\/chunk\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)$"};
+inline static std::regex get_chunk_rgx{"^\\/chunk\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)$"};
 
 const http::server::reply
 ChunkController::handle(const http::server::request &req) {
@@ -31,7 +32,7 @@ ChunkController::handle(const http::server::request &req) {
     }
     if (req.method == "PUT"){
         std::smatch match;
-        if (std::regex_search(req.uri.begin(), req.uri.end(), match, put_get_chunk_rgx)) { //todo: La regex prende un pò tutto, migliorare
+        if (std::regex_search(req.uri.begin(), req.uri.end(), match, put_chunk_rgx)) { //todo: La regex prende un pò tutto, migliorare
 
            // if (JWT::validateToken(req)) {
             PutChunkDTO put_chunk{};
@@ -51,12 +52,14 @@ ChunkController::handle(const http::server::request &req) {
     }
     if (req.method == "GET"){
         std::smatch match;
-        if (std::regex_search(req.uri.begin(), req.uri.end(), match, put_get_chunk_rgx)) { //todo: La regex prende un pò tutto, migliorare
+        if (std::regex_search(req.uri.begin(), req.uri.end(), match, get_chunk_rgx)) { //todo: La regex prende un pò tutto, migliorare
 
             //if (JWT::validateToken(req)) {
             GetChunkDTO get_chunk{};
             get_chunk.fill(req.uri);
-            get_file_chunk(get_chunk);
+            return MakeReply::make_1line_dump_jsonReply<std::string>(
+                    get_file_chunk(get_chunk), //todo: al momento ritorna una roba strana, aggiustare il return tornando solo il json del file
+                    http::server::reply::ok);
             /*}
             else
                 throw CredentialsExpired();*/

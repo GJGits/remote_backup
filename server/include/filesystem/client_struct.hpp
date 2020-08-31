@@ -99,7 +99,7 @@ public:
 
         outfile.close();
 
-        (*structure)["entries"][index]["size"] = -1; //todo: mettere il file size senzato, quando capirò come creare effettivamente i files dal chunk
+        (*structure)["entries"][index]["size"] = "-1"; //todo: calcolare sta size
         (*structure)["entries"][index]["validity"] = false;
         (*structure)["entries"][index]["dim_last_chunk"] = chunk_size;
 
@@ -138,7 +138,7 @@ public:
     }
 
 
-    void created_new_file(std::string username, std::string chunk_hash, std::string chunk_id, std::string file_path, std::string file_size, bool validity, std::string chunk_size, std::string timestamp_locale, std::vector<char> chunk_body){
+    void created_new_file(std::string username, std::string chunk_hash, std::string chunk_id, std::string file_path, bool validity, std::string chunk_size, std::string timestamp_locale, std::vector<char> chunk_body){
         json entry;
         json chunk;
 
@@ -148,7 +148,6 @@ public:
 
         entry["chunks"].push_back(chunk);
         entry["path"] = file_path;
-        entry["size"] = file_size; //todo: mettere il file size senzato, quando capirò come creare effettivamente i files dal chunk
         entry["validity"] = validity;
         entry["dim_last_chunk"] = chunk_size;
         entry["last_mod"] = timestamp_locale;
@@ -169,6 +168,9 @@ public:
         outfile << strvec;
         outfile.close();
 
+
+
+        entry["size"] = (i)*full_chunk_size + std::stoi(chunk_size);
         (*structure)["entries"].push_back(entry);
     }
 
@@ -185,6 +187,19 @@ public:
         o << (*structure) << "\n";
         o.close();
        // (*structure).clear(); essendo in stack, uscendo dalla funzione si distrugge tutto, però rivedere sta cosa
+    }
+
+    std::string get_chunk(std::string chunk_id, std::string file_path,std::string chunk_size, std::string username){
+
+        std::fstream file(("../../filesystem/"+username+"/"+file_path), std::ios::in );
+        char F[std::stoi(chunk_size)+1];
+        file.seekg(std::stoi(chunk_id)*std::stoi(chunk_size), std::ios::beg);
+        file.read(F, std::stoi(chunk_size));
+        F[std::stoi(chunk_size)] = 0;
+        std::string s(F);
+        file.close();
+        return s;
+
     }
 
     bool get_file_found(){ return file_found;}

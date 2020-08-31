@@ -76,12 +76,10 @@ std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
         ClientStruct clientstr(post_file.getusername());
         clientstr.research_file(post_file.getfile_path());
 
-        // Il server controlla inizialmente l'hash del chunk ricevuto, e nel caso ritorna errore
-
         if (clientstr.get_file_found())
             clientstr.add_chunk(post_file.getchunk_body(),post_file.getfile_path(),post_file.getchunk_id(),post_file.getchunk_hash(),post_file.getchunk_size());
         else
-            clientstr.created_new_file(post_file.getusername(),post_file.getchunk_hash(), post_file.getchunk_id(),post_file.getfile_path(), "-1", false, post_file.getchunk_size(), post_file.gettimestamp_locale(), post_file.getchunk_body());
+            clientstr.created_new_file(post_file.getusername(),post_file.getchunk_hash(), post_file.getchunk_id(),post_file.getfile_path(), false, post_file.getchunk_size(), post_file.gettimestamp_locale(), post_file.getchunk_body());
 
         clientstr.update_total_file_status();
         clientstr.write_structure();
@@ -119,22 +117,6 @@ std::string UserService::file_chunk_get(const GetChunkDTO &get_file) {
     ClientStruct clientstr(get_file.getusername());
     clientstr.research_file(get_file.getfile_path());
 
-    if (clientstr.get_file_found()){
-                std::clog << "il file c'è e dobbiamo tornare i bytes relativi\n";
-
-                //todo: calcolare e ritornare il chunk corrispondente
-
-            } else { // File appena creato, nuovo, non ci stava prima
-
-                //todo: ritornare qualcosa di vuoto in termini di blocco dati
-
-            }
-
-
-
-
-
-    return "ciao";
-
+    return clientstr.get_chunk(get_file.getchunk_id(),get_file.getfile_path(),get_file.getchunk_size(),get_file.getusername());
 
 }
