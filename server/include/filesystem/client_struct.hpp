@@ -69,7 +69,7 @@ public:
 
     void add_chunk(std::vector<char> chunk_body,std::string file_path, std::string chunk_id, std::string chunk_hash, std::string chunk_size){
         std::clog << "il file c'è già e dobbiamo solo aggiungere i chunks \n";
-        int full_chunk_size = 50;
+        int full_chunk_size = 10;
 
         json chunk;
         chunk["id"] = chunk_id;
@@ -85,7 +85,7 @@ public:
         std::ofstream outfile;
         outfile.open("../../filesystem/"+username+"/"+file_path , std::ios_base::in | std::ios_base::out | std::ios_base::ate);
 
-        std::string padding(50, '0');
+        std::string padding(full_chunk_size, '0');
         int i = 0;
         for(i = 0 ; i < std::stoi(chunk_id) ; i++){
             if(!std::count(chunks_already_present.begin(),chunks_already_present.end(),i)){ //cerco se quel chunk_id è già stato scritto, se non lo è, devo 0 fillare
@@ -100,7 +100,6 @@ public:
         outfile.write(strvec.c_str(),strvec.size());
 
         outfile.close();
-        //}
 
         (*structure)["entries"][index]["size"] = -1; //todo: mettere il file size senzato, quando capirò come creare effettivamente i files dal chunk
         (*structure)["entries"][index]["validity"] = false;
@@ -137,7 +136,7 @@ public:
         json entry;
         json chunk;
         std::clog << "e5\n";
-        int full_chunk_size = 50;
+        int full_chunk_size = 10;
         chunk["id"] = chunk_id;
         chunk["hash"] = chunk_hash;
 
@@ -152,7 +151,7 @@ public:
         std::ofstream outfile;
         outfile.open("../../filesystem/"+username+"/"+file_path);
 
-        std::string padding(50, '0');
+        std::string padding(full_chunk_size, '0');
         int i=0;
         for(i = 0 ; i < std::stoi(chunk_id) ; i++){
             if(i != std::stoi(chunk_id)){
