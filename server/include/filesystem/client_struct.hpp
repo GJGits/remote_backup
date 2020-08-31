@@ -69,6 +69,7 @@ public:
 
     void add_chunk(std::vector<char> chunk_body,std::string file_path, std::string chunk_id, std::string chunk_hash, std::string chunk_size){
         std::clog << "il file c'è già e dobbiamo solo aggiungere i chunks \n";
+        int full_chunk_size = 50;
 
         json chunk;
         chunk["id"] = chunk_id;
@@ -82,18 +83,21 @@ public:
         }
 
         std::ofstream outfile;
-        outfile.open("../../filesystem/"+username+"/"+file_path);
-        int full_chunk_size = 50;
+        outfile.open("../../filesystem/"+username+"/"+file_path , std::ios_base::in | std::ios_base::out | std::ios_base::ate);
 
-        std::vector<char> padding(full_chunk_size, '0'); //todo: recuperare la vera chunk size
-        for(int i = 0 ; i < std::stoi(chunk_id) ; i++){
+        std::string padding(50, '0');
+        int i = 0;
+        for(i = 0 ; i < std::stoi(chunk_id) ; i++){
             if(!std::count(chunks_already_present.begin(),chunks_already_present.end(),i)){ //cerco se quel chunk_id è già stato scritto, se non lo è, devo 0 fillare
-                for(auto p : padding)
-                    outfile << p;
+                std::clog << "scrivo ora\n";
+                outfile.seekp(i*full_chunk_size);
+                outfile.write(padding.c_str(),padding.size());
             }
         }
-        for(auto b : chunk_body)
-            outfile << b;
+        std::clog << "indice " << i << "\n";
+        outfile.seekp(i*full_chunk_size);
+        std::string strvec{chunk_body.begin(),chunk_body.end()};
+        outfile.write(strvec.c_str(),strvec.size());
 
         outfile.close();
         //}
@@ -147,24 +151,19 @@ public:
 
         std::ofstream outfile;
         outfile.open("../../filesystem/"+username+"/"+file_path);
-/*
-        std::fstream s(my_file_path); // use option std::ios_base::binary if necessary
-        s.seekp(position_of_data_to_overwrite, std::ios_base::beg);
-        s.write(my_data, size_of_data_to_overwrite);
-        */
-        std::vector<char> padding(full_chunk_size, '0'); //todo: recuperare la vera chunk size
 
-        for(int i = 0 ; i < std::stoi(chunk_id) ; i++){
+        std::string padding(50, '0');
+        int i=0;
+        for(i = 0 ; i < std::stoi(chunk_id) ; i++){
             if(i != std::stoi(chunk_id)){
-                for(auto b : padding)
-                    outfile << b;
+                outfile.seekp(i*full_chunk_size, std::ios_base::beg);
+                outfile << padding;
             }
         }
-        for(auto b : chunk_body)
-        outfile << b;
-
+        outfile.seekp(i*full_chunk_size, std::ios_base::beg);
+        std::string strvec{chunk_body.begin(),chunk_body.end()};
+        outfile << strvec;
         outfile.close();
-
 
         (*structure)["entries"].push_back(entry);
     }
