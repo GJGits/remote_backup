@@ -88,7 +88,7 @@ public:
     }
 
 
-    void add_chunk(std::vector<char> chunk_body,std::string file_path, std::string chunk_id, std::string chunk_hash, std::string chunk_size){
+    void add_chunk(std::vector<char> chunk_body,std::string file_path, std::string chunk_id, std::string chunk_hash, std::string chunk_size,std::string number_of_chunks){
         std::clog << "il file c'è già e dobbiamo solo aggiungere i chunks \n";
         int full_chunk_size = 10;
 
@@ -97,32 +97,26 @@ public:
         chunk["hash"] = chunk_hash;
         (*structure)["entries"][index]["chunks"].push_back(chunk);
 
-        for (size_t i = 0; i < (*structure)["entries"][index]["chunks"].size();
-             i++) {
-            std::string ind = (*structure)["entries"][index]["chunks"][i]["id"];
-            chunks_already_present.push_back(std::stoi(ind));
-        }
 
         std::ofstream outfile;
         outfile.open("../../filesystem/"+username+"/"+file_path , std::ios_base::in | std::ios_base::out | std::ios_base::ate);
 
-        std::string padding(full_chunk_size, '0');
-        int i = 0;
-        for(i = 0 ; i < std::stoi(chunk_id) ; i++){
-            if(!std::count(chunks_already_present.begin(),chunks_already_present.end(),i)){ //cerco se quel chunk_id è già stato scritto, se non lo è, devo 0 fillare
-                outfile.seekp(i*full_chunk_size);
-                outfile.write(padding.c_str(),padding.size());
-            }
-        }
-        outfile.seekp(i*full_chunk_size);
+
+        outfile.seekp(std::stoi(chunk_id)*full_chunk_size);
         std::string strvec{chunk_body.begin(),chunk_body.end()};
         outfile.write(strvec.c_str(),strvec.size());
-
+        if(std::stoi(chunk_id)==(std::stoi(number_of_chunks)-1)) {
+            std::filesystem::path path="../../filesystem/"+username+"/"+file_path;
+            int dim=(std::stoi(number_of_chunks)-1)*full_chunk_size+std::stoi(chunk_size);
+            std::filesystem::resize_file(path,dim);
+        }
         outfile.close();
 
-        (*structure)["entries"][index]["size"] = "-1"; //todo: calcolare sta size
+        (*structure)["entries"][index]["size"] = -1; //todo: mettere il file size senzato, quando capirò come creare effettivamente i files dal chunk
         (*structure)["entries"][index]["validity"] = false;
         (*structure)["entries"][index]["dim_last_chunk"] = chunk_size;
+
+
 
     }
 
@@ -159,7 +153,7 @@ public:
     }
 
 
-    void created_new_file(std::string username, std::string chunk_hash, std::string chunk_id, std::string file_path, bool validity, std::string chunk_size, std::string timestamp_locale, std::vector<char> chunk_body){
+    void created_new_file(std::string username, std::string chunk_hash, std::string chunk_id, std::string file_path, bool validity, std::string chunk_size, std::string timestamp_locale, std::vector<char> chunk_body,std::string number_of_chunks){
         json entry;
         json chunk;
 
@@ -178,7 +172,7 @@ public:
 
         std::string padding(full_chunk_size, '0');
         int i=0;
-        for(i = 0 ; i < std::stoi(chunk_id) ; i++){
+        for(i = 0 ; i < std::stoi(number_of_chunks) ; i++){
             if(i != std::stoi(chunk_id)){
                 outfile.seekp(i*full_chunk_size, std::ios_base::beg);
                 outfile << padding;

@@ -71,15 +71,16 @@ std::string UserService::getStatusFile(const std::string &username) {
 std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
     std::clog << "l'hash vero è: "<< Sha256::getSha256(post_file.getchunk_body()) << "\n";
 
+
     if(Sha256::getSha256(post_file.getchunk_body()).compare(post_file.getchunk_hash()) == 0){
 
         ClientStruct clientstr(post_file.getusername());
         clientstr.research_file(post_file.getfile_path());
 
         if (clientstr.get_file_found())
-            clientstr.add_chunk(post_file.getchunk_body(),post_file.getfile_path(),post_file.getchunk_id(),post_file.getchunk_hash(),post_file.getchunk_size());
+            clientstr.add_chunk(post_file.getchunk_body(),post_file.getfile_path(),post_file.getchunk_id(),post_file.getchunk_hash(),post_file.getchunk_size(),post_file.getnumber_of_chunks());
         else
-            clientstr.created_new_file(post_file.getusername(),post_file.getchunk_hash(), post_file.getchunk_id(),post_file.getfile_path(), false, post_file.getchunk_size(), post_file.gettimestamp_locale(), post_file.getchunk_body());
+            clientstr.created_new_file(post_file.getusername(),post_file.getchunk_hash(), post_file.getchunk_id(),post_file.getfile_path(), false, post_file.getchunk_size(), post_file.gettimestamp_locale(), post_file.getchunk_body(),post_file.getnumber_of_chunks());
 
         clientstr.update_total_file_status();
         clientstr.write_structure();
