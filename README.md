@@ -239,6 +239,17 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 
 </details>
 
+<details>
+  <summary>DELETE /chunk/{username}/{chunk_id}/{file_pathBASE64}</summary>  
+
+  * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di eliminare un chunk di un file, se l'utente che è autenticato.*
+
+  * **Authenticated**:&nbsp;&nbsp;&nbsp;`TRUE`
+  <br /> 
+
+  * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTTP headers: MIME: application/octect-stream body: `binary data here`
+
+</details>
 
 <br />  
 <details>
