@@ -132,3 +132,13 @@ std::string UserService::delete_file_service(const DeleteFileDTO &del_file) {
     clientstr.write_structure();
     return "200_OK";
 }
+
+
+std::string UserService::file_chunk_delete_service(const DeleteChunkDTO &delete_chunk){
+
+
+
+
+    return "ciao";
+}
+
