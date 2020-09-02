@@ -31,17 +31,19 @@ void SyncSubscriber::init() {
 
 void SyncSubscriber::on_new_file(const Message &message) {
   std::clog << "New file\n";
-  std::string file_path = message.get_content()["name"];
+  json content = message.get_content();
+  std::string file_path = content["path"];
+  std::clog << "fpath: " << file_path << "\n";
   if (std::filesystem::exists(file_path) &&
-      !std::filesystem::exists(file_path)) {
+      !std::filesystem::is_empty(file_path)) {
     std::shared_ptr<Broker> broker = Broker::getInstance();
     json file_entry;
-    file_entry["path"] = file_entry;
+    file_entry["path"] = file_path;
     file_entry["last_mod"] =
         std::filesystem::last_write_time(file_path).time_since_epoch().count();
     uintmax_t size = std::filesystem::file_size(file_path);
     file_entry["size"] = size;
-    size_t n_chunks = ceil(size / CHUNK_SIZE);
+    size_t n_chunks = ceil((double)size / CHUNK_SIZE);
     std::ifstream istream{file_path, std::ios::binary};
     Chunk c{std::move(istream)};
     for (size_t i = 0; i < n_chunks; i++) {
@@ -65,13 +67,13 @@ void SyncSubscriber::on_new_folder(const Message &message) {
     std::string new_path = p.path().string();
     if (std::filesystem::is_regular_file(new_path)) {
       mex["path"] = new_path;
-      broker->publish(TOPIC::NEW_FILE, Message{mex});
+      on_new_file(mex);
     }
   }
 }
 void SyncSubscriber::on_file_renamed(const Message &message) {
   std::clog << "New file_renamed\n";
-  //todo: inviare richiesta al server
+  // todo: inviare richiesta al server
 }
 void SyncSubscriber::on_file_modified(const Message &message) {
   std::clog << "New file_modified\n";

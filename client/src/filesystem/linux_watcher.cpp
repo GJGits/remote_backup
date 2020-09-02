@@ -62,14 +62,14 @@ void LinuxWatcher::check_news() {
     if (std::filesystem::is_regular_file(sub_path)) {
       size_t last_mod =
           std::filesystem::last_write_time(sub_path).time_since_epoch().count();
-      message["name"] = sub_path;
+      message["path"] = sub_path;
       // 1. file non presente in struttura -> aggiunto off-line
       if (!sync_structure->has_entry(sub_path)) {
-        broker->publish(TOPIC::NEW_FILE, message);
+        broker->publish(TOPIC::NEW_FILE, Message{message});
       }
       // 2. last_mod non coincide -> modificato off-line
       else if (sync_structure->get_last_mod(sub_path) != last_mod) {
-        broker->publish(TOPIC::FILE_MODIFIED, message);
+        broker->publish(TOPIC::FILE_MODIFIED, Message{message});
       }
     }
   }

@@ -80,7 +80,10 @@ std::vector<std::string> SyncStructure::get_paths() const {
 
 void SyncStructure::add_chunk(const json &chunk) {
   json chk = chunk["chunks"][0];
+  std::clog << "chunk: " << chk.dump() << "\n";
+  std::clog << "chunk dump: " << chunk.dump() << "\n";
   if (entries.find(chunk["path"]) == entries.end()) {
+    std::clog << "olga\n";
     (*structure)["entries"].push_back(chunk);
     entries[chunk["path"]] = std::make_tuple(count++, chunk);
   } else {

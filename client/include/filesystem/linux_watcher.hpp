@@ -20,7 +20,7 @@
 #include "../pubsub/broker.hpp"
 #include "../common/duration.hpp"
 
-#define TIMER 60000
+#define TIMER 5000
 #define WAIT -1
 
 using json = nlohmann::json;

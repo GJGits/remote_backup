@@ -10,7 +10,7 @@ private:
 
 public:
   Message() {}
-  Message(const json &content) : content{content} {}
+  Message(const json &content) {this->content = content;}
   bool has_content() const {return this->content.is_null();}
   json get_content() const { return this->content; }
 };
