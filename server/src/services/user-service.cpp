@@ -120,3 +120,15 @@ std::string UserService::file_chunk_get(const GetChunkDTO &get_file) {
     return clientstr.get_chunk(get_file.getchunk_id(),get_file.getfile_path(),get_file.getchunk_size(),get_file.getusername());
 
 }
+
+
+std::string UserService::delete_file_service(const DeleteFileDTO &del_file) {
+
+    ClientStruct clientstr(del_file.getusername());
+    if(clientstr.delete_file(del_file.getfile_path()) == false){
+        return "File not eliminated\n";
+    }
+    clientstr.update_total_file_status();
+    clientstr.write_structure();
+    return "200_OK";
+}

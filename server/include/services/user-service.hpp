@@ -4,6 +4,7 @@
 #include "../dtos/post_chunk_dto.hpp"
 #include "../dtos/put_chunk_dto.hpp"
 #include "../dtos/get_chunk_dto.hpp"
+#include "../dtos/delete_file_dto.hpp"
 #include "../common/sha256.hpp"
 #include "../filesystem/client_struct.hpp"
 #include "../repositories/user-repository.hpp"
@@ -40,5 +41,5 @@ class UserService {
     std::string file_chunk_add(const PostChunkDTO &post_file);
     std::string file_chunk_update(const PutChunkDTO &put_file);
     std::string file_chunk_get(const GetChunkDTO &get_file);
-
+    std::string delete_file_service(const DeleteFileDTO &del_file);
 };

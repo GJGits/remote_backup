@@ -3,6 +3,7 @@
 #include "controller.hpp"
 #include "status-controller.hpp"
 #include "chunk-controller.hpp"
+#include "file-controller.hpp"
 #include "../exceptions/exceptions.hpp"
 
 
@@ -20,6 +21,7 @@ public:
       controller_map["auth"] = AuthController::getInstance();
       controller_map["status"] = StatusController::getInstance();
       controller_map["chunk"] = ChunkController::getInstance();
+      controller_map["file"] = FileController::getInstance();
 
         // todo: inizializza
     }
@@ -35,6 +37,8 @@ public:
         return StatusController::getInstance();
       else if (strcmp(res, "chunk") == 0)
           return ChunkController::getInstance();
+      else if (strcmp(res, "file") == 0)
+          return FileController::getInstance();
     }
     throw ControllerNotRetrievable();
   }

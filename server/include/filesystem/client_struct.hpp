@@ -66,6 +66,33 @@ public:
         }
     }
 
+    bool delete_file(std::string path){
+        std::clog << "e3\n";
+        if (!(*structure)["entries"].empty()) {
+            std::clog << "e4\n";
+            std::clog << "la dimensione e': " << (*structure)["entries"].size() << "\n";
+            for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
+                std::clog << "il dump è: " << (*structure)["entries"][0].dump() << "\n";
+                json tmp = (*structure)["entries"][i];
+                std::clog << "provo su " << tmp["path"] << "\n";
+                if (tmp["path"].get<std::string>().compare(path) ==
+                    0) { // C'è già il path nel client-struct.json
+                    (*structure)["entries"].erase(i);
+                    /*(*structure)["entries"][i].erase("chunks");
+                    (*structure)["entries"][i].erase("dim_last_chunk");
+                    (*structure)["entries"][i].erase("last_mod");
+                    (*structure)["entries"][i].erase("path");
+                    (*structure)["entries"][i].erase("size");
+                    (*structure)["entries"][i].erase("validity");*/
+
+                    std::clog << "file trovato\n";
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 
     void add_chunk(std::vector<char> chunk_body,std::string file_path, std::string chunk_id, std::string chunk_hash, std::string chunk_size){
         std::clog << "il file c'è già e dobbiamo solo aggiungere i chunks \n";
