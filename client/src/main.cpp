@@ -2,11 +2,15 @@
 
 #include "../include/filesystem/linux_watcher.hpp"
 #include "../include/pubsub/sync_sub.hpp"
+#include "../include/pubsub/struct_sub.hpp"
 
 int main() {
 
   std::shared_ptr<SyncSubscriber> sync_sub = SyncSubscriber::getInstance();
   sync_sub->init();
+
+  std::shared_ptr<StructSubscriber> struct_sub = StructSubscriber::getInstance();
+  struct_sub->init();
 
 
   std::shared_ptr<LinuxWatcher> watcher = LinuxWatcher::getInstance(

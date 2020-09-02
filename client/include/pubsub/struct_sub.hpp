@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 
+#include "../filesystem/sync_structure.hpp"
 #include "broker.hpp"
 
 class StructSubscriber {

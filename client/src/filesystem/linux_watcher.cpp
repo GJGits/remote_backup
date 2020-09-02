@@ -1,8 +1,8 @@
 #include "../../include/filesystem/linux_watcher.hpp"
 
 LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
-    : watcher_mask{mask} {
-  timer = -1;
+    : root_to_watch{root_to_watch}, watcher_mask{mask} {
+  timer = TIMER;
   // Richiedo un file descriptor al kernel da utilizzare
   // per la watch. L'API fornita prevede, come spesso avviene
   // in linux, che la comunicazione tra kernel e user avvenga
@@ -16,7 +16,6 @@ LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
   }
   // start checks
   check_news();
-  check_del();
 }
 
 std::shared_ptr<LinuxWatcher>
@@ -60,28 +59,18 @@ void LinuxWatcher::check_news() {
   json message;
   for (auto &p : std::filesystem::recursive_directory_iterator(root_to_watch)) {
     std::string sub_path = p.path().string();
-    size_t last_mod =
-        std::filesystem::last_write_time(sub_path).time_since_epoch().count();
-    message["name"] = sub_path;
-    // 1. file non presente in struttura -> aggiunto off-line
-    if (!sync_structure->has_entry(sub_path)) {
-      broker->publish(TOPIC::NEW_FILE, message);
-    }
-    // 2. last_mod non coincide -> modificato off-line
-    else if (sync_structure->get_last_mod(sub_path) != last_mod) {
-      broker->publish(TOPIC::FILE_MODIFIED, message);
-    }
-  }
-}
-
-void check_del() {
-  std::shared_ptr<SyncStructure> sync_structure = SyncStructure::getInstance();
-  std::shared_ptr<Broker> broker = Broker::getInstance();
-  json message;
-  for (const std::string &path : sync_structure->get_paths()) {
-    if (!std::filesystem::exists(path)) {
-      message["name"] = path;
-      broker->publish(TOPIC::FILE_DELETED, message);
+    if (std::filesystem::is_regular_file(sub_path)) {
+      size_t last_mod =
+          std::filesystem::last_write_time(sub_path).time_since_epoch().count();
+      message["name"] = sub_path;
+      // 1. file non presente in struttura -> aggiunto off-line
+      if (!sync_structure->has_entry(sub_path)) {
+        broker->publish(TOPIC::NEW_FILE, message);
+      }
+      // 2. last_mod non coincide -> modificato off-line
+      else if (sync_structure->get_last_mod(sub_path) != last_mod) {
+        broker->publish(TOPIC::FILE_MODIFIED, message);
+      }
     }
   }
 }
@@ -127,11 +116,11 @@ void LinuxWatcher::handle_events() {
         event = (const struct inotify_event *)ptr;
 
         json message;
-        message["name"] =
+        message["path"] =
             wd_path_map[event->wd] + "/" + std::string{event->name};
 
         try {
-          timer = 5000;
+          timer = TIMER;
           std::clog << "MASK: " << event->mask << "\n";
 
           //
@@ -153,23 +142,23 @@ void LinuxWatcher::handle_events() {
             broker->publish(TOPIC::NEW_FILE, Message{message});
             break;
           case 1073742080:
-            add_watch(message["name"]);
+            add_watch(message["path"]);
             broker->publish(TOPIC::NEW_FOLDER, Message{message});
             break;
           case 1073741952:
-            add_watch(message["name"]);
+            add_watch(message["path"]);
             broker->publish(TOPIC::NEW_FOLDER, Message{message});
             break;
           case 1073741888:
-            remove_watch(message["name"]);
+            remove_watch(message["path"]);
             broker->publish(TOPIC::CONTENT_MOVED, Message{});
             break;
           case 64:
-            cookie_map[event->cookie] = message["name"];
+            cookie_map[event->cookie] = message["path"];
             broker->publish(TOPIC::CONTENT_MOVED, Message{});
             break;
           case 128: {
-            message["old_name"] = cookie_map[event->cookie];
+            message["old_path"] = cookie_map[event->cookie];
             broker->publish(TOPIC::FILE_RENAMED, Message{message});
             cookie_map.erase(event->cookie);
           } break;
@@ -191,8 +180,18 @@ void LinuxWatcher::handle_events() {
     if (poll_num == 0) {
       std::clog << "timeout\n";
       cookie_map.clear();
+      timer = WAIT;
+      // check di move verso l'esterno
+      std::shared_ptr<Broker> broker = Broker::getInstance();
+      std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+      json mex;
+      for (const std::string &path : sync->get_paths()) {
+        if (!std::filesystem::exists(path)) {
+          mex["path"] = path;
+          broker->publish(TOPIC::FILE_DELETED, Message{mex});
+        }
+      }
       broker->publish(TOPIC::TIME_OUT, Message{});
-      timer = -1;
     }
   }
 }

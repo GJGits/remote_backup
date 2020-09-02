@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../common/sha256.hpp"
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
 
@@ -18,7 +19,6 @@ using json = nlohmann::json;
 class SyncStructure {
 
 private:
-  bool dirty;
   int count;
   std::unordered_map<std::string, std::tuple<int, json>> entries;
   std::unique_ptr<json> structure;
@@ -26,15 +26,17 @@ private:
 
   void create_structure();
   void read_structure();
-  void write_structure();
+  void hash_struct();
 
 public:
   static std::shared_ptr<SyncStructure> getInstance();
+  void write_structure();
   void add_chunk(const json &chunk);
   void replace_chunk(const json &chunk);
   void delete_chunk(const json &chunk);
   bool has_entry(const std::string &path);
   void delete_entry(const json &entry);
+  void rename_entry(const json &entry);
   std::vector<std::string> get_paths() const;
-  size_t get_last_mod(const std::string &path) const;
+  size_t get_last_mod(const std::string &path);
 };

@@ -20,6 +20,9 @@
 #include "../pubsub/broker.hpp"
 #include "../common/duration.hpp"
 
+#define TIMER 60000
+#define WAIT -1
+
 using json = nlohmann::json;
 
 class LinuxWatcher {
@@ -66,12 +69,6 @@ public:
    * effettuato per la modifica si basa su last_modified.
    */
   void check_news();
-
-  /**
-   * Metodo eseguito a startup e che permette di notificare l'eliminazione
-   * di file avvenuta off-line.
-   */
-  void check_del();
 
   /**
    * Effettua watch degli eventi on-line per poi effettuare una publish

@@ -5,8 +5,12 @@
 #include <memory>
 #include <math.h>
 
+#include "../common/json.hpp"
+#include "../filesystem/sync_structure.hpp"
 #include "../filesystem/chunk.hpp"
 #include "broker.hpp"
+
+using json = nlohmann::json;
 
 class SyncSubscriber {
 private:

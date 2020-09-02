@@ -36,6 +36,7 @@ void SyncSubscriber::on_new_file(const Message &message) {
       !std::filesystem::exists(file_path)) {
     std::shared_ptr<Broker> broker = Broker::getInstance();
     json file_entry;
+    file_entry["path"] = file_entry;
     file_entry["last_mod"] =
         std::filesystem::last_write_time(file_path).time_since_epoch().count();
     uintmax_t size = std::filesystem::file_size(file_path);
@@ -56,15 +57,28 @@ void SyncSubscriber::on_new_file(const Message &message) {
 }
 void SyncSubscriber::on_new_folder(const Message &message) {
   std::clog << "New folder\n";
+  json mex;
+  std::shared_ptr<Broker> broker = Broker::getInstance();
+  json content = message.get_content();
+  for (auto &p :
+       std::filesystem::recursive_directory_iterator(content["path"])) {
+    std::string new_path = p.path().string();
+    if (std::filesystem::is_regular_file(new_path)) {
+      mex["path"] = new_path;
+      broker->publish(TOPIC::NEW_FILE, Message{mex});
+    }
+  }
 }
 void SyncSubscriber::on_file_renamed(const Message &message) {
   std::clog << "New file_renamed\n";
+  //todo: inviare richiesta al server
 }
 void SyncSubscriber::on_file_modified(const Message &message) {
   std::clog << "New file_modified\n";
 }
 void SyncSubscriber::on_file_deleted(const Message &message) {
   std::clog << "New file_deleted\n";
+  // todo: invia al server
 }
 void SyncSubscriber::on_bulk_delete(const Message &message) {
   std::clog << "bulk_delete\n";
