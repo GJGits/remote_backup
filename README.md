@@ -239,6 +239,8 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 
 </details>
 
+<br /> 
+
 <details>
   <summary>DELETE /chunk/{username}/{chunk_id}/{file_pathBASE64}</summary>  
 
