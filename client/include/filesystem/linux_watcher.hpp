@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <unordered_map>
 
+#include "sync_structure.hpp"
 #include "../pubsub/message.hpp"
 #include "../common/json.hpp"
 #include "../pubsub/broker.hpp"
@@ -58,9 +59,23 @@ public:
    */
   bool remove_watch(const std::string &path);
 
+
   /**
-   * Effettua handle degli eventi per poi rigirarli ad un apposito
-   * event handler.
+   * Metodo eseguito a startup e che permette di notificare l'aggiunta
+   * di nuovi o modifica di file avvenuta off-line. Il controllo che viene 
+   * effettuato per la modifica si basa su last_modified.
+   */
+  void check_news();
+
+  /**
+   * Metodo eseguito a startup e che permette di notificare l'eliminazione
+   * di file avvenuta off-line.
+   */
+  void check_del();
+
+  /**
+   * Effettua watch degli eventi on-line per poi effettuare una publish
+   * al broker.
    */
   void handle_events();
 

@@ -1,8 +1,11 @@
 #pragma once
 
+#include <filesystem>
 #include <iostream>
 #include <memory>
+#include <math.h>
 
+#include "../filesystem/chunk.hpp"
 #include "broker.hpp"
 
 class SyncSubscriber {

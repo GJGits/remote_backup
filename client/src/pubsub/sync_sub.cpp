@@ -31,6 +31,28 @@ void SyncSubscriber::init() {
 
 void SyncSubscriber::on_new_file(const Message &message) {
   std::clog << "New file\n";
+  std::string file_path = message.get_content()["name"];
+  if (std::filesystem::exists(file_path) &&
+      !std::filesystem::exists(file_path)) {
+    std::shared_ptr<Broker> broker = Broker::getInstance();
+    json file_entry;
+    file_entry["last_mod"] =
+        std::filesystem::last_write_time(file_path).time_since_epoch().count();
+    uintmax_t size = std::filesystem::file_size(file_path);
+    file_entry["size"] = size;
+    size_t n_chunks = ceil(size / CHUNK_SIZE);
+    std::ifstream istream{file_path, std::ios::binary};
+    Chunk c{std::move(istream)};
+    for (size_t i = 0; i < n_chunks; i++) {
+      size_t to_read = size > CHUNK_SIZE ? CHUNK_SIZE : size;
+      c.read(i, to_read);
+      size -= to_read;
+      file_entry["chunks"].push_back(c.get_json_representation());
+      broker->publish(TOPIC::ADD_CHUNK, Message{file_entry});
+      file_entry["chunks"].clear();
+      // todo: prepare http request and push to sync worker
+    }
+  }
 }
 void SyncSubscriber::on_new_folder(const Message &message) {
   std::clog << "New folder\n";

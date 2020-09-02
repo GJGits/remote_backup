@@ -26,12 +26,22 @@ void StructSubscriber::init() {
                               std::placeholders::_1));
 }
 
-void StructSubscriber::on_add_chunk(const Message &message) {}
+void StructSubscriber::on_add_chunk(const Message &message) {
+  std::clog << "ADD CHUNK\n";
+}
 
-void StructSubscriber::on_update_chunk(const Message &message) {}
+void StructSubscriber::on_update_chunk(const Message &message) {
+  std::clog << "UPDATE CHUNK\n";
+}
 
-void StructSubscriber::on_delete_chunk(const Message &message) {}
+void StructSubscriber::on_delete_chunk(const Message &message) {
+  std::clog << "DELETE CHUNK\n";
+}
 
-void StructSubscriber::on_delete_entry(const Message &message) {}
+void StructSubscriber::on_delete_entry(const Message &message) {
+  std::clog << "DELETE ENTRY\n";
+}
 
-void StructSubscriber::on_timeout(const Message &message) {}
+void StructSubscriber::on_timeout(const Message &message) {
+  std::clog << "TIMEOUT\n";
+}

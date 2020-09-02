@@ -8,14 +8,15 @@ LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
   // in linux, che la comunicazione tra kernel e user avvenga
   // tramite lettura da "file".
   inotify_descriptor = inotify_init1(IN_NONBLOCK);
-  std::clog << "descriptor number in constructor: " << inotify_descriptor
-            << "\n";
   // Fatal error, in questo caso il kernel non e' in grado di
   // restituire un file descriptor, non possiamo proseguire.
   if (inotify_descriptor == -1) {
     perror("inotify_init1");
     exit(-1);
   }
+  // start checks
+  check_news();
+  check_del();
 }
 
 std::shared_ptr<LinuxWatcher>
@@ -51,6 +52,38 @@ bool LinuxWatcher::remove_watch(const std::string &path) {
   wd_path_map.erase(path_wd_map[path]);
   path_wd_map.erase(path);
   return true;
+}
+
+void LinuxWatcher::check_news() {
+  std::shared_ptr<SyncStructure> sync_structure = SyncStructure::getInstance();
+  std::shared_ptr<Broker> broker = Broker::getInstance();
+  json message;
+  for (auto &p : std::filesystem::recursive_directory_iterator(root_to_watch)) {
+    std::string sub_path = p.path().string();
+    size_t last_mod =
+        std::filesystem::last_write_time(sub_path).time_since_epoch().count();
+    message["name"] = sub_path;
+    // 1. file non presente in struttura -> aggiunto off-line
+    if (!sync_structure->has_entry(sub_path)) {
+      broker->publish(TOPIC::NEW_FILE, message);
+    }
+    // 2. last_mod non coincide -> modificato off-line
+    else if (sync_structure->get_last_mod(sub_path) != last_mod) {
+      broker->publish(TOPIC::FILE_MODIFIED, message);
+    }
+  }
+}
+
+void check_del() {
+  std::shared_ptr<SyncStructure> sync_structure = SyncStructure::getInstance();
+  std::shared_ptr<Broker> broker = Broker::getInstance();
+  json message;
+  for (const std::string &path : sync_structure->get_paths()) {
+    if (!std::filesystem::exists(path)) {
+      message["name"] = path;
+      broker->publish(TOPIC::FILE_DELETED, message);
+    }
+  }
 }
 
 void LinuxWatcher::handle_events() {
