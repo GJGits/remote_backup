@@ -66,7 +66,7 @@ public:
         }
     }
 
-    bool delete_file(std::string path){
+    bool delete_file(std::string file_path,std::string username ){
         std::clog << "e3\n";
         if (!(*structure)["entries"].empty()) {
             std::clog << "e4\n";
@@ -75,16 +75,10 @@ public:
                 std::clog << "il dump è: " << (*structure)["entries"][0].dump() << "\n";
                 json tmp = (*structure)["entries"][i];
                 std::clog << "provo su " << tmp["path"] << "\n";
-                if (tmp["path"].get<std::string>().compare(path) ==
-                    0) { // C'è già il path nel client-struct.json
+                if (tmp["path"].get<std::string>().compare(file_path) ==
+                    0) {
                     (*structure)["entries"].erase(i);
-                    /*(*structure)["entries"][i].erase("chunks");
-                    (*structure)["entries"][i].erase("dim_last_chunk");
-                    (*structure)["entries"][i].erase("last_mod");
-                    (*structure)["entries"][i].erase("path");
-                    (*structure)["entries"][i].erase("size");
-                    (*structure)["entries"][i].erase("validity");*/
-
+                    remove(("../../filesystem/"+username+"/"+file_path).c_str());
                     std::clog << "file trovato\n";
                     return true;
                 }

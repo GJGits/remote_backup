@@ -125,7 +125,7 @@ std::string UserService::file_chunk_get(const GetChunkDTO &get_file) {
 std::string UserService::delete_file_service(const DeleteFileDTO &del_file) {
 
     ClientStruct clientstr(del_file.getusername());
-    if(clientstr.delete_file(del_file.getfile_path()) == false){
+    if(clientstr.delete_file(del_file.getfile_path(), del_file.getusername()) == false){
         return "File not eliminated\n";
     }
     clientstr.update_total_file_status();
