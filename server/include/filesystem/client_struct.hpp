@@ -172,20 +172,24 @@ public:
 
         std::string padding(full_chunk_size, '0');
         int i=0;
+        int index_to_write = -1;
         for(i = 0 ; i < std::stoi(number_of_chunks) ; i++){
             if(i != std::stoi(chunk_id)){
                 outfile.seekp(i*full_chunk_size, std::ios_base::beg);
                 outfile << padding;
             }
+            else{
+                index_to_write = i;
+            }
         }
-        outfile.seekp(i*full_chunk_size, std::ios_base::beg);
+        outfile.seekp(index_to_write*full_chunk_size, std::ios_base::beg);
         std::string strvec{chunk_body.begin(),chunk_body.end()};
         outfile << strvec;
         outfile.close();
 
 
 
-        entry["size"] = (i)*full_chunk_size + std::stoi(chunk_size);
+        entry["size"] = (i-1)*full_chunk_size + std::stoi(chunk_size);
         (*structure)["entries"].push_back(entry);
     }
 
