@@ -111,16 +111,19 @@ public:
             std::filesystem::resize_file(path,dim);
         }
         outfile.close();
-
-        (*structure)["entries"][index]["size"] = -1; //todo: mettere il file size senzato, quando capirò come creare effettivamente i files dal chunk
+        if(std::stoi(chunk_id) == (std::stoi(number_of_chunks)-1)) {
+            int final_size = std::stoi((*structure)["entries"][index]["size"].get<std::string>()) - full_chunk_size + std::stoi(chunk_size);
+            (*structure)["entries"][index]["size"] = std::to_string(final_size); //todo: mettere il file size senzato, quando capirò come creare effettivamente i files dal chunk
+            (*structure)["entries"][index]["dim_last_chunk"] = chunk_size;
+        }
         (*structure)["entries"][index]["validity"] = false;
-        (*structure)["entries"][index]["dim_last_chunk"] = chunk_size;
+
 
 
 
     }
 
-    void modify_chunk(std::vector<char> chunk_body, std::string chunk_id, std::string chunk_hash, std::string chunk_size, std::string file_path){
+    void modify_chunk(std::vector<char> chunk_body, std::string chunk_id, std::string chunk_hash, std::string chunk_size, std::string file_path, std::string number_of_chunks){
         std::clog << "il file c'è già e dobbiamo solo aggiungere i chunks \n";
         //int full_chunk_size = 2097152;
         int full_chunk_size = 10;
@@ -146,9 +149,12 @@ public:
         outfile.write(strvec.c_str(),strvec.size());
         outfile.close();
 
-        (*structure)["entries"][index]["size"] = -1; //todo: mettere il file size senzato, quando capirò come creare effettivamente i files dal chunk
+        if(std::stoi(chunk_id) == (std::stoi(number_of_chunks)-1)) {
+            int final_size = std::stoi((*structure)["entries"][index]["size"].get<std::string>()) - full_chunk_size + std::stoi(chunk_size);
+            (*structure)["entries"][index]["size"] = std::to_string(final_size); //todo: mettere il file size senzato, quando capirò come creare effettivamente i files dal chunk
+            (*structure)["entries"][index]["dim_last_chunk"] = chunk_size;
+        }
         (*structure)["entries"][index]["validity"] = false;
-        (*structure)["entries"][index]["dim_last_chunk"] = chunk_size;
 
     }
 
@@ -189,7 +195,7 @@ public:
 
 
 
-        entry["size"] = (i-1)*full_chunk_size + std::stoi(chunk_size);
+        entry["size"] = std::to_string((i-1)*full_chunk_size + std::stoi(chunk_size));
         (*structure)["entries"].push_back(entry);
     }
 

@@ -102,7 +102,7 @@ std::string UserService::file_chunk_update(const PutChunkDTO &put_file) {
         ClientStruct clientstr(put_file.getusername());
         clientstr.research_file(put_file.getfile_path());
         clientstr.modify_chunk(put_file.getchunk_body(),put_file.getchunk_id(), put_file.getchunk_hash(),
-                                      put_file.getchunk_size(),put_file.getfile_path());
+                                      put_file.getchunk_size(),put_file.getfile_path(),put_file.getnumber_of_chunks());
         clientstr.update_total_file_status();
         clientstr.write_structure();
 
