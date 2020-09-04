@@ -90,6 +90,8 @@ Dopo aver lanciato i vari servizi aprire una finestra di terminale ed eseguire i
     - `show databases;`: permette di visualizzare quali databases esistono all'interno del server.
   
     - `use <db_name>;`: permette di porsi all'interno di un db, solo da qui sono eseguibili le query per questo determinato db.
+    
+4. Una volta selezionato il dabase, eseguire tali comandi per interagire col db:
   
     - `show tables;`: permette di elencare le tabelle presenti all'interno del db precedentemente selezionato.
 
