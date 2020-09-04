@@ -21,4 +21,4 @@ void Chunk::read(size_t id, size_t dim) {
 
 void Chunk::write(size_t id, size_t dim) {}
 
-json Chunk::get_json_representation() const { return j_chunk; };
+json Chunk::get_json_representation() { return j_chunk; };

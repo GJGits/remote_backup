@@ -37,22 +37,20 @@ void SyncSubscriber::on_new_file(const Message &message) {
   if (std::filesystem::exists(file_path) &&
       !std::filesystem::is_empty(file_path)) {
     std::shared_ptr<Broker> broker = Broker::getInstance();
-    json file_entry;
-    file_entry["path"] = file_path;
-    file_entry["last_mod"] =
-        std::filesystem::last_write_time(file_path).time_since_epoch().count();
-    uintmax_t size = std::filesystem::file_size(file_path);
-    file_entry["size"] = size;
-    size_t n_chunks = ceil((double)size / CHUNK_SIZE);
+    FileEntry fentry{file_path};
+    size_t n_chunks = fentry.get_nchunks();
+    uintmax_t size = fentry.get_size();
     std::ifstream istream{file_path, std::ios::binary};
     Chunk c{std::move(istream)};
     for (size_t i = 0; i < n_chunks; i++) {
       size_t to_read = size > CHUNK_SIZE ? CHUNK_SIZE : size;
       c.read(i, to_read);
       size -= to_read;
-      file_entry["chunks"].push_back(c.get_json_representation());
-      broker->publish(TOPIC::ADD_CHUNK, Message{file_entry});
-      file_entry["chunks"].clear();
+      json chk = c.get_json_representation();
+      fentry.add_chunk(chk);
+      broker->publish(TOPIC::ADD_CHUNK,
+                      Message{fentry.get_json_representation()});
+      fentry.clear_chunks();
       // todo: prepare http request and push to sync worker
     }
   }
@@ -77,6 +75,46 @@ void SyncSubscriber::on_file_renamed(const Message &message) {
 }
 void SyncSubscriber::on_file_modified(const Message &message) {
   std::clog << "New file_modified\n";
+  std::shared_ptr<SyncStructure> structure = SyncStructure::getInstance();
+  std::shared_ptr<Broker> broker = Broker::getInstance();
+  json content = message.get_content();
+  std::vector<std::string> hashes =
+      structure->get_entry_hashes(content["path"]);
+  FileEntry fentry{content["path"]};
+  size_t n_chunks = fentry.get_nchunks();
+  uintmax_t size = fentry.get_size();
+  std::ifstream istream{content["path"], std::ios::binary};
+  Chunk c{std::move(istream)};
+  for (size_t i = 0; i < n_chunks; i++) {
+    size_t to_read = size > CHUNK_SIZE ? CHUNK_SIZE : size;
+    c.read(i, to_read);
+    size -= to_read;
+    json chk = c.get_json_representation();
+    fentry.add_chunk(chk);
+    // 1 chunk non presente su struct (modifica con append a destra) -> aggiungo
+    // chunk
+    if (i > hashes.size()) {
+      broker->publish(TOPIC::ADD_CHUNK,
+                      Message{fentry.get_json_representation()});
+      // prepare http request
+    }
+    // 2 chunk presente, ma hash diverso (modifica interna) -> replace chunk
+    if (i <= hashes.size() && hashes[i].compare(chk["hash"]) != 0) {
+      broker->publish(TOPIC::UPDATE_CHUNK,
+                      Message{fentry.get_json_representation()});
+      // prepare http request
+    }
+    fentry.clear_chunks();
+  }
+  // 3 chunk presente su struct, ma non su filesystem (delete parziale) ->
+  // delete chunk
+  for (size_t j = n_chunks; j < hashes.size(); j++) {
+    json en;
+    en["path"] = content["path"];
+    en["id"] = j;
+    broker->publish(TOPIC::DELETE_CHUNK, Message{en});
+    // prepare http request
+  }
 }
 void SyncSubscriber::on_file_deleted(const Message &message) {
   std::clog << "New file_deleted\n";

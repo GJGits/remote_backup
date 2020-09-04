@@ -46,13 +46,14 @@ void StructSubscriber::on_delete_chunk(const Message &message) {
 
 void StructSubscriber::on_delete_entry(const Message &message) {
   std::clog << "DELETE ENTRY\n";
-  json content = message.get_content();
+  std::unique_lock lk{m};
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   sync->delete_entry(message.get_content());
 }
 
 void StructSubscriber::on_timeout(const Message &message) {
   std::clog << "TIMEOUT\n";
+  std::unique_lock lk{m};
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   sync->write_structure();
 }

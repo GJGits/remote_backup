@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <memory>
+#include <mutex>
 
 #include "../filesystem/sync_structure.hpp"
 #include "broker.hpp"
@@ -9,6 +10,7 @@
 class StructSubscriber {
 private:
   static inline std::shared_ptr<StructSubscriber> instance{nullptr};
+  std::mutex m;
   StructSubscriber() {}
 
 public:

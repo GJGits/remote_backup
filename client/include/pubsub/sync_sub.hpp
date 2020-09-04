@@ -3,11 +3,10 @@
 #include <filesystem>
 #include <iostream>
 #include <memory>
-#include <math.h>
 
 #include "../common/json.hpp"
 #include "../filesystem/sync_structure.hpp"
-#include "../filesystem/chunk.hpp"
+#include "../filesystem/file_entry.hpp"
 #include "broker.hpp"
 
 using json = nlohmann::json;

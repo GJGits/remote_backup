@@ -26,7 +26,7 @@ public:
   Chunk(std::ofstream &&ostream, std::unique_ptr<char[]> &&buffer);
   void read(size_t id, size_t dim);
   void write(size_t id, size_t dim);
-  json get_json_representation() const;
+  json get_json_representation();
   ~Chunk() {
     if (istream.is_open())
       istream.close();

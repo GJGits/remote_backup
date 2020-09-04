@@ -3,95 +3,18 @@
         {
             "chunks": [
                 {
-                    "hash": "d196b84bb508dcfde5f13009e7cb100cbb40cac9a8d1ab0f8440613507b08489",
-                    "id": 0
-                }
-            ],
-            "last_mod": 1529875720000000000,
-            "path": "./sync/c++ - thread.pdf",
-            "size": 441793
-        },
-        {
-            "chunks": [
-                {
-                    "hash": "dce2b0bde4df0b5d36b96d152f4e500acf50e1ca49a2624444ad21b8ec687638",
-                    "id": 0
-                }
-            ],
-            "last_mod": 1529874820000000000,
-            "path": "./sync/c#.pdf",
-            "size": 504412
-        },
-        {
-            "chunks": [
-                {
-                    "hash": "c1783d1a0599834e498a59085f93a1a3645036cf74138771a2f3e3f756fb651b",
-                    "id": 0
-                }
-            ],
-            "last_mod": 1529874638000000000,
-            "path": "./sync/c++ - generali.pdf",
-            "size": 583741
-        },
-        {
-            "chunks": [
-                {
-                    "hash": "f662b39ad9831112cbd1723e4f70d8e352ff5cf988301375b020e81b54b94291",
-                    "id": 0
-                }
-            ],
-            "last_mod": 1587146302000000000,
-            "path": "./sync/pacchetto 2/Esercizio_print_nostdlib/lista_systemcall_linux.pdf",
-            "size": 313022
-        },
-        {
-            "chunks": [
-                {
-                    "hash": "599706bbc13afe62f634afa57b7bd706e1a396125877a88d982c31a9c2dae53e",
-                    "id": 0
-                }
-            ],
-            "last_mod": 1587145852000000000,
-            "path": "./sync/pacchetto 2/Esercizio_print_nostdlib/out",
-            "size": 5752
-        },
-        {
-            "chunks": [
-                {
-                    "hash": "4bfab3f6c7f6dbb52cacc162e2ca955f105a0df707848365130c8f1e7c323547",
-                    "id": 0
-                }
-            ],
-            "last_mod": 1587146584000000000,
-            "path": "./sync/pacchetto 2/Esercizio_print_nostdlib/main.c",
-            "size": 876
-        },
-        {
-            "chunks": [
-                {
-                    "hash": "847f2d887639101fc96178939251ce8b179e890e96b4431f188c1498ff08f8eb",
+                    "hash": "1cf97f5897fcffa4e1745a4c24fac15e2ceadf66ef8361853fa1a59cfc699974",
                     "id": 0
                 },
                 {
-                    "hash": "1beb1f8d9197544730b63799b7d16465364ac6651bb4496dc2c6b25044e63649",
+                    "hash": "622132ff3d20c7e58da6613bab4f56d8801c301df54acad154e5ac299ecf0f20",
                     "id": 1
                 }
             ],
-            "last_mod": 1587040330000000000,
-            "path": "./sync/pacchetto 2/02 - il modello di esecuzione.pdf",
-            "size": 2826844
-        },
-        {
-            "chunks": [
-                {
-                    "hash": "d15f197905458bc228cb26abc2b7d858791052aba63b3dfcb084da53c5257f5b",
-                    "id": 0
-                }
-            ],
-            "last_mod": 1586342244000000000,
-            "path": "./sync/pacchetto 2/02 - il modello di esecuzione.ppt",
-            "size": 1206784
+            "last_mod": 1601900638,
+            "path": "./sync/pacchetto 15/15 - gestione delle eccezioni.pdf",
+            "size": 2121444
         }
     ],
-    "hashed_status": "64bb562957dd01f53a9cc40486e15b79320c9ede7a07bdd5c33e32c2ef802f1a"
+    "hashed_status": "113a47fdccc1b345b223e9597d418427be6c26623dc7bfbe5a0422402d7eceba"
 }

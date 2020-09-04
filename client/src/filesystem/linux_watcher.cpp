@@ -61,7 +61,7 @@ void LinuxWatcher::check_news() {
     std::string sub_path = p.path().string();
     if (std::filesystem::is_regular_file(sub_path)) {
       size_t last_mod =
-          std::filesystem::last_write_time(sub_path).time_since_epoch().count();
+          std::filesystem::last_write_time(sub_path).time_since_epoch().count() / 1000000000;
       message["path"] = sub_path;
       // 1. file non presente in struttura -> aggiunto off-line
       if (!sync_structure->has_entry(sub_path)) {
@@ -185,8 +185,9 @@ void LinuxWatcher::handle_events() {
       std::shared_ptr<Broker> broker = Broker::getInstance();
       std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
       json mex;
-      for (const std::string &path : sync->get_paths()) {
+      for (std::string &path : sync->get_paths()) {
         if (!std::filesystem::exists(path)) {
+          std::clog << "path: " << path << "\n";
           mex["path"] = path;
           broker->publish(TOPIC::FILE_DELETED, Message{mex});
         }
