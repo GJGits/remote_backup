@@ -61,7 +61,7 @@ void StructSubscriber::on_delete_entry(const Message &message) {
 }
 
 void StructSubscriber::on_up_empty(const Message &message) {
-  std::clog << "TIMEOUT\n";
+  std::clog << "UPEMPTY\n";
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   sync->write_structure();
 }

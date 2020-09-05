@@ -9,7 +9,7 @@ std::shared_ptr<RestClient> RestClient::getInstance() {
 }
 
 void RestClient::read_info() {
-  std::ifstream i("./config/client-struct.json");
+  std::ifstream i("./config/client-conf.json");
   i >> config;
 }
 
@@ -74,12 +74,14 @@ void RestClient::delete_file(std::string &path) {
   std::shared_ptr<UpWorker> up_worker = UpWorker::getIstance();
   std::string user = config["username"];
   std::string token = config["token"];
+  std::clog << "e1\n";
   http::request<http::vector_body<char>> req{
       http::verb::delete_,
       "/file/" + user + "/" + macaron::Base64::Encode(path), 10};
   req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
   req.set(http::field::authorization, "Barear " + token);
   up_worker->push_request(req);
+  std::clog << "Arrivo qui\n";
 }
 
 void RestClient::get_status() {}

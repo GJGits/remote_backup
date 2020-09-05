@@ -36,7 +36,8 @@ private:
   std::condition_variable cv;
   std::queue<http::request<http::vector_body<char>>> requests;
   static inline std::shared_ptr<UpWorker> instance{nullptr};
-  UpWorker(): is_running{true}{}
+  UpWorker(): is_running{true}{
+  }
 
 public:
   static std::shared_ptr<UpWorker> getIstance();

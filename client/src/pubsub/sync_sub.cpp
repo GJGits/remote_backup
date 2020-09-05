@@ -97,7 +97,8 @@ void SyncSubscriber::on_file_modified(const Message &message) {
 }
 void SyncSubscriber::on_file_deleted(const Message &message) {
   std::clog << "New file_deleted\n";
-  std::string path = message.get_content()["path"];
+  json content = message.get_content();
+  std::string path = content["path"];
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   rest_client->delete_file(path);
 }

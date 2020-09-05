@@ -1,7 +1,7 @@
 #include "../../include/http/up_worker.hpp"
 
 std::shared_ptr<UpWorker> UpWorker::getIstance() {
-  if (instance.get() != nullptr) {
+  if (instance.get() == nullptr) {
     instance = std::shared_ptr<UpWorker>{new UpWorker()};
     instance->run();
   }
@@ -9,12 +9,12 @@ std::shared_ptr<UpWorker> UpWorker::getIstance() {
 }
 
 void UpWorker::run() {
-  //const char *host = "remote_backup_nginx-server_1";
-  //const char *port = "80";
-  //net::io_context ioc;
-  //tcp::resolver resolver(ioc);
-  //beast::tcp_stream stream(ioc);
-  //auto const results = resolver.resolve(host, port);
+  // const char *host = "remote_backup_nginx-server_1";
+  // const char *port = "80";
+  // net::io_context ioc;
+  // tcp::resolver resolver(ioc);
+  // beast::tcp_stream stream(ioc);
+  // auto const results = resolver.resolve(host, port);
   for (size_t i = 0; i < 2; i++) {
     workers.emplace_back([&]() {
       std::shared_ptr<Broker> broker = Broker::getInstance();
@@ -23,17 +23,19 @@ void UpWorker::run() {
         {
           std::unique_lock lk{m};
           if (!requests.empty()) {
+            std::clog << "pop\n";
             req = std::move(requests.front());
             requests.pop();
           } else {
+            std::clog << "empty\n";
             broker->publish(TOPIC::UP_EMPTY, Message{});
-            cv.wait(lk, [&]() { !requests.empty() || !is_running; });
+            cv.wait(lk, [&]() { return !requests.empty() || !is_running; });
             continue;
           }
         }
-        //stream.connect(results);
-        //req.set(http::field::host, host);
-        //http::write(stream, req);
+        // stream.connect(results);
+        // req.set(http::field::host, host);
+        // http::write(stream, req);
       }
     });
   }
@@ -44,6 +46,7 @@ void UpWorker::push_request(
   std::unique_lock lk{m};
   requests.push(request);
   cv.notify_one();
+  std::clog << "e2\n";
 }
 
 UpWorker::~UpWorker() {
