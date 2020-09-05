@@ -1,5 +1,11 @@
 #include "../../include/services/user-service.hpp"
 
+int div_ceil(int numerator, int denominator)
+{
+    std::div_t res = std::div(numerator, denominator);
+    return res.rem ? (res.quot + 1) : res.quot;
+}
+
 std::string UserService::login(const SigninDTO &user) {
   UserRepository user_rep;
   UserEntity user_returned =
@@ -71,33 +77,54 @@ std::string UserService::getStatusFile(const std::string &username) {
 std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
     std::clog << "l'hash vero è: "<< Sha256::getSha256(post_file.getchunk_body()) << "\n";
 
+    int full_chunk_size = 10;
 
     if(Sha256::getSha256(post_file.getchunk_body()).compare(post_file.getchunk_hash()) == 0){
-        ChunkEntity chunk_ent{post_file.getusername(), std::stoi(post_file.getchunk_id()), post_file.getchunk_hash(), post_file.getfile_path(), std::stoi(post_file.getchunk_size()), post_file.gettimestamp_locale()};
+        int filesize = stoi(post_file.getnumber_of_chunks()) - full_chunk_size + std::stoi(post_file.getchunk_size());
+        ChunkEntity chunk_ent{post_file.getusername(), std::stoi(post_file.getchunk_id()), post_file.getchunk_hash(), post_file.getfile_path(), std::stoi(post_file.getchunk_size()), post_file.gettimestamp_locale(), filesize};
         ChunkRepository chunk_rep;
+
+        std::ofstream outfile;
+
+        std::vector<char> chunk_body{post_file.getchunk_body()};
+        std::string padding(full_chunk_size, '0');
+        int i=0;
         if(chunk_rep.getFilePath(chunk_ent)==false) {
-            chunk_rep.addChunk(chunk_ent);
+
+            outfile.open("../../filesystem/"+post_file.getusername()+"/"+post_file.getfile_path());
+            std::clog << "Non Trovato\n";
+            for(i = 0 ; i < std::stoi(post_file.getchunk_id()) ; i++){
+                if(i != std::stoi(post_file.getchunk_id())){
+                    outfile.seekp(i*full_chunk_size, std::ios_base::beg);
+                    outfile << padding;
+                }
+            }
+
             chunk_rep.addFileInfo(chunk_ent);
         }
         else {
+            outfile.open("../../filesystem/"+post_file.getusername()+"/"+post_file.getfile_path() , std::ios_base::in | std::ios_base::out | std::ios_base::ate);
+
+            //Inserire la size, calcolarla e metterla nella chunk_ent
+            int max_id = div_ceil(chunk_rep.getFileSize(chunk_ent),full_chunk_size);
+            for(i = max_id ; i < std::stoi(post_file.getchunk_id()); i++){
+                    outfile.seekp(i*full_chunk_size);
+                    outfile.write(padding.c_str(),padding.size());
+            }
             std::clog << "Trovato\n";
-            chunk_rep.addChunk(chunk_ent);
+           // chunk_rep.updateFileInfo(chunk_ent); //todo: DA FARE
+
         }
-        return "200_OK";
-        /*
-        ClientStruct clientstr(post_file.getusername());
-        clientstr.research_file(post_file.getfile_path());
 
-        if (clientstr.get_file_found())
-            clientstr.add_chunk(post_file.getchunk_body(),post_file.getfile_path(),post_file.getchunk_id(),post_file.getchunk_hash(),post_file.getchunk_size());
-        else
-            clientstr.created_new_file(post_file.getusername(),post_file.getchunk_hash(), post_file.getchunk_id(),post_file.getfile_path(), false, post_file.getchunk_size(), post_file.gettimestamp_locale(), post_file.getchunk_body());
-
-        clientstr.update_total_file_status();
-        clientstr.write_structure();
+        outfile.seekp(i*full_chunk_size, std::ios_base::beg);
+        std::string strvec{chunk_body.begin(),chunk_body.end()};
+        outfile << strvec;
+        outfile.close();
+        // Devo riaggiornare le info del file ogni volta
+        chunk_rep.addChunk(chunk_ent);
 
         return "200_OK";
- */
+
     }
 
     return "chunk_corrupted";
