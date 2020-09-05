@@ -78,9 +78,9 @@ std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
         clientstr.research_file(post_file.getfile_path());
 
         if (clientstr.get_file_found())
-            clientstr.add_chunk(post_file.getchunk_body(),post_file.getfile_path(),post_file.getchunk_id(),post_file.getchunk_hash(),post_file.getchunk_size(),post_file.getnumber_of_chunks());
+            clientstr.add_chunk(post_file.getchunk_body(),post_file.getfile_path(),post_file.getchunk_id(),post_file.getchunk_hash(),post_file.getchunk_size());
         else
-            clientstr.created_new_file(post_file.getusername(),post_file.getchunk_hash(), post_file.getchunk_id(),post_file.getfile_path(), false, post_file.getchunk_size(), post_file.gettimestamp_locale(), post_file.getchunk_body(),post_file.getnumber_of_chunks());
+            clientstr.created_new_file(post_file.getusername(),post_file.getchunk_hash(), post_file.getchunk_id(),post_file.getfile_path(), false, post_file.getchunk_size(), post_file.gettimestamp_locale(), post_file.getchunk_body());
 
         clientstr.update_total_file_status();
         clientstr.write_structure();
@@ -102,7 +102,7 @@ std::string UserService::file_chunk_update(const PutChunkDTO &put_file) {
         ClientStruct clientstr(put_file.getusername());
         clientstr.research_file(put_file.getfile_path());
         clientstr.modify_chunk(put_file.getchunk_body(),put_file.getchunk_id(), put_file.getchunk_hash(),
-                                      put_file.getchunk_size(),put_file.getfile_path(),put_file.getnumber_of_chunks());
+                                      put_file.getchunk_size(),put_file.getfile_path());
         clientstr.update_total_file_status();
         clientstr.write_structure();
 
