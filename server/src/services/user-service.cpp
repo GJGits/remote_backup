@@ -73,7 +73,18 @@ std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
 
 
     if(Sha256::getSha256(post_file.getchunk_body()).compare(post_file.getchunk_hash()) == 0){
-
+        ChunkEntity chunk_ent{post_file.getusername(), std::stoi(post_file.getchunk_id()), post_file.getchunk_hash(), post_file.getfile_path(), std::stoi(post_file.getchunk_size()), post_file.gettimestamp_locale()};
+        ChunkRepository chunk_rep;
+        if(chunk_rep.getFilePath(chunk_ent)==false) {
+            chunk_rep.addChunk(chunk_ent);
+            chunk_rep.addFileInfo(chunk_ent);
+        }
+        else {
+            std::clog << "Trovato\n";
+            chunk_rep.addChunk(chunk_ent);
+        }
+        return "200_OK";
+        /*
         ClientStruct clientstr(post_file.getusername());
         clientstr.research_file(post_file.getfile_path());
 
@@ -86,6 +97,7 @@ std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
         clientstr.write_structure();
 
         return "200_OK";
+ */
     }
 
     return "chunk_corrupted";

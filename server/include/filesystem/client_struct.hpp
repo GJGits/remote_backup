@@ -92,12 +92,13 @@ public:
     void add_chunk(std::vector<char> chunk_body,std::string file_path, std::string chunk_id, std::string chunk_hash, std::string chunk_size){
         std::clog << "il file c'è già e dobbiamo solo aggiungere i chunks \n";
         int full_chunk_size = 10;
-
+/*
         json chunk;
         chunk["id"] = chunk_id;
         chunk["hash"] = chunk_hash;
-        (*structure)["entries"][index]["chunks"].push_back(chunk);
 
+        (*structure)["entries"][index]["chunks"].push_back(chunk);
+*/
         for (size_t i = 0; i < (*structure)["entries"][index]["chunks"].size();
              i++) {
             std::string ind = (*structure)["entries"][index]["chunks"][i]["id"];

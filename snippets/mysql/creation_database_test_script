@@ -13,5 +13,13 @@ Test creation database
 
 5) INSERT INTO users(id, username, password, salt) 
 	VALUES(DEFAULT, "Pippo", "0000", 3);
-	
+
+
+Creazione Tabella Chunks
+
+create table chunks(username varchar(100) NOT NULL, id integer NOT NULL, hash varchar(128) NOT NULL, path varchar(100) NOT NULL);
+
+CREAZIONE Tabella fileinfo
+
+create table fileinfo(username varchar(100), path varchar(100), size integer NOT NULL, lastmod varchar(100) NOT NULL, primary key (username, path));
 

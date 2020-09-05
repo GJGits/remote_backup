@@ -9,6 +9,8 @@
 #include "../common/sha256.hpp"
 #include "../filesystem/client_struct.hpp"
 #include "../repositories/user-repository.hpp"
+#include "../repositories/chunk-repository.hpp"
+#include "../entities/chunk-entity.hpp"
 #include <filesystem>
 #include <cstdlib>
 #include <fstream>
