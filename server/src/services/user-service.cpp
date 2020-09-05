@@ -135,11 +135,14 @@ std::string UserService::delete_file_service(const DeleteFileDTO &del_file) {
 }
 
 
-std::string UserService::file_chunk_delete_service(const DeleteChunkDTO &delete_chunk){
+std::string UserService::file_chunk_delete_service(const DeleteChunkDTO &del_chunk){
 
+    ClientStruct clientstr(del_chunk.getusername());
 
+    if(clientstr.delete_chunk(del_chunk.getfile_path(), del_chunk.getusername(), del_chunk.getchunk_id()) == false){
+        return "File not eliminated\n";
+    }
 
-
-    return "ciao";
+    return "200_OK";
 }
 

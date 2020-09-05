@@ -43,5 +43,5 @@ class UserService {
     std::string file_chunk_update(const PutChunkDTO &put_file);
     std::string file_chunk_get(const GetChunkDTO &get_file);
     std::string delete_file_service(const DeleteFileDTO &del_file);
-    std::string file_chunk_delete_service(const DeleteChunkDTO &delete_chunk);
+    std::string file_chunk_delete_service(const DeleteChunkDTO &del_chunk);
 };

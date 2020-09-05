@@ -227,5 +227,21 @@ public:
 
     }
 
+
+    bool delete_chunk(std::string file_path,std::string username, std::string chunk_id ) {
+        if (std::stoi(chunk_id) == 0){
+            remove(("../../filesystem/" + username + "/" + file_path).c_str());
+            return true;
+        }
+        int full_chunk_size = 10;
+        std::ofstream outfile;
+        std::string path{"../../filesystem/"+username+"/"+file_path};
+        outfile.open(path , std::ios_base::in | std::ios_base::out | std::ios_base::ate);
+        int dim=std::stoi(chunk_id)*full_chunk_size;
+        std::filesystem::resize_file(path,dim);
+        outfile.close();
+        return true;
+    }
+
     bool get_file_found(){ return file_found;}
 };
