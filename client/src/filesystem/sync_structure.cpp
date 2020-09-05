@@ -49,14 +49,13 @@ void SyncStructure::write_structure() {
     for (auto it = entries.begin(); it != entries.end(); it++) {
       (*structure)["entries"].push_back(it->second);
       entries_dump += it->second.dump();
-      std::clog << "entry dump: " << entries_dump << "\n";
     }
-    const char *dump_str = entries_dump.c_str();
+    char *dump_str = new char[entries_dump.size() + 1];
+    strcpy(dump_str, entries_dump.c_str());
     std::shared_ptr<char[]> data {dump_str};
-    //std::vector<char> data(entries_dump.begin(), entries_dump.end());
     (*structure)["hashed_status"] = (*structure)["entries"].empty()
                                         ? std::string{"empty_hashed_status"}
-                                        : Sha256::getSha256(data);
+                                        : Sha256::getSha256(data, entries_dump.size());
   }
   std::ofstream o("./config/client-struct.json");
   o << (*structure) << "\n";

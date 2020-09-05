@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <string.h>
 
 #include "../common/sha256.hpp"
 #include "../common/duration.hpp"

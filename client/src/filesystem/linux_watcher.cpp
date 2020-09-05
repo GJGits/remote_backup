@@ -192,7 +192,6 @@ void LinuxWatcher::handle_events() {
           broker->publish(TOPIC::FILE_DELETED, Message{mex});
         }
       }
-      broker->publish(TOPIC::TIME_OUT, Message{});
     }
   }
 }

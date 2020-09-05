@@ -21,8 +21,8 @@ void StructSubscriber::init() {
   broker->subscribe(TOPIC::FILE_DELETED,
                     std::bind(&StructSubscriber::on_delete_entry,
                               instance.get(), std::placeholders::_1));
-  broker->subscribe(TOPIC::TIME_OUT,
-                    std::bind(&StructSubscriber::on_timeout, instance.get(),
+  broker->subscribe(TOPIC::UP_EMPTY,
+                    std::bind(&StructSubscriber::on_up_empty, instance.get(),
                               std::placeholders::_1));
 }
 
@@ -60,7 +60,7 @@ void StructSubscriber::on_delete_entry(const Message &message) {
   sync->delete_entry(message.get_content());
 }
 
-void StructSubscriber::on_timeout(const Message &message) {
+void StructSubscriber::on_up_empty(const Message &message) {
   std::clog << "TIMEOUT\n";
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   sync->write_structure();

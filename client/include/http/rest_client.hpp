@@ -20,6 +20,7 @@
 
 #include "../common/base64.hpp"
 #include "../common/json.hpp"
+#include "up_worker.hpp"
 
 namespace beast = boost::beast; // from <boost/beast.hpp>
 namespace http = beast::http;   // from <boost/beast/http.hpp>
@@ -30,17 +31,19 @@ using json = nlohmann::json;
 class RestClient {
 
 private:
+  json config;
   static inline std::shared_ptr<RestClient> instance{nullptr};
 
   RestClient(){}
+  void read_info();
 
 public:
   static std::shared_ptr<RestClient> getInstance();
-  void post_chunk(std::shared_ptr<char[]> &chunk);
-  void put_chunk(std::shared_ptr<char[]> &chunk);
-  void delete_chunk(json &chk_info);
+  void post_chunk(json &chk_info, std::shared_ptr<char[]> &chunk, size_t size, size_t nchunks);
+  void put_chunk(json &chk_info, std::shared_ptr<char[]> &chunk, size_t size, size_t nchunks);
+  void delete_chunk(json &chk_info, size_t size);
   void get_chunk();
-  void delete_file();
+  void delete_file(std::string &path);
   void get_status();
   void get_status_file();
 };

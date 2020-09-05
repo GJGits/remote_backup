@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../pubsub/broker.hpp"
 #include "../common/base64.hpp"
 #include "../common/json.hpp"
 
@@ -35,7 +36,7 @@ private:
   std::condition_variable cv;
   std::queue<http::request<http::vector_body<char>>> requests;
   static inline std::shared_ptr<UpWorker> instance{nullptr};
-  UpWorker();
+  UpWorker(): is_running{true}{}
 
 public:
   static std::shared_ptr<UpWorker> getIstance();

@@ -35,12 +35,14 @@ void SyncSubscriber::on_new_file(const Message &message) {
     std::shared_ptr<Broker> broker = Broker::getInstance();
     std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
     FileEntry fentry{file_path};
+    size_t i = 0;
     while (fentry.has_chunk()) {
-      std::shared_ptr<char[]> chunk = fentry.next_chunk();
+      std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
       json jentry = fentry.get_json_representation();
-      rest_client->post_chunk(chunk);
+      rest_client->post_chunk(jentry, std::get<0>(chunk), std::get<1>(chunk), fentry.get_nchunks());
       broker->publish(TOPIC::ADD_CHUNK, Message{jentry});
       fentry.clear_chunks();
+      i++;
     }
   }
 }
@@ -68,19 +70,20 @@ void SyncSubscriber::on_file_modified(const Message &message) {
   std::shared_ptr<Broker> broker = Broker::getInstance();
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   json content = message.get_content();
+  std::string path = content["path"];
   std::vector<std::string> hashes =
-      structure->get_entry_hashes(content["path"]);
-  FileEntry fentry{content["path"]};
+      structure->get_entry_hashes(path);
+  FileEntry fentry{path};
   size_t i = 0;
   while (fentry.has_chunk()) {
-    std::shared_ptr<char[]> chunk = fentry.next_chunk();
+    std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
     json jentry = fentry.get_json_representation();
     if (i > hashes.size()) {
-      rest_client->post_chunk(chunk);
+      rest_client->post_chunk(jentry,  std::get<0>(chunk), std::get<1>(chunk), fentry.get_nchunks());
       broker->publish(TOPIC::ADD_CHUNK, Message{jentry});
     }
     if (i <= hashes.size() && hashes[i].compare(jentry["chunks"][0]) != 0) {
-      rest_client->put_chunk(chunk);
+      rest_client->put_chunk(jentry, std::get<0>(chunk), std::get<1>(chunk), fentry.get_nchunks());
       broker->publish(TOPIC::UPDATE_CHUNK, Message{jentry});
     }
     fentry.clear_chunks();
@@ -88,11 +91,14 @@ void SyncSubscriber::on_file_modified(const Message &message) {
   }
   for (size_t j = i; j < hashes.size(); j++) {
     json chk_info = {{"id", j}, {"path", content["path"]}};
-    rest_client->delete_chunk(chk_info);
+    rest_client->delete_chunk(chk_info, CHUNK_SIZE); // todo: correggere ultimo chunk
     broker->publish(TOPIC::DELETE_CHUNK, Message{chk_info});
   }
 }
 void SyncSubscriber::on_file_deleted(const Message &message) {
   std::clog << "New file_deleted\n";
-  // todo: invia al server
+  std::string path = message.get_content()["path"];
+  std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
+  rest_client->delete_file(path);
 }
+
