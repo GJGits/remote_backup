@@ -9,8 +9,8 @@
 
 class StructSubscriber {
 private:
-  static inline std::shared_ptr<StructSubscriber> instance{nullptr};
   std::mutex m;
+  static inline std::shared_ptr<StructSubscriber> instance{nullptr};
   StructSubscriber() {}
 
 public:

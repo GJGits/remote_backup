@@ -49,8 +49,11 @@ void SyncStructure::write_structure() {
     for (auto it = entries.begin(); it != entries.end(); it++) {
       (*structure)["entries"].push_back(it->second);
       entries_dump += it->second.dump();
+      std::clog << "entry dump: " << entries_dump << "\n";
     }
-    std::vector<char> data(entries_dump.begin(), entries_dump.end());
+    const char *dump_str = entries_dump.c_str();
+    std::shared_ptr<char[]> data {dump_str};
+    //std::vector<char> data(entries_dump.begin(), entries_dump.end());
     (*structure)["hashed_status"] = (*structure)["entries"].empty()
                                         ? std::string{"empty_hashed_status"}
                                         : Sha256::getSha256(data);
@@ -59,6 +62,7 @@ void SyncStructure::write_structure() {
   o << (*structure) << "\n";
   o.close();
   (*structure).clear();
+  entries.clear();
 }
 
 bool SyncStructure::has_entry(const std::string &path) {
@@ -98,7 +102,6 @@ void SyncStructure::add_chunk(const json &chunk) {
 }
 
 void SyncStructure::replace_chunk(const json &chunk) {
-
   for (size_t i = 0; i < entries[chunk["path"]]["chunks"].size(); i++) {
     if (entries[chunk["path"]]["chunks"][i]["id"] == chunk["id"]) {
       entries[chunk["path"]]["chunks"][i] = chunk;
@@ -107,16 +110,11 @@ void SyncStructure::replace_chunk(const json &chunk) {
 }
 
 void SyncStructure::delete_chunk(const json &chunk) {
-
   size_t n_chunks = entries[chunk["path"]]["chunks"].size();
   for (size_t i = 0; i < n_chunks; i++) {
     size_t chk_id = entries[chunk["path"]]["chunks"][i]["id"];
     if (chk_id == chunk["id"]) {
       entries[chunk["path"]]["chunks"].erase(i);
-    } else {
-      if (chunk["id"] != (n_chunks - 1)) {
-        entries[chunk["path"]]["chunks"][i]["id"] = chk_id - 1;
-      }
     }
   }
 }

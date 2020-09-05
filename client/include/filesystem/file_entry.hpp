@@ -3,9 +3,9 @@
 #include <string>
 #include <filesystem>
 #include <math.h>
+#include <fstream>
 
 #include "../common/json.hpp"
-#include "../filesystem/chunk.hpp"
 
 using json = nlohmann::json;
 
@@ -15,12 +15,14 @@ private:
   std::string path;
   uintmax_t size;
   size_t nchunks;
+  std::ifstream in;
+  size_t read_count;
 
 public:
   FileEntry(const std::string &path);
-  uintmax_t get_size();
+  bool has_chunk();
+  std::shared_ptr<char[]> next_chunk();
   void add_chunk(json &chunk);
-  size_t get_nchunks();
   void clear_chunks();
   json get_json_representation();
 };

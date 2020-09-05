@@ -7,6 +7,7 @@
 #include "../common/json.hpp"
 #include "../filesystem/sync_structure.hpp"
 #include "../filesystem/file_entry.hpp"
+#include "../http/rest_client.hpp"
 #include "broker.hpp"
 
 using json = nlohmann::json;
@@ -23,5 +24,4 @@ public:
   void on_file_renamed(const Message &message);
   void on_file_modified(const Message &message);
   void on_file_deleted(const Message &message);
-  void on_bulk_delete(const Message &message);
 };
