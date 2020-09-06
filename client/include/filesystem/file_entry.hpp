@@ -6,6 +6,7 @@
 #include <fstream>
 #include <tuple>
 
+#include "../common/sha256.hpp"
 #include "../common/json.hpp"
 
 using json = nlohmann::json;

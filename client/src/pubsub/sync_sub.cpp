@@ -27,7 +27,7 @@ void SyncSubscriber::init() {
 }
 
 void SyncSubscriber::on_new_file(const Message &message) {
-  std::clog << "New file\n";
+  DurationLogger logger{"NEW_FILE"};
   json content = message.get_content();
   std::string file_path = content["path"];
   if (std::filesystem::exists(file_path) &&
@@ -39,15 +39,15 @@ void SyncSubscriber::on_new_file(const Message &message) {
     while (fentry.has_chunk()) {
       std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
       json jentry = fentry.get_json_representation();
-      rest_client->post_chunk(jentry, std::get<0>(chunk), std::get<1>(chunk), fentry.get_nchunks());
       broker->publish(TOPIC::ADD_CHUNK, Message{jentry});
+      rest_client->post_chunk(jentry, std::get<0>(chunk), std::get<1>(chunk), fentry.get_nchunks());
       fentry.clear_chunks();
       i++;
     }
   }
 }
 void SyncSubscriber::on_new_folder(const Message &message) {
-  std::clog << "New folder\n";
+  DurationLogger logger{"NEW_FOLDER"};
   json mex;
   std::shared_ptr<Broker> broker = Broker::getInstance();
   json content = message.get_content();
@@ -61,11 +61,11 @@ void SyncSubscriber::on_new_folder(const Message &message) {
   }
 }
 void SyncSubscriber::on_file_renamed(const Message &message) {
-  std::clog << "New file_renamed\n";
   // todo: inviare richiesta al server
+  DurationLogger logger{"FILE_RENAMED"};
 }
 void SyncSubscriber::on_file_modified(const Message &message) {
-  std::clog << "New file_modified\n";
+  DurationLogger logger{"FILE_MODIFIED"};
   std::shared_ptr<SyncStructure> structure = SyncStructure::getInstance();
   std::shared_ptr<Broker> broker = Broker::getInstance();
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
@@ -79,24 +79,24 @@ void SyncSubscriber::on_file_modified(const Message &message) {
     std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
     json jentry = fentry.get_json_representation();
     if (i > hashes.size()) {
-      rest_client->post_chunk(jentry,  std::get<0>(chunk), std::get<1>(chunk), fentry.get_nchunks());
       broker->publish(TOPIC::ADD_CHUNK, Message{jentry});
+      rest_client->post_chunk(jentry,  std::get<0>(chunk), std::get<1>(chunk), fentry.get_nchunks());
     }
     if (i <= hashes.size() && hashes[i].compare(jentry["chunks"][0]) != 0) {
-      rest_client->put_chunk(jentry, std::get<0>(chunk), std::get<1>(chunk), fentry.get_nchunks());
       broker->publish(TOPIC::UPDATE_CHUNK, Message{jentry});
+      rest_client->put_chunk(jentry, std::get<0>(chunk), std::get<1>(chunk), fentry.get_nchunks());
     }
     fentry.clear_chunks();
     i++;
   }
   for (size_t j = i; j < hashes.size(); j++) {
     json chk_info = {{"id", j}, {"path", content["path"]}};
-    rest_client->delete_chunk(chk_info, CHUNK_SIZE); // todo: correggere ultimo chunk
     broker->publish(TOPIC::DELETE_CHUNK, Message{chk_info});
+    rest_client->delete_chunk(chk_info, CHUNK_SIZE); // todo: correggere ultimo chunk
   }
 }
 void SyncSubscriber::on_file_deleted(const Message &message) {
-  std::clog << "New file_deleted\n";
+  DurationLogger logger{"FILE_DELETED"};
   json content = message.get_content();
   std::string path = content["path"];
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();

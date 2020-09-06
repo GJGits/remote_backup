@@ -14,8 +14,9 @@ void SyncStructure::create_structure() {
 }
 
 void SyncStructure::read_structure() {
-
-  if (entries.empty()) {
+  std::unique_lock lk{m};
+  DurationLogger logger{"READ_STRUCTURE"};
+  if (entries.empty() && !dirty) {
     std::ifstream i("./config/client-struct.json");
     std::unique_ptr<json> structure = std::make_unique<json>();
     i >> (*structure);
@@ -39,29 +40,34 @@ std::shared_ptr<SyncStructure> SyncStructure::getInstance() {
 }
 
 void SyncStructure::write_structure() {
-  DurationLogger duration{"WRITE_STRUCTURE"};
-  std::unique_ptr<json> structure = std::make_unique<json>();
-  if (entries.empty()) {
-    (*structure)["hashed_status"] = std::string{"empty_hashed_status"};
-    (*structure)["entries"] = json::array();
-  } else {
-    std::string entries_dump;
-    for (auto it = entries.begin(); it != entries.end(); it++) {
-      (*structure)["entries"].push_back(it->second);
-      entries_dump += it->second.dump();
+  std::unique_lock lk{m};
+  if (dirty) {
+    std::unique_ptr<json> structure = std::make_unique<json>();
+    DurationLogger duration{"WRITE_STRUCTURE"};
+    if (entries.empty()) {
+      (*structure)["hashed_status"] = std::string{"empty_hashed_status"};
+      (*structure)["entries"] = json::array();
+    } else {
+      std::string entries_dump;
+      for (auto it = entries.begin(); it != entries.end(); it++) {
+        (*structure)["entries"].push_back(it->second);
+        entries_dump += it->second.dump();
+      }
+      char *dump_str = new char[entries_dump.size() + 1];
+      strcpy(dump_str, entries_dump.c_str());
+      std::shared_ptr<char[]> data{dump_str};
+      (*structure)["hashed_status"] =
+          (*structure)["entries"].empty()
+              ? std::string{"empty_hashed_status"}
+              : Sha256::getSha256(data, entries_dump.size());
     }
-    char *dump_str = new char[entries_dump.size() + 1];
-    strcpy(dump_str, entries_dump.c_str());
-    std::shared_ptr<char[]> data {dump_str};
-    (*structure)["hashed_status"] = (*structure)["entries"].empty()
-                                        ? std::string{"empty_hashed_status"}
-                                        : Sha256::getSha256(data, entries_dump.size());
+    std::ofstream o("./config/client-struct.json");
+    o << (*structure) << "\n";
+    o.close();
+    (*structure).clear();
+    entries.clear();
+    dirty = false;
   }
-  std::ofstream o("./config/client-struct.json");
-  o << (*structure) << "\n";
-  o.close();
-  (*structure).clear();
-  entries.clear();
 }
 
 bool SyncStructure::has_entry(const std::string &path) {
@@ -92,23 +98,28 @@ SyncStructure::get_entry_hashes(const std::string &path) {
 }
 
 void SyncStructure::add_chunk(const json &chunk) {
+  DurationLogger logger{"ADD_CHUNK"};
   json chk = chunk["chunks"][0];
   if (entries.find(chunk["path"]) == entries.end()) {
     entries[chunk["path"]] = chunk;
   } else {
     entries[chunk["path"]]["chunks"].push_back(chk);
   }
+  dirty = true;
 }
 
 void SyncStructure::replace_chunk(const json &chunk) {
+  DurationLogger logger{"REPLACE_CHUNK"};
   for (size_t i = 0; i < entries[chunk["path"]]["chunks"].size(); i++) {
     if (entries[chunk["path"]]["chunks"][i]["id"] == chunk["id"]) {
       entries[chunk["path"]]["chunks"][i] = chunk;
     }
   }
+  dirty = true;
 }
 
 void SyncStructure::delete_chunk(const json &chunk) {
+  DurationLogger logger{"DELETE_CHUNK"};
   size_t n_chunks = entries[chunk["path"]]["chunks"].size();
   for (size_t i = 0; i < n_chunks; i++) {
     size_t chk_id = entries[chunk["path"]]["chunks"][i]["id"];
@@ -116,14 +127,18 @@ void SyncStructure::delete_chunk(const json &chunk) {
       entries[chunk["path"]]["chunks"].erase(i);
     }
   }
+  dirty = true;
 }
 
 void SyncStructure::delete_entry(const json &entry) {
+  DurationLogger logger{"DELETE_ENTRY"};
   std::string path = entry["path"];
   entries.erase(path);
+  dirty = true;
 }
 
 void SyncStructure::rename_entry(const json &entry) {
+  DurationLogger logger{"RENAME_ENTRY"};
   json ent = entry;
   std::string old_path = entry["old_path"];
   std::string new_path = entry["path"];
@@ -131,4 +146,5 @@ void SyncStructure::rename_entry(const json &entry) {
     ent["path"] = new_path;
     entries.erase(old_path);
   }
+  dirty = true;
 }

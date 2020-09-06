@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <vector>
 #include <string.h>
+#include <mutex>
 
 #include "../common/sha256.hpp"
 #include "../common/duration.hpp"
@@ -21,7 +22,9 @@ class SyncStructure {
 private:
   std::unordered_map<std::string, json> entries;
   inline static std::shared_ptr<SyncStructure> instance{nullptr};
-  
+  std::mutex m;
+  bool dirty;
+
   void create_structure();
   void read_structure();
 

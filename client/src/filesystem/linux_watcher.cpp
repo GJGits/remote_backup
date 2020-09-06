@@ -178,7 +178,6 @@ void LinuxWatcher::handle_events() {
       }
     }
     if (poll_num == 0) {
-      std::clog << "timeout\n";
       cookie_map.clear();
       timer = WAIT;
       // check di move verso l'esterno
@@ -187,7 +186,6 @@ void LinuxWatcher::handle_events() {
       json mex;
       for (std::string &path : sync->get_paths()) {
         if (!std::filesystem::exists(path)) {
-          std::clog << "path: " << path << "\n";
           mex["path"] = path;
           broker->publish(TOPIC::FILE_DELETED, Message{mex});
         }

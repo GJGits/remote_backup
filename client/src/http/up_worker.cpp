@@ -23,11 +23,9 @@ void UpWorker::run() {
         {
           std::unique_lock lk{m};
           if (!requests.empty()) {
-            std::clog << "pop\n";
             req = std::move(requests.front());
             requests.pop();
           } else {
-            std::clog << "empty\n";
             broker->publish(TOPIC::UP_EMPTY, Message{});
             cv.wait(lk, [&]() { return !requests.empty() || !is_running; });
             continue;
@@ -46,7 +44,6 @@ void UpWorker::push_request(
   std::unique_lock lk{m};
   requests.push(request);
   cv.notify_one();
-  std::clog << "e2\n";
 }
 
 UpWorker::~UpWorker() {
