@@ -10,6 +10,7 @@
 #include "../filesystem/client_struct.hpp"
 #include "../repositories/user-repository.hpp"
 #include "../repositories/chunk-repository.hpp"
+#include "../repositories/file-repository.hpp"
 #include "../entities/chunk-entity.hpp"
 #include <filesystem>
 #include <cstdlib>

@@ -199,13 +199,13 @@ std::string UserService::file_chunk_get(const GetChunkDTO &get_file) {
 
 std::string UserService::delete_file_service(const DeleteFileDTO &del_file) {
 
-    ClientStruct clientstr(del_file.getusername());
-    if(clientstr.delete_file(del_file.getfile_path(), del_file.getusername()) == false){
-        return "File not eliminated\n";
-    }
-    clientstr.update_total_file_status();
-    clientstr.write_structure();
-    return "200_OK";
+    FileEntity file_ent{del_file.getusername(),del_file.getfile_path()};
+    FileRepository file_rep;
+    if(file_rep.deleteFile(file_ent))
+        return "200_OK";
+
+
+    return "File_not_eliminated";
 }
 
 
