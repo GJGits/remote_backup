@@ -127,3 +127,64 @@ int ChunkRepository::getFileSize(const ChunkEntity &chunk){
 
     throw UknownError();
 }
+
+bool ChunkRepository::updateFileInfofull(const ChunkEntity &chunk){
+    std::unique_ptr<sql::PreparedStatement> stmt;
+    std::unique_ptr<sql::ResultSet> res;
+
+    try {
+
+        std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
+
+        stmt = std::unique_ptr<
+               sql::PreparedStatement>{std::move(con->prepareStatement(
+                "UPDATE fileinfo SET size = ? , lastmod = ? WHERE path = ? AND username = ?;"))};
+
+        stmt->setInt(1, chunk.getSizeFile());
+        stmt->setString(2, sql::SQLString{chunk.getLastMod().c_str()});
+        stmt->setString(3, sql::SQLString{chunk.getPathFile().c_str()});
+        stmt->setString(4, sql::SQLString{chunk.getUsername().c_str()});
+
+
+        return stmt->executeUpdate() == 1 ? true : false;
+
+    } catch (sql::SQLException &e) {
+        //std::clog << "insert mysql error\n";
+        Logger::log(std::string{"insert mysql error("} +
+                    std::to_string(e.getErrorCode()) + std::string{")"});
+        // ce la caviamo con una generica not
+        return false;
+    }
+
+    return false;
+}
+
+bool ChunkRepository::updateFileInfopartial(const ChunkEntity &chunk){
+    std::unique_ptr<sql::PreparedStatement> stmt;
+    std::unique_ptr<sql::ResultSet> res;
+
+    try {
+
+        std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
+
+        stmt = std::unique_ptr<
+               sql::PreparedStatement>{std::move(con->prepareStatement(
+                "UPDATE fileinfo SET lastmod = ? WHERE path = ? AND username = ?;"))};
+
+        stmt->setString(1, sql::SQLString{chunk.getLastMod().c_str()});
+        stmt->setString(2, sql::SQLString{chunk.getPathFile().c_str()});
+        stmt->setString(3, sql::SQLString{chunk.getUsername().c_str()});
+
+
+        return stmt->executeUpdate() == 1 ? true : false;
+
+    } catch (sql::SQLException &e) {
+        //std::clog << "insert mysql error\n";
+        Logger::log(std::string{"insert mysql error("} +
+                    std::to_string(e.getErrorCode()) + std::string{")"});
+        // ce la caviamo con una generica not
+        return false;
+    }
+
+    return false;
+}

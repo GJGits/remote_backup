@@ -80,8 +80,7 @@ std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
     int full_chunk_size = 10;
 
     if(Sha256::getSha256(post_file.getchunk_body()).compare(post_file.getchunk_hash()) == 0){
-        int filesize = stoi(post_file.getnumber_of_chunks()) - full_chunk_size + std::stoi(post_file.getchunk_size());
-        ChunkEntity chunk_ent{post_file.getusername(), std::stoi(post_file.getchunk_id()), post_file.getchunk_hash(), post_file.getfile_path(), std::stoi(post_file.getchunk_size()), post_file.gettimestamp_locale(), filesize};
+        ChunkEntity chunk_ent{post_file.getusername(), std::stoi(post_file.getchunk_id()), post_file.getchunk_hash(), post_file.getfile_path(), std::stoi(post_file.getchunk_size()), post_file.gettimestamp_locale()};
         ChunkRepository chunk_rep;
 
         std::ofstream outfile;
@@ -90,7 +89,8 @@ std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
         std::string padding(full_chunk_size, '0');
         int i=0;
         if(chunk_rep.getFilePath(chunk_ent)==false) {
-
+            int filesize = (std::stoi(post_file.getchunk_id())-1)*full_chunk_size + std::stoi(post_file.getchunk_size());
+            chunk_ent.setSizeFile(filesize);
             outfile.open("../../filesystem/"+post_file.getusername()+"/"+post_file.getfile_path());
             std::clog << "Non Trovato\n";
             for(i = 0 ; i < std::stoi(post_file.getchunk_id()) ; i++){
@@ -101,26 +101,43 @@ std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
             }
 
             chunk_rep.addFileInfo(chunk_ent);
+            outfile.seekp(i*full_chunk_size, std::ios_base::beg);
+            std::string strvec{chunk_body.begin(),chunk_body.end()};
+            outfile << strvec;
+            outfile.close();
         }
         else {
             outfile.open("../../filesystem/"+post_file.getusername()+"/"+post_file.getfile_path() , std::ios_base::in | std::ios_base::out | std::ios_base::ate);
 
             //Inserire la size, calcolarla e metterla nella chunk_ent
             int max_id = div_ceil(chunk_rep.getFileSize(chunk_ent),full_chunk_size);
-            for(i = max_id ; i < std::stoi(post_file.getchunk_id()); i++){
-                    outfile.seekp(i*full_chunk_size);
-                    outfile.write(padding.c_str(),padding.size());
-            }
-            std::clog << "Trovato\n";
-           // chunk_rep.updateFileInfo(chunk_ent); //todo: DA FARE
+            std::clog << "max_id: " << max_id << "\n";
+            if(std::stoi(post_file.getchunk_id()) >= max_id){
+                for(i = max_id ; i < std::stoi(post_file.getchunk_id()); i++){
+                        outfile.seekp(i*full_chunk_size);
+                        outfile.write(padding.c_str(),padding.size());
+                }
 
+                    int filesize = (std::stoi(post_file.getchunk_id())-1)*full_chunk_size + std::stoi(post_file.getchunk_size());
+                    chunk_ent.setSizeFile(filesize);
+                    chunk_rep.updateFileInfofull(chunk_ent);
+
+            }
+            else {
+                chunk_rep.updateFileInfopartial(chunk_ent);
+                i = std::stoi(post_file.getchunk_id());
+            }
+
+            std::clog << "Trovato\n";
+
+            outfile.seekp(i*full_chunk_size, std::ios_base::beg);
+            std::string strvec{chunk_body.begin(),chunk_body.end()};
+            outfile.write(strvec.c_str(),strvec.size());
+            outfile.close();
         }
 
-        outfile.seekp(i*full_chunk_size, std::ios_base::beg);
-        std::string strvec{chunk_body.begin(),chunk_body.end()};
-        outfile << strvec;
-        outfile.close();
-        // Devo riaggiornare le info del file ogni volta
+
+
         chunk_rep.addChunk(chunk_ent);
 
         return "200_OK";

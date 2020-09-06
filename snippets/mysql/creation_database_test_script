@@ -21,5 +21,9 @@ create table chunks(username varchar(100) NOT NULL, id integer NOT NULL, hash va
 
 CREAZIONE Tabella fileinfo
 
-create table fileinfo(username varchar(100), path varchar(100), size integer NOT NULL, lastmod varchar(100) NOT NULL, primary key (username, path));
+create table fileinfo(username varchar(100), path varchar(100), size integer NOT NULL, lastmod varchar(100) NOT NULL,  primary key (username, path));
 
+
+UPDATE fileinfo
+SET size = ? , lastmod = ?
+WHERE path = ? AND username = ?;
