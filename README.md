@@ -214,7 +214,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 
 <br />
 <details>
-  <summary>PUT /chunk/{username}/{chunk_id}/{chunksize}/{chunk_hash}/{number_of_chunks}/{file_pathBASE64}</summary>  
+  <summary>PUT /chunk/{username}/{chunk_id}/{chunksize}/{chunk_hash}/{number_of_chunks}/{file_pathBASE64}/{timestamp_locale}</summary>  
 
   * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di aggiornare, se l'utente è autenticato, il contenuto di un file.*
 
