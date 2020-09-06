@@ -185,12 +185,15 @@ std::string UserService::file_chunk_update(const PutChunkDTO &put_file) {
 }
 
 std::string UserService::file_chunk_get(const GetChunkDTO &get_file) {
-
-    ClientStruct clientstr(get_file.getusername());
-    clientstr.research_file(get_file.getfile_path());
-
-    return clientstr.get_chunk(get_file.getchunk_id(),get_file.getfile_path(),get_file.getchunk_size(),get_file.getusername());
-
+    int full_chunk_size = 10;
+    std::fstream file(("../../filesystem/"+get_file.getusername()+"/"+get_file.getfile_path()), std::ios::in );
+    char F[get_file.getchunk_size()+1];
+    file.seekg(get_file.getchunk_id()*full_chunk_size, std::ios::beg);
+    file.read(F, get_file.getchunk_size());
+    F[get_file.getchunk_size()] = 0;
+    std::string s(F);
+    file.close();
+    return s;
 }
 
 
