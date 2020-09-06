@@ -32,7 +32,6 @@ bool LinuxWatcher::add_watch(const std::string &path) {
   if (wd == -1) {
     return false;
   }
-
   path_wd_map[path] = wd;
   wd_path_map[wd] = path;
   for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
@@ -60,15 +59,17 @@ void LinuxWatcher::check_news() {
   for (auto &p : std::filesystem::recursive_directory_iterator(root_to_watch)) {
     std::string sub_path = p.path().string();
     if (std::filesystem::is_regular_file(sub_path)) {
-      size_t last_mod =
-          std::filesystem::last_write_time(sub_path).time_since_epoch().count() / 1000000000;
+      size_t last_mod = std::filesystem::last_write_time(sub_path)
+                            .time_since_epoch()
+                            .count() /
+                        1000000000;
       message["path"] = sub_path;
       // 1. file non presente in struttura -> aggiunto off-line
       if (!sync_structure->has_entry(sub_path)) {
         broker->publish(TOPIC::NEW_FILE, Message{message});
       }
       // 2. last_mod non coincide -> modificato off-line
-      else if (sync_structure->get_last_mod(sub_path) != last_mod) {
+      else if (sync_structure->get_last_mod(sub_path) < last_mod) {
         broker->publish(TOPIC::FILE_MODIFIED, Message{message});
       }
     }
@@ -116,17 +117,19 @@ void LinuxWatcher::handle_events() {
         event = (const struct inotify_event *)ptr;
 
         json message;
-        message["path"] =
+        std::string path =
             wd_path_map[event->wd] + "/" + std::string{event->name};
+        message["path"] = path;
 
         try {
           timer = TIMER;
-          std::clog << "MASK: " << event->mask << "\n";
+          std::clog << "MASK: " << event->mask << "NAME" << event->name << "\n";
 
           //
           //  TABELLA RIASSUNTIVA CODICI EVENTI:
 
           //    8          -> EVENTO IN_CLOSE_WRITE
+          //    256        -> FILE WAS CREATED
           //    1073741952 -> CTRL+Z CARTELLA ?
           //    1073742080 -> EVENT HANDLE_EXPAND
           //    1073741888 -> MOVED_FROM FOLDER
@@ -135,10 +138,15 @@ void LinuxWatcher::handle_events() {
           //    512        -> IN_DELETE
 
           switch (event->mask) {
-          case 2:
-            broker->publish(TOPIC::FILE_MODIFIED, Message{message});
-            break;
+          case 2: {
+            // Un file relativamente grande genera in seguito ad una NEW_FILE
+            // una serie di FILE_MODIFIED. In questo modo lascio fare tutto
+            // alla NEW_FILE
+            if (new_files.find(path) == new_files.end())
+              broker->publish(TOPIC::FILE_MODIFIED, Message{message});
+          } break;
           case 256:
+            new_files.insert(path);
             broker->publish(TOPIC::NEW_FILE, Message{message});
             break;
           case 1073742080:
@@ -155,12 +163,14 @@ void LinuxWatcher::handle_events() {
             break;
           case 64:
             cookie_map[event->cookie] = message["path"];
-            broker->publish(TOPIC::CONTENT_MOVED, Message{});
+            //broker->publish(TOPIC::CONTENT_MOVED, Message{});
             break;
           case 128: {
-            message["old_path"] = cookie_map[event->cookie];
-            broker->publish(TOPIC::FILE_RENAMED, Message{message});
-            cookie_map.erase(event->cookie);
+            if (cookie_map.find(event->cookie) != cookie_map.end()) {
+              message["old_path"] = cookie_map[event->cookie];
+              broker->publish(TOPIC::FILE_RENAMED, Message{message});
+              cookie_map.erase(event->cookie);
+            }
           } break;
           case 512:
             broker->publish(TOPIC::FILE_DELETED, Message{message});
@@ -178,6 +188,7 @@ void LinuxWatcher::handle_events() {
       }
     }
     if (poll_num == 0) {
+      new_files.clear();
       cookie_map.clear();
       timer = WAIT;
       // check di move verso l'esterno

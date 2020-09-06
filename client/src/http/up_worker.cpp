@@ -19,6 +19,7 @@ void UpWorker::run() {
     workers.emplace_back([&]() {
       std::shared_ptr<Broker> broker = Broker::getInstance();
       while (is_running) {
+        DurationLogger{"UP_JOB"};
         http::request<http::vector_body<char>> req;
         {
           std::unique_lock lk{m};
@@ -31,6 +32,8 @@ void UpWorker::run() {
             continue;
           }
         }
+        // fake upload time for a request plus response todo: delete
+        sleep(2);
         // stream.connect(results);
         // req.set(http::field::host, host);
         // http::write(stream, req);

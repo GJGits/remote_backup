@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../common/duration.hpp"
 #include "../pubsub/broker.hpp"
 #include "../common/base64.hpp"
 #include "../common/json.hpp"

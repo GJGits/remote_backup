@@ -13,6 +13,7 @@
 #include <sys/inotify.h>
 #include <unistd.h>
 #include <unordered_map>
+#include <set>
 
 #include "sync_structure.hpp"
 #include "../pubsub/message.hpp"
@@ -31,6 +32,7 @@ private:
   int inotify_descriptor;
   std::string root_to_watch;
   uint32_t watcher_mask;
+  std::set<std::string> new_files;
   std::unordered_map<std::string, int> path_wd_map;
   std::unordered_map<int, std::string> wd_path_map;
   std::unordered_map<int, std::string> cookie_map;

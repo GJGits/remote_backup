@@ -40,7 +40,6 @@ std::shared_ptr<SyncStructure> SyncStructure::getInstance() {
 }
 
 void SyncStructure::write_structure() {
-  std::unique_lock lk{m};
   if (dirty) {
     std::unique_ptr<json> structure = std::make_unique<json>();
     DurationLogger duration{"WRITE_STRUCTURE"};
