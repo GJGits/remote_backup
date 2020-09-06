@@ -12,6 +12,7 @@ public:
     bool addChunk(const ChunkEntity &chunk);
     bool addFileInfo(const ChunkEntity &chunk);
     int getFileSize(const ChunkEntity &chunk);
-    bool updateFileInfofull(const ChunkEntity &chunk);
-    bool updateFileInfopartial(const ChunkEntity &chunk);
+    bool updateFileInfo(const ChunkEntity &chunk);
+    bool updateChunk(const ChunkEntity &chunk);
+
 };

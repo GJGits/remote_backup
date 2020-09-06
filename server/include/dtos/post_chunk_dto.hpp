@@ -7,8 +7,8 @@
 class PostChunkDTO{
 private:
     std::string username;
-    std::string chunk_id;
-    std::string chunk_size;
+    int chunk_id;
+    int chunk_size;
     std::string file_path;
     std::string chunk_hash;
     std::string timestamp_locale;
@@ -18,8 +18,8 @@ private:
 public:
     PostChunkDTO(){};
     std::string getusername() const;
-    std::string getchunk_id() const;
-    std::string getchunk_size() const;
+    int getchunk_id() const;
+    int getchunk_size() const;
     std::string getchunk_hash() const;
     std::string getfile_path() const;
     std::string gettimestamp_locale() const;
@@ -34,10 +34,10 @@ public:
                     username = uri_elements[i];
                     break;
                 case 3 :
-                    chunk_id = uri_elements[i];
+                    chunk_id = std::stoi(uri_elements[i]);
                     break;
                 case 4 :
-                    chunk_size = uri_elements[i];
+                    chunk_size = std::stoi(uri_elements[i]);
                     break;
                 case 5 :
                     chunk_hash = uri_elements[i];

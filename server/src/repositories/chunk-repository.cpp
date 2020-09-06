@@ -128,7 +128,7 @@ int ChunkRepository::getFileSize(const ChunkEntity &chunk){
     throw UknownError();
 }
 
-bool ChunkRepository::updateFileInfofull(const ChunkEntity &chunk){
+bool ChunkRepository::updateFileInfo(const ChunkEntity &chunk){
     std::unique_ptr<sql::PreparedStatement> stmt;
     std::unique_ptr<sql::ResultSet> res;
 
@@ -159,7 +159,8 @@ bool ChunkRepository::updateFileInfofull(const ChunkEntity &chunk){
     return false;
 }
 
-bool ChunkRepository::updateFileInfopartial(const ChunkEntity &chunk){
+
+bool ChunkRepository::updateChunk(const ChunkEntity &chunk){
     std::unique_ptr<sql::PreparedStatement> stmt;
     std::unique_ptr<sql::ResultSet> res;
 
@@ -169,11 +170,13 @@ bool ChunkRepository::updateFileInfopartial(const ChunkEntity &chunk){
 
         stmt = std::unique_ptr<
                sql::PreparedStatement>{std::move(con->prepareStatement(
-                "UPDATE fileinfo SET lastmod = ? WHERE path = ? AND username = ?;"))};
+                "UPDATE chunks SET hash = ? , size = ? WHERE path = ? AND username = ? AND id = ?;"))};
 
-        stmt->setString(1, sql::SQLString{chunk.getLastMod().c_str()});
-        stmt->setString(2, sql::SQLString{chunk.getPathFile().c_str()});
-        stmt->setString(3, sql::SQLString{chunk.getUsername().c_str()});
+        stmt->setString(1, sql::SQLString{chunk.getHashChunk().c_str()});
+        stmt->setInt(2, chunk.getSizeChunk());
+        stmt->setString(3, sql::SQLString{chunk.getPathFile().c_str()});
+        stmt->setString(4, sql::SQLString{chunk.getUsername().c_str()});
+        stmt->setInt(5, chunk.getIdChunk());
 
 
         return stmt->executeUpdate() == 1 ? true : false;
