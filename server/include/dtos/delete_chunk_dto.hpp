@@ -7,16 +7,18 @@
 class DeleteChunkDTO{
 private:
     std::string username;
-    std::string chunk_id;
-    std::string chunk_size;
+    int chunk_id;
+    int chunk_size;
     std::string file_path;
+    std::string timestamp_locale;
 
 public:
     DeleteChunkDTO(){};
     std::string getusername() const;
-    std::string getchunk_id() const;
-    std::string getchunk_size() const;
+    int getchunk_id() const;
+    int getchunk_size() const;
     std::string getfile_path() const;
+    std::string gettimestamp_locale() const;
 
     const void fill( std::string requri) {
         std::vector<std::string> uri_elements = Utility::split(requri, '/');
@@ -26,14 +28,16 @@ public:
                     username = uri_elements[i];
                     break;
                 case 3 :
-                    chunk_id = uri_elements[i];
+                    chunk_id = std::stoi(uri_elements[i]);
                     break;
                 case 4 :
-                    chunk_size = uri_elements[i];
+                    chunk_size = std::stoi(uri_elements[i]);
                     break;
                 case 5 :
                     file_path = macaron::Base64::Decode(uri_elements[i]);
                     break;
+                case 6 :
+                    timestamp_locale = uri_elements[i];
 
                 default :
                     break;

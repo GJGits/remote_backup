@@ -201,8 +201,10 @@ std::string UserService::delete_file_service(const DeleteFileDTO &del_file) {
 
     FileEntity file_ent{del_file.getusername(),del_file.getfile_path()};
     FileRepository file_rep;
-    if(file_rep.deleteFile(file_ent))
+    if(file_rep.deleteFile(file_ent)){
+        remove(("../../filesystem/" + del_file.getusername() + "/" + del_file.getfile_path()).c_str());
         return "200_OK";
+    }
 
 
     return "File_not_eliminated";
@@ -211,12 +213,15 @@ std::string UserService::delete_file_service(const DeleteFileDTO &del_file) {
 
 std::string UserService::file_chunk_delete_service(const DeleteChunkDTO &del_chunk){
 
-    ClientStruct clientstr(del_chunk.getusername());
+    ChunkEntity chunk_ent{del_chunk.getusername(), del_chunk.getchunk_id(), del_chunk.getfile_path(), del_chunk.getchunk_size(),del_chunk.gettimestamp_locale()};
+    ChunkRepository chunk_rep;
 
-    if(clientstr.delete_chunk(del_chunk.getfile_path(), del_chunk.getusername(), del_chunk.getchunk_id()) == false){
-        return "File not eliminated\n";
-    }
-
+    chunk_rep.delete_chunks(chunk_ent);
+    int full_chunk_size = 10;
+    int filesize = (del_chunk.getchunk_id()-1) * full_chunk_size;
+    chunk_ent.setSizeFile(filesize);
+    chunk_rep.updateFileInfo(chunk_ent);
+    std::filesystem::resize_file("../../filesystem/"+del_chunk.getusername()+"/"+del_chunk.getfile_path(), filesize);
     return "200_OK";
 }
 

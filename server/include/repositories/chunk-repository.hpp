@@ -14,5 +14,5 @@ public:
     int getFileSize(const ChunkEntity &chunk);
     bool updateFileInfo(const ChunkEntity &chunk);
     bool updateChunk(const ChunkEntity &chunk);
-
+    bool delete_chunks(const ChunkEntity &chunk);
 };
