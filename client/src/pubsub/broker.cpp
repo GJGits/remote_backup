@@ -16,7 +16,8 @@ void Broker::subscribe(const TOPIC &topic,
   }
 }
 
-void Broker::publish(const TOPIC &topic, const Message &message) {
+void Broker::publish(const Message &message) {
+  TOPIC topic = message.get_topic();
   if (subs.find(topic) != subs.end()) {
     for (auto const &call : subs[topic]) {
       std::async(std::launch::async, call, message);

@@ -26,5 +26,5 @@ public:
   ~Broker() {}
   static std::shared_ptr<Broker> getInstance();
   void subscribe(const TOPIC &topic, const std::function<void(const Message &)> &callback);
-  void publish(const TOPIC &topic, const Message &message);
+  void publish(const Message &message);
 };

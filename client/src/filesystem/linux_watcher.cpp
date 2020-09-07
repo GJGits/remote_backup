@@ -66,11 +66,11 @@ void LinuxWatcher::check_news() {
       message["path"] = sub_path;
       // 1. file non presente in struttura -> aggiunto off-line
       if (!sync_structure->has_entry(sub_path)) {
-        broker->publish(TOPIC::NEW_FILE, Message{message});
+        broker->publish(Message{TOPIC::NEW_FILE,  message});
       }
       // 2. last_mod non coincide -> modificato off-line
       else if (sync_structure->get_last_mod(sub_path) < last_mod) {
-        broker->publish(TOPIC::FILE_MODIFIED, Message{message});
+        broker->publish(Message{TOPIC::FILE_MODIFIED, message});
       }
     }
   }
@@ -143,37 +143,37 @@ void LinuxWatcher::handle_events() {
             // una serie di FILE_MODIFIED. In questo modo lascio fare tutto
             // alla NEW_FILE
             if (new_files.find(path) == new_files.end())
-              broker->publish(TOPIC::FILE_MODIFIED, Message{message});
+              broker->publish(Message{TOPIC::FILE_MODIFIED, message});
           } break;
           case 256:
             new_files.insert(path);
-            broker->publish(TOPIC::NEW_FILE, Message{message});
+            broker->publish(Message{TOPIC::NEW_FILE, message});
             break;
           case 1073742080:
             add_watch(message["path"]);
-            broker->publish(TOPIC::NEW_FOLDER, Message{message});
+            broker->publish(Message{TOPIC::NEW_FOLDER, message});
             break;
           case 1073741952:
             add_watch(message["path"]);
-            broker->publish(TOPIC::NEW_FOLDER, Message{message});
+            broker->publish(Message{TOPIC::NEW_FOLDER, message});
             break;
           case 1073741888:
             remove_watch(message["path"]);
-            broker->publish(TOPIC::CONTENT_MOVED, Message{});
+            //broker->publish(TOPIC::CONTENT_MOVED, Message{});
             break;
           case 64:
             cookie_map[event->cookie] = message["path"];
-            //broker->publish(TOPIC::CONTENT_MOVED, Message{});
+            // broker->publish(TOPIC::CONTENT_MOVED, Message{});
             break;
           case 128: {
             if (cookie_map.find(event->cookie) != cookie_map.end()) {
               message["old_path"] = cookie_map[event->cookie];
-              broker->publish(TOPIC::FILE_RENAMED, Message{message});
+              broker->publish(Message{TOPIC::FILE_RENAMED, message});
               cookie_map.erase(event->cookie);
             }
           } break;
           case 512:
-            broker->publish(TOPIC::FILE_DELETED, Message{message});
+            broker->publish(Message{TOPIC::FILE_DELETED, message});
             break;
           default:
             break;
@@ -198,7 +198,7 @@ void LinuxWatcher::handle_events() {
       for (std::string &path : sync->get_paths()) {
         if (!std::filesystem::exists(path)) {
           mex["path"] = path;
-          broker->publish(TOPIC::FILE_DELETED, Message{mex});
+          broker->publish(Message{TOPIC::FILE_DELETED, mex});
         }
       }
     }

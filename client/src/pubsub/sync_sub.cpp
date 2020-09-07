@@ -37,10 +37,7 @@ void SyncSubscriber::on_new_file(const Message &message) {
     FileEntry fentry{file_path};
     size_t i = 0;
     while (fentry.has_chunk()) {
-      std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
-      json jentry = fentry.get_json_representation();
-      broker->publish(TOPIC::ADD_CHUNK, Message{jentry});
-      rest_client->post_chunk(jentry, std::get<0>(chunk), std::get<1>(chunk), fentry.get_nchunks());
+      rest_client->post_chunk(fentry);
       fentry.clear_chunks();
       i++;
     }
@@ -56,7 +53,7 @@ void SyncSubscriber::on_new_folder(const Message &message) {
     std::string new_path = p.path().string();
     if (std::filesystem::is_regular_file(new_path)) {
       mex["path"] = new_path;
-      on_new_file(mex);
+      on_new_file(Message{TOPIC::NEW_FILE, mex});
     }
   }
 }
@@ -79,19 +76,17 @@ void SyncSubscriber::on_file_modified(const Message &message) {
     std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
     json jentry = fentry.get_json_representation();
     if (i > hashes.size()) {
-      broker->publish(TOPIC::ADD_CHUNK, Message{jentry});
-      rest_client->post_chunk(jentry,  std::get<0>(chunk), std::get<1>(chunk), fentry.get_nchunks());
+      rest_client->post_chunk(fentry);
     }
     if (i <= hashes.size() && hashes[i].compare(jentry["chunks"][0]) != 0) {
-      broker->publish(TOPIC::UPDATE_CHUNK, Message{jentry});
-      rest_client->put_chunk(jentry, std::get<0>(chunk), std::get<1>(chunk), fentry.get_nchunks());
+      rest_client->put_chunk(fentry);
     }
     fentry.clear_chunks();
     i++;
   }
   for (size_t j = i; j < hashes.size(); j++) {
     json chk_info = {{"id", j}, {"path", content["path"]}};
-    broker->publish(TOPIC::DELETE_CHUNK, Message{chk_info});
+    broker->publish(Message{TOPIC::DELETE_CHUNK, chk_info});
     rest_client->delete_chunk(chk_info, CHUNK_SIZE); // todo: correggere ultimo chunk
   }
 }

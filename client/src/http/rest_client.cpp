@@ -13,58 +13,67 @@ void RestClient::read_info() {
   i >> config;
 }
 
-void RestClient::post_chunk(json &chk_info, std::shared_ptr<char[]> &chunk,
-                            size_t size, size_t nchunks) {
+void RestClient::post_chunk(FileEntry &fentry) {
   std::shared_ptr<UpWorker> up_worker = UpWorker::getIstance();
-  std::string user = config["username"];
-  std::string token = config["token"];
-  std::string path = chk_info["path"];
-  std::string hash = chk_info["chunks"][0]["hash"];
-  size_t chk_id = chk_info["chunks"][0]["id"];
-  size_t timestamp = chk_info["last_mod"];
+  std::shared_ptr<Broker> broker = Broker::getInstance();
+  std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
+  json jentry = fentry.get_json_representation();
+  broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
+  size_t nchunks = fentry.get_nchunks();
+  std::shared_ptr<char[]> buffer = std::get<0>(chunk);
+  size_t size = std::get<1>(chunk);
   http::request<http::vector_body<char>> req{
       http::verb::post,
-      "/chunk/" + user + "/" + std::to_string(chk_id) + "/" +
-          std::to_string(size) + "/" + hash + "/" + std::to_string(nchunks) +
-          "/" + macaron::Base64::Encode(path) + std::to_string(timestamp),
+      "/chunk/" + std::string{config["username"]} + "/" +
+          std::to_string(jentry["chunks"][0]["id"].get<int>()) + "/" + std::to_string(size) +
+          "/" + std::string{jentry["chunks"][0]["hash"]} + "/" +
+          std::to_string(nchunks) + "/" +
+          macaron::Base64::Encode(std::string{jentry["path"]}) +
+          std::to_string(jentry["last_mod"].get<int>()),
       10};
+  req.set(http::field::authorization, "Barear " + std::string{config["token"]});
   req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+  std::move(buffer.get(), buffer.get() + size, std::back_inserter(req.body()));
   up_worker->push_request(req);
 }
 
-void RestClient::put_chunk(json &chk_info, std::shared_ptr<char[]> &chunk,
-                           size_t size, size_t nchunks) {
+void RestClient::put_chunk(FileEntry &fentry) {
   std::shared_ptr<UpWorker> up_worker = UpWorker::getIstance();
-  std::string user = config["username"];
-  std::string token = config["token"];
-  std::string path = chk_info["path"];
-  std::string hash = chk_info["chunks"][0]["hash"];
-  size_t chk_id = chk_info["chunks"][0]["id"];
-  size_t timestamp = chk_info["last_mod"];
+  std::shared_ptr<Broker> broker = Broker::getInstance();
+  std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
+  json jentry = fentry.get_json_representation();
+  broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
+  size_t nchunks = fentry.get_nchunks();
+  std::shared_ptr<char[]> buffer = std::get<0>(chunk);
+  size_t size = std::get<1>(chunk);
   http::request<http::vector_body<char>> req{
       http::verb::put,
-      "/chunk/" + user + "/" + std::to_string(chk_id) + "/" +
-          std::to_string(size) + "/" + hash + "/" + std::to_string(nchunks) +
-          "/" + macaron::Base64::Encode(path) + "/" + std::to_string(timestamp),
+      "/chunk/" + std::string{config["username"]} + "/" +
+          std::to_string(jentry["chunks"][0]["id"].get<int>()) + "/" + std::to_string(size) +
+          "/" + std::string{jentry["chunks"][0]["hash"]} + "/" +
+          std::to_string(nchunks) + "/" +
+          macaron::Base64::Encode(std::string{jentry["path"]}) +
+          std::to_string(jentry["last_mod"].get<int>()),
       10};
+  req.set(http::field::authorization, "Barear " + std::string{config["token"]});
   req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-  req.set(http::field::authorization, "Barear " + token);
+  std::move(buffer.get(), buffer.get() + size, std::back_inserter(req.body()));
   up_worker->push_request(req);
 }
 
 void RestClient::delete_chunk(json &chk_info, size_t size) {
   std::shared_ptr<UpWorker> up_worker = UpWorker::getIstance();
-  std::string user = config["username"];
-  std::string token = config["token"];
-  std::string path = chk_info["path"];
-  size_t chk_id = chk_info["chunks"][0]["id"];
+  std::shared_ptr<Broker> broker = Broker::getInstance();
+  broker->publish(Message{TOPIC::DELETE_CHUNK, chk_info});
   http::request<http::vector_body<char>> req{
       http::verb::delete_,
-      "/chunk/" + user + "/" + std::to_string(chk_id) + "/" +
-          std::to_string(size) + "/" + macaron::Base64::Encode(path),
+      "/chunk/" + std::string{config["username"]} + "/" +
+          std::to_string(chk_info["chunks"][0]["id"].get<int>()) + "/" +
+          std::to_string(size) + "/" +
+          macaron::Base64::Encode(std::string{chk_info["path"]}),
       10};
   req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-  req.set(http::field::authorization, "Barear " + token);
+  req.set(http::field::authorization, "Barear " + std::string{config["token"]});
   up_worker->push_request(req);
 }
 
@@ -72,13 +81,17 @@ void RestClient::get_chunk() {}
 
 void RestClient::delete_file(std::string &path) {
   std::shared_ptr<UpWorker> up_worker = UpWorker::getIstance();
-  std::string user = config["username"];
-  std::string token = config["token"];
+  std::shared_ptr<Broker> broker = Broker::getInstance();
+  json jentry;
+  jentry["path"] = path;
+  broker->publish(Message{TOPIC::REMOVE_ENTRY, jentry});
   http::request<http::vector_body<char>> req{
       http::verb::delete_,
-      "/file/" + user + "/" + macaron::Base64::Encode(path), 10};
+      "/file/" + std::string{config["username"]} + "/" +
+          macaron::Base64::Encode(path),
+      10};
   req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-  req.set(http::field::authorization, "Barear " + token);
+  req.set(http::field::authorization, "Barear " + std::string{config["token"]});
   up_worker->push_request(req);
 }
 

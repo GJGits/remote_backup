@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../filesystem/file_entry.hpp"
 #include "../common/base64.hpp"
 #include "../common/json.hpp"
 #include "up_worker.hpp"
@@ -39,8 +40,8 @@ private:
 
 public:
   static std::shared_ptr<RestClient> getInstance();
-  void post_chunk(json &chk_info, std::shared_ptr<char[]> &chunk, size_t size, size_t nchunks);
-  void put_chunk(json &chk_info, std::shared_ptr<char[]> &chunk, size_t size, size_t nchunks);
+  void post_chunk(FileEntry &fentry);
+  void put_chunk(FileEntry &fentry);
   void delete_chunk(json &chk_info, size_t size);
   void get_chunk();
   void delete_file(std::string &path);

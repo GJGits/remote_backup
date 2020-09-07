@@ -11,6 +11,7 @@ enum TOPIC {
     ADD_CHUNK, 
     UPDATE_CHUNK,
     DELETE_CHUNK,
+    REMOVE_ENTRY,
     UP_EMPTY,
     TIME_OUT
     };

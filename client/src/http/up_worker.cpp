@@ -8,13 +8,8 @@ std::shared_ptr<UpWorker> UpWorker::getIstance() {
   return instance;
 }
 
+
 void UpWorker::run() {
-  // const char *host = "remote_backup_nginx-server_1";
-  // const char *port = "80";
-  // net::io_context ioc;
-  // tcp::resolver resolver(ioc);
-  // beast::tcp_stream stream(ioc);
-  // auto const results = resolver.resolve(host, port);
   for (size_t i = 0; i < 2; i++) {
     workers.emplace_back([&]() {
       std::shared_ptr<Broker> broker = Broker::getInstance();
@@ -27,16 +22,14 @@ void UpWorker::run() {
             req = std::move(requests.front());
             requests.pop();
           } else {
-            broker->publish(TOPIC::UP_EMPTY, Message{});
+            broker->publish(Message{TOPIC::UP_EMPTY});
             cv.wait(lk, [&]() { return !requests.empty() || !is_running; });
             continue;
           }
         }
         // fake upload time for a request plus response todo: delete
-        sleep(2);
-        // stream.connect(results);
-        // req.set(http::field::host, host);
-        // http::write(stream, req);
+        send(req);
+        read();
       }
     });
   }
@@ -48,6 +41,16 @@ void UpWorker::push_request(
   requests.push(request);
   cv.notify_one();
 }
+
+void UpWorker::send(http::request<http::vector_body<char>> &request) {
+  // auto const results = resolver.resolve(host, port);
+  // stream.connect(results);
+  // req.set(http::field::host, host);
+  // http::write(stream, req);
+  sleep(1);
+}
+
+void UpWorker::read() { sleep(1); }
 
 UpWorker::~UpWorker() {
   is_running = false;
