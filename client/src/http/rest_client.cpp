@@ -18,7 +18,6 @@ void RestClient::post_chunk(FileEntry &fentry) {
   std::shared_ptr<Broker> broker = Broker::getInstance();
   std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
   json jentry = fentry.get_json_representation();
-  broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
   size_t nchunks = fentry.get_nchunks();
   std::shared_ptr<char[]> buffer = std::get<0>(chunk);
   size_t size = std::get<1>(chunk);
@@ -34,7 +33,7 @@ void RestClient::post_chunk(FileEntry &fentry) {
   req.set(http::field::authorization, "Barear " + std::string{config["token"]});
   req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
   std::move(buffer.get(), buffer.get() + size, std::back_inserter(req.body()));
-  up_worker->push_request(req);
+  up_worker->push_request(std::tuple(req, Message{TOPIC::ADD_CHUNK, jentry}));
 }
 
 void RestClient::put_chunk(FileEntry &fentry) {
@@ -42,7 +41,6 @@ void RestClient::put_chunk(FileEntry &fentry) {
   std::shared_ptr<Broker> broker = Broker::getInstance();
   std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
   json jentry = fentry.get_json_representation();
-  broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
   size_t nchunks = fentry.get_nchunks();
   std::shared_ptr<char[]> buffer = std::get<0>(chunk);
   size_t size = std::get<1>(chunk);
@@ -58,13 +56,12 @@ void RestClient::put_chunk(FileEntry &fentry) {
   req.set(http::field::authorization, "Barear " + std::string{config["token"]});
   req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
   std::move(buffer.get(), buffer.get() + size, std::back_inserter(req.body()));
-  up_worker->push_request(req);
+  up_worker->push_request(std::tuple(req, Message{TOPIC::UPDATE_CHUNK, jentry}));
 }
 
 void RestClient::delete_chunk(json &chk_info, size_t size) {
   std::shared_ptr<UpWorker> up_worker = UpWorker::getIstance();
   std::shared_ptr<Broker> broker = Broker::getInstance();
-  broker->publish(Message{TOPIC::DELETE_CHUNK, chk_info});
   http::request<http::vector_body<char>> req{
       http::verb::delete_,
       "/chunk/" + std::string{config["username"]} + "/" +
@@ -74,7 +71,7 @@ void RestClient::delete_chunk(json &chk_info, size_t size) {
       10};
   req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
   req.set(http::field::authorization, "Barear " + std::string{config["token"]});
-  up_worker->push_request(req);
+  up_worker->push_request(std::tuple(req, Message{TOPIC::DELETE_CHUNK, chk_info}));
 }
 
 void RestClient::get_chunk() {}
@@ -84,7 +81,6 @@ void RestClient::delete_file(std::string &path) {
   std::shared_ptr<Broker> broker = Broker::getInstance();
   json jentry;
   jentry["path"] = path;
-  broker->publish(Message{TOPIC::REMOVE_ENTRY, jentry});
   http::request<http::vector_body<char>> req{
       http::verb::delete_,
       "/file/" + std::string{config["username"]} + "/" +
@@ -92,7 +88,7 @@ void RestClient::delete_file(std::string &path) {
       10};
   req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
   req.set(http::field::authorization, "Barear " + std::string{config["token"]});
-  up_worker->push_request(req);
+  up_worker->push_request(std::tuple(req, Message{TOPIC::REMOVE_ENTRY, jentry}));
 }
 
 void RestClient::get_status() {}

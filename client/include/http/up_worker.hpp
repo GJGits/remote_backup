@@ -17,6 +17,7 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
+#include <tuple>
 
 #include "../common/base64.hpp"
 #include "../common/duration.hpp"
@@ -35,22 +36,23 @@ private:
   std::vector<std::thread> workers;
   std::mutex m;
   std::condition_variable cv;
-  std::queue<http::request<http::vector_body<char>>> requests;
+  std::queue<std::tuple<http::request<http::vector_body<char>>, Message>> requests;
   static inline std::shared_ptr<UpWorker> instance{nullptr};
   const char *host = "remote_backup_nginx-server_1";
   const char *port = "80";
   net::io_context ioc;
   tcp::resolver resolver;
   beast::tcp_stream stream;
+  size_t job_count;
 
   UpWorker()
       : is_running{true}, resolver{std::move(tcp::resolver{ioc})},
-        stream{std::move(beast::tcp_stream{ioc})} {}
+        stream{std::move(beast::tcp_stream{ioc})}, job_count{0} {}
 
 public:
   static std::shared_ptr<UpWorker> getIstance();
   void run();
-  void push_request(const http::request<http::vector_body<char>> &request);
+  void push_request(const std::tuple<http::request<http::vector_body<char>>, const Message> &request);
   void send(http::request<http::vector_body<char>> &request);
   void read();
   ~UpWorker();

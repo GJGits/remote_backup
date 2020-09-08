@@ -8,21 +8,21 @@ std::shared_ptr<UpWorker> UpWorker::getIstance() {
   return instance;
 }
 
-
 void UpWorker::run() {
   for (size_t i = 0; i < 2; i++) {
     workers.emplace_back([&]() {
       std::shared_ptr<Broker> broker = Broker::getInstance();
       while (is_running) {
-        DurationLogger{"UP_JOB"};
         http::request<http::vector_body<char>> req;
+        Message mex;
         {
           std::unique_lock lk{m};
           if (!requests.empty()) {
-            req = std::move(requests.front());
+            std::tuple pair = std::move(requests.front());
+            req = std::get<0>(pair);
+            mex = std::get<1>(pair);
             requests.pop();
           } else {
-            broker->publish(Message{TOPIC::UP_EMPTY});
             cv.wait(lk, [&]() { return !requests.empty() || !is_running; });
             continue;
           }
@@ -30,19 +30,30 @@ void UpWorker::run() {
         // fake upload time for a request plus response todo: delete
         send(req);
         read();
+        broker->publish(mex);
+
+        {
+          std::unique_lock lk{m};
+          job_count--;
+          if (job_count == 0)
+            broker->publish(TOPIC::UP_EMPTY);
+        }
       }
     });
   }
 }
 
 void UpWorker::push_request(
-    const http::request<http::vector_body<char>> &request) {
+    const std::tuple<http::request<http::vector_body<char>>, const Message>
+        &request) {
   std::unique_lock lk{m};
+  job_count++;
   requests.push(request);
   cv.notify_one();
 }
 
 void UpWorker::send(http::request<http::vector_body<char>> &request) {
+  DurationLogger{"SEND"};
   // auto const results = resolver.resolve(host, port);
   // stream.connect(results);
   // req.set(http::field::host, host);
@@ -50,7 +61,10 @@ void UpWorker::send(http::request<http::vector_body<char>> &request) {
   sleep(1);
 }
 
-void UpWorker::read() { sleep(1); }
+void UpWorker::read() {
+  DurationLogger{"READ"};
+  sleep(1);
+}
 
 UpWorker::~UpWorker() {
   is_running = false;
