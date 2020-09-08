@@ -137,9 +137,9 @@ Le tabelle all'interno del DBMS sono le seguenti:
 
 **users:** In questa collection troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata memorizzata tramite hash, il sale.
 
-| username | hashed_password | salt |
-| :---: | :---: | :---: |
-myuser | pass_hash_value | 3 | 
+| username | hashed_password | salt | hashed_status |
+| :---: | :---: | :---: | :---: |
+myuser | pass_hash_value | 3 | hash_folder |
 
 ## Descrizione della directory della repository<a name="Descrizione_della_directory_della_repository"></a>
 
@@ -168,7 +168,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
   <summary>POST /auth/signup</summary>
   <br />  
   
-  * **Descrizione**:&nbsp;&nbsp;&nbsp;*Endpoint che permette di registrare un nuovo utente*  
+  * **Descrizione**:&nbsp;&nbsp;&nbsp;*Endpoint che permette di registrare un nuovo utente, ponendo l'hashed_status = "empty_hashed_status"*  
 
   * **Authenticated**:&nbsp;&nbsp;&nbsp;`FALSE`
   <br />
