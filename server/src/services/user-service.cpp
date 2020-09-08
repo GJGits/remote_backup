@@ -56,10 +56,7 @@ std::string UserService::signup(const SignupDTO &user) {
 std::string UserService::getStatus(const std::string &username) {
   UserRepository user_rep;
   user_rep.getUserByUsername(username);
-    json j;
-    std::ifstream i("../../filesystem/" + username + "/client-struct.json");
-    i >> j;
-    return j["hashed_status"];
+  return user_rep.update_hashed_status(username);
 
 }
 
@@ -154,7 +151,6 @@ std::string UserService::file_chunk_update(const PutChunkDTO &put_file) {
 
         std::ofstream outfile;
         outfile.open("../../filesystem/"+put_file.getusername()+"/"+put_file.getfile_path() , std::ios_base::in | std::ios_base::out | std::ios_base::ate);
-
         int max_id = div_ceil(chunk_rep.getFileSize(chunk_ent),full_chunk_size);
 
         std::vector<char> chunk_body{put_file.getchunk_body()};

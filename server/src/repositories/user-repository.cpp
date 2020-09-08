@@ -16,7 +16,8 @@ bool UserRepository::insertUser(const UserEntity &user) {
     stmt->setString(1, sql::SQLString{user.getUsername().c_str()});
     stmt->setString(2, sql::SQLString{user.getHashedPassword().c_str()});
     stmt->setUInt(3, user.getSalt());
-    return stmt->executeUpdate() == 1 ? true : false;
+
+      return stmt->executeUpdate() == 1 ? true : false;
 
   } catch (sql::SQLException &e) {
     //std::clog << "insert mysql error\n";
@@ -40,7 +41,7 @@ UserRepository::getUserByUsername(const std::string &username) {
     std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
     stmt = std::unique_ptr<sql::PreparedStatement>{
         std::move(con->prepareStatement("SELECT username, hashed_password, "
-                                        "salt FROM users WHERE username = ?"))};
+                                        "salt, hashed_status FROM users WHERE username = ?"))};
     stmt->setString(1, username);
     res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
     if (res->next()) {
@@ -85,4 +86,48 @@ bool UserRepository::deleteUserByUsername(const std::string &username) {
   }
 
   return false;
+}
+
+
+//select * from chunks where username = "aldo" and path="a.txt" order by path,id;
+
+std::string UserRepository::update_hashed_status(const std::string &username){
+    std::unique_ptr<sql::PreparedStatement> stmt;
+    std::unique_ptr<sql::ResultSet> res;
+
+    try {
+
+        std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
+        std::clog << "e0\n";
+        stmt = std::unique_ptr<
+               sql::PreparedStatement>{std::move(con->prepareStatement(
+                "SELECT hash FROM chunks WHERE username = ? ORDER BY path,id;"))};
+
+        stmt->setString(1, sql::SQLString{username.c_str()});
+        std::clog << "e1\n";
+
+        res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
+        std::clog << "e2\n";
+
+        std::string hashed_status_concat;
+        while (res->next()) {
+            hashed_status_concat.append(std::move(res->getString("hash")));
+        }
+        std::clog << "e3\n";
+
+        std::clog << hashed_status_concat << "\n";
+        std::vector<char> data(hashed_status_concat.begin(), hashed_status_concat.end());
+        std::clog << "e4\n";
+
+        return Sha256::getSha256(data);
+
+    } catch (sql::SQLException &e) {
+        //std::clog << "insert mysql error\n";
+        Logger::log(std::string{"insert mysql error("} +
+                    std::to_string(e.getErrorCode()) + std::string{")"});
+        // ce la caviamo con una generica not
+        return "Error";
+    }
+    //todo:: mettere per bene i try catch
+    return "error";
 }

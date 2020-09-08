@@ -83,3 +83,14 @@ struct CredentialsExpired : public std::exception
     }
 
 };
+
+struct ChunkCorrupted : public std::exception
+{
+    const char * what () const throw ()
+    {
+        Logger::log(" The chunk is no ok\n");
+
+        return "The chunk is no ok";
+    }
+
+};
