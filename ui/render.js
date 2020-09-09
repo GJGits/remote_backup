@@ -1,6 +1,7 @@
 const { ipcRenderer } = require('electron');
 const textEncoding = require('text-encoding');
 var logged = false;
+var transfers = [];
 
 const check_creds = (username, password, ripPassword) => {
 
@@ -81,6 +82,36 @@ ipcRenderer.on('status-changed', (event, arg) => {
     change_status(logged);
 });
 
+ipcRenderer.on('transfer', (event, arg) => {
+    const tokens = arg.split(";");
+    const transfer = {
+        direction: tokens[0],
+        file_name: tokens[1],
+        done: tokens[2],
+        total: tokens[3],
+    };
+    let dir_img = "";
+    if (direction === "up") {
+        dir_img = "imgs/icons8-upload-48.png";
+    } else if (direction === "down") {
+        dir_img = "imgs/icons8-download-48.png";
+    } else {
+        dir_img = "imgs/icons8-cancel-48.png";
+    }
+    const dom_element = $("#" + transfer.file_name);
+    if (!dom_element.length) {
+        // nuovo elemento
+        $("#transfers").append("");
+    } else {
+        if (done === total) {
+            // caricamento completato
+        }
+        if (direction === "abort") {
+            // caricamento cancellato
+        }
+    }
+});
+
 
 $(document).ready(function () {
 
@@ -117,7 +148,7 @@ $(document).ready(function () {
             dataType: "json",
             success: function (result) {
                 if (result && result.token) {
-                    ipcRenderer.sendSync('token', result);
+                    ipcRenderer.sendSync('token', {user:username, token:result.token});
                 }
 
             },

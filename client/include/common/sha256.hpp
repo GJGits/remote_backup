@@ -4,6 +4,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include <openssl/sha.h>
 
@@ -20,7 +21,7 @@ public:
   Sha256 &operator=(const Sha256 &) = delete;
   Sha256 &operator=(Sha256 &&) = delete;
 
-  static std::string getSha256(const std::vector<char> buf) {
+  static std::string getSha256(const std::shared_ptr<char[]> &buf, size_t size) {
     /*
     if (instance == nullptr) {
       instance = new Sha256();
@@ -29,7 +30,7 @@ public:
     unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
-    SHA256_Update(&sha256, buf.data(), buf.size());
+    SHA256_Update(&sha256, buf.get(), size);
     SHA256_Final(hash, &sha256);
     std::stringstream ss;
     for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {

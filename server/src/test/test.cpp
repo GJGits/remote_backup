@@ -27,10 +27,10 @@ void testBase64() {
   printResult(tests, errors);
 }
 
-void testSha256() {
+/*void testSha256() {
     std::string message{"Ciao Mario!"};
     std::clog << "hash: " << Sha256::getSha256(message) << "\n";
-}
+}*/
 
 void testHamacSha256() {
     const unsigned char *text = (const unsigned char *) "Ciao Mario!";
@@ -80,6 +80,6 @@ void testAll()
 {
     std::clog << "Running tests...\n";
     testSQLCRUD();
-    testSha256();
+    //testSha256();
     testHamacSha256();
 }

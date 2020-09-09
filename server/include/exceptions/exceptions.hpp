@@ -72,3 +72,14 @@ struct ControllerNotRetrievable : public std::exception
     }
 
 };
+
+struct CredentialsExpired : public std::exception
+{
+    const char * what () const throw ()
+    {
+        Logger::log(" The credentials are expired, please log in again and retry!");
+
+        return "The credentials are expired, please log in again and retry!";
+    }
+
+};

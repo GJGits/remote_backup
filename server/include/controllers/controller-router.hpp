@@ -2,6 +2,7 @@
 #include "auth-controller.hpp"
 #include "controller.hpp"
 #include "status-controller.hpp"
+#include "chunk-controller.hpp"
 #include "../exceptions/exceptions.hpp"
 
 
@@ -18,7 +19,9 @@ public:
       instance = new ControllerRouter();
       controller_map["auth"] = AuthController::getInstance();
       controller_map["status"] = StatusController::getInstance();
-      // todo: inizializza
+      controller_map["chunk"] = ChunkController::getInstance();
+
+        // todo: inizializza
     }
     // qui map ok, recupero controller
     // todo: recupera controller qui:
@@ -30,6 +33,8 @@ public:
         return AuthController::getInstance();
       else if (strcmp(res, "status") == 0)
         return StatusController::getInstance();
+      else if (strcmp(res, "chunk") == 0)
+          return ChunkController::getInstance();
     }
     throw ControllerNotRetrievable();
   }

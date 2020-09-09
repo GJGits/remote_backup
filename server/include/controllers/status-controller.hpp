@@ -24,5 +24,5 @@ public:
   }
   virtual const http::server::reply handle(const http::server::request &req);
   const std::string get_status(const std::string &username);
-
+  const std::string get_status_file(const std::string &username);
 };

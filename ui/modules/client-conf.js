@@ -1,31 +1,31 @@
 const fs = require('fs');
 
-module.exports = class Token {
+module.exports = class ClientConf {
 
     constructor() {
-        this.format_rgx = /^\{\"token\"\:\s?\"[a-zA-Z0-9=]+\.[a-zA-Z0-9=]+\.[a-zA-Z0-9=]+\"\}$/;
+        this.format_rgx = /^\{\"username\":\s?\"\w*\",\s?\"token\"\:\s?\"[a-zA-Z0-9=]+\.[a-zA-Z0-9=]+\.[a-zA-Z0-9=]+\"\}$/;
         this.value_rgx = /^[a-zA-Z0-9=]+\.[a-zA-Z0-9=]+\.[a-zA-Z0-9=]+$/;
-        this.value;
+        this.content;
         this.read();
     }
 
     read() {
-        fs.readFile('../client/config/token.json', 'utf8', (err, jsonString) => {
+        fs.readFile('../client/config/client-conf.json', 'utf8', (err, jsonString) => {
             if (err) {
                 console.log("File read failed:", err)
                 return
             }
             if (this.rightFormat(jsonString)) {
 
-                this.value = JSON.parse(jsonString).token;
+                this.content = JSON.parse(jsonString);
                 return;
             }
-            this.value = undefined;
+            this.content = undefined;
         });
     }
 
     write() {
-        fs.writeFile('../client/config/token.json', JSON.stringify({ token: this.value }), (err) => {
+        fs.writeFile('../client/config/client-conf.json', JSON.stringify(this.content), (err) => {
             if (err) {
                 console.log("File read failed:", err)
                 return
@@ -33,9 +33,9 @@ module.exports = class Token {
         });
     }
 
-    set(str_token_value) {
-        if (this.isValid(str_token_value)) {
-            this.value = str_token_value;
+    set(config) {
+        if (this.isValid(config.token)) {
+            this.content.token = config;
             this.write();
             return true;
         }
@@ -43,12 +43,13 @@ module.exports = class Token {
     }
 
     reset() {
-        this.value = "";
+        this.content.username = "";
+        this.content.token = "";
         this.write();
     }
 
     isExpired() {
-        const buff = Buffer.from(this.value.split(".")[1], "base64");
+        const buff = Buffer.from(this.content.token.split(".")[1], "base64");
         const exp = JSON.parse(buff.toLocaleString("ascii")).exp;
         const now = Math.round((new Date()).getTime() / 1000);
         console.log("exp:", exp, ", now:", now);
@@ -56,7 +57,7 @@ module.exports = class Token {
     }
 
     isValid() {
-        return this.value && this.value_rgx.test(this.value) && !this.isExpired();
+        return this.value_rgx.test(this.content.token) && !this.isExpired();
     }
 
     rightFormat(json_string) {

@@ -13,7 +13,7 @@ DurationLogger::DurationLogger(const char *name) {
 }
 
 DurationLogger::~DurationLogger() {
-    std::clog << " [" << (this->name) << "]: [" << blue << ((float)clock() - (float)t0 ) / CLOCKS_PER_SEC << def << "]sec\n";
+    std::clog << "[" << (this->name) << "]: [" << blue << ((float)clock() - (float)t0 ) / CLOCKS_PER_SEC << def << "]sec\n";
     delete[] this->name;
     this->name = nullptr;
 }
