@@ -28,8 +28,18 @@ void UpWorker::run() {
           }
         }
         // fake upload time for a request plus response todo: delete
-        send(req);
+        // send(req);
+        // read();
+
+        auto const results = resolver.resolve(host, port);
+        stream.connect(results);
+        req.set(http::field::host, host);
+        for (auto it = req.body().begin(); it != req.body().end(); it++) {
+          std::clog << "char body: " << *it << "\n";
+        }
+        http::write(stream, req);
         read();
+
         broker->publish(mex);
 
         {

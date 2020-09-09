@@ -21,7 +21,7 @@ std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
   }
   memset(buffer.get(), '\0', CHUNK_SIZE);
   size_t to_read =
-      read_count < nchunks ? CHUNK_SIZE : (size - ((nchunks - 1) * CHUNK_SIZE));
+      read_count < (nchunks - 1) ? CHUNK_SIZE : (size - ((nchunks - 1) * CHUNK_SIZE));
   in.seekg(read_count * CHUNK_SIZE);
   in.read(buffer.get(), to_read);
   json chunk = {{"id", read_count},

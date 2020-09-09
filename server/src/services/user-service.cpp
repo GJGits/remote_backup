@@ -74,8 +74,6 @@ std::string UserService::getStatusFile(const std::string &username) {
 std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
     std::clog << "l'hash vero è: "<< Sha256::getSha256(post_file.getchunk_body()) << "\n";
 
-    int full_chunk_size = 10;
-
     if(Sha256::getSha256(post_file.getchunk_body()).compare(post_file.getchunk_hash()) == 0){
         ChunkEntity chunk_ent{post_file.getusername(), post_file.getchunk_id(), post_file.getchunk_hash(), post_file.getfile_path(), post_file.getchunk_size(), post_file.gettimestamp_locale()};
         ChunkRepository chunk_rep;
@@ -83,16 +81,16 @@ std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
         std::ofstream outfile;
 
         std::vector<char> chunk_body{post_file.getchunk_body()};
-        std::string padding(full_chunk_size, '0');
+        std::string padding(CHUNK_SIZE, '0');
         int i=0;
         int filesize = 0;
         if(chunk_rep.getFilePath(chunk_ent)==false) {
-            filesize = (post_file.getchunk_id()-1)*full_chunk_size + post_file.getchunk_size();
+            filesize = (post_file.getchunk_id()-1)*CHUNK_SIZE + post_file.getchunk_size();
             chunk_ent.setSizeFile(filesize);
             outfile.open("../../filesystem/"+post_file.getusername()+"/"+post_file.getfile_path());
             for(i = 0 ; i < post_file.getchunk_id() ; i++){
                 if(i != post_file.getchunk_id()){
-                    outfile.seekp(i*full_chunk_size, std::ios_base::beg);
+                    outfile.seekp(i*CHUNK_SIZE, std::ios_base::beg);
                     outfile << padding;
                 }
             }
@@ -102,15 +100,16 @@ std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
         }
         else {
             outfile.open("../../filesystem/"+post_file.getusername()+"/"+post_file.getfile_path() , std::ios_base::in | std::ios_base::out | std::ios_base::ate);
-            std::clog << "SONO QUI\n";
-            int max_id = div_ceil(chunk_rep.getFileSize(chunk_ent),full_chunk_size);
+
+            int max_id = div_ceil(chunk_rep.getFileSize(chunk_ent),CHUNK_SIZE);
+
             if(post_file.getchunk_id() >= max_id){
                 for(i = max_id ; i < post_file.getchunk_id(); i++){
-                        outfile.seekp(i*full_chunk_size);
+                        outfile.seekp(i*CHUNK_SIZE);
                         outfile.write(padding.c_str(),padding.size());
                 }
 
-                filesize = (post_file.getchunk_id()-1)*full_chunk_size + post_file.getchunk_size();
+                filesize = (post_file.getchunk_id()-1)*CHUNK_SIZE + post_file.getchunk_size();
                 chunk_ent.setSizeFile(filesize);
 
             }
@@ -124,7 +123,7 @@ std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
         }
 
 
-        outfile.seekp(i*full_chunk_size, std::ios_base::beg);
+        outfile.seekp(i*CHUNK_SIZE, std::ios_base::beg);
         std::string strvec{chunk_body.begin(),chunk_body.end()};
         outfile.write(strvec.c_str(),strvec.size());
         outfile.close();
@@ -144,26 +143,25 @@ std::string UserService::file_chunk_update(const PutChunkDTO &put_file) {
     std::clog << "l'hash vero è: "<< Sha256::getSha256(put_file.getchunk_body()) << "\n";
 
     if(Sha256::getSha256(put_file.getchunk_body()).compare(put_file.getchunk_hash()) == 0) {
-        int full_chunk_size = 10;
 
         ChunkEntity chunk_ent{put_file.getusername(), put_file.getchunk_id(), put_file.getchunk_hash(), put_file.getfile_path(), put_file.getchunk_size(),put_file.gettimestamp_locale()};
         ChunkRepository chunk_rep;
 
         std::ofstream outfile;
         outfile.open("../../filesystem/"+put_file.getusername()+"/"+put_file.getfile_path() , std::ios_base::in | std::ios_base::out | std::ios_base::ate);
-        int max_id = div_ceil(chunk_rep.getFileSize(chunk_ent),full_chunk_size);
+        int max_id = div_ceil(chunk_rep.getFileSize(chunk_ent),CHUNK_SIZE);
 
         std::vector<char> chunk_body{put_file.getchunk_body()};
-        outfile.seekp(put_file.getchunk_id()*full_chunk_size, std::ios_base::beg);
+        outfile.seekp(put_file.getchunk_id()*CHUNK_SIZE, std::ios_base::beg);
         std::string strvec{chunk_body.begin(),chunk_body.end()};
         outfile.write(strvec.c_str(),strvec.size());
         chunk_rep.updateChunk(chunk_ent);
         int filesize = 0;
         if(max_id == put_file.getchunk_id()) {
-            int dim = (max_id - 1) * full_chunk_size + put_file.getchunk_size();
+            int dim = (max_id - 1) * CHUNK_SIZE + put_file.getchunk_size();
             std::filesystem::resize_file("../../filesystem/"+put_file.getusername()+"/"+put_file.getfile_path(), dim);
 
-            filesize = (put_file.getchunk_id()-1)*full_chunk_size + put_file.getchunk_size();
+            filesize = (put_file.getchunk_id()-1)*CHUNK_SIZE + put_file.getchunk_size();
         }
         else{
             filesize = chunk_rep.getFileSize(chunk_ent);
@@ -181,10 +179,9 @@ std::string UserService::file_chunk_update(const PutChunkDTO &put_file) {
 }
 
 std::string UserService::file_chunk_get(const GetChunkDTO &get_file) {
-    int full_chunk_size = 10;
     std::fstream file(("../../filesystem/"+get_file.getusername()+"/"+get_file.getfile_path()), std::ios::in );
     char F[get_file.getchunk_size()+1];
-    file.seekg(get_file.getchunk_id()*full_chunk_size, std::ios::beg);
+    file.seekg(get_file.getchunk_id()*CHUNK_SIZE, std::ios::beg);
     file.read(F, get_file.getchunk_size());
     F[get_file.getchunk_size()] = 0;
     std::string s(F);
@@ -213,8 +210,7 @@ std::string UserService::file_chunk_delete_service(const DeleteChunkDTO &del_chu
     ChunkRepository chunk_rep;
 
     chunk_rep.delete_chunks(chunk_ent);
-    int full_chunk_size = 10;
-    int filesize = (del_chunk.getchunk_id()-1) * full_chunk_size;
+    int filesize = (del_chunk.getchunk_id()-1) * CHUNK_SIZE;
     chunk_ent.setSizeFile(filesize);
     chunk_rep.updateFileInfo(chunk_ent);
     std::filesystem::resize_file("../../filesystem/"+del_chunk.getusername()+"/"+del_chunk.getfile_path(), filesize);
