@@ -1,0 +1,17 @@
+#pragma once
+
+enum TOPIC {
+    NEW_FILE, 
+    NEW_FOLDER, 
+    CONTENT_MOVED, 
+    FILE_RENAMED, 
+    FILE_MODIFIED, 
+    FILE_DELETED, 
+    BULK_DELETE, 
+    ADD_CHUNK, 
+    UPDATE_CHUNK,
+    DELETE_CHUNK,
+    REMOVE_ENTRY,
+    UP_EMPTY,
+    TIME_OUT
+    };
