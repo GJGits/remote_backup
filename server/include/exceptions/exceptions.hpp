@@ -95,3 +95,15 @@ struct ChunkCorrupted : public std::exception
 
 
 };
+
+struct FileSizeNotAvailable : public std::exception
+{
+    const char * what () const throw ()
+    {
+        Logger::log(" The size of file is not retrievable\n");
+
+        return "The size of file is not retrievable";
+    }
+
+
+};
