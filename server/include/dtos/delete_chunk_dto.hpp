@@ -4,19 +4,21 @@
 #include "../common/base64.hpp"
 
 
-class GetChunkDTO{
+class DeleteChunkDTO{
 private:
     std::string username;
     int chunk_id;
     int chunk_size;
     std::string file_path;
+    std::string timestamp_locale;
 
 public:
-    GetChunkDTO(){};
+    DeleteChunkDTO(){};
     std::string getusername() const;
     int getchunk_id() const;
     int getchunk_size() const;
     std::string getfile_path() const;
+    std::string gettimestamp_locale() const;
 
     const void fill( std::string requri) {
         std::vector<std::string> uri_elements = Utility::split(requri, '/');
@@ -34,6 +36,8 @@ public:
                 case 5 :
                     file_path = macaron::Base64::Decode(uri_elements[i]);
                     break;
+                case 6 :
+                    timestamp_locale = uri_elements[i];
 
                 default :
                     break;

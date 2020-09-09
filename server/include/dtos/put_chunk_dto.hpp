@@ -7,20 +7,26 @@
 class PutChunkDTO{
 private:
     std::string username;
-    std::string chunk_id;
-    std::string chunk_size;
+    int chunk_id;
+    int chunk_size;
     std::string chunk_hash;
     std::string file_path;
     std::vector<char> chunk_body;
-    //PUT /chunk/{username}/{chunk_id}/{chunksize}/{chunk_hash}/{file_pathBASE64}
+    std::string number_of_chunks;
+    std::string timestamp_locale;
+
+    //PUT /chunk/{username}/{chunk_id}/{chunksize}/{chunk_hash}/{number_of_chunks}/{file_pathBASE64}/{timestamp}
 public:
     PutChunkDTO(){};
     std::string getusername() const;
-    std::string getchunk_id() const;
-    std::string getchunk_size() const;
+    int getchunk_id() const;
+    int getchunk_size() const;
     std::string getchunk_hash() const;
     std::string getfile_path() const;
     std::vector<char> getchunk_body() const; //todo: attenzione, passare all'heap
+    std::string getnumber_of_chunks() const;
+    std::string gettimestamp_locale() const;
+
 
     const void fill( std::string requri, std::vector<char> reqbody) { //todo: passarlo per riferimento, non per copia
         std::vector<std::string> uri_elements = Utility::split(requri, '/');
@@ -30,17 +36,24 @@ public:
                     username = uri_elements[i];
                     break;
                 case 3 :
-                    chunk_id = uri_elements[i];
+                    chunk_id = std::stoi(uri_elements[i]);
                     break;
                 case 4 :
-                    chunk_size = uri_elements[i];
+                    chunk_size = std::stoi(uri_elements[i]);
                     break;
                 case 5:
                     chunk_hash = uri_elements[i];
                     break;
                 case 6 :
+                    number_of_chunks = uri_elements[i];
+                    break;
+                case 7 :
                     file_path = macaron::Base64::Decode(uri_elements[i]);
                     break;
+                case 8 :
+                    timestamp_locale = uri_elements[i];
+                    break;
+
 
                 default :
                     break;

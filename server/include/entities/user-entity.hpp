@@ -15,4 +15,5 @@ public:
   std::string getUsername() const;
   std::string getHashedPassword() const;
   unsigned int getSalt() const;
+
 };

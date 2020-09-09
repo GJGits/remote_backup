@@ -1,8 +1,10 @@
 #include "../../include/controllers/chunk-controller.hpp"
 
-inline static std::regex post_chunk_rgx{"^\\/chunk\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)$"};
-inline static std::regex put_chunk_rgx{"^\\/chunk\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)$"};
-inline static std::regex get_chunk_rgx{"^\\/chunk\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)$"};
+inline static std::regex post_chunk_rgx{"^\\/chunk\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+\\S+)\\/(\\w+)$"};
+inline static std::regex put_chunk_rgx{"^\\/chunk\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+\\S+)\\/(\\w+)$"};
+inline static std::regex get_chunk_rgx{"^\\/chunk\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+\\S+)$"};
+inline static std::regex delete_chunk_rgx{"^\\/chunk\\/(\\w+)\\/(\\w+\\S+)$"};
+
 
 const http::server::reply
 ChunkController::handle(const http::server::request &req) {
@@ -67,8 +69,26 @@ ChunkController::handle(const http::server::request &req) {
         else
             throw WrongRquestFormat();
     }
-    return MakeReply::make_1line_jsonReply<std::string>("token", "tutto ok", http::server::reply::bad_request);
+    if (req.method == "DELETE"){
+        std::smatch match;
+        if (std::regex_search(req.uri.begin(), req.uri.end(), match, delete_chunk_rgx)) { //todo: La regex prende un pò tutto, migliorare
 
+            //if (JWT::validateToken(req)) {
+            DeleteChunkDTO delete_chunk{};
+            delete_chunk.fill(req.uri);
+            std::string response = delete_file_chunk(delete_chunk);
+            if(response.compare("200_OK")==0)
+                return http::server::reply::stock_reply(http::server::reply::ok);
+            else
+                return MakeReply::make_1line_jsonReply<std::string>("err_msg", response, http::server::reply::bad_request);
+
+            /*}
+            else
+                throw CredentialsExpired();*/
+        }
+        else
+            throw WrongRquestFormat();
+    }
 
     throw WrongRquestFormat(); // todo: creare eccezione
 
@@ -90,4 +110,10 @@ std::string ChunkController::get_file_chunk(const GetChunkDTO &get_chunk) {
 
     UserService *user_service = UserService::getInstance();
     return user_service->file_chunk_get(get_chunk);
+}
+
+std::string ChunkController::delete_file_chunk(const DeleteChunkDTO &delete_chunk) {
+
+    UserService *user_service = UserService::getInstance();
+    return user_service->file_chunk_delete_service(delete_chunk);
 }

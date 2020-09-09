@@ -8,3 +8,4 @@ UserEntity::UserEntity(std::string username,
 std::string UserEntity::getUsername() const { return username; }
 std::string UserEntity::getHashedPassword() const { return hashed_password; }
 uint32_t UserEntity::getSalt() const { return salt; }
+

@@ -7,11 +7,23 @@ Test creation database
 3) CREATE TABLE users (
 	username VARCHAR(50) PRIMARY KEY,
 	hashed_password VARCHAR(128) NOT NULL,
-	salt INT UNSIGNED NOT NULL);
+	salt INT UNSIGNED NOT NULL;
 	 
 4) describe users;
 
-5) INSERT INTO users(id, username, password, salt) 
-	VALUES(DEFAULT, "Pippo", "0000", 3);
-	
+5) INSERT INTO users(username, password, salt)
+	VALUES("Pippo", "0000", 3);
 
+
+Creazione Tabella Chunks
+
+create table chunks(username varchar(100) NOT NULL, id integer NOT NULL, hash varchar(128) NOT NULL, path varchar(100) NOT NULL, size integer NOT NULL);
+
+CREAZIONE Tabella fileinfo
+
+create table fileinfo(username varchar(100), path varchar(100), size integer NOT NULL, lastmod varchar(100) NOT NULL,  primary key (username, path));
+
+
+UPDATE fileinfo
+SET size = ? , lastmod = ?
+WHERE path = ? AND username = ?;
