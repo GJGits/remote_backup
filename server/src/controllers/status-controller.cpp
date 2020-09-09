@@ -10,18 +10,19 @@ StatusController::handle(const http::server::request &req) {
   if (req.method == "GET") {
     std::smatch match;
     if (std::regex_search(req.uri.begin(), req.uri.end(), match, user_rgx)) {
-      if (JWT::validateToken(req)) {
+      //if (JWT::validateToken(req)) {
         std::string username{std::move(match[1])};
         return MakeReply::make_1line_jsonReply<std::string>(
             std::string{"hashed_status"}, get_status(username),
             http::server::reply::ok);
-      }
+      //}
     } else if (std::regex_search(req.uri.begin(), req.uri.end(), match, user_rgx_file)) {
-        std::clog << "sono dentro\n";
         //if (JWT::validateToken(req)) { sto codice è per l'autenticazione, rimetterlo poi
             std::string username{std::move(match[1])};
+        std::clog << "Username: " << username << "\n";
 
-            return MakeReply::make_1line_dump_jsonReply<std::string>(
+        return MakeReply::make_1line_dump_jsonReply<std::string>(
+
                    get_status_file(username), //todo: al momento ritorna una roba strana, aggiustare il return tornando solo il json del file
                     http::server::reply::ok);
        // }

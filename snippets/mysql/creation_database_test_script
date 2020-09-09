@@ -11,7 +11,19 @@ Test creation database
 	 
 4) describe users;
 
-5) INSERT INTO users(id, username, password, salt) 
-	VALUES(DEFAULT, "Pippo", "0000", 3);
-	
+5) INSERT INTO users(username, password, salt)
+	VALUES("Pippo", "0000", 3);
 
+
+Creazione Tabella Chunks
+
+create table chunks(c_username varchar(100) NOT NULL, c_id integer NOT NULL, c_hash varchar(128) NOT NULL, c_path varchar(100) NOT NULL, c_size integer NOT NULL);
+
+CREAZIONE Tabella fileinfo
+
+create table fileinfo(f_username varchar(100), f_path varchar(100), f_size integer NOT NULL, f_lastmod varchar(100) NOT NULL,  primary key (f_username, f_path));
+
+
+UPDATE fileinfo
+SET size = ? , lastmod = ?
+WHERE path = ? AND username = ?;

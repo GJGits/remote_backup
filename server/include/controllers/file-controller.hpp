@@ -11,23 +11,19 @@
 #include <regex>
 #include "../common/utility.hpp"
 
-class ChunkController : public Controller {
+class FileController : public Controller {
 
 private:
-    inline static ChunkController *instance = nullptr;
+    inline static FileController *instance = nullptr;
 
 public:
     // contiene switch_case per inoltrare al metodo corretto
-    static ChunkController *getInstance() {
+    static FileController *getInstance() {
         if (instance == nullptr) {
-            instance = new ChunkController();
+            instance = new FileController();
         }
         return instance;
     }
     virtual const http::server::reply handle(const http::server::request &req);
-    std::string post_file_chunk(const PostChunkDTO &post_chunk);
-    std::string put_file_chunk(const PutChunkDTO &put_chunk);
-    std::string get_file_chunk(const GetChunkDTO &get_chunk);
-    std::string delete_file_chunk(const DeleteChunkDTO &delete_chunk);
-
+    const std::string delete_file(const DeleteFileDTO &del_file);
 };

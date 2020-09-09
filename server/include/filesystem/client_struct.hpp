@@ -66,15 +66,39 @@ public:
         }
     }
 
+    bool delete_file(std::string file_path,std::string username ){
+        std::clog << "e3\n";
+        if (!(*structure)["entries"].empty()) {
+            std::clog << "e4\n";
+            std::clog << "la dimensione e': " << (*structure)["entries"].size() << "\n";
+            for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
+                std::clog << "il dump è: " << (*structure)["entries"][0].dump() << "\n";
+                json tmp = (*structure)["entries"][i];
+                std::clog << "provo su " << tmp["path"] << "\n";
+                if (tmp["path"].get<std::string>().compare(file_path) ==
+                    0) {
+                    (*structure)["entries"].erase(i);
+                    remove(("../../filesystem/"+username+"/"+file_path).c_str());
+                    std::clog << "file trovato\n";
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
 
     void add_chunk(std::vector<char> chunk_body,std::string file_path, std::string chunk_id, std::string chunk_hash, std::string chunk_size){
         std::clog << "il file c'è già e dobbiamo solo aggiungere i chunks \n";
         int full_chunk_size = 10;
-
+/*
         json chunk;
         chunk["id"] = chunk_id;
         chunk["hash"] = chunk_hash;
+
         (*structure)["entries"][index]["chunks"].push_back(chunk);
+*/
 
         for (size_t i = 0; i < (*structure)["entries"][index]["chunks"].size();
              i++) {
@@ -105,6 +129,7 @@ public:
 
     }
 
+
     void modify_chunk(std::vector<char> chunk_body, std::string chunk_id, std::string chunk_hash, std::string chunk_size, std::string file_path){
         std::clog << "il file c'è già e dobbiamo solo aggiungere i chunks \n";
         //int full_chunk_size = 2097152;
@@ -131,7 +156,7 @@ public:
         outfile.write(strvec.c_str(),strvec.size());
         outfile.close();
 
-        (*structure)["entries"][index]["size"] = -1; //todo: mettere il file size senzato, quando capirò come creare effettivamente i files dal chunk
+        (*structure)["entries"][index]["size"] = "-1"; //todo: calcolare sta size
         (*structure)["entries"][index]["validity"] = false;
         (*structure)["entries"][index]["dim_last_chunk"] = chunk_size;
 
@@ -171,8 +196,12 @@ public:
 
 
         entry["size"] = (i)*full_chunk_size + std::stoi(chunk_size);
+
         (*structure)["entries"].push_back(entry);
     }
+
+
+
 
     void update_total_file_status(){
         std::string entries_dump = (*structure)["entries"].dump();
@@ -201,6 +230,23 @@ public:
         return s;
 
     }
+
+
+    bool delete_chunk(std::string file_path,std::string username, std::string chunk_id ) {
+        if (std::stoi(chunk_id) == 0){
+            remove(("../../filesystem/" + username + "/" + file_path).c_str());
+            return true;
+        }
+        int full_chunk_size = 10;
+        std::ofstream outfile;
+        std::string path{"../../filesystem/"+username+"/"+file_path};
+        outfile.open(path , std::ios_base::in | std::ios_base::out | std::ios_base::ate);
+        int dim=std::stoi(chunk_id)*full_chunk_size;
+        std::filesystem::resize_file(path,dim);
+        outfile.close();
+        return true;
+    }
+
 
     bool get_file_found(){ return file_found;}
 };

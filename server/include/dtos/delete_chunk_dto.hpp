@@ -4,30 +4,23 @@
 #include "../common/base64.hpp"
 
 
-class PostChunkDTO{
+class DeleteChunkDTO{
 private:
     std::string username;
     int chunk_id;
     int chunk_size;
     std::string file_path;
-    std::string chunk_hash;
     std::string timestamp_locale;
-    std::vector<char> chunk_body;
-    std::string number_of_chunks;
 
-//POST /chunk/{username}/{chunk_id}/{chunk_size}/{chunk_hash}/{file_pathBASE64}/{timestamp_locale}
 public:
-    PostChunkDTO(){};
+    DeleteChunkDTO(){};
     std::string getusername() const;
     int getchunk_id() const;
     int getchunk_size() const;
-    std::string getchunk_hash() const;
     std::string getfile_path() const;
     std::string gettimestamp_locale() const;
-    std::vector<char> getchunk_body() const;
-    std::string getnumber_of_chunks() const;
 
-    const void fill( std::string requri, std::vector<char> reqbody) { //todo: passarlo per riferimento, non per copia
+    const void fill( std::string requri) {
         std::vector<std::string> uri_elements = Utility::split(requri, '/');
         for (unsigned int i = 0; i < uri_elements.size(); i++) {
             switch (i) {
@@ -39,25 +32,16 @@ public:
                     break;
                 case 4 :
                     chunk_size = std::stoi(uri_elements[i]);
-
                     break;
                 case 5 :
-                    chunk_hash = uri_elements[i];
-                    break;
-                case 6 :
-                    number_of_chunks = uri_elements[i];
-                    break;
-                case 7 :
                     file_path = macaron::Base64::Decode(uri_elements[i]);
                     break;
-                case 8 :
-
+                case 6 :
                     timestamp_locale = uri_elements[i];
-                    break;
+
                 default :
                     break;
             }
         }
-        chunk_body = reqbody;
     }
 };
