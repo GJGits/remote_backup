@@ -41,7 +41,7 @@ UserRepository::getUserByUsername(const std::string &username) {
     std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
     stmt = std::unique_ptr<sql::PreparedStatement>{
         std::move(con->prepareStatement("SELECT username, hashed_password, "
-                                        "salt, hashed_status FROM users WHERE username = ?"))};
+                                        "salt FROM users WHERE username = ?"))};
     stmt->setString(1, username);
     res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
     if (res->next()) {
@@ -101,7 +101,7 @@ std::string UserRepository::update_hashed_status(const std::string &username){
         std::clog << "e0\n";
         stmt = std::unique_ptr<
                sql::PreparedStatement>{std::move(con->prepareStatement(
-                "SELECT hash FROM chunks WHERE username = ? ORDER BY path,id;"))};
+                "SELECT c_hash FROM chunks WHERE c_username = ? ORDER BY c_path,c_id;"))};
 
         stmt->setString(1, sql::SQLString{username.c_str()});
         std::clog << "e1\n";
@@ -111,7 +111,7 @@ std::string UserRepository::update_hashed_status(const std::string &username){
 
         std::string hashed_status_concat;
         while (res->next()) {
-            hashed_status_concat.append(std::move(res->getString("hash")));
+            hashed_status_concat.append(std::move(res->getString("c_hash")));
         }
         std::clog << "e3\n";
 
@@ -130,4 +130,68 @@ std::string UserRepository::update_hashed_status(const std::string &username){
     }
     //todo:: mettere per bene i try catch
     return "error";
+}
+
+
+json UserRepository::get_status_file(const std::string &username) {
+    json j;
+    j["entries"] = json::array();
+
+    std::unique_ptr<sql::PreparedStatement> stmt;
+    std::unique_ptr<sql::ResultSet> res;
+
+
+        std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
+        std::clog << "e0\n";
+        stmt = std::unique_ptr<
+                sql::PreparedStatement>{std::move(con->prepareStatement(
+                "select * from chunks,fileinfo where chunks.c_username = ? and chunks.c_username = fileinfo.f_username and chunks.c_path = fileinfo.f_path order by fileinfo.f_path;"))};
+
+        stmt->setString(1, sql::SQLString{username.c_str()});
+        std::clog << "e1\n";
+
+        res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
+        std::clog << "e2\n";
+
+        json j_entry;
+
+        json j_chunks;
+        j_chunks = json::array();
+
+        json j_single_chunk;
+
+        std::string actual_file_path{""};
+        while (res->next()) {
+
+            if(actual_file_path.compare(res->getString("f_path"))!=0){
+                if(actual_file_path.compare("")!=0) {
+                    j_entry["chunks"] = j_chunks;
+                    j["entries"].push_back(j_entry);
+                }
+
+                actual_file_path = res->getString("f_path");
+                j_chunks.clear();
+
+                j_entry["path"] = res->getString("f_path");
+                j_entry["size"] = res->getInt("f_size");
+                j_entry["validity"] = "false";
+                j_entry["last_mod"] = res->getString("f_lastmod");
+
+            }
+            j_entry["dim_last_chunk"] = res->getInt("c_size");
+
+            j_single_chunk["hash"] = res->getString("c_hash");
+            j_single_chunk["id"] = res->getInt("c_id");
+            j_chunks.push_back(j_single_chunk);
+
+
+
+        }
+        j_entry["chunks"] = j_chunks;
+        j["entries"].push_back(j_entry);
+
+
+        return j;
+
+
 }

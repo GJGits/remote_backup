@@ -63,11 +63,11 @@ std::string UserService::getStatus(const std::string &username) {
 std::string UserService::getStatusFile(const std::string &username) {
     UserRepository user_rep;
     user_rep.getUserByUsername(username);
-    json j;
-    std::ifstream i("../../filesystem/" + username + "/client-struct.json");
-    i >> j;
-    std::clog <<"il dump è : " << j.dump() << "\n";
-    return j.dump();
+    json status_file = user_rep.get_status_file(username);
+    status_file["hashed_status"] = user_rep.update_hashed_status(username);
+    std::clog << status_file.dump() << "\n";
+
+    return status_file.dump();
 
 }
 
