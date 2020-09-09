@@ -16,6 +16,7 @@ public:
     std::string getusername() const;
     int getchunk_id() const;
     int getchunk_size() const;
+
     std::string getfile_path() const;
 
     const void fill( std::string requri) {
@@ -30,6 +31,7 @@ public:
                     break;
                 case 4 :
                     chunk_size = std::stoi(uri_elements[i]);
+
                     break;
                 case 5 :
                     file_path = macaron::Base64::Decode(uri_elements[i]);

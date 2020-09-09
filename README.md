@@ -90,6 +90,8 @@ Dopo aver lanciato i vari servizi aprire una finestra di terminale ed eseguire i
     - `show databases;`: permette di visualizzare quali databases esistono all'interno del server.
   
     - `use <db_name>;`: permette di porsi all'interno di un db, solo da qui sono eseguibili le query per questo determinato db.
+    
+4. Una volta selezionato il dabase, eseguire tali comandi per interagire col db:
   
     - `show tables;`: permette di elencare le tabelle presenti all'interno del db precedentemente selezionato.
 
@@ -135,9 +137,9 @@ Le tabelle all'interno del DBMS sono le seguenti:
 
 **users:** In questa collection troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata memorizzata tramite hash, il sale.
 
-| username | hashed_password | salt |
-| :---: | :---: | :---: |
-myuser | pass_hash_value | 3 | 
+| username | hashed_password | salt | hashed_status |
+| :---: | :---: | :---: | :---: |
+myuser | pass_hash_value | 3 | hash_folder |
 
 ## Descrizione della directory della repository<a name="Descrizione_della_directory_della_repository"></a>
 
@@ -166,7 +168,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
   <summary>POST /auth/signup</summary>
   <br />  
   
-  * **Descrizione**:&nbsp;&nbsp;&nbsp;*Endpoint che permette di registrare un nuovo utente*  
+  * **Descrizione**:&nbsp;&nbsp;&nbsp;*Endpoint che permette di registrare un nuovo utente, ponendo l'hashed_status = "empty_hashed_status"*  
 
   * **Authenticated**:&nbsp;&nbsp;&nbsp;`FALSE`
   <br />
@@ -195,20 +197,24 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 <br />  
 
 <details>
-  <summary>POST {username}/file/{chunk_id}/{chunk_size}/{file_pathBASE64}/{timestamp_locale}</summary>
+  <summary>POST /chunk/{username}/{chunk_id}/{chunk_size}/{chunk_hash}/{number_of_chunks}/{file_pathBASE64}/{timestamp_locale}</summary>
   <br />  
   
-  * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette, se il client è autenticato, di aggiungere un file appena creato. `{chunk_id}` corrisponde al numero di chunk che stiamo inviando, 0 per il primo chunk. Il parametro `{chunk_size}` corrisponde alla dimensione del chunk che stiamo inviando, questo corrisponde a `full` se si invia un chunk di dimensione massima (0.5MB), altrimenti la dimensione in byte.*  
+  * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette, se il client è autenticato, di aggiungere un file appena creato. `{chunk_id}` corrisponde al numero di chunk che stiamo inviando, 0 per il primo chunk. Il parametro `{chunk_size}` corrisponde alla dimensione del chunk che stiamo inviando, questo corrisponde a `full` se si invia un chunk di dimensione massima (2MB), altrimenti la dimensione in byte.*  
 
   * **Authenticated**:&nbsp;&nbsp;&nbsp;`TRUE`
   <br /> 
 
   * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTTP headers: MIME: application/octect-stream body: `binary data here` 
+  <br />  
+  
+  * **Risposta**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In caso negativo viene generato un messaggio HTTP 1.1 400 `{ err_msg : message here }`, in caso positivo invece viene inviata una risposta HTTP 1.1 200 OK senza alcun body all'interno.   
+
   </details> 
 
 <br />
 <details>
-  <summary>PUT {username}/file/{chunk_id}/{chunksize}/{file_pathBASE64}</summary>  
+  <summary>PUT /chunk/{username}/{chunk_id}/{chunksize}/{chunk_hash}/{number_of_chunks}/{file_pathBASE64}/{timestamp_locale}</summary>  
 
   * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di aggiornare, se l'utente è autenticato, il contenuto di un file.*
 
@@ -216,11 +222,42 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
   <br /> 
 
   * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTTP headers: MIME: application/octect-stream body: `binary data here`
-
+  <br />  
+  
+  * **Risposta**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In caso negativo viene generato un messaggio HTTP 1.1 400 `{ err_msg : message here }`, in caso positivo invece viene inviata una risposta HTTP 1.1 200 OK senza alcun body all'interno.   
 </details>
 <br />  
+
+
 <details>
-<summary>GET /status</summary>
+  <summary>DELETE /file/{username}/{file_pathBASE64}</summary>  
+
+  * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di eliminare un file, se l'utente che è autenticato.*
+
+  * **Authenticated**:&nbsp;&nbsp;&nbsp;`TRUE`
+  <br /> 
+
+  * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTTP headers: MIME: application/octect-stream body: `binary data here`
+
+</details>
+
+<br /> 
+
+<details>
+  <summary>DELETE /chunk/{username}/{chunk_id}/{chunk_size}/{file_pathBASE64}/{timestamp_locale}</summary>  
+
+  * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di eliminare un chunk di un file, se l'utente che è autenticato.*
+
+  * **Authenticated**:&nbsp;&nbsp;&nbsp;`TRUE`
+  <br /> 
+
+  * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTTP headers: MIME: application/octect-stream body: `binary data here`
+
+</details>
+
+<br />  
+<details>
+<summary>GET /status/{username}</summary>
 
 * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di ottenere una checksum dell'intera cartella monitorata.*
 
@@ -230,7 +267,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 </details>
 <br />
 <details>
-<summary>GET /status/file</summary>
+<summary>GET /status/{username}/file</summary>
 
 * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di ottenere il JSON file del server con i dettagli sullo stato della cartella remota.*
 
@@ -240,7 +277,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 </details>
 <br />
 <details>
-<summary>GET /file/{chunk_id}/{chunksize}/{file_pathBASE64}</summary>
+<summary>GET /chunk/{username}/{chunk_id}/{chunksize}/{file_pathBASE64}</summary>
 
 * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di ottenere un chunk di un file dal server.*
 

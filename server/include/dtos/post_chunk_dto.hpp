@@ -14,6 +14,7 @@ private:
     std::string timestamp_locale;
     std::vector<char> chunk_body;
     std::string number_of_chunks;
+
 //POST /chunk/{username}/{chunk_id}/{chunk_size}/{chunk_hash}/{file_pathBASE64}/{timestamp_locale}
 public:
     PostChunkDTO(){};
@@ -38,6 +39,7 @@ public:
                     break;
                 case 4 :
                     chunk_size = std::stoi(uri_elements[i]);
+
                     break;
                 case 5 :
                     chunk_hash = uri_elements[i];
@@ -49,6 +51,7 @@ public:
                     file_path = macaron::Base64::Decode(uri_elements[i]);
                     break;
                 case 8 :
+
                     timestamp_locale = uri_elements[i];
                     break;
                 default :

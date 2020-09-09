@@ -40,6 +40,7 @@ public:
                     break;
                 case 4 :
                     chunk_size = std::stoi(uri_elements[i]);
+
                     break;
                 case 5:
                     chunk_hash = uri_elements[i];

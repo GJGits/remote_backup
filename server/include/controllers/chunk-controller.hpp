@@ -29,4 +29,5 @@ public:
     std::string put_file_chunk(const PutChunkDTO &put_chunk);
     std::string get_file_chunk(const GetChunkDTO &get_chunk);
     std::string delete_file_chunk(const DeleteChunkDTO &delete_chunk);
+
 };

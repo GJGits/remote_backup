@@ -99,6 +99,7 @@ public:
 
         (*structure)["entries"][index]["chunks"].push_back(chunk);
 */
+
         for (size_t i = 0; i < (*structure)["entries"][index]["chunks"].size();
              i++) {
             std::string ind = (*structure)["entries"][index]["chunks"][i]["id"];
@@ -201,6 +202,7 @@ public:
 
 
 
+
     void update_total_file_status(){
         std::string entries_dump = (*structure)["entries"].dump();
         std::vector<char> data(entries_dump.begin(), entries_dump.end());
@@ -244,6 +246,7 @@ public:
         outfile.close();
         return true;
     }
+
 
     bool get_file_found(){ return file_found;}
 };

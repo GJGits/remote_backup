@@ -69,7 +69,8 @@ ChunkController::handle(const http::server::request &req) {
         else
             throw WrongRquestFormat();
     }
-    if (req.method == "DELETE"){
+
+if (req.method == "DELETE"){
         std::smatch match;
         if (std::regex_search(req.uri.begin(), req.uri.end(), match, delete_chunk_rgx)) { //todo: La regex prende un pò tutto, migliorare
 
@@ -89,6 +90,7 @@ ChunkController::handle(const http::server::request &req) {
         else
             throw WrongRquestFormat();
     }
+
 
     throw WrongRquestFormat(); // todo: creare eccezione
 
@@ -117,3 +119,4 @@ std::string ChunkController::delete_file_chunk(const DeleteChunkDTO &delete_chun
     UserService *user_service = UserService::getInstance();
     return user_service->file_chunk_delete_service(delete_chunk);
 }
+

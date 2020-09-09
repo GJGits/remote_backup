@@ -4,6 +4,7 @@
 #include "status-controller.hpp"
 #include "chunk-controller.hpp"
 #include "file-controller.hpp"
+
 #include "../exceptions/exceptions.hpp"
 
 
@@ -23,6 +24,7 @@ public:
       controller_map["chunk"] = ChunkController::getInstance();
       controller_map["file"] = FileController::getInstance();
 
+
         // todo: inizializza
     }
     // qui map ok, recupero controller
@@ -39,6 +41,7 @@ public:
           return ChunkController::getInstance();
       else if (strcmp(res, "file") == 0)
           return FileController::getInstance();
+
     }
     throw ControllerNotRetrievable();
   }

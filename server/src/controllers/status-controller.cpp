@@ -22,6 +22,7 @@ StatusController::handle(const http::server::request &req) {
         std::clog << "Username: " << username << "\n";
 
         return MakeReply::make_1line_dump_jsonReply<std::string>(
+
                    get_status_file(username), //todo: al momento ritorna una roba strana, aggiustare il return tornando solo il json del file
                     http::server::reply::ok);
        // }
@@ -38,6 +39,7 @@ const std::string StatusController::get_status(const std::string &username) {
 }
 
 const std::string StatusController::get_status_file(const std::string &username) {
+
     UserService *user_service = UserService::getInstance();
     return user_service->getStatusFile(username);
 }
