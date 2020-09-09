@@ -13,7 +13,7 @@ bool FileRepository::deleteFile(const FileEntity &file){
 
         stmt = std::unique_ptr<
                sql::PreparedStatement>{std::move(con->prepareStatement(
-                "DELETE FROM fileinfo WHERE username = ? and path = ?;"))};
+                "DELETE FROM fileinfo WHERE f_username = ? and f_path = ?;"))};
 
         stmt->setString(1, sql::SQLString{file.getUsername().c_str()});
         stmt->setString(2, sql::SQLString{file.getPathFile().c_str()});
@@ -24,7 +24,7 @@ bool FileRepository::deleteFile(const FileEntity &file){
 
         stmt = std::unique_ptr<
                sql::PreparedStatement>{std::move(con->prepareStatement(
-        "DELETE FROM chunks WHERE username = ? and path = ?;"))};
+        "DELETE FROM chunks WHERE c_username = ? and c_path = ?;"))};
 
         stmt->setString(1, sql::SQLString{file.getUsername().c_str()});
         stmt->setString(2, sql::SQLString{file.getPathFile().c_str()});

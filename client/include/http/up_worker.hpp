@@ -40,14 +40,10 @@ private:
   static inline std::shared_ptr<UpWorker> instance{nullptr};
   const char *host = "remote_backup_nginx-server_1";
   const char *port = "80";
-  net::io_context ioc;
-  tcp::resolver resolver;
-  beast::tcp_stream stream;
   size_t job_count;
 
   UpWorker()
-      : is_running{true}, resolver{std::move(tcp::resolver{ioc})},
-        stream{std::move(beast::tcp_stream{ioc})}, job_count{0} {}
+      : is_running{true}, job_count{0} {}
 
 public:
   static std::shared_ptr<UpWorker> getIstance();

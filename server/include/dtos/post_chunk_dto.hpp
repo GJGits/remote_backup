@@ -64,9 +64,5 @@ public:
       }
     }
     chunk_body = reqbody;
-    for (auto it = chunk_body.begin(); it != chunk_body.end(); it++) {
-      std::clog << "char body (server): " << *it << "\n";
-    }
-    std::clog << "arrivo qui\n";
   }
 };

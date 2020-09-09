@@ -27,7 +27,7 @@ void RestClient::post_chunk(FileEntry &fentry) {
           std::to_string(jentry["chunks"][0]["id"].get<int>()) + "/" + std::to_string(size) +
           "/" + std::string{jentry["chunks"][0]["hash"]} + "/" +
           std::to_string(nchunks) + "/" +
-          macaron::Base64::Encode(std::string{jentry["path"]}) + "/" +
+          macaron::Base64::Encode(std::string{jentry["path"]}.substr(7)) + "/" +
           std::to_string(jentry["last_mod"].get<int>()),
       10};
   req.set(http::field::content_length, std::to_string(size));
@@ -51,7 +51,7 @@ void RestClient::put_chunk(FileEntry &fentry) {
           std::to_string(jentry["chunks"][0]["id"].get<int>()) + "/" + std::to_string(size) +
           "/" + std::string{jentry["chunks"][0]["hash"]} + "/" +
           std::to_string(nchunks) + "/" +
-          macaron::Base64::Encode(std::string{jentry["path"]}) + "/" +
+          macaron::Base64::Encode(std::string{jentry["path"]}.substr(7)) + "/" +
           std::to_string(jentry["last_mod"].get<int>()),
       10};
   req.set(http::field::content_length, std::to_string(size));    
@@ -69,7 +69,7 @@ void RestClient::delete_chunk(json &chk_info, size_t size) {
       "/chunk/" + std::string{config["username"]} + "/" +
           std::to_string(chk_info["chunks"][0]["id"].get<int>()) + "/" +
           std::to_string(size) + "/" +
-          macaron::Base64::Encode(std::string{chk_info["path"]}),
+          macaron::Base64::Encode(std::string{chk_info["path"]}.substr(7)),
       10};
   req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
   req.set(http::field::authorization, "Barear " + std::string{config["token"]});
@@ -86,7 +86,7 @@ void RestClient::delete_file(std::string &path) {
   http::request<http::vector_body<char>> req{
       http::verb::delete_,
       "/file/" + std::string{config["username"]} + "/" +
-          macaron::Base64::Encode(path),
+          macaron::Base64::Encode(path.substr(7)),
       10};
   req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
   req.set(http::field::authorization, "Barear " + std::string{config["token"]});

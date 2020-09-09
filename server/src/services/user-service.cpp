@@ -81,17 +81,17 @@ std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
         std::ofstream outfile;
 
         std::vector<char> chunk_body{post_file.getchunk_body()};
-        std::string padding(CHUNK_SIZE, '0');
+        std::string padding(CHUNK_SIZE, '\0');
         int i=0;
         int filesize = 0;
         if(chunk_rep.getFilePath(chunk_ent)==false) {
-            filesize = (post_file.getchunk_id()-1)*CHUNK_SIZE + post_file.getchunk_size();
+            filesize = (post_file.getchunk_id())*CHUNK_SIZE + post_file.getchunk_size();
             chunk_ent.setSizeFile(filesize);
-            outfile.open("../../filesystem/"+post_file.getusername()+"/"+post_file.getfile_path());
+            outfile.open("../../filesystem/"+post_file.getusername()+"/"+post_file.getfile_path(), std::ios::binary);
             for(i = 0 ; i < post_file.getchunk_id() ; i++){
                 if(i != post_file.getchunk_id()){
                     outfile.seekp(i*CHUNK_SIZE, std::ios_base::beg);
-                    outfile << padding;
+                    outfile.write(padding.c_str(),padding.size());
                 }
             }
 
@@ -99,7 +99,7 @@ std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
 
         }
         else {
-            outfile.open("../../filesystem/"+post_file.getusername()+"/"+post_file.getfile_path() , std::ios_base::in | std::ios_base::out | std::ios_base::ate);
+            outfile.open("../../filesystem/"+post_file.getusername()+"/"+post_file.getfile_path() , std::ios::binary);
 
             int max_id = div_ceil(chunk_rep.getFileSize(chunk_ent),CHUNK_SIZE);
 
