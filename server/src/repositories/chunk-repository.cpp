@@ -8,8 +8,11 @@ bool ChunkRepository::getFilePath(const ChunkEntity &chunk) {
 
         std::shared_ptr <sql::Connection> con = DBConnect::getConnection();
         stmt = std::unique_ptr < sql::PreparedStatement > {
-                std::move(con->prepareStatement("SELECT f_username FROM fileinfo WHERE f_path = ?"))};
+                std::move(con->prepareStatement("SELECT f_username FROM fileinfo WHERE f_path = ? and f_username = ?"))};
         stmt->setString(1, chunk.getPathFile());
+        stmt->setString(2, sql::SQLString{chunk.getUsername().c_str()});
+
+
         res = std::unique_ptr < sql::ResultSet > {std::move(stmt->executeQuery())};
         if (res->next()) {
             return true;
@@ -101,7 +104,7 @@ int ChunkRepository::getFileSize(const ChunkEntity &chunk){
     std::unique_ptr<sql::PreparedStatement> stmt;
     std::unique_ptr<sql::ResultSet> res;
 
-    try {
+
 
         std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
         stmt = std::unique_ptr<sql::PreparedStatement>{
@@ -114,16 +117,10 @@ int ChunkRepository::getFileSize(const ChunkEntity &chunk){
             return res->getInt("f_size");
 
         }
-        throw UsernameNotExists();
 
-    } catch (sql::SQLException &e) {
-        //std::clog << "select mysql error\n";
-        Logger::log(std::string{"select mysql error("} +
-                    std::to_string(e.getErrorCode()) + std::string{")"});
-        // ce la caviamo con un generico not found
-        throw UknownError();
+        throw FileSizeNotAvailable();
 
-    }
+
 
     throw UknownError();
 }

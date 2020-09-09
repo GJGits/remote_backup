@@ -71,7 +71,16 @@ void request_handler::handle_request(const request &req, reply &rep) {
               "error", e.what(), http::server::reply::internal_server_error);
       return;
   }
-
+    catch (FileSizeNotAvailable &e) {
+        rep = MakeReply::make_1line_jsonReply<std::string>(
+                "error", e.what(), http::server::reply::internal_server_error);
+        return;
+    }
+  catch (sql::SQLException &e) {
+      rep = MakeReply::make_1line_jsonReply<std::string>(
+              "error", std::to_string(e.getErrorCode()), http::server::reply::internal_server_error);
+      return;
+  }
 }
 
 } // namespace server

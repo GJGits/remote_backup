@@ -102,7 +102,7 @@ std::string UserService::file_chunk_add(const PostChunkDTO &post_file) {
         }
         else {
             outfile.open("../../filesystem/"+post_file.getusername()+"/"+post_file.getfile_path() , std::ios_base::in | std::ios_base::out | std::ios_base::ate);
-
+            std::clog << "SONO QUI\n";
             int max_id = div_ceil(chunk_rep.getFileSize(chunk_ent),full_chunk_size);
             if(post_file.getchunk_id() >= max_id){
                 for(i = max_id ; i < post_file.getchunk_id(); i++){
