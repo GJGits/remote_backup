@@ -27,9 +27,10 @@ void RestClient::post_chunk(FileEntry &fentry) {
           std::to_string(jentry["chunks"][0]["id"].get<int>()) + "/" + std::to_string(size) +
           "/" + std::string{jentry["chunks"][0]["hash"]} + "/" +
           std::to_string(nchunks) + "/" +
-          macaron::Base64::Encode(std::string{jentry["path"]}) +
+          macaron::Base64::Encode(std::string{jentry["path"]}) + "/" +
           std::to_string(jentry["last_mod"].get<int>()),
       10};
+  req.set(http::field::content_length, std::to_string(size));
   req.set(http::field::authorization, "Barear " + std::string{config["token"]});
   req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
   std::move(buffer.get(), buffer.get() + size, std::back_inserter(req.body()));
@@ -50,9 +51,10 @@ void RestClient::put_chunk(FileEntry &fentry) {
           std::to_string(jentry["chunks"][0]["id"].get<int>()) + "/" + std::to_string(size) +
           "/" + std::string{jentry["chunks"][0]["hash"]} + "/" +
           std::to_string(nchunks) + "/" +
-          macaron::Base64::Encode(std::string{jentry["path"]}) +
+          macaron::Base64::Encode(std::string{jentry["path"]}) + "/" +
           std::to_string(jentry["last_mod"].get<int>()),
       10};
+  req.set(http::field::content_length, std::to_string(size));    
   req.set(http::field::authorization, "Barear " + std::string{config["token"]});
   req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
   std::move(buffer.get(), buffer.get() + size, std::back_inserter(req.body()));

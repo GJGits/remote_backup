@@ -24,6 +24,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <ctime>
 
+#define CHUNK_SIZE 2097152
+
 
 class UserService {
     private:
