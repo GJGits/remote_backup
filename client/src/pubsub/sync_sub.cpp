@@ -79,7 +79,7 @@ void SyncSubscriber::on_file_modified(const Message &message) {
       rest_client->post_chunk(fentry);
     }
     if (i <= hashes.size() && hashes[i].compare(jentry["chunks"][0]) != 0) {
-      rest_client->put_chunk(fentry);
+      rest_client->put_chunk(chunk, jentry);
     }
     fentry.clear_chunks();
     i++;
