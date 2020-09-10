@@ -81,6 +81,16 @@ void request_handler::handle_request(const request &req, reply &rep) {
               "error", std::to_string(e.getErrorCode()), http::server::reply::internal_server_error);
       return;
   }
+    catch (FileNotDeleted &e) {
+        rep = MakeReply::make_1line_jsonReply<std::string>(
+                "error", e.what(), http::server::reply::internal_server_error);
+        return;
+    }
+  catch (FileNotOpened &e) {
+      rep = MakeReply::make_1line_jsonReply<std::string>(
+              "error", e.what(), http::server::reply::internal_server_error);
+      return;
+  }
 }
 
 } // namespace server

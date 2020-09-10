@@ -15,6 +15,6 @@ public:
   bool insertUser(const UserEntity &user);
   UserEntity getUserByUsername(const std::string &username);
   bool deleteUserByUsername(const std::string &username);
-  std::string update_hashed_status(const std::string &username);
+  std::string get_hashed_status(const std::string &username);
   json get_status_file(const std::string &username);
 };

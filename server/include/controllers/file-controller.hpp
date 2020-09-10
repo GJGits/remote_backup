@@ -25,5 +25,5 @@ public:
         return instance;
     }
     virtual const http::server::reply handle(const http::server::request &req);
-    const std::string delete_file(const DeleteFileDTO &del_file);
+    void delete_file(const DeleteFileDTO &del_file);
 };

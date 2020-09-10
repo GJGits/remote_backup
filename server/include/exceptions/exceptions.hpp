@@ -88,9 +88,9 @@ struct ChunkCorrupted : public std::exception
 {
     const char * what () const throw ()
     {
-        Logger::log(" The chunk is no ok\n");
+        Logger::log("The chunk received is different from the one calculated\n");
 
-        return "The chunk is no ok";
+        return "The chunk received is different from the one calculated";
     }
 
 
@@ -105,5 +105,26 @@ struct FileSizeNotAvailable : public std::exception
         return "The size of file is not retrievable";
     }
 
+};
+
+struct FileNotDeleted : public std::exception
+{
+    const char * what () const throw ()
+    {
+        Logger::log("The file could not be deleted\n");
+
+        return "The file could not be deleted";
+    }
+
+};
+
+struct FileNotOpened : public std::exception
+{
+    const char * what () const throw ()
+    {
+        Logger::log("The file could not be open\n");
+
+        return "The file could not be open";
+    }
 
 };
