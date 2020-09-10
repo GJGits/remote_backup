@@ -11,16 +11,7 @@ module.exports = class ClientConf {
 
     read() {
         fs.readFile('../client/config/client-conf.json', 'utf8', (err, jsonString) => {
-            if (err) {
-                console.log("File read failed:", err)
-                return
-            }
-            if (this.rightFormat(jsonString)) {
-
-                this.content = JSON.parse(jsonString);
-                return;
-            }
-            this.content = undefined;
+            this.content = JSON.parse(jsonString);
         });
     }
 
@@ -28,18 +19,13 @@ module.exports = class ClientConf {
         fs.writeFile('../client/config/client-conf.json', JSON.stringify(this.content), (err) => {
             if (err) {
                 console.log("File read failed:", err)
-                return
             }
         });
     }
 
     set(config) {
-        if (this.isValid(config.token)) {
-            this.content.token = config;
-            this.write();
-            return true;
-        }
-        return false;
+        this.content = config;
+        this.write();
     }
 
     reset() {
@@ -57,7 +43,7 @@ module.exports = class ClientConf {
     }
 
     isValid() {
-        return this.value_rgx.test(this.content.token) && !this.isExpired();
+        return this.content && this.value_rgx.test(this.content.token) && !this.isExpired();
     }
 
     rightFormat(json_string) {

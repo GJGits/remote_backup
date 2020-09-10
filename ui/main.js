@@ -15,7 +15,6 @@ const mb = menubar(
     }
   });
 
-var conf = new ClientConf();
 
 
 mb.on('ready', () => {
@@ -24,14 +23,9 @@ mb.on('ready', () => {
 
   // MESSAGE HANDLERS
 
-  ipcMain.on('token', (event, data) => {
-    if (data && data.username && data.token && conf.set(data)) {
-      mb.window.webContents.send('status-changed', "log-in");
-      event.returnValue = "ok";
-    } else {
-      event.returnValue = "ko";
-      mb.window.webContents.send('status-changed', "log-off");
-    }
+  ipcMain.on('config', (event, data) => {
+    let conf = new ClientConf();
+    conf.set(data);
   });
 
   // UDP INSTANCE DEFINITION
@@ -58,11 +52,10 @@ mb.on('ready', () => {
 });
 
 mb.on('after-create-window', () => {
-  if (token && token.isValid()) {
-    mb.window.webContents.send('status-changed', "log-in");
-  } else {
-    token.reset();
-    mb.window.webContents.send('status-changed', "log-off");
-  }
+  let conf = new ClientConf();
+  if (conf.isValid())
+    mb.window.webContents.send('status-changed', "logged");
+  else
+    mb.window.webContents.send('status-changed', "login");
   mb.window.openDevTools();
 });
