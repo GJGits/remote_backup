@@ -14,10 +14,7 @@ ChunkController::handle(const http::server::request &req) {
 
   if (req.method == "POST") {
     std::smatch match;
-    if (std::regex_search(
-            req.uri.begin(), req.uri.end(), match,
-            post_chunk_rgx)) {
-
+    if (std::regex_search(req.uri.begin(), req.uri.end(), match,post_chunk_rgx)) {
       // if (JWT::validateToken(req)) {
       PostChunkDTO post_chunk{};
       post_chunk.fill(req.uri, req.body);
@@ -32,9 +29,7 @@ ChunkController::handle(const http::server::request &req) {
   }
   else if (req.method == "PUT") {
     std::smatch match;
-    if (std::regex_search(
-            req.uri.begin(), req.uri.end(), match,
-            put_chunk_rgx)) {
+    if (std::regex_search(req.uri.begin(), req.uri.end(), match,put_chunk_rgx)) {
 
       // if (JWT::validateToken(req)) {
       PutChunkDTO put_chunk{};

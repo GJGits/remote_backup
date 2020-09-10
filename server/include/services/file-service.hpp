@@ -26,22 +26,22 @@
 #include "../common/constants.hpp"
 
 
-class UserService {
-    private:
-    inline static UserService *instance = nullptr;
-  
-    public:
-    
 
-   static UserService *getInstance() {
-    if (instance == nullptr) {
-      instance = new UserService();
-    }
-    return instance;
+class FileService {
+private:
+    inline static FileService *instance = nullptr;
+
+public:
+
+
+    static FileService *getInstance() {
+        if (instance == nullptr) {
+            instance = new FileService();
+        }
+        return instance;
     }
 
-    std::string login(const SigninDTO &user);
-    std::string signup(const SignupDTO &user);
-    std::string getStatus(const std::string &username);
+    std::string getStatusFile(const std::string &username);
+    void delete_file_service(const DeleteFileDTO &del_file);
 
 };

@@ -22,42 +22,23 @@
 class ChunkService {
 private:
     inline static ChunkService *instance = nullptr;
-    int index = 0;
 public:
 
 
     static ChunkService *getInstance() {
         if (instance == nullptr) {
             instance = new ChunkService();
-            instance->set_index(0);
         }
         return instance;
     }
-    void file_chunk_add(const PostChunkDTO &post_file);
-    void file_chunk_update(const PutChunkDTO &put_file);
+    int div_ceil(int numerator, int denominator);
+    void file_chunk_add(const PostChunkDTO &post_chunk);
+    void file_chunk_update(const PutChunkDTO &put_chunk);
     std::string file_chunk_get(const GetChunkDTO &get_file);
     void file_chunk_delete_service(const DeleteChunkDTO &del_chunk);
-
-    int get_index(){ return index;};
-    void set_index(int val){ index = val; };
-
-
-    void fill_padding(int start_index, int id_chunk, std::ofstream &outfile){
-        std::string padding(CHUNK_SIZE, '0');
-        for(int i = start_index ; i < id_chunk ; i++){
-            std::clog << start_index << "\n";
-                outfile.seekp(i*CHUNK_SIZE, std::ios_base::beg);
-                outfile.write(padding.c_str(),CHUNK_SIZE);
-        }
-    }
-
-    void open_file_custom(std::string &path, std::ofstream &outfile){
-        if(std::filesystem::exists(path))
-            outfile.open(path , std::ios::binary | std::ios::in | std::ios::out);
-        else
-            outfile.open(path, std::ios::binary | std::ios::out);
-        if(!outfile.is_open())
-            throw FileNotOpened();
-    }
-
+    void fill_padding(int start_index, int id_chunk, std::ofstream &outfile);
+    void open_write_file_custom(std::string &path, std::ofstream &outfile);
+    void open_read_file_custom(std::string &path, std::fstream &infile);
+    void write_data_in_file_close(int index, std::vector<char> chunk_body, std::ofstream &outfile);
+    std::string read_custom(int size,int index, std::fstream &infile);
 };

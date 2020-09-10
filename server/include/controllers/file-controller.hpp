@@ -8,6 +8,7 @@
 #include "../dtos/get_chunk_dto.hpp"
 #include "../dtos/post_chunk_dto.hpp"
 #include "../services/user-service.hpp"
+#include "../services/file-service.hpp"
 #include <regex>
 #include "../common/utility.hpp"
 

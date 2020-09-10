@@ -31,6 +31,6 @@ const std::string StatusController::get_status(const std::string &username) {
 
 const std::string StatusController::get_status_file(const std::string &username) {
 
-    UserService *user_service = UserService::getInstance();
-    return user_service->getStatusFile(username);
+    FileService *file_service = FileService::getInstance();
+    return file_service->getStatusFile(username);
 }

@@ -3,6 +3,7 @@
 #include "../dtos/signup_dto.hpp"
 #include "../dtos/signin_dto.hpp"
 #include "../services/user-service.hpp"
+#include "../services/file-service.hpp"
 #include "../http/header.hpp"
 #include <regex>
 #include "../common/makereply.hpp"

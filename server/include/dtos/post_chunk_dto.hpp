@@ -12,13 +12,12 @@ private:
   int chunk_id;
   int chunk_size;
   std::string file_path;
+  std::string full_file_path;
   std::string chunk_hash;
   std::string timestamp_locale;
   std::vector<char> chunk_body;
   std::string number_of_chunks;
 
-  // POST
-  // /chunk/{username}/{chunk_id}/{chunk_size}/{chunk_hash}/{file_pathBASE64}/{timestamp_locale}
 public:
   PostChunkDTO(){};
   std::string getusername() const;
@@ -26,43 +25,10 @@ public:
   int getchunk_size() const;
   std::string getchunk_hash() const;
   std::string getfile_path() const;
+  std::string get_full_file_path() const;
   std::string gettimestamp_locale() const;
   std::vector<char> getchunk_body() const;
   std::string getnumber_of_chunks() const;
 
-  const void fill(std::string requri,
-                  std::vector<char> reqbody) { // todo: passarlo per
-                                               // riferimento, non per copia
-    std::vector<std::string> uri_elements = Utility::split(requri, '/');
-    for (unsigned int i = 0; i < uri_elements.size(); i++) {
-      switch (i) {
-      case 2:
-        username = uri_elements[i];
-        break;
-      case 3:
-        chunk_id = std::stoi(uri_elements[i]);
-        break;
-      case 4:
-        chunk_size = std::stoi(uri_elements[i]);
-
-        break;
-      case 5:
-        chunk_hash = uri_elements[i];
-        break;
-      case 6:
-        number_of_chunks = uri_elements[i];
-        break;
-      case 7:
-        file_path = macaron::Base64::Decode(uri_elements[i]);
-        break;
-      case 8:
-
-        timestamp_locale = uri_elements[i];
-        break;
-      default:
-        break;
-      }
-    }
-    chunk_body = reqbody;
-  }
+  const void fill(std::string requri,std::vector<char> reqbody);
 };
