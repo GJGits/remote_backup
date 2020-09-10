@@ -244,7 +244,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 <br /> 
 
 <details>
-  <summary>DELETE /chunk/{username}/{chunk_id}/{file_pathBASE64}/{timestamp_locale}</summary>  
+  <summary>DELETE /chunk/{username}/{chunk_id}/{file_pathBASE64}</summary>  
 
   * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di eliminare un chunk di un file, se l'utente che è autenticato.*
 
