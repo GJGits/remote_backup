@@ -37,11 +37,12 @@ private:
 
   RestClient(){}
   void read_info();
+  void fill_headers(http::request<http::vector_body<char>> &req, size_t size = 0);
 
 public:
   static std::shared_ptr<RestClient> getInstance();
   void post_chunk(FileEntry &fentry);
-  void put_chunk(FileEntry &fentry);
+  void put_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk, json &jentry);
   void delete_chunk(json &chk_info, size_t size);
   void get_chunk();
   void delete_file(std::string &path);

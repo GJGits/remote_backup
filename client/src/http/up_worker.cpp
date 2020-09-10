@@ -11,6 +11,10 @@ std::shared_ptr<UpWorker> UpWorker::getIstance() {
 void UpWorker::run() {
   for (size_t i = 0; i < 2; i++) {
     workers.emplace_back([&]() {
+      net::io_context ioc;
+      tcp::resolver resolver(ioc);
+      beast::tcp_stream stream(ioc);
+      auto const results = resolver.resolve(host, port);
       std::shared_ptr<Broker> broker = Broker::getInstance();
       while (is_running) {
         http::request<http::vector_body<char>> req;
@@ -27,20 +31,10 @@ void UpWorker::run() {
             continue;
           }
         }
-        // fake upload time for a request plus response todo: delete
-        // send(req);
-        // read();
-        // The io_context is required for all I/O
-        net::io_context ioc;
-        // These objects perform our I/O
-        tcp::resolver resolver(ioc);
-        beast::tcp_stream stream(ioc);
-        auto const results = resolver.resolve(host, port);
-        stream.connect(results);
-        req.set(http::field::host, host);
-        http::write(stream, req);
-        read();
 
+        stream.connect(results);
+        send(stream, req);
+        read(stream);
         broker->publish(mex);
 
         {
@@ -63,16 +57,13 @@ void UpWorker::push_request(
   cv.notify_one();
 }
 
-void UpWorker::send(http::request<http::vector_body<char>> &request) {
+void UpWorker::send(beast::tcp_stream &stream,
+                    http::request<http::vector_body<char>> &request) {
   DurationLogger{"SEND"};
-  // auto const results = resolver.resolve(host, port);
-  // stream.connect(results);
-  // req.set(http::field::host, host);
-  // http::write(stream, req);
-  sleep(1);
+  http::write(stream, request);
 }
 
-void UpWorker::read() {
+void UpWorker::read(beast::tcp_stream &stream) {
   DurationLogger{"READ"};
   sleep(1);
 }

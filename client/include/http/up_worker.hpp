@@ -49,7 +49,7 @@ public:
   static std::shared_ptr<UpWorker> getIstance();
   void run();
   void push_request(const std::tuple<http::request<http::vector_body<char>>, const Message> &request);
-  void send(http::request<http::vector_body<char>> &request);
-  void read();
+  void send(beast::tcp_stream& stream, http::request<http::vector_body<char>> &request);
+  void read(beast::tcp_stream &stream);
   ~UpWorker();
 };
