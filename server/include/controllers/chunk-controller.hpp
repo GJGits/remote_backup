@@ -8,6 +8,7 @@
 #include "../dtos/get_chunk_dto.hpp"
 #include "../dtos/post_chunk_dto.hpp"
 #include "../services/user-service.hpp"
+#include "../services/chunk-service.hpp"
 #include <regex>
 #include "../common/utility.hpp"
 
@@ -25,9 +26,9 @@ public:
         return instance;
     }
     virtual const http::server::reply handle(const http::server::request &req);
-    std::string post_file_chunk(const PostChunkDTO &post_chunk);
-    std::string put_file_chunk(const PutChunkDTO &put_chunk);
+    void post_file_chunk(const PostChunkDTO &post_chunk);
+    void put_file_chunk(const PutChunkDTO &put_chunk);
     std::string get_file_chunk(const GetChunkDTO &get_chunk);
-    std::string delete_file_chunk(const DeleteChunkDTO &delete_chunk);
+    void delete_file_chunk(const DeleteChunkDTO &delete_chunk);
 
 };

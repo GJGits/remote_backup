@@ -23,8 +23,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <ctime>
-
-#define CHUNK_SIZE 4096
+#include "../common/constants.hpp"
 
 
 class UserService {
@@ -45,10 +44,6 @@ class UserService {
     std::string signup(const SignupDTO &user);
     std::string getStatus(const std::string &username);
     std::string getStatusFile(const std::string &username);
-    std::string file_chunk_add(const PostChunkDTO &post_file);
-    std::string file_chunk_update(const PutChunkDTO &put_file);
-    std::string file_chunk_get(const GetChunkDTO &get_file);
-    std::string delete_file_service(const DeleteFileDTO &del_file);
-    std::string file_chunk_delete_service(const DeleteChunkDTO &del_chunk);
+    void delete_file_service(const DeleteFileDTO &del_file);
 
 };
