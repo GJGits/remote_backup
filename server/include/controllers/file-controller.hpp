@@ -15,16 +15,11 @@
 class FileController : public Controller {
 
 private:
-    inline static FileController *instance = nullptr;
+    static inline std::shared_ptr<FileController> instance{nullptr};
 
 public:
-    // contiene switch_case per inoltrare al metodo corretto
-    static FileController *getInstance() {
-        if (instance == nullptr) {
-            instance = new FileController();
-        }
-        return instance;
-    }
+    static std::shared_ptr<FileController> getInstance();
+
     virtual const http::server::reply handle(const http::server::request &req);
     void delete_file(const DeleteFileDTO &del_file);
 };

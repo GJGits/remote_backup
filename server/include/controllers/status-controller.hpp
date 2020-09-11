@@ -13,17 +13,12 @@
 
 class StatusController : public Controller {
 private:
-  inline static StatusController *instance = nullptr;
+    static inline std::shared_ptr<StatusController> instance{nullptr};
 
 public:
-  // contiene switch_case per inoltrare al metodo corretto
-  static StatusController *getInstance() {
-    if (instance == nullptr) {
-      instance = new StatusController();
-    }
-    return instance;
-  }
-  virtual const http::server::reply handle(const http::server::request &req);
+    static std::shared_ptr<StatusController> getInstance();
+
+    virtual const http::server::reply handle(const http::server::request &req);
   const std::string get_status(const std::string &username);
   const std::string get_status_file(const std::string &username);
 };

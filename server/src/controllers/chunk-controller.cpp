@@ -5,6 +5,15 @@ inline static std::regex put_chunk_rgx{"^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[
 inline static std::regex get_chunk_rgx{"^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+$"};
 inline static std::regex delete_chunk_rgx{"^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w=+]+$"};
 
+
+
+std::shared_ptr<ChunkController> ChunkController::getInstance() {
+    if (instance.get() == nullptr) {
+        instance = std::shared_ptr<ChunkController>(new ChunkController{});
+    }
+    return instance;
+}
+
 const http::server::reply
 ChunkController::handle(const http::server::request &req) {
 

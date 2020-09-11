@@ -3,7 +3,12 @@
 inline static std::regex signin_rgx{"^\\{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\"\\}$"};
 inline static std::regex signup_rgx{"^\\{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\",\\s?\"password_confirm\":\\s?\"\\w+\"\\}$"};
 
-
+std::shared_ptr<AuthController> AuthController::getInstance() {
+    if (instance.get() == nullptr) {
+        instance = std::shared_ptr<AuthController>(new AuthController{});
+    }
+    return instance;
+}
 
 const http::server::reply
 AuthController::handle(const http::server::request &req) {

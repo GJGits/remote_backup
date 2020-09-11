@@ -15,16 +15,12 @@
 class ChunkController : public Controller {
 
 private:
-    inline static ChunkController *instance = nullptr;
+    static inline std::shared_ptr<ChunkController> instance{nullptr};
 
 public:
     // contiene switch_case per inoltrare al metodo corretto
-    static ChunkController *getInstance() {
-        if (instance == nullptr) {
-            instance = new ChunkController();
-        }
-        return instance;
-    }
+    static std::shared_ptr<ChunkController> getInstance();
+
     virtual const http::server::reply handle(const http::server::request &req);
     void post_file_chunk(const PostChunkDTO &post_chunk);
     void put_file_chunk(const PutChunkDTO &put_chunk);

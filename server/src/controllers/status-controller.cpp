@@ -1,5 +1,13 @@
 #include "../../include/controllers/status-controller.hpp"
 
+
+std::shared_ptr<StatusController> StatusController::getInstance() {
+    if (instance.get() == nullptr) {
+        instance = std::shared_ptr<StatusController>(new StatusController{});
+    }
+    return instance;
+}
+
 // regex utente: "^\\w+$"
 inline static std::regex user_rgx{"^/status/(\\w+)$"};
 inline static std::regex user_rgx_file{"^/status/(\\w+)/file$"};

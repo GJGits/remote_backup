@@ -22,7 +22,7 @@ void request_handler::handle_request(const request &req, reply &rep) {
 
   try {
 
-    Controller *c = ControllerRouter::getController(req.uri);
+      std::shared_ptr<Controller> c = ControllerRouter::getController(req.uri);
     rep = c->handle(req);
     return;
 
