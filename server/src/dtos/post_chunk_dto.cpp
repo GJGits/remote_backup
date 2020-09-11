@@ -6,7 +6,6 @@ int PostChunkDTO::getchunk_size() const { return chunk_size; }
 std::string PostChunkDTO::getchunk_hash() const { return chunk_hash; }
 std::string PostChunkDTO::getfile_path() const { return file_path; }
 std::string PostChunkDTO::get_full_file_path() const { return full_file_path; }
-std::string PostChunkDTO::getnumber_of_chunks() const { return number_of_chunks; }
 std::string PostChunkDTO::gettimestamp_locale() const { return timestamp_locale; }
 std::vector<char> PostChunkDTO::getchunk_body() const { return chunk_body; }
 
@@ -27,13 +26,10 @@ const void PostChunkDTO::fill(std::string requri,std::vector<char> reqbody) {
                 chunk_hash = uri_elements[i];
                 break;
             case 6:
-                number_of_chunks = uri_elements[i];
-                break;
-            case 7:
                 file_path = macaron::Base64::Decode(uri_elements[i]);
                 full_file_path = "../../filesystem/"+username+"/"+file_path;
                 break;
-            case 8:
+            case 7:
                 timestamp_locale = uri_elements[i];
                 break;
             default:

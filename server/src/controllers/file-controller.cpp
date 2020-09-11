@@ -1,6 +1,6 @@
 #include "../../include/controllers/file-controller.hpp"
 
-inline static std::regex delete_rgx{"^\\/file\\/(\\w+)\\/(\\w+\\S+)$"};
+inline static std::regex delete_rgx{"^\\/file\\/[\\w]+\\/[\\w=+]+$"};
 
 const http::server::reply
 FileController::handle(const http::server::request &req) {

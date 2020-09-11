@@ -16,7 +16,6 @@ private:
   std::string chunk_hash;
   std::string timestamp_locale;
   std::vector<char> chunk_body;
-  std::string number_of_chunks;
 
 public:
   PostChunkDTO(){};
@@ -28,7 +27,6 @@ public:
   std::string get_full_file_path() const;
   std::string gettimestamp_locale() const;
   std::vector<char> getchunk_body() const;
-  std::string getnumber_of_chunks() const;
 
   const void fill(std::string requri,std::vector<char> reqbody);
 };

@@ -9,6 +9,7 @@ int ChunkService::div_ceil(int numerator, int denominator)
 
 
 void ChunkService::file_chunk_add(const PostChunkDTO &post_chunk) {
+    sleep(1);
     std::clog << "l'hash vero è: "<< Sha256::getSha256(post_chunk.getchunk_body()) << "\n";
     if(Sha256::getSha256(post_chunk.getchunk_body()).compare(post_chunk.getchunk_hash()) == 0){
         ChunkEntity chunk_ent{post_chunk.getusername(), post_chunk.getchunk_id(), post_chunk.getchunk_hash(), post_chunk.getfile_path(), post_chunk.getchunk_size(), post_chunk.gettimestamp_locale()};
@@ -67,7 +68,7 @@ std::string ChunkService::file_chunk_get(const GetChunkDTO &get_file) {
 
 void ChunkService::file_chunk_delete_service(const DeleteChunkDTO &del_chunk){
 
-    ChunkEntity chunk_ent{del_chunk.getusername(), del_chunk.getchunk_id(), del_chunk.getfile_path(), del_chunk.getchunk_size(),del_chunk.gettimestamp_locale()};
+    ChunkEntity chunk_ent{del_chunk.getusername(), del_chunk.getchunk_id(), del_chunk.getfile_path(),del_chunk.gettimestamp_locale()};
     ChunkRepository chunk_rep;
     std::clog << del_chunk.get_full_file_path() << "\n";
     std::filesystem::resize_file(del_chunk.get_full_file_path(), del_chunk.getchunk_id() * CHUNK_SIZE);
@@ -78,7 +79,7 @@ void ChunkService::file_chunk_delete_service(const DeleteChunkDTO &del_chunk){
 }
 
 void ChunkService::fill_padding(int start_index, int id_chunk, std::ofstream &outfile){
-    std::string padding(CHUNK_SIZE, '0');
+    std::string padding(CHUNK_SIZE, '\0');
     for(int i = start_index ; i < id_chunk ; i++){
         outfile.seekp(i*CHUNK_SIZE, std::ios_base::beg);
         outfile.write(padding.c_str(),CHUNK_SIZE);
@@ -88,8 +89,12 @@ void ChunkService::fill_padding(int start_index, int id_chunk, std::ofstream &ou
 void ChunkService::open_write_file_custom(std::string &path, std::ofstream &outfile){
     if(std::filesystem::exists(path))
         outfile.open(path , std::ios::binary | std::ios::in | std::ios::out);
-    else
+    else {
+        std::string directories = Utility::directories_path(path,'/');
+        if(!directories.empty())
+            std::filesystem::create_directories(directories);
         outfile.open(path, std::ios::binary | std::ios::out);
+    }
     if(!outfile.is_open())
         throw FileNotOpened();
 }
