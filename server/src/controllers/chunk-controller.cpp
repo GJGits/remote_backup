@@ -77,27 +77,26 @@ ChunkController::handle(const http::server::request &req) {
 };
 
 void ChunkController::post_file_chunk(const PostChunkDTO &post_chunk) {
-
-  ChunkService *chunk_service = ChunkService::getInstance();
-  chunk_service->file_chunk_add(post_chunk);
+    std::shared_ptr<ChunkService> chunk_service = ChunkService::getInstance();
+    chunk_service->file_chunk_add(post_chunk);
   return;
 }
 
 void ChunkController::put_file_chunk(const PutChunkDTO &put_chunk) {
 
-    ChunkService *chunk_service = ChunkService::getInstance();
+    std::shared_ptr<ChunkService> chunk_service = ChunkService::getInstance();
     chunk_service->file_chunk_update(put_chunk);
   return;
 }
 
 std::string ChunkController::get_file_chunk(const GetChunkDTO &get_chunk) {
 
-  ChunkService *chunk_service = ChunkService::getInstance();
+    std::shared_ptr<ChunkService> chunk_service = ChunkService::getInstance();
   return chunk_service->file_chunk_get(get_chunk);
 }
 
 void ChunkController::delete_file_chunk(const DeleteChunkDTO &delete_chunk) {
 
-  ChunkService *chunk_service = ChunkService::getInstance();
+    std::shared_ptr<ChunkService> chunk_service = ChunkService::getInstance();
   return chunk_service->file_chunk_delete_service(delete_chunk);
 }

@@ -29,19 +29,15 @@
 
 class FileService {
 private:
-    inline static FileService *instance = nullptr;
+    static inline std::shared_ptr<FileService> instance{nullptr};
 
 public:
 
-
-    static FileService *getInstance() {
-        if (instance == nullptr) {
-            instance = new FileService();
-        }
-        return instance;
-    }
+    std::mutex mtx;
+    static std::shared_ptr<FileService> getInstance();
 
     std::string getStatusFile(const std::string &username);
     void delete_file_service(const DeleteFileDTO &del_file);
+    ~FileService() {}
 
 };

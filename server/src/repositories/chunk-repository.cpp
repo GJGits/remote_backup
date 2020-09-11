@@ -1,12 +1,16 @@
 #include "../../include/repositories/chunk-repository.hpp"
 
+
 bool ChunkRepository::getFilePath(const ChunkEntity &chunk) {
     std::unique_ptr <sql::PreparedStatement> stmt;
     std::unique_ptr <sql::ResultSet> res;
     std::shared_ptr <sql::Connection> con = DBConnect::getConnection();
+    std::clog << "Il path file è: " << chunk.getPathFile() << "\n";
+    std::clog << "Il username è: " << chunk.getUsername() << "\n";
+
     stmt = std::unique_ptr < sql::PreparedStatement > {
-            std::move(con->prepareStatement("SELECT f_username FROM fileinfo WHERE f_path = ? and f_username = ?"))};
-    stmt->setString(1, chunk.getPathFile());
+            std::move(con->prepareStatement("SELECT f_username FROM fileinfo WHERE f_path = ? and f_username = ?;"))};
+    stmt->setString(1, sql::SQLString{chunk.getPathFile().c_str()});
     stmt->setString(2, sql::SQLString{chunk.getUsername().c_str()});
     res = std::unique_ptr < sql::ResultSet > {std::move(stmt->executeQuery())};
     return res->next() ?  true : false;
@@ -48,7 +52,7 @@ int ChunkRepository::getFileSize(const ChunkEntity &chunk){
     std::unique_ptr<sql::ResultSet> res;
     std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
     stmt = std::unique_ptr<sql::PreparedStatement>{
-            std::move(con->prepareStatement("SELECT f_size FROM fileinfo WHERE f_username = ? and f_path = ?"))};
+            std::move(con->prepareStatement("SELECT f_size FROM fileinfo WHERE f_username = ? and f_path = ?;"))};
     stmt->setString(1, sql::SQLString{chunk.getUsername().c_str()});
     stmt->setString(2, sql::SQLString{chunk.getPathFile().c_str()});
 

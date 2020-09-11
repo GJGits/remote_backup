@@ -8,6 +8,7 @@
 class ChunkRepository {
 private:
 public:
+
     bool getFilePath(const ChunkEntity &chunk);
     bool addChunk(const ChunkEntity &chunk);
     bool addFileInfo(const ChunkEntity &chunk);

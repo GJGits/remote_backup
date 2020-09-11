@@ -22,16 +22,12 @@
 
 class ChunkService {
 private:
-    inline static ChunkService *instance = nullptr;
+    static inline std::shared_ptr<ChunkService> instance{nullptr};
 public:
+    std::mutex mtx;
 
+    static std::shared_ptr<ChunkService> getInstance();
 
-    static ChunkService *getInstance() {
-        if (instance == nullptr) {
-            instance = new ChunkService();
-        }
-        return instance;
-    }
     int div_ceil(int numerator, int denominator);
     void file_chunk_add(const PostChunkDTO &post_chunk);
     void file_chunk_update(const PutChunkDTO &put_chunk);
@@ -42,4 +38,5 @@ public:
     void open_read_file_custom(std::string &path, std::fstream &infile);
     void write_data_in_file_close(int index, std::vector<char> chunk_body, std::ofstream &outfile);
     std::string read_custom(int size,int index, std::fstream &infile);
+    ~ChunkService() {}
 };

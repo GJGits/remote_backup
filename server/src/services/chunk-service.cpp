@@ -1,5 +1,11 @@
 #include "../../include/services/chunk-service.hpp"
 
+std::shared_ptr<ChunkService> ChunkService::getInstance() {
+    if (instance.get() == nullptr) {
+        instance = std::shared_ptr<ChunkService>(new ChunkService{});
+    }
+    return instance;
+}
 
 int ChunkService::div_ceil(int numerator, int denominator)
 {
@@ -9,13 +15,13 @@ int ChunkService::div_ceil(int numerator, int denominator)
 
 
 void ChunkService::file_chunk_add(const PostChunkDTO &post_chunk) {
-    sleep(1);
     std::clog << "l'hash vero è: "<< Sha256::getSha256(post_chunk.getchunk_body()) << "\n";
     if(Sha256::getSha256(post_chunk.getchunk_body()).compare(post_chunk.getchunk_hash()) == 0){
         ChunkEntity chunk_ent{post_chunk.getusername(), post_chunk.getchunk_id(), post_chunk.getchunk_hash(), post_chunk.getfile_path(), post_chunk.getchunk_size(), post_chunk.gettimestamp_locale()};
         ChunkRepository chunk_rep;
         std::ofstream outfile;
         std::string full_path = post_chunk.get_full_file_path();
+        std::unique_lock lk(mtx);
         open_write_file_custom(full_path,outfile);
         if(!chunk_rep.getFilePath(chunk_ent)) {  /* File doesn't exist yet */
             chunk_ent.setSizeFile((post_chunk.getchunk_id())*CHUNK_SIZE + post_chunk.getchunk_size());
@@ -67,6 +73,7 @@ std::string ChunkService::file_chunk_get(const GetChunkDTO &get_file) {
 }
 
 void ChunkService::file_chunk_delete_service(const DeleteChunkDTO &del_chunk){
+    std::unique_lock lk(mtx);
 
     ChunkEntity chunk_ent{del_chunk.getusername(), del_chunk.getchunk_id(), del_chunk.getfile_path(),del_chunk.gettimestamp_locale()};
     ChunkRepository chunk_rep;

@@ -78,7 +78,7 @@ void request_handler::handle_request(const request &req, reply &rep) {
     }
   catch (sql::SQLException &e) {
       rep = MakeReply::make_1line_jsonReply<std::string>(
-              "error", std::to_string(e.getErrorCode()), http::server::reply::internal_server_error);
+              "error", std::string{"Error code:  "} + e.what() + std::string{"___ Error Explanation: "} + std::to_string(e.getErrorCode()) + std::string{"___ SQL STATE: "}+ e.getSQLState() , http::server::reply::internal_server_error);
       return;
   }
     catch (FileNotDeleted &e) {

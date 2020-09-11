@@ -28,20 +28,17 @@
 
 class UserService {
     private:
-    inline static UserService *instance = nullptr;
-  
-    public:
-    
+    static inline std::shared_ptr<UserService> instance{nullptr};
 
-   static UserService *getInstance() {
-    if (instance == nullptr) {
-      instance = new UserService();
-    }
-    return instance;
-    }
+public:
+
+
+    static std::shared_ptr<UserService> getInstance();
+
 
     std::string login(const SigninDTO &user);
     std::string signup(const SignupDTO &user);
     std::string getStatus(const std::string &username);
+    ~UserService() {}
 
 };

@@ -24,13 +24,13 @@ const http::server::reply StatusController::handle(const http::server::request &
 }
 
 const std::string StatusController::get_status(const std::string &username) {
+    std::shared_ptr<UserService> user_service = UserService::getInstance();
 
-  UserService *user_service = UserService::getInstance();
   return user_service->getStatus(username);
 }
 
 const std::string StatusController::get_status_file(const std::string &username) {
 
-    FileService *file_service = FileService::getInstance();
+    std::shared_ptr<FileService> file_service = FileService::getInstance();
     return file_service->getStatusFile(username);
 }

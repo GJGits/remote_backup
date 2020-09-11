@@ -1,6 +1,12 @@
 #include "../../include/services/user-service.hpp"
 
 
+std::shared_ptr<UserService> UserService::getInstance() {
+    if (instance.get() == nullptr) {
+        instance = std::shared_ptr<UserService>(new UserService{});
+    }
+    return instance;
+}
 
 std::string UserService::login(const SigninDTO &user) {
   UserRepository user_rep;

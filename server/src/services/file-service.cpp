@@ -1,5 +1,11 @@
 #include "../../include/services/file-service.hpp"
 
+std::shared_ptr<FileService> FileService::getInstance() {
+    if (instance.get() == nullptr) {
+        instance = std::shared_ptr<FileService>(new FileService{});
+    }
+    return instance;
+}
 
 
 std::string FileService::getStatusFile(const std::string &username) {
@@ -13,6 +19,8 @@ std::string FileService::getStatusFile(const std::string &username) {
 
 
 void FileService::delete_file_service(const DeleteFileDTO &del_file) {
+    std::unique_lock lk(mtx);
+
     FileEntity file_ent{del_file.getusername(),del_file.getfile_path()};
     FileRepository file_rep;
     if(file_rep.deleteFile(file_ent)){

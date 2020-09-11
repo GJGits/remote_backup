@@ -8,6 +8,7 @@
 class FileRepository {
 private:
 public:
+
     bool deleteFile(const FileEntity &chunk);
 
 
