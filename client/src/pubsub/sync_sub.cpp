@@ -77,7 +77,7 @@ void SyncSubscriber::on_file_modified(const Message &message) {
     std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
     json jentry = fentry.get_json_representation();
     if (i > hashes.size()) {
-      rest_client->post_chunk(fentry);
+      rest_client->post_chunk(chunk, jentry);
     }
     if (i <= hashes.size() && hashes[i].compare(jentry["chunks"][0]) != 0) {
       rest_client->put_chunk(chunk, jentry);
