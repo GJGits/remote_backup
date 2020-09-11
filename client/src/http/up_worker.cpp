@@ -34,9 +34,12 @@ void UpWorker::run() {
 
         stream.connect(results);
         send(stream, req);
-        read(stream);
-        broker->publish(mex);
-
+        http::response<http::dynamic_body> res = read(stream);
+        std::clog << "response: " << res << "\n";
+        if (res.result_int() == 200) {
+          broker->publish(mex);
+        }
+        
         {
           std::unique_lock lk{m};
           job_count--;
@@ -63,9 +66,15 @@ void UpWorker::send(beast::tcp_stream &stream,
   http::write(stream, request);
 }
 
-void UpWorker::read(beast::tcp_stream &stream) {
+http::response<http::dynamic_body> UpWorker::read(beast::tcp_stream &stream) {
   DurationLogger{"READ"};
-  sleep(1);
+  // This buffer is used for reading and must be persisted
+  beast::flat_buffer buffer;
+  // Declare a container to hold the response
+  http::response<http::dynamic_body> res;
+  // Receive the HTTP response
+  http::read(stream, buffer, res);
+  return res;
 }
 
 UpWorker::~UpWorker() {

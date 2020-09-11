@@ -21,11 +21,10 @@ void RestClient::fill_headers(http::request<http::vector_body<char>> &req,
   req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 }
 
-void RestClient::post_chunk(FileEntry &fentry) {
+void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
+                            json &jentry) {
   std::shared_ptr<UpWorker> up_worker = UpWorker::getIstance();
   std::shared_ptr<Broker> broker = Broker::getInstance();
-  std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
-  json jentry = fentry.get_json_representation();
   std::shared_ptr<char[]> buffer = std::get<0>(chunk);
   http::request<http::vector_body<char>> req{
       http::verb::post,
@@ -33,7 +32,7 @@ void RestClient::post_chunk(FileEntry &fentry) {
           std::to_string(jentry["chunks"][0]["id"].get<int>()) + "/" +
           std::to_string(std::get<1>(chunk)) + "/" +
           std::string{jentry["chunks"][0]["hash"]} + "/" +
-          std::to_string(fentry.get_nchunks()) + "/" +
+          std::to_string(jentry["nchunks"].get<int>()) + "/" +
           macaron::Base64::Encode(std::string{jentry["path"]}.substr(7)) + "/" +
           std::to_string(jentry["last_mod"].get<int>()),
       10};

@@ -41,7 +41,7 @@ private:
 
 public:
   static std::shared_ptr<RestClient> getInstance();
-  void post_chunk(FileEntry &fentry);
+  void post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk, json &jentry);
   void put_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk, json &jentry);
   void delete_chunk(json &chk_info, size_t size);
   void get_chunk();

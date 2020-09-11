@@ -50,6 +50,6 @@ public:
   void run();
   void push_request(const std::tuple<http::request<http::vector_body<char>>, const Message> &request);
   void send(beast::tcp_stream& stream, http::request<http::vector_body<char>> &request);
-  void read(beast::tcp_stream &stream);
+  http::response<http::dynamic_body> read(beast::tcp_stream &stream);
   ~UpWorker();
 };
