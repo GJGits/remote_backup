@@ -7,7 +7,6 @@ bool ChunkRepository::getFilePath(const ChunkEntity &chunk) {
     std::shared_ptr <sql::Connection> con = DBConnect::getConnection();
     std::clog << "Il path file è: " << chunk.getPathFile() << "\n";
     std::clog << "Il username è: " << chunk.getUsername() << "\n";
-
     stmt = std::unique_ptr < sql::PreparedStatement > {
             std::move(con->prepareStatement("SELECT f_username FROM fileinfo WHERE f_path = ? and f_username = ?;"))};
     stmt->setString(1, sql::SQLString{chunk.getPathFile().c_str()});
