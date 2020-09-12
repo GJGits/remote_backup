@@ -13,6 +13,7 @@
 #include "header.hpp"
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace http {
 namespace server {
@@ -25,6 +26,7 @@ struct request {
   int http_version_minor;
   std::vector<header> headers;
   std::vector<char> body;
+  std::shared_ptr<std::vector<char>> body2{new std::vector<char>{}};
 };
 
 } // namespace server
