@@ -128,3 +128,14 @@ struct FileNotOpened : public std::exception
     }
 
 };
+
+struct DatabaseInvalidConnection : public std::exception
+{
+    const char * what () const throw ()
+    {
+        Logger::log("The database connection is not available\n");
+
+        return "The database connection is not available";
+    }
+
+};
