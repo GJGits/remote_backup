@@ -8,6 +8,8 @@
   (and mysql_connection.h). This will reduce your build time!
 */
 #include "../common/logger.hpp"
+#include "../common/constants.hpp"
+
 #include "mysql_connection.h"
 #include <array>
 #include <cppconn/driver.h>
@@ -21,6 +23,8 @@
 /**
  * TODO: questa classe deve essere un singleton
  */
+
+
 class DBConnect {
 
 private:

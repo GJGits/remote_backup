@@ -4,8 +4,10 @@ DBConnect* DBConnect::instance = nullptr;
 std::shared_ptr<sql::Connection>
 DBConnect::getConnection()
 {
+
     if (DBConnect::instance == nullptr) {
         DBConnect::instance = new DBConnect();
+
         sql::Driver* driver = get_driver_instance();
         // TODO: convertire 16 con il campo max_connections letto da file
         for (int i = 0; i < 16; i++) {
@@ -23,8 +25,13 @@ DBConnect::getConnection()
             }
         }
     }
+
+    DBConnect::instance->index = DBConnect::instance->index == 16 ? 0 : DBConnect::instance->index;
     int scelta = DBConnect::instance->index;
-    DBConnect::instance->index == 15 ? 0 : DBConnect::instance->index++;
-    //std::clog << "Restituita connection: @" << scelta << "\n";
+    DBConnect::instance->index ++ ;
+
+    std::clog << "Restituita connection: @" << scelta << "\n";
+
+
     return DBConnect::instance->connections[scelta];
 }

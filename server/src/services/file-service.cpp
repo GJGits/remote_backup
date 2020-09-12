@@ -19,7 +19,6 @@ std::string FileService::getStatusFile(const std::string &username) {
 
 
 void FileService::delete_file_service(const DeleteFileDTO &del_file) {
-    std::unique_lock lk(mtx);
 
     FileEntity file_ent{del_file.getusername(),del_file.getfile_path()};
     FileRepository file_rep;
