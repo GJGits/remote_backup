@@ -10,9 +10,7 @@ module.exports = class ClientConf {
     }
 
     read() {
-        fs.readFile('../client/config/client-conf.json', 'utf8', (err, jsonString) => {
-            this.content = JSON.parse(jsonString);
-        });
+        this.content = JSON.parse(fs.readFileSync('../client/config/client-conf.json', 'utf8'));
     }
 
     write() {
@@ -43,6 +41,7 @@ module.exports = class ClientConf {
     }
 
     isValid() {
+        console.log('content:', this.content);
         return this.content && this.value_rgx.test(this.content.token) && !this.isExpired();
     }
 

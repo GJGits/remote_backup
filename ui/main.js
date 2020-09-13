@@ -38,8 +38,10 @@ mb.on('ready', () => {
     console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
     msg = new TextDecoder("utf-8").decode(msg);
     mb.window.webContents.send('asynchronous-message', msg);
-    if (msg === "log-in" || msg === "log-off")
+    if (msg === "login" || msg === "logged")
       mb.window.webContents.send('status-changed', msg);
+    if (msg === "start-sync" || msg == "end-sync")
+      mb.window.webContents.send('sync', msg);
   });
 
   server.on('listening', () => {
@@ -57,5 +59,6 @@ mb.on('after-create-window', () => {
     mb.window.webContents.send('status-changed', "logged");
   else
     mb.window.webContents.send('status-changed', "login");
+  mb.window.webContents.send('sync', "synced");
   mb.window.openDevTools();
 });

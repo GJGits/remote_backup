@@ -27,12 +27,21 @@ ipcRenderer.on('synchronous-message', (event, arg) => {
 
 ipcRenderer.on('status-changed', (event, arg) => {
     arg = arg.replace("\n", "");
+    console.log("status changed:", arg);
     change_status(arg);
 });
 
-$(document).ready(function () {
+ipcRenderer.on('sync', (event, arg) => {
+    if (arg === 'start-sync') {
+        $("#loading").show();
+        $("#synced").hide();
+    } else {
+        $("#loading").hide();
+        $("#synced").show();
+    }
+});
 
-    change_status("login");
+$(document).ready(function () {
 
     /* EVENTS HANDLERS */
 
@@ -59,7 +68,7 @@ $(document).ready(function () {
             dataType: "json",
         }).done(function (data) {
             console.log("dati successo", data);
-            ipcRenderer.send('config', {username: username, token: data.token});
+            ipcRenderer.send('config', { username: username, token: data.token });
             change_status("logged");
         }).fail(function (error) {
             $(".alert.alert-danger.error").show();
@@ -81,7 +90,7 @@ $(document).ready(function () {
             dataType: "json"
         }).done(function (data) {
             console.log("dati successo", data);
-            ipcRenderer.send('config', {username: username, token: data.token});
+            ipcRenderer.send('config', { username: username, token: data.token });
             change_status("logged");
         }).fail(function (error) {
             $(".alert.alert-danger.error").show();

@@ -111,60 +111,28 @@
         <h1>REMOTEBACKUP</h1>
       </span>
       <span class="align-middle">
-        <img class="btn-img" src="imgs/play.png" alt="" height="30" width="30">
-        <img class="btn-img" src="imgs/pause.png" alt="" height="30" width="30">
       </span>
 
     </div>
     <hr>
 
-    <div id="transfers" class="container">
-      
+    <div id="synced">
+
+      <!--  WHEN TRANSFERS OK -->
+      <img src="imgs/check-mark.png" alt=""
+        style="margin-left: 200px; background-color: whitesmoke; border-radius: 50px;" height="48" width="48">
+      <div class="col-12">
+        <p class="text-center font-weight-bold mt-4">RemoteBackup attualmente sincronizzato</p>
+      </div>
     </div>
 
-    <!--  WHEN TRANSFERS OK -->
-    <img src="imgs/check-mark.png" alt="" style="margin-left: 200px; background-color: whitesmoke; border-radius: 50px;"
-      height="48" width="48">
-    <div class="col-12">
-      <p class="text-center font-weight-bold mt-4">RemoteBackup attualmente sincronizzato</p>
-    </div>
-
-    <!-- UPLOAD TRANSFER -->
-    
-    <div class="row p-2 mb-1">
-      <img src="imgs/icons8-upload-48.png" class="mt-2 p-1" style="border-radius: 50px; border-style: dashed; border-color: rgb(28, 175, 233); border-width: 1px;" width="25" height="25" alt="">
-      <img src="imgs/txt-icon-40.png" width="40" height="40" alt="">
-      <span class="ml-2 mt-3 align-middle">file1.txt</span>
-    </div>
-    <div class="progress">
-      <div class="progress-bar w-25" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
-    </div>
-
-    <!-- DOWNALOAD TRANSFER -->
-
-    <div class="row p-2 mb-1">
-      <img src="imgs/icons8-download-48.png" class="mt-2 p-1" style="border-radius: 50px; border-style: dashed; border-color: rgb(28, 175, 233); border-width: 1px;" width="25" height="25" alt="">
-      <img src="imgs/txt-icon-40.png" width="40" height="40" alt="">
-      <span class="ml-2 mt-3 align-middle">file2.txt</span>
-    </div>
-    <div class="progress">
-      <div class="progress-bar w-50" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
-    </div>
-
-    <!-- CANCELED TRANSFER -->
-
-    <div class="row p-2 mb-1">
-      <img src="imgs/icons8-cancel-48.png" class="mt-2 p-1" style="border-radius: 50px; border-style: dashed; border-color: red; border-width: 1px;" width="25" height="25" alt="">
-      <img src="imgs/txt-icon-40.png" width="40" height="40" alt="">
-      <span class="ml-2 mt-3 align-middle">file3.txt</span>
-    </div>
-    <div class="progress">
-      <div class="progress-bar bg-danger w-50" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+    <!--  WHEN TRANSFERS NO OK -->
+    <div id="loading">
+      <img src="imgs/icons8-wait-40.png" alt="" style="animation: rotation 2s infinite linear; margin-left: 200px;">
+      <p class="text-center font-weight-bold mt-4">RemoteBackup sincronizzazione in corso</p>
     </div>
 
     <hr>
-
-
     <hr>
     <div class="row p-3">
       <span>Usage 1GB/2GB (50%)</span>
