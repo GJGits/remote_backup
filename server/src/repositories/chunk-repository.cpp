@@ -80,9 +80,6 @@ int ChunkRepository::getFileSize(const ChunkEntity &chunk){
     throw FileSizeNotAvailable();
 }
 
-
-
-
 bool ChunkRepository::delete_chunks(const ChunkEntity &chunk){
     std::unique_ptr<sql::PreparedStatement> stmt;
     std::unique_ptr<sql::ResultSet> res;
