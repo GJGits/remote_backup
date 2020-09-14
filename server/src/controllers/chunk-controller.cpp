@@ -22,7 +22,7 @@ ChunkController::handle(const http::server::request &req) {
     if (std::regex_search(req.uri.begin(), req.uri.end(), match,post_chunk_rgx)) {
       // if (JWT::validateToken(req)) {
       PostChunkDTO post_chunk{};
-      post_chunk.fill(req.uri, req.body);
+      post_chunk.fill(req);
       post_file_chunk(post_chunk);
       return http::server::reply::stock_reply(http::server::reply::ok);
 
@@ -38,7 +38,7 @@ ChunkController::handle(const http::server::request &req) {
 
       // if (JWT::validateToken(req)) {
       PutChunkDTO put_chunk{};
-      put_chunk.fill(req.uri, req.body);
+      put_chunk.fill(req);
       put_file_chunk(put_chunk);
       return http::server::reply::stock_reply(http::server::reply::ok);
 

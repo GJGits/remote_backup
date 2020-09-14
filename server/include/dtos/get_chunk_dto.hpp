@@ -20,5 +20,5 @@ public:
     int getchunk_size() const;
     std::string getfile_path() const;
     std::string get_full_file_path() const;
-    const void fill( std::string requri);
+    const void fill(const std::string &requri);
 };

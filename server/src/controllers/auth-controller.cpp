@@ -16,7 +16,7 @@ AuthController::handle(const http::server::request &req) {
   if (req.method == "POST") {
 
     if (req.uri == "/auth/signin") {
-      std::string req_body = std::string{req.body.begin(), req.body.end()};
+      std::string req_body = std::string{req.body.get()->begin(), req.body.get()->end()};
       std::smatch match;
       if (std::regex_match(req_body, match, signin_rgx)) {
           SigninDTO user{};
@@ -24,7 +24,7 @@ AuthController::handle(const http::server::request &req) {
           return MakeReply::make_1line_jsonReply<std::string>("token", post_signin(user), http::server::reply::ok);
       }
     } else if (req.uri == "/auth/signup") {
-      std::string req_body = std::string{req.body.begin(), req.body.end()};
+      std::string req_body = std::string{req.body.get()->begin(), req.body.get()->end()};
       std::smatch match;
       if (std::regex_match(req_body, match, signup_rgx)) {
           SignupDTO user{};

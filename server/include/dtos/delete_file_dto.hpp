@@ -2,6 +2,7 @@
 #include "json-serializable.hpp"
 #include "../common/utility.hpp"
 #include "../common/base64.hpp"
+#include "../http/request.hpp"
 
 
 class DeleteFileDTO{
@@ -16,5 +17,5 @@ public:
     std::string getfile_path() const;
     std::string get_full_file_path() const;
 
-    const void fill( std::string requri, std::vector<char> reqbody);
+    const void fill( const http::server::request &req);
 };

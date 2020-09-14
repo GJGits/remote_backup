@@ -17,7 +17,7 @@ FileController::handle(const http::server::request &req) {
         if (std::regex_search(req.uri.begin(), req.uri.end(), match, delete_rgx)) {
             // if (JWT::validateToken(req)) {
             DeleteFileDTO del_file{};
-            del_file.fill(req.uri, req.body);
+            del_file.fill(req);
             delete_file(del_file);
             return http::server::reply::stock_reply(http::server::reply::ok);
             /* }

@@ -22,9 +22,6 @@ void FileService::delete_file_service(const DeleteFileDTO &del_file) {
 
     FileEntity file_ent{del_file.getusername(),del_file.getfile_path()};
     FileRepository file_rep;
-    if(file_rep.deleteFile(file_ent)){
-        remove(("../../filesystem/" + del_file.getusername() + "/" + del_file.getfile_path()).c_str());
-        return;
-    }
-    throw FileNotDeleted();
+    file_rep.deleteFile(file_ent);
+    return;
 }
