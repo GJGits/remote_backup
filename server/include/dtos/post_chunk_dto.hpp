@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-
+#include "../http/request.hpp"
 #include "../common/base64.hpp"
 #include "../common/utility.hpp"
 #include "json-serializable.hpp"
@@ -15,7 +15,7 @@ private:
   std::string full_file_path;
   std::string chunk_hash;
   std::string timestamp_locale;
-  std::vector<char> chunk_body;
+  std::shared_ptr<std::vector<char>> chunk_body{new std::vector<char>{}};
 
 public:
   PostChunkDTO(){};
@@ -26,7 +26,7 @@ public:
   std::string getfile_path() const;
   std::string get_full_file_path() const;
   std::string gettimestamp_locale() const;
-  std::vector<char> getchunk_body() const;
+  std::shared_ptr<std::vector<char>> getchunk_body() const;
 
-  const void fill(std::string requri,std::vector<char> reqbody);
+  const void fill(const http::server::request &req);
 };

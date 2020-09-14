@@ -28,4 +28,4 @@ void GuiSubscriber::init() {
 
 void GuiSubscriber::on_action(const Message &message) {}
 
-void GuiSubscriber::on_action(const Message &message) {}
+void GuiSubscriber::on_finish(const Message &message) {}

@@ -6,11 +6,6 @@ bool FileRepository::deleteFile(const FileEntity &file){
 
         std::shared_ptr <sql::Connection> con = DBConnect::getConnection();
     if(con->isValid() && !con->isClosed()) {
-
-        std::clog << file.getPathFile() << "\n";
-        std::clog << file.getUsername() << "\n";
-
-
         stmt = std::unique_ptr < sql::PreparedStatement >
                {std::move(con->prepareStatement("DELETE FROM fileinfo WHERE f_username = ? and f_path = ?;"))};
         stmt->setString(1, sql::SQLString{file.getUsername().c_str()});

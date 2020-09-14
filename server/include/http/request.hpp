@@ -25,8 +25,7 @@ struct request {
   int http_version_major;
   int http_version_minor;
   std::vector<header> headers;
-  std::vector<char> body;
-  std::shared_ptr<std::vector<char>> body2{new std::vector<char>{}};
+  std::shared_ptr<std::vector<char>> body{new std::vector<char>{}};
 };
 
 } // namespace server

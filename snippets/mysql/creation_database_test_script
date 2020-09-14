@@ -17,7 +17,7 @@ Test creation database
 
 Creazione Tabella Chunks
 
-create table chunks(c_username varchar(100) NOT NULL, c_id integer NOT NULL, c_hash varchar(128) NOT NULL, c_path varchar(100) NOT NULL, c_size integer NOT NULL);
+create table chunks(c_username varchar(100) NOT NULL, c_id integer NOT NULL, c_hash varchar(128) NOT NULL, c_path varchar(100) NOT NULL, c_size integer NOT NULL, c_data BLOB(4097) NOT NULL, primary key (c_username, c_path, c_id));
 
 CREAZIONE Tabella fileinfo
 

@@ -7,27 +7,12 @@ std::string GetChunkDTO::getfile_path() const { return file_path; }
 std::string GetChunkDTO::get_full_file_path() const { return full_file_path; };
 
 
-const void GetChunkDTO::fill( std::string requri) {
+const void GetChunkDTO::fill(const std::string &requri) {
     std::vector<std::string> uri_elements = Utility::split(requri, '/');
-    for (unsigned int i = 0; i < uri_elements.size(); i++) {
-        switch (i) {
-            case 2 :
-                username = uri_elements[i];
-                break;
-            case 3 :
-                chunk_id = std::stoi(uri_elements[i]);
-                break;
-            case 4 :
-                chunk_size = std::stoi(uri_elements[i]);
+    username = uri_elements[2];
+    chunk_id = std::stoi(uri_elements[3]);
+    chunk_size = std::stoi(uri_elements[4]);
+    file_path = macaron::Base64::Decode(uri_elements[5]);
+    full_file_path = "../../filesystem/"+username+"/"+file_path;
 
-                break;
-            case 5 :
-                file_path = macaron::Base64::Decode(uri_elements[i]);
-                full_file_path = "../../filesystem/"+username+"/"+file_path;
-                break;
-
-            default :
-                break;
-        }
-    }
 }
