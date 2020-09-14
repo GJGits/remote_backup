@@ -13,6 +13,7 @@
     "electron": "^9.1.0"
   },
   "dependencies": {
+    "du": "^1.0.0",
     "electron-json-storage": "^4.2.0",
     "jquery": "^3.5.1",
     "menubar": "^9.0.1",

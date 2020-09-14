@@ -3,6 +3,7 @@
 std::shared_ptr<SyncSubscriber> SyncSubscriber::getInstance() {
   if (instance.get() == nullptr) {
     instance = std::shared_ptr<SyncSubscriber>(new SyncSubscriber{});
+    instance->compute_new_size();
   }
   return instance;
 }
@@ -26,6 +27,18 @@ void SyncSubscriber::init() {
                               std::placeholders::_1));
 }
 
+void SyncSubscriber::compute_new_size() {
+  for (auto &p : std::filesystem::recursive_directory_iterator("./sync")) {
+    if (p.is_regular_file()) {
+      increment_size(std::filesystem::file_size(p.path().string()));
+    }
+  }
+}
+
+void SyncSubscriber::increment_size(size_t size) {
+  dir_size += size;
+}
+
 void SyncSubscriber::on_new_file(const Message &message) {
   DurationLogger logger{"NEW_FILE"};
   json content = message.get_content();
@@ -34,14 +47,17 @@ void SyncSubscriber::on_new_file(const Message &message) {
       !std::filesystem::is_empty(file_path)) {
     std::shared_ptr<Broker> broker = Broker::getInstance();
     std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-    FileEntry fentry{file_path};
-    size_t i = 0;
-    while (fentry.has_chunk()) {
-      std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
-      json jentry = fentry.get_json_representation();
-      rest_client->post_chunk(chunk, jentry);
-      fentry.clear_chunks();
-      i++;
+    increment_size(std::filesystem::file_size(file_path));
+    if (dir_size < MAX_SYNC_SIZE) {
+      FileEntry fentry{file_path};
+      size_t i = 0;
+      while (fentry.has_chunk()) {
+        std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
+        json jentry = fentry.get_json_representation();
+        rest_client->post_chunk(chunk, jentry);
+        fentry.clear_chunks();
+        i++;
+      }
     }
   }
 }
@@ -72,30 +88,35 @@ void SyncSubscriber::on_file_modified(const Message &message) {
   std::string path = content["path"];
   std::vector<std::string> hashes = structure->get_entry_hashes(path);
   FileEntry fentry{path};
-  size_t i = 0;
-  while (fentry.has_chunk()) {
-    std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
-    json jentry = fentry.get_json_representation();
-    if (i > hashes.size()) {
-      rest_client->post_chunk(chunk, jentry);
+  compute_new_size();
+  if (dir_size < MAX_SYNC_SIZE) {
+    size_t i = 0;
+    while (fentry.has_chunk()) {
+      std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
+      json jentry = fentry.get_json_representation();
+      if (i > hashes.size()) {
+        rest_client->post_chunk(chunk, jentry);
+      }
+      if (i <= hashes.size() && hashes[i].compare(jentry["chunks"][0]) != 0) {
+        rest_client->put_chunk(chunk, jentry);
+      }
+      fentry.clear_chunks();
+      i++;
     }
-    if (i <= hashes.size() && hashes[i].compare(jentry["chunks"][0]) != 0) {
-      rest_client->put_chunk(chunk, jentry);
+    for (size_t j = i; j < hashes.size(); j++) {
+      json chk_info = {{"id", j}, {"path", content["path"]}};
+      broker->publish(Message{TOPIC::DELETE_CHUNK, chk_info});
+      rest_client->delete_chunk(chk_info,
+                                CHUNK_SIZE); // todo: correggere ultimo chunk
     }
-    fentry.clear_chunks();
-    i++;
-  }
-  for (size_t j = i; j < hashes.size(); j++) {
-    json chk_info = {{"id", j}, {"path", content["path"]}};
-    broker->publish(Message{TOPIC::DELETE_CHUNK, chk_info});
-    rest_client->delete_chunk(chk_info,
-                              CHUNK_SIZE); // todo: correggere ultimo chunk
   }
 }
+
 void SyncSubscriber::on_file_deleted(const Message &message) {
   DurationLogger logger{"FILE_DELETED"};
   json content = message.get_content();
   std::string path = content["path"];
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   rest_client->delete_file(path);
+  compute_new_size();
 }

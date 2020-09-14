@@ -1,4 +1,5 @@
 const { ipcRenderer } = require('electron');
+const du = require('du');
 
 var change_status = (status) => {
     let stats = ["login", "signup", "logged"];
@@ -38,6 +39,16 @@ ipcRenderer.on('sync', (event, arg) => {
     } else {
         $("#loading").hide();
         $("#synced").show();
+        let size_prom = du('../client/sync/');
+        size_prom.then((size) => {
+            let percentage = ((size / (2 * 1024 * 1024 * 1024)) * 100) > 100 ? 100 : ((size / (2 * 1024 * 1024 * 1024)) * 100).toFixed(2);
+            $("#usage").text("Total space usage: " + percentage + "%");
+            $("#us_prog").removeClass();
+            $("#us_prog").addClass("progress-bar");
+            $("#us_prog").addClass("w-" + parseInt(percentage));
+            $("#us_prog").attr("aria-valuenow", parseInt(percentage));
+        });
+
     }
 });
 
