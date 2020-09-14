@@ -10,6 +10,7 @@ using boost::asio::ip::udp;
 
 class GuiSubscriber {
 private:
+  bool is_running;
   static inline std::shared_ptr<GuiSubscriber> instance{nullptr};
   GuiSubscriber() {}
 

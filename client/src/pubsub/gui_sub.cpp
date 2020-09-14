@@ -27,15 +27,18 @@ void GuiSubscriber::init() {
 }
 
 void GuiSubscriber::on_action(const Message &message) {
-  boost::asio::io_service io_service;
-  udp::socket socket(io_service, udp::endpoint(udp::v4(), 0));
-  udp::resolver resolver(io_service);
-  udp::resolver::query query(udp::v4(), "172.17.0.1", "41234");
-  udp::resolver::iterator iter = resolver.resolve(query);
-  udp::endpoint endpoint = *iter;
-  std::string msg{"start-sync"};
-  socket.send_to(boost::asio::buffer(msg, msg.size()), endpoint);
-  socket.close();
+  if (!is_running) {
+    boost::asio::io_service io_service;
+    udp::socket socket(io_service, udp::endpoint(udp::v4(), 0));
+    udp::resolver resolver(io_service);
+    udp::resolver::query query(udp::v4(), "172.17.0.1", "41234");
+    udp::resolver::iterator iter = resolver.resolve(query);
+    udp::endpoint endpoint = *iter;
+    std::string msg{"start-sync"};
+    socket.send_to(boost::asio::buffer(msg, msg.size()), endpoint);
+    socket.close();
+    is_running = true;
+  }
 }
 
 void GuiSubscriber::on_finish(const Message &message) {
@@ -48,4 +51,5 @@ void GuiSubscriber::on_finish(const Message &message) {
   std::string msg{"end-sync"};
   socket.send_to(boost::asio::buffer(msg, msg.size()), endpoint);
   socket.close();
+  is_running = false;
 }

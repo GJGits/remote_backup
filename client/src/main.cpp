@@ -3,6 +3,7 @@
 #include "../include/filesystem/linux_watcher.hpp"
 #include "../include/pubsub/sync_sub.hpp"
 #include "../include/pubsub/struct_sub.hpp"
+#include "../include/pubsub/gui_sub.hpp"
 
 int main() {
 
@@ -11,6 +12,9 @@ int main() {
 
   std::shared_ptr<StructSubscriber> struct_sub = StructSubscriber::getInstance();
   struct_sub->init();
+
+  std::shared_ptr<GuiSubscriber> gui_sub = GuiSubscriber::getInstance();
+  gui_sub->init();
 
 
   std::shared_ptr<LinuxWatcher> watcher = LinuxWatcher::getInstance(
