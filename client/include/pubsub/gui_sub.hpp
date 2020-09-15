@@ -12,7 +12,7 @@ class GuiSubscriber {
 private:
   bool is_running;
   static inline std::shared_ptr<GuiSubscriber> instance{nullptr};
-  GuiSubscriber() {}
+  GuiSubscriber() : is_running{false} {}
 
 public:
   static std::shared_ptr<GuiSubscriber> getInstance();

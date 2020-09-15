@@ -16,7 +16,7 @@ class ChunkController : public Controller {
 
 private:
     static inline std::shared_ptr<ChunkController> instance{nullptr};
-
+    std::shared_ptr<ChunkService> chunk_service;
 public:
     // contiene switch_case per inoltrare al metodo corretto
     static std::shared_ptr<ChunkController> getInstance();

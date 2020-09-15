@@ -35,7 +35,6 @@ private:
       instance->token_header = macaron::Base64::Encode(jwt_header.dump());
       instance->secret = config["token-conf"]["secret"];
       instance->expiration = config["token-conf"]["expiration"];
-
     }
     return instance;
   }
@@ -55,7 +54,7 @@ public:
     HmacSha256::hmac_sha256(
         text, text_len, (const unsigned char *)getInstance()->secret.c_str(),
         (int)getInstance()->secret.size(), kdigest);
-    json jwt_sign; 
+    json jwt_sign;
     jwt_sign["sign"] = macaron::Base64::Encode(std::string{kdigest});
     std::clog << "sign = " << jwt_sign["sign"] << "\n";
     std::string sign = macaron::Base64::Encode(jwt_sign.dump());
@@ -63,13 +62,10 @@ public:
   }
 
   static bool validateToken(const http::server::request &req) {
-    std::clog << "e0\n";
     for (http::server::header h : req.headers) {
       if (h.name.compare("Authorization") == 0) {
         std::vector<std::string> tokens = Utility::split(h.value, ' ');
-        std::clog << "token = " << tokens[1] << "\n";
         if (tokens.size() == 2 && tokens[0].compare("Bearer") == 0) {
-          std::clog << "e1\n";
           std::string token = tokens[1];
           std::vector<std::string> token_parts = Utility::split(token, '.');
           if (token_parts.size() == 3) {
@@ -79,10 +75,6 @@ public:
             std::string jwt_payload_str =
                 macaron::Base64::Decode(token_parts[1]);
             std::string jwt_sign_str = macaron::Base64::Decode(token_parts[2]);
-            std::clog << "head = " << jwt_header_str
-                      << ", pay = " << jwt_payload_str << "\n";
-            std::clog << "head = " << token_parts[0]
-                      << ", pay = " << token_parts[1] << "\n";
             // todo: check sul formato di jwt_xxx_str
             json jwt_header = json::parse(jwt_header_str);
             json jwt_payload = json::parse(jwt_payload_str);
@@ -90,13 +82,10 @@ public:
             std::smatch match;
             std::string ex_str = std::to_string(jwt_payload["exp"].get<int>());
             if (std::regex_match(ex_str, match, time_rgx)) {
-              std::clog << "e3\n";
               int exp = jwt_payload["exp"];
               std::string sign = jwt_sign["sign"];
               if (exp >= std::time(nullptr)) {
-                std::clog << "e4\n";
                 std::string token_calc = generateToken(jwt_payload["sub"], exp);
-                std::clog << "token calc = " << token_calc << "\n";
                 json sign_cal =
                     json::parse(macaron::Base64::Decode(Utility::split(
                         generateToken(jwt_payload["sub"], exp), '.')[2]));

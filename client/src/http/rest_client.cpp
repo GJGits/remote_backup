@@ -17,7 +17,7 @@ void RestClient::fill_headers(http::request<http::vector_body<char>> &req,
                               size_t size) {
   req.set(http::field::host, "remote_backup_nginx-server_1");
   req.set(http::field::content_length, std::to_string(size));
-  req.set(http::field::authorization, "Barear " + std::string{config["token"]});
+  req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
   req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 }
 

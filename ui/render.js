@@ -45,7 +45,7 @@ ipcRenderer.on('sync', (event, arg) => {
             $("#usage").text("Total space usage: " + percentage + "%");
             $("#us_prog").removeClass();
             $("#us_prog").addClass("progress-bar");
-            $("#us_prog").addClass("w-" + parseInt(percentage));
+            $("#us_prog").css("width", "" + parseInt(percentage) + "%");
             $("#us_prog").attr("aria-valuenow", parseInt(percentage));
         });
 
