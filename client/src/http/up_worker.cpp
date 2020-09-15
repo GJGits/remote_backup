@@ -31,7 +31,6 @@ void UpWorker::run() {
             continue;
           }
         }
-
         stream.connect(results);
         send(stream, req);
         http::response<http::dynamic_body> res = read(stream);

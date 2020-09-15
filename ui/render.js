@@ -83,7 +83,12 @@ $(document).ready(function () {
             change_status("logged");
         }).fail(function (error) {
             $(".alert.alert-danger.error").show();
-            $(".alert.alert-danger.error").text(error.responseJSON.error);
+            if (error.status === 404) {
+                $(".alert.alert-danger.error").text("server non raggiungibile");
+            } else {
+                $(".alert.alert-danger.error").text(error.responseJSON.error);
+            }
+
         });
     });
 
@@ -105,7 +110,11 @@ $(document).ready(function () {
             change_status("logged");
         }).fail(function (error) {
             $(".alert.alert-danger.error").show();
-            $(".alert.alert-danger.error").text(error.responseJSON.error);
+            if (error.status === 404) {
+                $(".alert.alert-danger.error").text("server non raggiungibile");
+            } else {
+                $(".alert.alert-danger.error").text(error.responseJSON.error);
+            }
         });
 
     });

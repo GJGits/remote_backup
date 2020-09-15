@@ -18,9 +18,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../filesystem/file_entry.hpp"
 #include "../common/base64.hpp"
 #include "../common/json.hpp"
+#include "../filesystem/file_entry.hpp"
 #include "up_worker.hpp"
 
 namespace beast = boost::beast; // from <boost/beast.hpp>
@@ -33,16 +33,22 @@ class RestClient {
 
 private:
   json config;
+  http::request<http::vector_body<char>> post_prototype;
+  http::request<http::vector_body<char>> put_prototype;
+  http::request<http::vector_body<char>> get_prototype;
+  http::request<http::vector_body<char>> delete_prototype;
   static inline std::shared_ptr<RestClient> instance{nullptr};
-
-  RestClient(){}
   void read_info();
-  void fill_headers(http::request<http::vector_body<char>> &req, size_t size = 0);
+  void fill_headers(http::request<http::vector_body<char>> &req,
+                    size_t size = 0);
+  RestClient();
 
 public:
   static std::shared_ptr<RestClient> getInstance();
-  void post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk, json &jentry);
-  void put_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk, json &jentry);
+  void post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
+                  json &jentry);
+  void put_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
+                 json &jentry);
   void delete_chunk(json &chk_info, size_t size);
   void get_chunk();
   void delete_file(std::string &path);
