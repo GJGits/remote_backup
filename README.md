@@ -363,7 +363,7 @@ Una volta verificati i prerequisiti posizionarsi nella cartella `ui` ed accertar
 
 #### Eseguire servizi Docker <a name="Eseguire_servizi_Docker"></a>
 
-Una volta posizionati nella cartella relativa al progetto tramite terminale, eseguire `docker-compose up --build`. Questo comando permette di eseguire i vari servizi che compongono l'applicativo. La terminazione può essere fatta tranquillamente in maniera ordinata con il comando `CTRL+C`.
+Una volta posizionati nella cartella relativa al progetto tramite terminale, eseguire `docker-compose up --build --scale db=3`. Questo comando permette di eseguire i vari servizi che compongono l'applicativo. La terminazione può essere fatta tranquillamente in maniera ordinata con il comando `CTRL+C`.
 
 ### Eventi da monitorare (ad applicazione accesa)<a name="Eventi_da_monitorare"></a>
 
