@@ -12,9 +12,8 @@ private:
     int chunk_size;
     std::string chunk_hash;
     std::string file_path;
-    std::string full_file_path;
     std::shared_ptr<std::vector<char>> chunk_body;
-    std::string timestamp_locale;
+    int timestamp_locale;
 
 public:
     PutChunkDTO(){};
@@ -23,8 +22,7 @@ public:
     int getchunk_size() const;
     std::string getchunk_hash() const;
     std::string getfile_path() const;
-    std::string get_full_file_path() const;
     std::shared_ptr<std::vector<char>> getchunk_body() const;
-    std::string gettimestamp_locale() const;
+    int gettimestamp_locale() const;
     const void fill(const http::server::request &req);
 };

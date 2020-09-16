@@ -6,6 +6,7 @@ inline static std::regex signup_rgx{"^\\{\"username\":\\s?\"\\w+\",\\s?\"passwor
 std::shared_ptr<AuthController> AuthController::getInstance() {
     if (instance.get() == nullptr) {
         instance = std::shared_ptr<AuthController>(new AuthController{});
+        instance->user_service = UserService::getInstance();
     }
     return instance;
 }
@@ -43,8 +44,5 @@ const std::string AuthController::post_signin(const SigninDTO &user) {
 }
 
 const std::string AuthController::post_signup(const SignupDTO &user) {
-
-    std::shared_ptr<UserService> user_service = UserService::getInstance();
   return user_service->signup(user);
-
 }

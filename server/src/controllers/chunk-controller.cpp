@@ -20,7 +20,7 @@ std::shared_ptr<ChunkController> ChunkController::getInstance() {
 const http::server::reply
 ChunkController::handle(const http::server::request &req) {
 
-  if (JWT::validateToken(req)) {
+  //if (JWT::validateToken(req)) {
 
     if (req.method == "POST") {
       std::smatch match;
@@ -64,7 +64,7 @@ ChunkController::handle(const http::server::request &req) {
       }
     }
     throw WrongRquestFormat();
-  }
+ // }
 
   throw CredentialsExpired();
 };

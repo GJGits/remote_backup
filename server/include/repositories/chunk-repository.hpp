@@ -9,10 +9,7 @@ class ChunkRepository {
 private:
 public:
 
-
-    bool getFilePath(const ChunkEntity &chunk);
     bool add_or_update_Chunk(const ChunkEntity &chunk);
-    bool add_or_update_FileInfo(const ChunkEntity &chunk);
-    int getFileSize(const ChunkEntity &chunk);
+    std::string get_Chunk(const ChunkEntity &chunk);
     bool delete_chunks(const ChunkEntity &chunk);
 };

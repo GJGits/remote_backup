@@ -9,16 +9,14 @@ private:
     std::string username;
     int chunk_id;
     std::string file_path;
-    std::string full_file_path;
-    std::string timestamp_locale;
+    int timestamp_locale;
 
 public:
     DeleteChunkDTO(){};
     std::string getusername() const;
     int getchunk_id() const;
     std::string getfile_path() const;
-    std::string get_full_file_path() const;
-    std::string gettimestamp_locale() const;
+    int gettimestamp_locale() const;
 
     const void fill( std::string requri);
 };

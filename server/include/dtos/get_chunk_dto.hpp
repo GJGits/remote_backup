@@ -10,7 +10,6 @@ private:
     int chunk_id;
     int chunk_size;
     std::string file_path;
-    std::string full_file_path;
 
 
 public:
@@ -19,6 +18,5 @@ public:
     int getchunk_id() const;
     int getchunk_size() const;
     std::string getfile_path() const;
-    std::string get_full_file_path() const;
     const void fill(const std::string &requri);
 };

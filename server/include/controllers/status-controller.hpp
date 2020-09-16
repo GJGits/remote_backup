@@ -14,6 +14,8 @@
 class StatusController : public Controller {
 private:
     static inline std::shared_ptr<StatusController> instance{nullptr};
+    std::shared_ptr<UserService> user_service;
+    std::shared_ptr<FileService> file_service;
 
 public:
     static std::shared_ptr<StatusController> getInstance();

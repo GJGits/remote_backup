@@ -1,1 +1,1 @@
-{"entries":[],"hashed_status":"empty_hashed_status"}
+{"entries":[{"chunks":[{"hash":"cfe8a851bdd5da9aef436377bd01b5e5e3abbc176dd33f34706025b289b9b1d4","id":0}],"last_mod":1600245790,"nchunks":1,"path":"./sync/tiprego.txt","size":113},{"chunks":[{"hash":"5e350ca7ec00e120256c3a8094b490b6fa479ab5a6b23fe38194af768da3ef01","id":0}],"last_mod":1599751145,"nchunks":1,"path":"./sync/primaprova.txt","size":10}],"hashed_status":"9b9e04197774e0dd184e3530842a63ca0ed3c574a1e6e322bb093d5d9096608f"}
