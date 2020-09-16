@@ -52,15 +52,16 @@ std::string ChunkRepository::get_Chunk(const ChunkEntity &chunk){
 
         res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
         if (res->next()) {
-            int size = res->getInt("c_size");
+            //int size = res->getInt("c_size");
 
             std::shared_ptr<char[]> buffer = std::shared_ptr<char[]>{new char[CHUNK_SIZE]};
             std::istream *blobData = res->getBlob("c_data");
-            blobData->read(buffer.get(), size);
+            std::clog << blobData;
+            //blobData->read(buffer.get(), size);
 
-            for(int i = 0 ; i< size ; i++){
-                std::clog << buffer.get()[i];
-            }
+            //for(int i = 0 ; i< size ; i++){
+              //  std::clog << buffer.get()[i];
+            //}
             std::clog << "\n";
             return "ciao";
 
