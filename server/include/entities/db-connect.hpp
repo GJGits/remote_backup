@@ -44,6 +44,6 @@ public:
   DBConnect &operator=(const DBConnect &) = delete; // assegnazione off
   DBConnect &operator=(DBConnect &&) = delete; // assegnazione movimento off
 
-  static std::shared_ptr<sql::Connection> getConnection(size_t db_selected = 0);
+  static std::shared_ptr<sql::Connection> getConnection(size_t db_selected);
 
 };

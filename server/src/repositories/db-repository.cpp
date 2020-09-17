@@ -21,7 +21,7 @@ int DBRepository::getDBbyUsername(std::string username) {
 
     std::unique_ptr<sql::PreparedStatement> stmt;
     std::unique_ptr<sql::ResultSet> res;
-    std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
+    std::shared_ptr<sql::Connection> con = DBConnect::getConnection(0);
     if (con->isValid() && !con->isClosed()) {
         stmt = std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement(
                 "SELECT db FROM UsersDB WHERE username = ?;"))};
@@ -42,7 +42,7 @@ int DBRepository::insertUsernameInDB(std::string username) {
 
     std::unique_ptr<sql::PreparedStatement> stmt;
     std::unique_ptr<sql::ResultSet> res;
-    std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
+    std::shared_ptr<sql::Connection> con = DBConnect::getConnection(0);
     if (con->isValid() && !con->isClosed()) {
         stmt = std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement( "SELECT db,COUNT(db) mycount FROM UsersDB GROUP BY db ORDER BY mycount;"))};
 
