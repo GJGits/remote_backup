@@ -19,6 +19,8 @@
 #include <cppconn/statement.h>
 #include <mutex>
 #include <string>
+#include <unordered_map>
+#include "../repositories/db-repository.hpp"
 
 /**
  * TODO: questa classe deve essere un singleton
@@ -27,11 +29,13 @@
 class DBConnect {
 
 private:
-  std::array<std::shared_ptr<sql::Connection>, 16>
-      connections; //  16 = numero massimo connessioni attive su mysql
-  int index;
+
+    std::unordered_map<int, std::array<std::shared_ptr<sql::Connection>, 4>> connections_map;
+  std::array<int,3> indexes;
   static DBConnect *instance;
-  DBConnect() : index{0} {}
+  DBConnect()  {
+      indexes = {0, 0, 0};
+  }
 
 public:
   inline static std::mutex m;
@@ -40,5 +44,6 @@ public:
   DBConnect &operator=(const DBConnect &) = delete; // assegnazione off
   DBConnect &operator=(DBConnect &&) = delete; // assegnazione movimento off
 
-  static std::shared_ptr<sql::Connection> getConnection();
+  static std::shared_ptr<sql::Connection> getConnection(size_t db_selected = 0);
+
 };

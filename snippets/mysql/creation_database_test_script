@@ -19,3 +19,9 @@ Creazione Tabella Chunks
 
 create table chunks(c_username varchar(100) NOT NULL, c_id integer NOT NULL, c_hash varchar(128) NOT NULL, c_path varchar(100) NOT NULL, c_size integer NOT NULL,c_lastmod integer NOT NULL, c_data blob NOT NULL, primary key (c_username, c_path, c_id));
 
+Creazione tabella UsersDB
+
+CREATE TABLE UsersDB (
+	username VARCHAR(50) NOT NULL,
+	db INT UNSIGNED NOT NULL,
+	primary key (username, db));

@@ -14,7 +14,7 @@ inline static std::regex user_rgx{"^/status/(\\w+)$"};
 inline static std::regex user_rgx_file{"^/status/(\\w+)/file$"};
 
 const http::server::reply StatusController::handle(const http::server::request &req) {
-    if (JWT::validateToken(req)) {
+    //if (JWT::validateToken(req)) {
         if (req.method == "GET") {
             std::smatch match;
             if (std::regex_search(req.uri.begin(), req.uri.end(), match, user_rgx)) {
@@ -26,7 +26,7 @@ const http::server::reply StatusController::handle(const http::server::request &
             }
         }
         throw WrongRquestFormat();
-    }
+   // }
     throw CredentialsExpired();
 }
 

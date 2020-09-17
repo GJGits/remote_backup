@@ -1,36 +1,49 @@
 #include "../../include/entities/db-connect.hpp"
 
 DBConnect *DBConnect::instance = nullptr;
-std::shared_ptr<sql::Connection> DBConnect::getConnection() {
+std::shared_ptr<sql::Connection> DBConnect::getConnection(size_t db_selected) {
   std::unique_lock lk{DBConnect::m};
   if (DBConnect::instance == nullptr) {
     DBConnect::instance = new DBConnect();
     sql::Driver *driver = get_driver_instance();
-    // TODO: convertire 16 con il campo max_connections letto da file
-    for (int i = 0; i < 16; i++) {
-      try {
-        sql::Connection *con;
-        con =
-            driver->connect("tcp://remote_backup_db_1:3306", "root", "example");
-        con->setSchema("db_utenti");
-        DBConnect::instance->connections[i] =
-            std::shared_ptr<sql::Connection>{con};
-      } catch (sql::SQLException &e) {
-        // 1. print to debug
-        std::clog << " (MySQL error code: " << e.getErrorCode();
-        // 2. log to a file
-        Logger::log(" (MySQL error code: " + e.getErrorCode());
-        // 3. do something
+      for (int i = 0; i < 4; i++) {
+          sql::Connection *con;
+          con = driver->connect("tcp://remote_backup_db_1:3306", "root", "example");
+          con->setSchema("db_utenti");
+          DBConnect::instance->connections_map[0][i] = std::shared_ptr<sql::Connection>{con};
       }
-    }
+      for (int i = 0; i < 4; i++) {
+
+        sql::Connection *con;
+        con = driver->connect("tcp://remote_backup_db_2:3306", "root", "example");
+        con->setSchema("db_utenti");
+        DBConnect::instance->connections_map[1][i] = std::shared_ptr<sql::Connection>{con};
+
+      }
+      for (int i = 0; i < 4; i++) {
+
+          sql::Connection *con;
+          con = driver->connect("tcp://remote_backup_db_3:3306", "root", "example");
+          con->setSchema("db_utenti");
+          DBConnect::instance->connections_map[2][i] = std::shared_ptr<sql::Connection>{con};
+
+      }
+      for (int i = 0; i < 4; i++) {
+              sql::Connection *con;
+              con = driver->connect("tcp://remote_backup_db_4:3306", "root", "example");
+              con->setSchema("db_utenti");
+              DBConnect::instance->connections_map[3][i] = std::shared_ptr<sql::Connection>{con};
+      }
   }
 
-  DBConnect::instance->index =
-      DBConnect::instance->index == 16 ? 0 : DBConnect::instance->index;
-  int scelta = DBConnect::instance->index;
-  DBConnect::instance->index++;
 
-  std::clog << "Restituita connection: @" << scelta << "\n";
+  DBConnect::instance->indexes[db_selected] =
+      DBConnect::instance->indexes[db_selected] == 4 ? 0 : DBConnect::instance->indexes[db_selected];
+  int scelta = DBConnect::instance->indexes[db_selected];
+  DBConnect::instance->indexes[db_selected]++;
 
-  return instance->connections[scelta];
+
+  std::clog << "Restituita connection: @" << scelta << " del db: @" << db_selected << "\n";
+
+  return instance->connections_map[db_selected][scelta];
 }

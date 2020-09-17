@@ -3,7 +3,12 @@
 bool ChunkRepository::add_or_update_Chunk(const ChunkEntity &chunk) {
   std::unique_ptr<sql::PreparedStatement> stmt;
   std::unique_ptr<sql::ResultSet> res;
-  std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
+
+
+    std::shared_ptr <DBRepository> db_repinstance = DBRepository::getInstance();
+    size_t db_selected = db_repinstance->getDBbyUsername(chunk.getUsername());
+  std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
+
   if (con->isValid() && !con->isClosed()) {
     stmt =
         std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement(
@@ -37,7 +42,11 @@ bool ChunkRepository::add_or_update_Chunk(const ChunkEntity &chunk) {
 std::string ChunkRepository::get_Chunk(const ChunkEntity &chunk) {
   std::unique_ptr<sql::PreparedStatement> stmt;
   std::unique_ptr<sql::ResultSet> res;
-  std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
+
+
+    std::shared_ptr <DBRepository> db_repinstance = DBRepository::getInstance();
+    size_t db_selected = db_repinstance->getDBbyUsername(chunk.getUsername());
+    std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
   if (con->isValid() && !con->isClosed()) {
     std::clog << chunk.getUsername().c_str() << "\n";
     std::clog << chunk.getPathFile().c_str() << "\n";
@@ -80,8 +89,10 @@ std::string ChunkRepository::get_Chunk(const ChunkEntity &chunk) {
 bool ChunkRepository::delete_chunks(const ChunkEntity &chunk) {
   std::unique_ptr<sql::PreparedStatement> stmt;
   std::unique_ptr<sql::ResultSet> res;
-  std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
-  if (con->isValid() && !con->isClosed()) {
+    std::shared_ptr <DBRepository> db_repinstance = DBRepository::getInstance();
+    size_t db_selected = db_repinstance->getDBbyUsername(chunk.getUsername());
+    std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
+    if (con->isValid() && !con->isClosed()) {
 
     stmt = std::unique_ptr<sql::PreparedStatement>{
         std::move(con->prepareStatement("DELETE from chunks WHERE c_path = ? "

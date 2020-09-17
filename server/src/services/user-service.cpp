@@ -32,11 +32,11 @@ std::string UserService::signup(const SignupDTO &user) {
     std::vector<char> vec(password_to_hash.begin(), password_to_hash.end());
     std::string hashedPassword{Sha256::getSha256(vec)};
     UserEntity user_to_insert{username, hashedPassword, salt};
-    if (user_rep.insertUser(user_to_insert)) {
-        std::string path{"../../filesystem/" + username};
-        std::filesystem::create_directories(path);
+    std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
+    db_repinstance->insertUsernameInDB(username);
+    if (user_rep.insertUser(user_to_insert))
         return JWT::generateToken(user.getUsername(), JWT::getExpiration() + std::time(nullptr));
-    }
+
     throw UsernameAlreadyExists();
 }
 

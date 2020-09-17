@@ -12,7 +12,7 @@ std::shared_ptr<FileController> FileController::getInstance() {
 
 const http::server::reply
 FileController::handle(const http::server::request &req) {
-    if (JWT::validateToken(req)) {
+    //if (JWT::validateToken(req)) {
         if (req.method == "DELETE") {
             std::smatch match;
             if (std::regex_search(req.uri.begin(), req.uri.end(), match, delete_rgx)) {
@@ -23,7 +23,7 @@ FileController::handle(const http::server::request &req) {
             }
         }
         throw WrongRquestFormat();
-    }
+    //}
     throw CredentialsExpired();
 };
 

@@ -1,20 +1,31 @@
 #include "../../include/repositories/user-repository.hpp"
 
 bool UserRepository::insertUser(const UserEntity &user) {
+    std::clog << user.getUsername() << "\n";
+    std::clog << user.getHashedPassword() << "\n";
+    std::clog << user.getSalt() << "\n";
     std::unique_ptr<sql::PreparedStatement> stmt;
     std::unique_ptr<sql::ResultSet> res;
-    std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
+
+    std::shared_ptr <DBRepository> db_repinstance = DBRepository::getInstance();
+    size_t db_selected = db_repinstance->insertUsernameInDB(user.getUsername());
+    std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
+
     stmt = std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement("INSERT INTO users(username, hashed_password, salt) VALUES(?, ?, ?)"))};
+
     stmt->setString(1, sql::SQLString{user.getUsername().c_str()});
     stmt->setString(2, sql::SQLString{user.getHashedPassword().c_str()});
     stmt->setUInt(3, user.getSalt());
+
     return stmt->executeUpdate() == 1 ? true : false;
 }
 
 UserEntity UserRepository::getUserByUsername(const std::string &username) {
     std::unique_ptr<sql::PreparedStatement> stmt;
     std::unique_ptr<sql::ResultSet> res;
-    std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
+    std::shared_ptr <DBRepository> db_repinstance = DBRepository::getInstance();
+    size_t db_selected = db_repinstance->getDBbyUsername(username);
+    std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
     stmt = std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement("SELECT username, hashed_password, ""salt FROM users WHERE username = ?"))};
     stmt->setString(1, username);
     res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
@@ -31,7 +42,9 @@ bool UserRepository::deleteUserByUsername(const std::string &username) {
 
     std::unique_ptr<sql::PreparedStatement> stmt;
     std::unique_ptr<sql::ResultSet> res;
-    std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
+    std::shared_ptr <DBRepository> db_repinstance = DBRepository::getInstance();
+    size_t db_selected = db_repinstance->getDBbyUsername(username);
+    std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
     stmt = std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement("DELETE from users WHERE username = ?"))};
     stmt->setString(1, username);
     return stmt->executeUpdate() == 1 ? true : false;
@@ -40,7 +53,9 @@ bool UserRepository::deleteUserByUsername(const std::string &username) {
 std::string UserRepository::get_hashed_status(const std::string &username){
     std::unique_ptr<sql::PreparedStatement> stmt;
     std::unique_ptr<sql::ResultSet> res;
-    std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
+    std::shared_ptr <DBRepository> db_repinstance = DBRepository::getInstance();
+    size_t db_selected = db_repinstance->getDBbyUsername(username);
+    std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
     stmt = std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement("SELECT c_hash FROM chunks WHERE c_username = ? ORDER BY c_path,c_id;"))};
     stmt->setString(1, sql::SQLString{username.c_str()});
     res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
@@ -61,7 +76,9 @@ json UserRepository::get_status_file(const std::string &username) {
     std::unique_ptr<sql::ResultSet> res;
 
 
-        std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
+    std::shared_ptr <DBRepository> db_repinstance = DBRepository::getInstance();
+    size_t db_selected = db_repinstance->getDBbyUsername(username);
+    std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
         std::clog << "e0\n";
         stmt = std::unique_ptr<
                 sql::PreparedStatement>{std::move(con->prepareStatement(
