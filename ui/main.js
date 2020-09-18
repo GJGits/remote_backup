@@ -28,6 +28,11 @@ mb.on('ready', () => {
     conf.set(data);
   });
 
+  ipcMain.on('reset-config', (event, data) => {
+    let conf = new ClientConf();
+    conf.reset();
+  });
+
   // UDP INSTANCE DEFINITION
   server.on('error', (err) => {
     console.log(`server error:\n${err.stack}`);

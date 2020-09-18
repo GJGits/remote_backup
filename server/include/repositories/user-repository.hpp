@@ -12,7 +12,7 @@ using json = nlohmann::json;
 class UserRepository {
 private:
 public:
-  bool insertUser(const UserEntity &user);
+  size_t insertUser(const UserEntity &user);
   UserEntity getUserByUsername(const std::string &username);
   bool deleteUserByUsername(const std::string &username);
   std::string get_hashed_status(const std::string &username);

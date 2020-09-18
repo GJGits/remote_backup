@@ -1,4 +1,1 @@
-{
-    "entries": [],
-    "hashed_status": "empty_hashed_status"
-}
+{"entries":[{"chunks":[{"hash":"58d07c7655a7d75d5ae6da2b762653c004a54fa5be850e94ed9d6532fd7ea6c1","id":0}],"last_mod":1586618044,"nchunks":1,"path":"./sync/011 - piattaforme di esecuzione.ppt","size":165},{"chunks":[{"hash":"ee52946178470fccdb6d82500a51e34849b6f3fc38852203fb372bfce450e0ed","id":0}],"last_mod":1600333898,"nchunks":1,"path":"./sync/a.txt","size":120}],"hashed_status":"30fc5795f3b3d23b080db0316a813442c6e8cfb84863571670ad419d0622652c"}

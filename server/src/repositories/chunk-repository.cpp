@@ -3,10 +3,7 @@
 bool ChunkRepository::add_or_update_Chunk(const ChunkEntity &chunk) {
   std::unique_ptr<sql::PreparedStatement> stmt;
   std::unique_ptr<sql::ResultSet> res;
-
-  std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
-  size_t db_selected = db_repinstance->getDBbyUsername(chunk.getUsername());
-  std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
+  std::shared_ptr<sql::Connection> con = DBConnect::getConnection(chunk.getDb());
 
   if (con->isValid() && !con->isClosed()) {
     stmt =

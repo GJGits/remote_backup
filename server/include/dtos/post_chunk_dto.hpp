@@ -1,12 +1,13 @@
 #pragma once
 
-#include <iostream>
-#include "../http/request.hpp"
 #include "../common/base64.hpp"
 #include "../common/utility.hpp"
+#include "../http/request.hpp"
 #include "json-serializable.hpp"
+#include "subject.hpp"
+#include <iostream>
 
-class PostChunkDTO {
+class PostChunkDTO : public Subject {
 private:
   std::string username;
   int chunk_id;
@@ -18,7 +19,7 @@ private:
   std::shared_ptr<std::vector<char>> chunk_body{new std::vector<char>{}};
 
 public:
-  PostChunkDTO(){};
+  PostChunkDTO(const Subject &subject) : Subject{subject} {}
   std::string getusername() const;
   int getchunk_id() const;
   int getchunk_size() const;

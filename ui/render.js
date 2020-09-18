@@ -119,6 +119,11 @@ $(document).ready(function () {
 
     });
 
+    $("#loggoff").click((event) => {
+        ipcRenderer.send('reset-config', {});
+        change_status("login");
+    });
+
 });
 
 

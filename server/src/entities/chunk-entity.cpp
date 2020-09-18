@@ -1,6 +1,7 @@
 #include "../../include/entities/chunk-entity.hpp"
 
 ChunkEntity::ChunkEntity(const PostChunkDTO &post_chunk):username{std::move(post_chunk.getusername())},
+                                                        db{post_chunk.get_db_id()},
                                                         id_chunk{post_chunk.getchunk_id()},
                                                         hash_chunk{std::move(post_chunk.getchunk_hash())},
                                                         path_file{std::move(post_chunk.getfile_path())},
@@ -13,6 +14,7 @@ ChunkEntity::ChunkEntity(const PostChunkDTO &post_chunk):username{std::move(post
 
 
 ChunkEntity::ChunkEntity(const PutChunkDTO &put_chunk):username(std::move(put_chunk.getusername())),
+                                          db{put_chunk.get_db_id()},
                                           id_chunk{put_chunk.getchunk_id()},
                                           hash_chunk{std::move(put_chunk.getchunk_hash())},
                                           path_file{std::move(put_chunk.getfile_path())},
@@ -34,6 +36,7 @@ ChunkEntity::ChunkEntity(const GetChunkDTO &get_chunk):username{std::move(get_ch
 
 
 std::string ChunkEntity::getUsername() const{ return username; };
+size_t ChunkEntity::getDb() const {return db;}
 int ChunkEntity::getIdChunk() const{return id_chunk;};
 std::string ChunkEntity::getHashChunk() const{return hash_chunk;};
 std::string ChunkEntity::getPathFile() const{return path_file;};

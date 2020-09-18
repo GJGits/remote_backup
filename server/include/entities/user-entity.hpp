@@ -9,7 +9,7 @@ private:
   unsigned int salt;
 
 public:
-  UserEntity(std::string username, std::string hashed_password,
+  UserEntity(const std::string &username, const std::string &hashed_password,
              unsigned int salt);
 
   std::string getUsername() const;

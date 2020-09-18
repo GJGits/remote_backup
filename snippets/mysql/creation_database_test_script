@@ -1,6 +1,6 @@
 Creazione database
 
-1) CREATE DATABASE db_prova;
+
 
 Creazione tabella users (db_2, db_3, db_4)
  CREATE TABLE users (
@@ -21,3 +21,10 @@ CREATE TABLE UsersDB (
 	username VARCHAR(50) NOT NULL,
 	db INT UNSIGNED NOT NULL,
 	primary key (username, db));
+
+Creazione tabella db_status (db_1)
+
+CREATE TABLE db_status (
+	db INT PRIMARY KEY,
+	usc INT
+);

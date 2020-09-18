@@ -14,6 +14,6 @@ private:
 public:
     static std::shared_ptr<DBRepository> getInstance();
 
-    int getDBbyUsername(std::string username);
-    int insertUsernameInDB(std::string username);
+    int getDBbyUsername(const std::string &username);
+    size_t insertUsernameInDB(const std::string &username);
 };

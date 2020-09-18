@@ -12,6 +12,11 @@
 #include <iostream>
 #include <regex>
 #include <string>
+#include <tuple>
+#include <unordered_map>
+
+#include "../dtos/subject.hpp"
+#include "jwt_cache_entry.hpp"
 
 using json = nlohmann::json;
 inline static std::regex time_rgx{"^\\d+$"};
@@ -19,6 +24,9 @@ inline static std::regex time_rgx{"^\\d+$"};
 class JWT {
 
 private:
+  std::unordered_map<std::string, JWTCacheEntry> tok_cache;
+  inline static std::regex pay_rgx{
+      "^\\{\"sub\":\"\\w+\",\\s?\"db\":\\d+,\\s?\"exp\":\\d+\\}$"};
   std::string token_header;
   inline static JWT *instance = nullptr;
   std::string secret;
@@ -31,7 +39,6 @@ private:
       std::ifstream i("../config/server-struct.json");
       i >> config;
       json jwt_header = {{"alg", "HS256"}, {"typ", "JWT"}};
-      std::clog << "header dump = " << jwt_header.dump() << "\n";
       instance->token_header = macaron::Base64::Encode(jwt_header.dump());
       instance->secret = config["token-conf"]["secret"];
       instance->expiration = config["token-conf"]["expiration"];
@@ -42,9 +49,11 @@ private:
 public:
   static int getExpiration() { return getInstance()->expiration; }
 
-  static std::string generateToken(const std::string &subscriber,
-                                   int expiration) {
-    json jwt_payload = {{"sub", subscriber}, {"exp", expiration}};
+  static std::string generateToken(const Subject &sub) {
+    json jwt_payload = {
+        {"sub", sub.get_sub()},
+        {"db", sub.get_db_id()},
+        {"exp", (getInstance()->expiration + std::time(nullptr))}};
     std::string payload = macaron::Base64::Encode(jwt_payload.dump());
     std::string to_sign{getInstance()->token_header + "." + payload};
     const unsigned char *text = (const unsigned char *)to_sign.c_str();
@@ -56,17 +65,28 @@ public:
         (int)getInstance()->secret.size(), kdigest);
     json jwt_sign;
     jwt_sign["sign"] = macaron::Base64::Encode(std::string{kdigest});
-    std::clog << "sign = " << jwt_sign["sign"] << "\n";
     std::string sign = macaron::Base64::Encode(jwt_sign.dump());
     return getInstance()->token_header + "." + payload + "." + sign;
   }
 
-  static bool validateToken(const http::server::request &req) {
+  static Subject validateToken(const http::server::request &req) {
     for (http::server::header h : req.headers) {
       if (h.name.compare("Authorization") == 0) {
         std::vector<std::string> tokens = Utility::split(h.value, ' ');
         if (tokens.size() == 2 && tokens[0].compare("Bearer") == 0) {
           std::string token = tokens[1];
+
+          // inizialmente cerco nella cache
+          if (getInstance()->tok_cache.find(token) !=
+              getInstance()->tok_cache.end()) {
+            JWTCacheEntry entry = getInstance()->tok_cache[token];
+            if (entry.get_exp() >= std::time(nullptr)) {
+              return entry.get_sub();
+            } else
+              getInstance()->tok_cache.erase(token);
+          }
+
+          // altrimenti procedo normalmente
           std::vector<std::string> token_parts = Utility::split(token, '.');
           if (token_parts.size() == 3) {
             // todo: verificare che le str siano codificabili in base64
@@ -80,23 +100,27 @@ public:
             json jwt_payload = json::parse(jwt_payload_str);
             json jwt_sign = json::parse(jwt_sign_str);
             std::smatch match;
-            std::string ex_str = std::to_string(jwt_payload["exp"].get<int>());
-            if (std::regex_match(ex_str, match, time_rgx)) {
-              int exp = jwt_payload["exp"];
-              std::string sign = jwt_sign["sign"];
-              if (exp >= std::time(nullptr)) {
-                std::string token_calc = generateToken(jwt_payload["sub"], exp);
-                json sign_cal =
-                    json::parse(macaron::Base64::Decode(Utility::split(
-                        generateToken(jwt_payload["sub"], exp), '.')[2]));
-                if (sign.compare(sign_cal["sign"]) == 0)
-                  return true;
-              }
+            int exp = jwt_payload["exp"];
+            std::string sign = jwt_sign["sign"];
+            if (exp >= std::time(nullptr)) {
+              Subject sub{jwt_payload["sub"],
+                          (size_t)jwt_payload["db"].get<int>()};
+              std::clog << "sub: " << jwt_payload["sub"] << ", db: "
+                        << std::to_string((size_t)jwt_payload["db"].get<int>())
+                        << "\n";
+              std::string token_calc = generateToken(sub);
+              json sign_cal = json::parse(macaron::Base64::Decode(
+                  Utility::split(generateToken(sub), '.')[2]));
+              std::clog << "sign compare ok\n";
+              // todo: valutare politica di flush
+              JWTCacheEntry ce{sub, exp};
+              getInstance()->tok_cache.insert({token, ce});
+              return sub;
             }
           }
         }
       }
     }
-    return false;
+    throw InvalidJWT();
   }
 };

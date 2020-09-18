@@ -139,3 +139,12 @@ struct DatabaseInvalidConnection : public std::exception
     }
 
 };
+
+struct InvalidJWT : public std::exception
+{
+    const char * what () const throw ()
+    {
+        return "Auth failed";
+    }
+
+};
