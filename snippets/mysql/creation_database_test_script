@@ -1,25 +1,21 @@
-Test creation database
+Creazione database
 
 1) CREATE DATABASE db_prova;
 
-2) use db_prova;
-
-3) CREATE TABLE users (
+Creazione tabella users (db_2, db_3, db_4)
+ CREATE TABLE users (
 	username VARCHAR(50) PRIMARY KEY,
 	hashed_password VARCHAR(128) NOT NULL,
 	salt INT UNSIGNED NOT NULL);
-	 
-4) describe users;
 
-5) INSERT INTO users(username, password, salt)
-	VALUES("Pippo", "0000", 3);
-
-
-Creazione Tabella Chunks
+Creazione Tabella Chunks (db_2, db_3, db_4)
 
 create table chunks(c_username varchar(100) NOT NULL, c_id integer NOT NULL, c_hash varchar(128) NOT NULL, c_path varchar(100) NOT NULL, c_size integer NOT NULL,c_lastmod integer NOT NULL, c_data blob NOT NULL, primary key (c_username, c_path, c_id));
 
-Creazione tabella UsersDB
+
+
+
+Creazione tabella UsersDB (db_1)
 
 CREATE TABLE UsersDB (
 	username VARCHAR(50) NOT NULL,
