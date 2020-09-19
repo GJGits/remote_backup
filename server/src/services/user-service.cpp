@@ -19,7 +19,7 @@ std::string UserService::login(const SigninDTO &user) {
     std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
     size_t db_sel = db_repinstance->getDBbyUsername(user.getUsername());
     Subject sub{user.getUsername(), db_sel};
-    return JWT::generateToken(sub);
+    return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
   }
 
   else
@@ -39,7 +39,7 @@ std::string UserService::signup(const SignupDTO &user) {
   UserRepository us_rep;
   size_t db_sel = us_rep.insertUser(user_to_insert);
   Subject sub{user.getUsername(), db_sel};
-  return JWT::generateToken(sub);
+  return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
 
   throw UsernameAlreadyExists();
 }

@@ -2,7 +2,7 @@
 #include <exception>
 #include "../http/reply.hpp"
 #include "../http/request.hpp"
-
+#include "../common/logger.hpp"
 
 
 struct UsernameAlreadyExists : public std::exception
@@ -145,6 +145,15 @@ struct InvalidJWT : public std::exception
     const char * what () const throw ()
     {
         return "Auth failed";
+    }
+
+};
+
+struct Base64DecodeFailed : public std::exception
+{
+    const char * what () const throw ()
+    {
+        return "decoding failed";
     }
 
 };
