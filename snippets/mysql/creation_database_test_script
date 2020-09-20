@@ -24,6 +24,8 @@ CREATE TABLE UsersDB (
 
 Creazione tabella db_status (db_1)
 
+per ogni db che si aggiunge, aggiungere MANUALMENTE un entry del tipo 0,0 dove il primo valore rappresenta l'id del db da assegnare
+all'utente (partire da 1) , il secondo valore rappresenta il numero di utenti che utilizzano il db, inizializzare con 0!
 CREATE TABLE db_status (
 	db INT PRIMARY KEY,
 	usc INT
