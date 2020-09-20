@@ -20,8 +20,8 @@ std::string FileService::getStatusFile(const std::string &username) {
 
 void FileService::delete_file_service(const DeleteFileDTO &del_file) {
 
-    FileEntity file_ent{del_file.getusername(),del_file.getfile_path()};
+    FileEntity file_ent{del_file.get_subject().get_sub(),del_file.getfile_path()};
+    std::filesystem::remove_all(del_file.getfile_path());
     FileRepository file_rep;
     file_rep.deleteFile(file_ent);
-    return;
 }

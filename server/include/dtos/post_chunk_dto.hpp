@@ -7,25 +7,25 @@
 #include "subject.hpp"
 #include <iostream>
 
-class PostChunkDTO : public Subject {
+class PostChunkDTO {
 private:
-  std::string username;
+  Subject subject;
   int chunk_id;
   int chunk_size;
-  std::string file_dir;
+  std::string file_name;
   std::string file_path;
   std::string chunk_hash;
   int timestamp_locale;
   std::shared_ptr<std::vector<char>> chunk_body{new std::vector<char>{}};
 
 public:
-  PostChunkDTO(const Subject &subject) : Subject{subject} {}
-  std::string getusername() const;
+  PostChunkDTO(const Subject &subject) : subject{subject} {}
+  Subject get_subject() const;
   int getchunk_id() const;
   int getchunk_size() const;
   std::string getchunk_hash() const;
   std::string getfile_path() const;
-  std::string getfile_dir() const;
+  std::string getfile_name() const;
   int gettimestamp_locale() const;
   std::shared_ptr<std::vector<char>> getchunk_body() const;
 

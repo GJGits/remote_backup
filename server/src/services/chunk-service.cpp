@@ -12,11 +12,11 @@ void ChunkService::file_chunk_add(const PostChunkDTO &post_chunk) {
           .compare(post_chunk.getchunk_hash()) == 0) {
     ChunkEntity chunk_ent{post_chunk};
     ChunkRepository chunk_rep;
-    std::filesystem::create_directories(post_chunk.getfile_dir());
-    std::ofstream out_file{post_chunk.getfile_path() + "__" +
-                               std::to_string(post_chunk.getchunk_id()) +
-                               ".chk",
-                           std::ios::binary};
+    std::filesystem::create_directories(post_chunk.getfile_path());
+    std::ofstream out_file{
+        post_chunk.getfile_path() + "/" + post_chunk.getfile_name() + "__" +
+            std::to_string(post_chunk.getchunk_id()) + ".chk",
+        std::ios::binary};
     if (out_file.is_open()) {
       out_file.write(
           reinterpret_cast<char *>(post_chunk.getchunk_body()->data()),
@@ -35,8 +35,10 @@ void ChunkService::file_chunk_update(const PutChunkDTO &put_chunk) {
           .compare(put_chunk.getchunk_hash()) == 0) {
     ChunkEntity chunk_ent{put_chunk};
     ChunkRepository chunk_rep;
-    std::string chk_fname{put_chunk.getfile_path() + "__" +
+    std::string chk_fname{put_chunk.getfile_path() + "/" +
+                          put_chunk.getfile_name() + "__" +
                           std::to_string(put_chunk.getchunk_id()) + ".chk"};
+    // todo: verificare che questa scrittura butta tutto e riscrive
     std::ofstream out_file{chk_fname, std::ios::binary};
     if (!out_file.is_open()) {
       out_file.write(

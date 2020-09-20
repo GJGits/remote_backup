@@ -1,13 +1,13 @@
 #include "../../include/controllers/chunk-controller.hpp"
 
 inline static std::regex post_chunk_rgx{
-    "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+\\/[\\w]+$"};
+    "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+\\/[\\w]+$"};
 inline static std::regex put_chunk_rgx{
-    "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+\\/[\\w]+$"};
+    "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+\\/[\\w]+$"};
 inline static std::regex get_chunk_rgx{
     "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+$"};
 inline static std::regex delete_chunk_rgx{
-    "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w=+]+$"};
+    "^\\/chunk\\/[\\w]+\\/[\\w=+]+$"};
 
 std::shared_ptr<ChunkController> ChunkController::getInstance() {
   if (instance.get() == nullptr) {
@@ -57,7 +57,7 @@ ChunkController::handle(const http::server::request &req) {
     if (std::regex_search(req.uri.begin(), req.uri.end(), match,
                           delete_chunk_rgx)) {
 
-      DeleteChunkDTO delete_chunk{};
+      DeleteChunkDTO delete_chunk{sub};
       delete_chunk.fill(req.uri);
       delete_file_chunk(delete_chunk);
       return http::server::reply::stock_reply(http::server::reply::ok);
