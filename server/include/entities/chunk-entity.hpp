@@ -8,8 +8,7 @@
 
 class ChunkEntity {
 private:
-    std::string username;
-    size_t db;
+    Subject subject;
     int id_chunk;
     std::string hash_chunk;
     std::string path_file;
@@ -27,8 +26,7 @@ public:
 
     ChunkEntity(const GetChunkDTO &get_chunk);
 
-    std::string getUsername() const;
-    size_t getDb() const;
+    Subject get_subject() const;
     int getIdChunk() const;
     std::string getHashChunk() const;
     std::string getPathFile() const;

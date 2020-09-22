@@ -30,7 +30,8 @@
 class FileService {
 private:
     static inline std::shared_ptr<FileService> instance{nullptr};
-
+    std::shared_ptr<FileRepository> file_repository;
+    std::shared_ptr<UserRepository> user_repository;
 public:
 
     std::mutex mtx;

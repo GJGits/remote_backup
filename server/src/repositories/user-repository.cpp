@@ -1,5 +1,12 @@
 #include "../../include/repositories/user-repository.hpp"
 
+std::shared_ptr<UserRepository> UserRepository::getInstance() {
+  if(instance.get() == nullptr) {
+    instance = std::shared_ptr<UserRepository>{};
+  }
+  return instance;
+}
+
 size_t UserRepository::insertUser(const UserEntity &user) {
   std::clog << user.getUsername() << "\n";
   std::clog << user.getHashedPassword() << "\n";

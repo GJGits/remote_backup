@@ -17,18 +17,22 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <ctime>
+#include <memory>
 #include "../common/constants.hpp"
+
+#include "../repositories/chunk-repository.hpp"
 
 
 class ChunkService {
 private:
     static inline std::shared_ptr<ChunkService> instance{nullptr};
+    std::shared_ptr<ChunkRepository> chunk_repository;
 public:
     std::mutex mtx;
     static std::shared_ptr<ChunkService> getInstance();
     void file_chunk_add(const PostChunkDTO &post_chunk);
     void file_chunk_update(const PutChunkDTO &put_chunk);
-    std::string file_chunk_get(const GetChunkDTO &get_chunk);
+    std::shared_ptr<std::vector<char>> file_chunk_get(const GetChunkDTO &get_chunk);
     void file_chunk_delete_service(const DeleteChunkDTO &del_chunk);
     ~ChunkService() {}
 };

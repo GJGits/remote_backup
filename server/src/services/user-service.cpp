@@ -3,13 +3,13 @@
 std::shared_ptr<UserService> UserService::getInstance() {
   if (instance.get() == nullptr) {
     instance = std::shared_ptr<UserService>(new UserService{});
+    instance->user_repository = UserRepository::getInstance();
   }
   return instance;
 }
 
 std::string UserService::login(const SigninDTO &user) {
-  UserRepository user_rep;
-  UserEntity user_returned = user_rep.getUserByUsername(user.getUsername());
+  UserEntity user_returned = user_repository->getUserByUsername(user.getUsername());
   unsigned int salt = user_returned.getSalt();
   std::string password_to_hash{std::to_string(salt) + user.getPassword() +
                                std::to_string(salt)};
@@ -36,8 +36,7 @@ std::string UserService::signup(const SignupDTO &user) {
   std::vector<char> vec(password_to_hash.begin(), password_to_hash.end());
   std::string hashedPassword{Sha256::getSha256(vec)};
   UserEntity user_to_insert{username, hashedPassword, salt};
-  UserRepository us_rep;
-  size_t db_sel = us_rep.insertUser(user_to_insert);
+  size_t db_sel = user_repository->insertUser(user_to_insert);
   Subject sub{user.getUsername(), db_sel};
   return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
 
@@ -45,7 +44,6 @@ std::string UserService::signup(const SignupDTO &user) {
 }
 
 std::string UserService::getStatus(const std::string &username) {
-  UserRepository user_rep;
-  user_rep.getUserByUsername(username);
-  return user_rep.get_hashed_status(username);
+  user_repository->getUserByUsername(username);
+  return user_repository->get_hashed_status(username);
 }

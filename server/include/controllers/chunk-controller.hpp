@@ -24,7 +24,7 @@ public:
     virtual const http::server::reply handle(const http::server::request &req);
     void post_file_chunk(const PostChunkDTO &post_chunk);
     void put_file_chunk(const PutChunkDTO &put_chunk);
-    std::string get_file_chunk(const GetChunkDTO &get_chunk);
+    std::shared_ptr<std::vector<char>> get_file_chunk(const GetChunkDTO &get_chunk);
     void delete_file_chunk(const DeleteChunkDTO &delete_chunk);
 
 };

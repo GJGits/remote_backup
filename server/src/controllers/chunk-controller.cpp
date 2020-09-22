@@ -5,9 +5,8 @@ inline static std::regex post_chunk_rgx{
 inline static std::regex put_chunk_rgx{
     "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+\\/[\\w]+$"};
 inline static std::regex get_chunk_rgx{
-    "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+$"};
-inline static std::regex delete_chunk_rgx{
-    "^\\/chunk\\/[\\w]+\\/[\\w=+]+$"};
+    "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w=+]+$"};
+inline static std::regex delete_chunk_rgx{"^\\/chunk\\/[\\w]+\\/[\\w=+]+$"};
 
 std::shared_ptr<ChunkController> ChunkController::getInstance() {
   if (instance.get() == nullptr) {
@@ -45,10 +44,15 @@ ChunkController::handle(const http::server::request &req) {
     if (std::regex_search(req.uri.begin(), req.uri.end(), match,
                           get_chunk_rgx)) {
 
-      GetChunkDTO get_chunk{};
+      GetChunkDTO get_chunk{sub};
       get_chunk.fill(req.uri);
-      return MakeReply::make_1line_dump_jsonReply<std::string>(
-          get_file_chunk(get_chunk), http::server::reply::ok);
+      // da errore perché creo stock reply che chiama content->size
+      // che ovviamente ancora non esiste
+      http::server::reply rep =
+          http::server::reply::stock_reply(http::server::reply::ok);
+      std::shared_ptr<std::vector<char>> content = get_file_chunk(get_chunk);
+      MakeReply::makebinaryreplay(rep, content);
+      return rep;
     }
   }
 
@@ -74,7 +78,8 @@ void ChunkController::put_file_chunk(const PutChunkDTO &put_chunk) {
   chunk_service->file_chunk_update(put_chunk);
 }
 
-std::string ChunkController::get_file_chunk(const GetChunkDTO &get_chunk) {
+std::shared_ptr<std::vector<char>>
+ChunkController::get_file_chunk(const GetChunkDTO &get_chunk) {
   return chunk_service->file_chunk_get(get_chunk);
 }
 

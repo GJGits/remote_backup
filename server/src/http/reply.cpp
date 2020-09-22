@@ -92,7 +92,7 @@ std::vector<boost::asio::const_buffer> reply::to_buffers() {
     buffers.push_back(boost::asio::buffer(misc_strings::crlf));
   }
   buffers.push_back(boost::asio::buffer(misc_strings::crlf));
-  buffers.push_back(boost::asio::buffer(content));
+  buffers.push_back(boost::asio::buffer((*content)));
   return buffers;
 }
 
@@ -206,10 +206,10 @@ std::string to_string(reply::status_type status) {
 reply reply::stock_reply(reply::status_type status) {
   reply rep;
   rep.status = status;
-  rep.content = stock_replies::to_string(status);
+  //rep.content = stock_replies::to_string(status);
   rep.headers.resize(2);
   rep.headers[0].name = "Content-Length";
-  rep.headers[0].value = std::to_string(rep.content.size());
+  rep.headers[0].value = std::to_string(rep.content->size());
   rep.headers[1].name = "Content-Type";
   rep.headers[1].value = "text/html";
   return rep;

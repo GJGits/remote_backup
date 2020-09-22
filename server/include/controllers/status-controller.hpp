@@ -4,6 +4,7 @@
 #include "../dtos/signin_dto.hpp"
 #include "../services/user-service.hpp"
 #include "../services/file-service.hpp"
+#include "../dtos/subject.hpp"
 #include "../http/header.hpp"
 #include <regex>
 #include "../common/makereply.hpp"

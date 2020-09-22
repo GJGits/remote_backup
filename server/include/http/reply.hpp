@@ -14,6 +14,7 @@
 #include <boost/asio.hpp>
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace http {
 namespace server {
@@ -44,7 +45,7 @@ struct reply {
   std::vector<header> headers;
 
   /// The content to be sent in the reply.
-  std::string content;
+  std::shared_ptr<std::vector<char>> content;
 
   /// Convert the reply into a vector of buffers. The buffers do not own the
   /// underlying memory blocks, therefore the reply object must remain valid and

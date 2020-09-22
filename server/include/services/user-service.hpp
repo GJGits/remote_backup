@@ -30,7 +30,7 @@
 class UserService {
     private:
     static inline std::shared_ptr<UserService> instance{nullptr};
-
+    std::shared_ptr<UserRepository> user_repository;
 public:
 
 
