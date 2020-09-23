@@ -1,7 +1,12 @@
 #include "../../include/dtos/get_chunk_dto.hpp"
 
 Subject GetChunkDTO::get_subject() const {return subject;}
-
+void GetChunkDTO::link_content_buffer(std::shared_ptr<std::array<char, CHUNK_SIZE>> &buff) {
+    this->rep_content = buff;
+}
+std::shared_ptr<std::array<char, CHUNK_SIZE>> GetChunkDTO::get_content_buffer() const {
+    return this->rep_content;
+}
 int GetChunkDTO::getchunk_id() const { return chunk_id; }
 int GetChunkDTO::getchunk_size() const { return chunk_size; }
 std::string GetChunkDTO::getfile_path() const { return file_path; }

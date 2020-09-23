@@ -50,8 +50,16 @@ ChunkController::handle(const http::server::request &req) {
       // che ovviamente ancora non esiste
       http::server::reply rep =
           http::server::reply::stock_reply(http::server::reply::ok);
-      std::shared_ptr<std::vector<char>> content = get_file_chunk(get_chunk);
-      MakeReply::makebinaryreplay(rep, content);
+      get_chunk.link_content_buffer(rep.content);
+      get_file_chunk(get_chunk);
+      struct http::server::header con_len;
+      con_len.name = "Content-Length";
+      con_len.value = std::to_string(get_chunk.getchunk_size());
+      struct http::server::header con_type;
+      con_type.name = "Content-Type";
+      con_type.value = "application/stream";
+      rep.headers.push_back(con_len);
+      rep.headers.push_back(con_type);
       return rep;
     }
   }
@@ -78,9 +86,8 @@ void ChunkController::put_file_chunk(const PutChunkDTO &put_chunk) {
   chunk_service->file_chunk_update(put_chunk);
 }
 
-std::shared_ptr<std::vector<char>>
-ChunkController::get_file_chunk(const GetChunkDTO &get_chunk) {
-  return chunk_service->file_chunk_get(get_chunk);
+void ChunkController::get_file_chunk(const GetChunkDTO &get_chunk) {
+  chunk_service->file_chunk_get(get_chunk);
 }
 
 void ChunkController::delete_file_chunk(const DeleteChunkDTO &delete_chunk) {

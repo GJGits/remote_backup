@@ -51,17 +51,15 @@ void ChunkService::file_chunk_update(const PutChunkDTO &put_chunk) {
   throw ChunkCorrupted();
 }
 
-std::shared_ptr<std::vector<char>>
+void
 ChunkService::file_chunk_get(const GetChunkDTO &get_chunk) {
   std::string fname{"../../filesystem/" + get_chunk.get_subject().get_sub() +
                     "/" + get_chunk.getfile_name() + "/" +
                     get_chunk.getfile_name() + "__" +
                     std::to_string(get_chunk.getchunk_id()) + ".chk"};
   std::ifstream ifile{fname};
-  std::shared_ptr<std::vector<char>> buff{};
   ChunkEntity chunk_ent{get_chunk};
-  ifile.read(buff->data(), get_chunk.getchunk_size());
-  return buff;
+  ifile.read(get_chunk.get_content_buffer()->data(), get_chunk.getchunk_size());
 }
 
 void ChunkService::file_chunk_delete_service(const DeleteChunkDTO &del_chunk) {

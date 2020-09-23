@@ -30,9 +30,11 @@ public:
     con_type.value = "application/json";
     rep.headers.push_back(con_len);
     rep.headers.push_back(con_type);
-    std::shared_ptr<std::vector<char>> buff{
-        new std::vector<char>{rep_content.begin(), rep_content.end()}};
-    rep.content = buff;
+    std::shared_ptr<std::array<char, CHUNK_SIZE>> buff{
+        new std::array<char, CHUNK_SIZE>{}};
+        for (size_t i = 0; i < rep_content.size(); i++) {
+          buff->data()[i] = rep_content[i];
+        }
     return;
   } // static member function
 
@@ -54,22 +56,12 @@ public:
     con_type.value = "application/json";
     rep.headers.push_back(con_len);
     rep.headers.push_back(con_type);
-    std::shared_ptr<std::vector<char>> buff{
-        new std::vector<char>{rep_body.begin(), rep_body.end()}};
-    rep.content = buff;
+    std::shared_ptr<std::array<char, CHUNK_SIZE>> buff{
+        new std::array<char, CHUNK_SIZE>{}};
+        for (size_t i = 0; i < rep_body.size(); i++) {
+          buff->data()[i] = rep_body[i];
+        }
     return;
   } // static member function
 
-  static void makebinaryreplay(http::server::reply &rep,
-                               std::shared_ptr<std::vector<char>> &rep_body) {
-    struct http::server::header con_len;
-    con_len.name = "Content-Length";
-    con_len.value = std::to_string(rep_body->size());
-    struct http::server::header con_type;
-    con_type.name = "Content-Type";
-    con_type.value = "application/stream";
-    rep.headers.push_back(con_len);
-    rep.headers.push_back(con_type);
-    rep.content = rep_body;
-  } // static member function
 };
