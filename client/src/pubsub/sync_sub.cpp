@@ -35,9 +35,7 @@ void SyncSubscriber::compute_new_size() {
   }
 }
 
-void SyncSubscriber::increment_size(size_t size) {
-  dir_size += size;
-}
+void SyncSubscriber::increment_size(size_t size) { dir_size += size; }
 
 void SyncSubscriber::on_new_file(const Message &message) {
   DurationLogger logger{"NEW_FILE"};

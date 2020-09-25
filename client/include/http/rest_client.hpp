@@ -21,7 +21,8 @@
 #include "../common/base64.hpp"
 #include "../common/json.hpp"
 #include "../filesystem/file_entry.hpp"
-#include "up_worker.hpp"
+#include "../http/up_worker.hpp"
+#include "../http/down_worker.hpp"
 
 namespace beast = boost::beast; // from <boost/beast.hpp>
 namespace http = beast::http;   // from <boost/beast/http.hpp>
@@ -52,6 +53,6 @@ public:
   void delete_chunk(json &chk_info, size_t size);
   void get_chunk();
   void delete_file(std::string &path);
-  void get_status();
+  std::string get_status();
   void get_status_file();
 };

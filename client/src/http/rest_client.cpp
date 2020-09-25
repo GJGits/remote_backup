@@ -96,6 +96,8 @@ void RestClient::delete_file(std::string &path) {
       std::tuple(req, Message{TOPIC::REMOVE_ENTRY, jentry}));
 }
 
-void RestClient::get_status() {}
+std::string RestClient::get_status() {
+  return "something";
+}
 
 void RestClient::get_status_file() {}

@@ -13,5 +13,7 @@ enum TOPIC {
     DELETE_CHUNK,
     REMOVE_ENTRY,
     UP_EMPTY,
+    DOWN_EMPTY,
+    GET_STATUS,
     TIME_OUT
     };

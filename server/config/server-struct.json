@@ -2,7 +2,7 @@
     "max_connections": 16,
     "token-conf": {
         "kd_alg": "hmac-sha256",
-        "expiration": 172800000,
+        "expiration": 172800,
         "secret": "key_here"
     }
 }

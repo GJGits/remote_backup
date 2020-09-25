@@ -46,8 +46,6 @@ ChunkController::handle(const http::server::request &req) {
 
       GetChunkDTO get_chunk{sub};
       get_chunk.fill(req.uri);
-      // da errore perché creo stock reply che chiama content->size
-      // che ovviamente ancora non esiste
       http::server::reply rep =
           http::server::reply::stock_reply(http::server::reply::ok);
       get_chunk.link_content_buffer(rep.content);
