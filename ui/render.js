@@ -1,5 +1,6 @@
 const { ipcRenderer } = require('electron');
 const du = require('du');
+const getMAC = require('getmac').default
 
 var change_status = (status) => {
     let stats = ["login", "signup", "logged"];
@@ -71,10 +72,13 @@ $(document).ready(function () {
         console.log("login clicked");
         username = $("#username").val();
         password = $("#password").val();
+        mac = getMAC();
+        //mac = "aa:bb:cc:dd:ee:ff"
+        console.log("mac:", mac);
         $.ajax({
             url: "http://0.0.0.0:3200/auth/signin",
             type: "POST",
-            data: JSON.stringify({ username: username, password: password.toString() }),
+            data: JSON.stringify({ username: username, password: password.toString(), mac_address: mac }),
             contentType: "application/json",
             dataType: "json",
         }).done(function (data) {
@@ -98,10 +102,11 @@ $(document).ready(function () {
         username = $("#username2").val();
         password = $("#password2").val();
         ripPassword = $("#rip-password").val();
+        mac = getMAC();
         $.ajax({
             url: "http://0.0.0.0:3200/auth/signup",
             type: "POST",
-            data: JSON.stringify({ username: username, password: password.toString(), password_confirm: ripPassword.toString() }),
+            data: JSON.stringify({ username: username, password: password.toString(), password_confirm: ripPassword.toString(), mac_address: mac }),
             contentType: "application/json",
             dataType: "json"
         }).done(function (data) {

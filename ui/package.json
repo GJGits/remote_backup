@@ -15,6 +15,7 @@
   "dependencies": {
     "du": "^1.0.0",
     "electron-json-storage": "^4.2.0",
+    "getmac": "^5.16.0",
     "jquery": "^3.5.1",
     "menubar": "^9.0.1",
     "text-encoding": "^0.7.0"

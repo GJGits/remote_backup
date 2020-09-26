@@ -4,6 +4,7 @@
 #include "json.hpp"
 #include <string.h>
 #include <vector>
+#include <iostream>
 
 using json = nlohmann::json;
 
@@ -30,10 +31,8 @@ public:
     con_type.value = "application/json";
     rep.headers.push_back(con_len);
     rep.headers.push_back(con_type);
-    std::shared_ptr<std::array<char, CHUNK_SIZE>> buff{
-        new std::array<char, CHUNK_SIZE>{}};
         for (size_t i = 0; i < rep_content.size(); i++) {
-          buff->data()[i] = rep_content[i];
+          (*rep.content)[i] = rep_content[i];
         }
     return;
   } // static member function

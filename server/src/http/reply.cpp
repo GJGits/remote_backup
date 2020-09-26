@@ -9,6 +9,7 @@
 //
 
 #include "../../include/http/reply.hpp"
+#include <iostream>
 
 namespace http {
 namespace server {

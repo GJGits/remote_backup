@@ -18,7 +18,8 @@ std::string UserService::login(const SigninDTO &user) {
   if (user_returned.getHashedPassword().compare(hashed_password) == 0) {
     std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
     size_t db_sel = db_repinstance->getDBbyUsername(user.getUsername());
-    Subject sub{user.getUsername(), db_sel};
+    size_t device_id = 0; // todo: selezionare da db utilizzando MAC
+    Subject sub{user.getUsername(), db_sel, device_id};
     return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
   }
 
@@ -37,7 +38,8 @@ std::string UserService::signup(const SignupDTO &user) {
   std::string hashedPassword{Sha256::getSha256(vec)};
   UserEntity user_to_insert{username, hashedPassword, salt};
   size_t db_sel = user_repository->insertUser(user_to_insert);
-  Subject sub{user.getUsername(), db_sel};
+  size_t device_id = 0; // todo: selezionare da db utilizzando MAC
+  Subject sub{user.getUsername(), db_sel, device_id};
   return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
 
   throw UsernameAlreadyExists();

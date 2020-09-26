@@ -7,6 +7,7 @@ private:
   std::string username;
   std::string password;
   std::string password_confirm;
+  std::string mac_address;
 
 public:
   SignupDTO(){};
@@ -14,6 +15,7 @@ public:
   std::string getUsername() const;
   std::string getPassword() const;
   std::string getPasswordConfirm() const;
+  std::string getMAC() const;
 
   const virtual std::string serialize() {
     json_object = {{"username", username},
@@ -26,5 +28,6 @@ public:
     username = json_object["username"];
     password = json_object["password"];
     password_confirm = json_object["password_confirm"];
+    mac_address = json_object["mac_address"];
   }
 };
