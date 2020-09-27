@@ -9,8 +9,7 @@ std::shared_ptr<UserService> UserService::getInstance() {
 }
 
 std::string UserService::login(const SigninDTO &user) {
-  UserEntity user_entity{user.getUsername(), user.getMAC()};
-  UserEntity user_returned = user_repository->getUserByUsername(user_entity);
+  UserEntity user_returned = user_repository->getUserByUsername(user.getUsername());
   unsigned int salt = user_returned.getSalt();
   std::string password_to_hash{std::to_string(salt) + user.getPassword() +
                                std::to_string(salt)};
@@ -19,7 +18,24 @@ std::string UserService::login(const SigninDTO &user) {
   if (user_returned.getHashedPassword().compare(hashed_password) == 0) {
     std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
     size_t db_sel = db_repinstance->getDBbyUsername(user.getUsername());
-    size_t device_id = user_repository->getdevicebyUsernameandMac(user_entity); // todo: selezionare da db utilizzando MAC
+      size_t device_id = 0;
+    if(user.getMAC().compare(user_returned.getDevice1())==0){
+        device_id = 0;
+    }
+    else if (user.getMAC().compare(user_returned.getDevice2())==0){
+        device_id = 1;
+    }
+    else if (user.getMAC().compare(user_returned.getDevice3())==0){
+        device_id = 2;
+    }
+    else if(user_returned.getnumdevices() < 3){
+        device_id = user_returned.getnumdevices() + 1;
+        user_returned.setDevices(device_id,user.getMAC());
+        user_repository->update_user(user_returned);
+    }
+    else{
+       throw ExceededNumberOfDevices();
+    }
     std::clog << "Il db selezionato è:"<< device_id << "\n";
     Subject sub{user.getUsername(), db_sel, device_id};
     return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
@@ -34,7 +50,6 @@ std::string UserService::signup(const SignupDTO &user) {
   if (user.getPassword().compare(user.getPasswordConfirm()) != 0)
     throw PasswordNeqConfirm();
 
-  UserEntity user_entity{user.getUsername(), user.getMAC()};
 
   std::string username(user.getUsername());
   unsigned int salt = abs(rand());
@@ -42,11 +57,10 @@ std::string UserService::signup(const SignupDTO &user) {
                                std::to_string(salt)};
   std::vector<char> vec(password_to_hash.begin(), password_to_hash.end());
   std::string hashedPassword{Sha256::getSha256(vec)};
-  UserEntity user_to_insert{username, hashedPassword, salt};
+  UserEntity user_to_insert{username, hashedPassword, salt, user.getMAC()};
   size_t db_sel = user_repository->insertUser(user_to_insert);
     std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
-    size_t device_id = user_repository->getdevicebyUsernameandMac(user_entity); // todo: selezionare da db utilizzando MAC
-    std::clog << "Il db selezionato è:"<< device_id << "\n";
+    size_t device_id = 0;
   Subject sub{user.getUsername(), db_sel, device_id};
   return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
 

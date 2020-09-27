@@ -9,7 +9,8 @@ Creazione tabella users (db_2, db_3, db_4)
 	salt INT UNSIGNED NOT NULL,
 	device1 varchar(64),
 	device2 varchar(64),
-	device3 varchar(64));
+	device3 varchar(64),
+	numdevices INT);
 
 # AGGIUNGI N COLONNE DOVE N E' IL NUMERO DI DEVICE MASSIMO PER UTENTE
 # LO STATUS DI QUESTE COLONNE E' {OK, GET, DELETE, TODO-DELETE}

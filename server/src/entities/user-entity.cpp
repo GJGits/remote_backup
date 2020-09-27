@@ -1,13 +1,21 @@
 #include "../../include/entities/user-entity.hpp"
 
 UserEntity::UserEntity(const std::string &username,
+                       const std::string &hashed_password, uint32_t salt,
+                       const std::string &device1,
+                       const std::string &device2,
+                       const std::string &device3,
+                       int numdevices)
+        : username{username}, hashed_password{hashed_password}, salt{salt}, device1{device1}, device2{device2}, device3{device3}, numdevices{numdevices} {}
+
+UserEntity::UserEntity(const std::string &username,
                        const std::string &hashed_password, uint32_t salt )
     : username{username}, hashed_password{hashed_password}, salt{salt} {}
 
-
 UserEntity::UserEntity(const std::string &username,
-                       const std::string &mac)
-        : username{username}, mac{mac} {}
+                       const std::string &hashed_password, uint32_t salt,
+                       const std::string &device1)
+        : username{username}, hashed_password{hashed_password}, salt{salt}, device1{device1} {}
 
 UserEntity::UserEntity(const std::string &username)
         : username{username} {}
@@ -15,4 +23,17 @@ UserEntity::UserEntity(const std::string &username)
 std::string UserEntity::getUsername() const { return username; }
 std::string UserEntity::getHashedPassword() const { return hashed_password; }
 uint32_t UserEntity::getSalt() const { return salt; }
-std::string UserEntity::getMac() const { return mac; }
+std::string UserEntity::getDevice1() const { return device1; }
+std::string UserEntity::getDevice2() const { return device2; }
+std::string UserEntity::getDevice3() const { return device3; }
+int UserEntity::getnumdevices() const { return numdevices; }
+
+void UserEntity::setDevices(int actual_num_fields, std::string mac) {
+    numdevices = actual_num_fields;
+    if(actual_num_fields == 2)
+        device2 = mac;
+    else
+        device3 = mac;
+
+
+}

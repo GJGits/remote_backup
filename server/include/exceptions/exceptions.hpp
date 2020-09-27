@@ -157,3 +157,12 @@ struct Base64DecodeFailed : public std::exception
     }
 
 };
+
+struct ExceededNumberOfDevices : public std::exception
+{
+const char * what () const throw ()
+{
+    return "Exceeded maximum number of devices allowed";
+}
+
+};
