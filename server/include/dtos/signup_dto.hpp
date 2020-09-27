@@ -20,7 +20,8 @@ public:
   const virtual std::string serialize() {
     json_object = {{"username", username},
                    {"password", password},
-                   {"password_confirm", password_confirm}};
+                   {"password_confirm", password_confirm},
+                   {"mac_address", mac_address}};
     return json_object.dump();
   }
   const virtual void deserialize(const std::string &json_string) {
