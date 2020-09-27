@@ -16,7 +16,8 @@ private:
 
 public:
   size_t insertUser(const UserEntity &user);
-  UserEntity getUserByUsername(const std::string &username);
+  UserEntity getUserByUsername(const UserEntity &user);
+  size_t getdevicebyUsernameandMac(const UserEntity &user);
   bool deleteUserByUsername(const std::string &username);
   std::string get_hashed_status(const std::string &username);
   json get_status_file(const std::string &username);

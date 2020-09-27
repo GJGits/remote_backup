@@ -6,13 +6,16 @@ Creazione tabella users (db_2, db_3, db_4)
  CREATE TABLE users (
 	username VARCHAR(50) PRIMARY KEY,
 	hashed_password VARCHAR(128) NOT NULL,
-	salt INT UNSIGNED NOT NULL);
+	salt INT UNSIGNED NOT NULL,
+	device1 varchar(64),
+	device2 varchar(64),
+	device3 varchar(64));
 
 # AGGIUNGI N COLONNE DOVE N E' IL NUMERO DI DEVICE MASSIMO PER UTENTE
 # LO STATUS DI QUESTE COLONNE E' {OK, GET, DELETE, TODO-DELETE}
 Creazione Tabella Chunks (db_2, db_3, db_4)
 
-create table chunks(c_username varchar(100) NOT NULL, c_id integer NOT NULL, c_hash varchar(128) NOT NULL, c_path varchar(100) NOT NULL, c_size integer NOT NULL,c_lastmod integer NOT NULL, c_data blob NOT NULL, primary key (c_username, c_path, c_id));
+create table chunks(c_username varchar(100) NOT NULL, c_id integer NOT NULL, c_hash varchar(128) NOT NULL, c_path varchar(100) NOT NULL, c_size integer NOT NULL,c_lastmod integer NOT NULL,device1 varchar(16), device2 varchar(16), device3 varchar(16), primary key (c_username, c_path, c_id));
 
 
 
@@ -26,7 +29,7 @@ CREATE TABLE UsersDB (
 
 Creazione tabella db_status (db_1)
 
-per ogni db che si aggiunge, aggiungere MANUALMENTE un entry del tipo 0,0 dove il primo valore rappresenta l'id del db da assegnare
+per ogni db che si aggiunge, aggiungere MANUALMENTE un entry del tipo 1,0 dove il primo valore rappresenta l'id del db da assegnare
 all'utente (partire da 1) , il secondo valore rappresenta il numero di utenti che utilizzano il db, inizializzare con 0!
 CREATE TABLE db_status (
 	db INT PRIMARY KEY,

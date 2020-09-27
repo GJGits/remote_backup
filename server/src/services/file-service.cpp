@@ -10,6 +10,7 @@ std::shared_ptr<FileService> FileService::getInstance() {
 }
 
 std::string FileService::getStatusFile(const std::string &username) {
+  UserEntity user_entity{username};
   user_repository->getUserByUsername(username);
   json status_file = user_repository->get_status_file(username);
   status_file["hashed_status"] = user_repository->get_hashed_status(username);

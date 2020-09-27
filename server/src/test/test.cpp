@@ -43,7 +43,7 @@ void testHamacSha256() {
 
 void testSQLCRUD()
 {
-
+/*
     std::clog << "##### TEST SQL CRUD #####\n";
     int tests = 2;
     int errors = 0;
@@ -72,6 +72,7 @@ void testSQLCRUD()
     userRepo.deleteUserByUsername(username);
 
     printResult(tests, errors);
+*/
 }
 
 
@@ -79,7 +80,7 @@ void testSQLCRUD()
 void testAll()
 {
     std::clog << "Running tests...\n";
-    testSQLCRUD();
+    //testSQLCRUD();
     //testSha256();
     testHamacSha256();
 }

@@ -2,6 +2,7 @@
 #include <optional>
 
 #include "../entities/db-connect.hpp"
+
 #include "../exceptions/exceptions.hpp"
 
 class DBRepository {
@@ -15,5 +16,6 @@ public:
     static std::shared_ptr<DBRepository> getInstance();
 
     int getDBbyUsername(const std::string &username);
+
     size_t insertUsernameInDB(const std::string &username);
 };

@@ -32,6 +32,7 @@ int DBRepository::getDBbyUsername(const std::string &username) {
   throw DatabaseInvalidConnection();
 }
 
+
 size_t DBRepository::insertUsernameInDB(const std::string &username) {
 
   std::unique_ptr<sql::PreparedStatement> stmt;

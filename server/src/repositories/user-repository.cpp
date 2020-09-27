@@ -29,24 +29,53 @@ size_t UserRepository::insertUser(const UserEntity &user) {
   return db_selected;
 }
 
-UserEntity UserRepository::getUserByUsername(const std::string &username) {
+
+
+UserEntity UserRepository::getUserByUsername(const UserEntity &user) {
   std::unique_ptr<sql::PreparedStatement> stmt;
   std::unique_ptr<sql::ResultSet> res;
   std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
-  size_t db_selected = db_repinstance->getDBbyUsername(username);
+  size_t db_selected = db_repinstance->getDBbyUsername(user.getUsername());
   std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
   stmt = std::unique_ptr<sql::PreparedStatement>{
       std::move(con->prepareStatement("SELECT username, hashed_password, "
                                       "salt FROM users WHERE username = ?"))};
-  stmt->setString(1, username);
+  stmt->setString(1, user.getUsername());
   res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
   if (res->next()) {
     std::string hashed_password = std::move(res->getString("hashed_password"));
     unsigned int salt = res->getInt("salt");
-    UserEntity entity{username, hashed_password, salt};
+    UserEntity entity{user.getUsername(), hashed_password, salt};
     return entity;
   }
   throw UsernameNotExists();
+}
+
+
+size_t UserRepository::getdevicebyUsernameandMac(const UserEntity &user){
+    std::unique_ptr<sql::PreparedStatement> stmt;
+    std::unique_ptr<sql::ResultSet> res;
+    std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
+    size_t db_selected = db_repinstance->getDBbyUsername(user.getUsername());
+    std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
+    stmt = std::unique_ptr<sql::PreparedStatement>{
+            std::move(con->prepareStatement("SELECT `column` FROM (SELECT username,'device1' as `column`, device1 as column_value FROM users UNION SELECT username,'device2' as `column`, device2 as column_value FROM users UNION SELECT username,'device3' as `column`, device3 as column_value FROM users) pivot WHERE username=? and `column_value` = ?; "))};
+
+    stmt->setString(1, user.getUsername());
+    stmt->setString(2, user.getMac());
+    res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
+    if (res->next()) {
+        std::string device_name = std::move(res->getString("column"));
+        if(device_name.compare("device1") == 0)
+            return 0;
+        else if(device_name.compare("device2") == 0)
+            return 1;
+        else if(device_name.compare("device3") == 0)
+            return 2;
+        else
+            return -1;
+    }
+    return -1;
 }
 
 bool UserRepository::deleteUserByUsername(const std::string &username) {
