@@ -25,6 +25,7 @@ void SyncSubscriber::init() {
   broker->subscribe(TOPIC::FILE_DELETED,
                     std::bind(&SyncSubscriber::on_file_deleted, instance.get(),
                               std::placeholders::_1));
+  // remote_check();
 }
 
 void SyncSubscriber::compute_new_size() {
@@ -39,6 +40,7 @@ void SyncSubscriber::increment_size(size_t size) { dir_size += size; }
 
 void SyncSubscriber::on_new_file(const Message &message) {
   DurationLogger logger{"NEW_FILE"};
+  std::shared_ptr<Broker> broker = Broker::getInstance();
   json content = message.get_content();
   std::string file_path = content["path"];
   if (std::filesystem::exists(file_path) &&
@@ -53,6 +55,7 @@ void SyncSubscriber::on_new_file(const Message &message) {
         std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
         json jentry = fentry.get_json_representation();
         rest_client->post_chunk(chunk, jentry);
+        broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
         fentry.clear_chunks();
         i++;
       }
@@ -80,9 +83,24 @@ void SyncSubscriber::on_file_renamed(const Message &message) {
 
 void SyncSubscriber::on_file_deleted(const Message &message) {
   DurationLogger logger{"FILE_DELETED"};
+  std::shared_ptr<Broker> broker = Broker::getInstance();
   json content = message.get_content();
   std::string path = content["path"];
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   rest_client->delete_file(path);
+  broker->publish(Message{TOPIC::REMOVE_ENTRY, content});
   compute_new_size();
+}
+
+void SyncSubscriber::remote_check() {
+  DurationLogger logger{"PROCESS_LIST"};
+  std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
+  int current_page = 0;
+  int last_page = 1;
+  while (current_page < last_page) {
+    json list = rest_client->get_status_list(current_page++);
+    current_page = list["current_page"].get<int>();
+    last_page = list["last_page"].get<int>();
+    // todo: processa messaggi ed eventualmente invia conflitti all'utente.
+  }
 }

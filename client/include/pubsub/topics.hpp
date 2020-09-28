@@ -15,5 +15,6 @@ enum TOPIC {
     UP_EMPTY,
     DOWN_EMPTY,
     GET_STATUS,
+    LIST,
     TIME_OUT
     };

@@ -36,6 +36,8 @@ void DownWorker::run() {
         http::response<http::vector_body<char>> res = read(stream);
         std::clog << "response: " << res << "\n";
         if (res.result_int() == 200) {
+          json list = json::parse(res.body());
+          mex.set_content(list);
           broker->publish(mex);
         }
 
@@ -65,7 +67,8 @@ void DownWorker::send(beast::tcp_stream &stream,
   http::write(stream, request);
 }
 
-http::response<http::vector_body<char>> DownWorker::read(beast::tcp_stream &stream) {
+http::response<http::vector_body<char>>
+DownWorker::read(beast::tcp_stream &stream) {
   DurationLogger{"READ"};
   // This buffer is used for reading and must be persisted
   beast::flat_buffer buffer;
@@ -75,8 +78,6 @@ http::response<http::vector_body<char>> DownWorker::read(beast::tcp_stream &stre
   http::read(stream, buffer, res);
   return res;
 }
-
-
 
 DownWorker::~DownWorker() {
   is_running = false;

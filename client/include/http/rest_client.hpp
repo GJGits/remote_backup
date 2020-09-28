@@ -23,6 +23,7 @@
 #include "../filesystem/file_entry.hpp"
 #include "../http/up_worker.hpp"
 #include "../http/down_worker.hpp"
+#include "../http/http_client.hpp"
 
 namespace beast = boost::beast; // from <boost/beast.hpp>
 namespace http = beast::http;   // from <boost/beast/http.hpp>
@@ -48,11 +49,7 @@ public:
   static std::shared_ptr<RestClient> getInstance();
   void post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
                   json &jentry);
-  void put_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
-                 json &jentry);
-  void delete_chunk(json &chk_info, size_t size);
   void get_chunk();
   void delete_file(std::string &path);
-  std::string get_status();
-  void get_status_file();
+  json get_status_list(size_t page);
 };

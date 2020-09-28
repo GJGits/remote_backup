@@ -27,4 +27,5 @@ public:
   TOPIC get_topic() const { return topic; }
   json get_content() const { return content1; }
   std::shared_ptr<std::vector<char>> get_content2() const { return content2; }
+  void set_content(const json &content) {this->content1 = content;}
 };
