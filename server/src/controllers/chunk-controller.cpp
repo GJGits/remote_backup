@@ -18,8 +18,9 @@ std::shared_ptr<ChunkController> ChunkController::getInstance() {
 
 const http::server::reply
 ChunkController::handle(const http::server::request &req) {
-
+std::clog << "provo la handle\n";
   Subject sub = JWT::validateToken(req);
+    std::clog << "try la handle\n";
 
   if (req.method == "POST") {
     std::smatch match;

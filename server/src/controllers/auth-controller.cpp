@@ -10,7 +10,7 @@ std::shared_ptr<AuthController> AuthController::getInstance() {
     }
     return instance;
 }
-//ciao
+
 const http::server::reply
 AuthController::handle(const http::server::request &req) {
 
@@ -20,6 +20,7 @@ AuthController::handle(const http::server::request &req) {
       std::string req_body = std::string{req.body.get()->begin(), req.body.get()->end()};
       std::clog << "signin body: " << req_body << "\n";
       std::smatch match;
+
       if (std::regex_match(req_body, match, signin_rgx)) {
           SigninDTO user{};
           user.deserialize(req_body);

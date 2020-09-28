@@ -72,18 +72,24 @@ public:
       if (h.name.compare("Authorization") == 0) {
         std::vector<std::string> tokens = Utility::split(h.value, ' ');
         if (tokens.size() == 2 && tokens[0].compare("Bearer") == 0) {
+            std::clog << "e0\n";
           std::string token = tokens[1];
           // inizialmente cerco nella cache
           if (getInstance()->tok_cache.find(token) !=
               getInstance()->tok_cache.end()) {
-            JWTCacheEntry entry = getInstance()->tok_cache[token];
+              std::clog << "e1\n";
+              JWTCacheEntry entry = getInstance()->tok_cache[token];
             if (entry.get_exp() >= std::time(nullptr)) {
-              return entry.get_sub();
+                std::clog << "e2\n";
+
+                return entry.get_sub();
             } else
               getInstance()->tok_cache.erase(token);
           }
           // altrimenti procedo normalmente
-          std::vector<std::string> token_parts = Utility::split(token, '.');
+            std::clog << "e3\n";
+
+            std::vector<std::string> token_parts = Utility::split(token, '.');
           if (token_parts.size() == 3) {
             json payload = json::parse(macaron::Base64::Decode(token_parts[1]));
             Subject sbj{payload["sub"], (size_t)payload["db"].get<int>(), (size_t)payload["dev_id"].get<int>()};
@@ -92,11 +98,14 @@ public:
                 json::parse(macaron::Base64::Decode(token_parts[2]))["sign"];
             std::string sign_calc = json::parse(macaron::Base64::Decode(
                 Utility::split(generateToken(sbj, exp), '.')[2]))["sign"];
-            if (sign.compare(sign_calc) == 0) {
+              std::clog << "e4\n";
+
+              if (sign.compare(sign_calc) == 0) {
+                std::clog << "e5\n";
               JWTCacheEntry ce{sbj, exp};
               // todo: valutare politica di replace per evitare di intasare
               // memoria
-              getInstance()->tok_cache["token"] = ce;
+              getInstance()->tok_cache[token] = ce;
               return sbj;
             }
           }

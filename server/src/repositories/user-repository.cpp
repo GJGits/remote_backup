@@ -40,18 +40,27 @@ UserEntity UserRepository::getUserByUsername(const UserEntity &user) {
   std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
   size_t db_selected = db_repinstance->getDBbyUsername(user.getUsername());
   std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
-
+    std::clog << "La getUserByUsername\n";
   stmt = std::unique_ptr<sql::PreparedStatement>{
       std::move(con->prepareStatement("SELECT username,hashed_password, salt, device1, device2, device3, numdevices FROM users WHERE username = ?"))};
-  stmt->setString(1, user.getUsername());
-  res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
-  if (res->next()) {
+  stmt->setString(1, sql::SQLString{user.getUsername().c_str()});
+
+    std::clog << "username: " <<user.getUsername() << "\n";
+
+    res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
+    std::clog << "username: " <<user.getUsername() << "\n";
+
+    if (res->next()) {
+    std::clog << "almeno entro\n";
     std::string hashed_password = std::move(res->getString("hashed_password"));
     unsigned int salt = res->getInt("salt");
     std::string device1 = std::move(res->getString("device1"));
       std::string device2 = std::move(res->getString("device2"));
       std::string device3 = std::move(res->getString("device3"));
       int numdevices = res->getInt("numdevices");
+      std::clog << "username: " <<user.getUsername() << "\n";
+      std::clog << "device1: " <<device1 << "\n";
+      std::clog << "numdevices: " <<numdevices << "\n";
       UserEntity entity{user.getUsername(), hashed_password, salt, device1, device2, device3, numdevices};
     return entity;
   }
@@ -68,9 +77,14 @@ void UserRepository::update_user(const UserEntity &user){
     std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
     stmt = std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement("UPDATE users set device2 = ? , device3 = ? ,numdevices = ? WHERE username = ?"))};
 
+    std::clog << "Device2 id: "<<user.getDevice2() << "\n";
+    std::clog << "Device3 id: "<<user.getDevice3() << "\n";
+    std::clog << "Device nums: "<<user.getnumdevices() << "\n";
+    std::clog << "Username: "<<user.getUsername() << "\n";
+
     stmt->setString(1, sql::SQLString{user.getDevice2().c_str()});
     stmt->setString(2, sql::SQLString{user.getDevice3().c_str()});
-    stmt->setInt(3,user.getnumdevices() );
+    stmt->setInt(3,user.getnumdevices()+1 );
     stmt->setString(4, sql::SQLString{user.getUsername().c_str()});
 
     stmt->executeUpdate();

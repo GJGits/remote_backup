@@ -13,26 +13,64 @@ bool ChunkRepository::add_or_update_Chunk(const ChunkEntity &chunk) {
   std::shared_ptr<sql::Connection> con = DBConnect::getConnection(chunk.get_subject().get_db_id());
 
   if (con->isValid() && !con->isClosed()) {
+      std::string device1;
+      std::string device2;
+      std::string device3;
+
+      switch(chunk.get_subject().get_device_id()) {
+          case 0 :
+              device1 = "OK";
+              device2 = "NONE";
+              device3 = "NONE";
+              break;
+
+          case 1 :
+              device1 = "NONE";
+              device2 = "OK";
+              device3 = "NONE";
+              break;
+
+          case 2 :
+              device1 = "NONE";
+              device2 = "NONE";
+              device3 = "OK";
+              break;
+
+          default :
+              break;
+      }
+      std::clog << "device numbers: "<< chunk.get_subject().get_device_id() << "\n";
+
+      std::clog << "device1: "<< device1 << "\n";
     stmt =
         std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement(
             "INSERT INTO chunks(c_username, c_id, c_hash, c_path, "
-            "c_size,c_lastmod) values(?,?,?,?,?,?) ON DUPLICATE KEY "
-            "UPDATE c_hash = ?, c_size = ? , c_lastmod = ?;"))};
+            "c_size,c_lastmod, device1, device2, device3) values(?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY "
+            "UPDATE c_hash = ?, c_size = ? , c_lastmod = ?, device1 = ?, device2 = ?, device3 = ?;"))};
     stmt->setString(1, sql::SQLString{chunk.get_subject().get_sub().c_str()});
     stmt->setInt(2, chunk.getIdChunk());
     stmt->setString(3, sql::SQLString{chunk.getHashChunk().c_str()});
     stmt->setString(4, sql::SQLString{chunk.getPathFile().c_str()});
     stmt->setInt(5, chunk.getSizeChunk());
     stmt->setInt(6, chunk.getLastMod());
-    stmt->setString(7, sql::SQLString{chunk.getHashChunk().c_str()});
-    stmt->setInt(8, chunk.getSizeChunk());
-    stmt->setInt(9, chunk.getLastMod());
+      stmt->setString(7, sql::SQLString{device1.c_str()});
+      stmt->setString(8, sql::SQLString{device2.c_str()});
+      stmt->setString(9, sql::SQLString{device3.c_str()});
+
+      stmt->setString(10, sql::SQLString{chunk.getHashChunk().c_str()});
+    stmt->setInt(11, chunk.getSizeChunk());
+    stmt->setInt(12, chunk.getLastMod());
+
+      stmt->setString(13, sql::SQLString{device1.c_str()});
+      stmt->setString(14, sql::SQLString{device2.c_str()});
+      stmt->setString(15, sql::SQLString{device3.c_str()});
+
     return stmt->executeUpdate() == 1 ? true : false;
   }
   throw DatabaseInvalidConnection();
 }
 
-std::string ChunkRepository::get_Chunk(const ChunkEntity &chunk) {
+bool ChunkRepository::get_Chunk(const ChunkEntity &chunk) {
   std::unique_ptr<sql::PreparedStatement> stmt;
   std::unique_ptr<sql::ResultSet> res;
 
@@ -44,37 +82,15 @@ std::string ChunkRepository::get_Chunk(const ChunkEntity &chunk) {
     std::clog << chunk.getPathFile().c_str() << "\n";
     std::clog << chunk.getIdChunk() << "\n";
 
+    int num_device = chunk.get_subject().get_device_id();
+
     stmt = std::unique_ptr<sql::PreparedStatement>{std::move(
-        con->prepareStatement("SELECT c_data,c_size FROM chunks WHERE "
-                              "c_username = ? and c_path = ? and c_id = ?;"))};
+        con->prepareStatement("UPDATE SET device"+std::to_string(num_device+1)+"='OK' FROM chunks WHERE c_username = ? and c_path = ? and c_id = ?;"))};
     stmt->setString(1, sql::SQLString{chunk.get_subject().get_sub().c_str()});
     stmt->setString(2, sql::SQLString{chunk.getPathFile().c_str()});
     stmt->setInt(3, chunk.getIdChunk());
 
-    res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
-    if (res->next()) {
-      int size = res->getInt("c_size");
-      std::shared_ptr<char[]> buffer =
-          std::shared_ptr<char[]>{new char[size + 1]};
-      memset(buffer.get(), '\0', size + 1);
-      std::istream *blobData = res->getBlob("c_data");
-      size_t read = 0;
-      while (size > 0) {
-        blobData->seekg(read);
-        ssize_t to_read = size > 64 ? 64 : size;
-        blobData->read(buffer.get() + read, to_read);
-        size -= to_read;
-        read += to_read;
-      }
-
-      for (size_t i = 0; i < read; i++) {
-        std::clog << buffer[i];
-      }
-      std::clog << "\n";
-
-      return "ciao";
-    }
-    throw FileSizeNotAvailable();
+    return stmt->executeUpdate() == 1 ? true : false;
   }
   throw DatabaseInvalidConnection();
 }
@@ -86,6 +102,8 @@ bool ChunkRepository::delete_chunks(const ChunkEntity &chunk) {
   size_t db_selected = db_repinstance->getDBbyUsername(chunk.get_subject().get_sub());
   std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
   if (con->isValid() && !con->isClosed()) {
+
+
     stmt = std::unique_ptr<sql::PreparedStatement>{
         std::move(con->prepareStatement("DELETE from chunks WHERE c_path = ? "
                                         "AND c_username = ? AND c_id >= ?;"))};

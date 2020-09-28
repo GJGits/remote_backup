@@ -60,6 +60,8 @@ ChunkService::file_chunk_get(const GetChunkDTO &get_chunk) {
   std::ifstream ifile{fname};
   ChunkEntity chunk_ent{get_chunk};
   ifile.read(get_chunk.get_content_buffer()->data(), get_chunk.getchunk_size());
+    chunk_repository->get_Chunk(chunk_ent);
+
 }
 
 void ChunkService::file_chunk_delete_service(const DeleteChunkDTO &del_chunk) {

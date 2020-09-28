@@ -29,14 +29,15 @@ std::string UserService::login(const SigninDTO &user) {
         device_id = 2;
     }
     else if(user_returned.getnumdevices() < 3){
-        device_id = user_returned.getnumdevices() + 1;
+        device_id = user_returned.getnumdevices();
+        std::clog << "Device id: "<<device_id << "\n";
         user_returned.setDevices(device_id,user.getMAC());
         user_repository->update_user(user_returned);
     }
     else{
        throw ExceededNumberOfDevices();
     }
-    std::clog << "Il db selezionato è:"<< device_id << "\n";
+    std::clog << "Il device id selezionato è:"<< device_id << "\n";
     Subject sub{user.getUsername(), db_sel, device_id};
     return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
   }
