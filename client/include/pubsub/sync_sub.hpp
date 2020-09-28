@@ -25,7 +25,6 @@ public:
   void on_new_file(const Message &message);
   void on_new_folder(const Message &message);
   void on_file_renamed(const Message &message);
-  void on_file_modified(const Message &message);
   void on_file_deleted(const Message &message);
   void increment_size(size_t size);
   void compute_new_size();
