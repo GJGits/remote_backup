@@ -17,8 +17,6 @@ public:
   static std::shared_ptr<StructSubscriber> getInstance();
   void init();
   void on_add_chunk(const Message &message);
-  void on_update_chunk(const Message &message);
-  void on_delete_chunk(const Message &message);
   void on_delete_entry(const Message &message);
-  void on_up_empty(const Message &message);
+  void on_time_out(const Message &message);
 };

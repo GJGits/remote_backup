@@ -201,6 +201,8 @@ void LinuxWatcher::handle_events() {
           broker->publish(Message{TOPIC::FILE_DELETED, mex});
         }
       }
+      // todo: applicare politica piu' solida per triggerare scrittura struttura
+      broker->publish(Message{TOPIC::TIME_OUT});
     }
   }
 }

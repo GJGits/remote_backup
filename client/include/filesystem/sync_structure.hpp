@@ -32,8 +32,6 @@ public:
   static std::shared_ptr<SyncStructure> getInstance();
   void write_structure();
   void add_chunk(const json &chunk);
-  void replace_chunk(const json &chunk);
-  void delete_chunk(const json &chunk);
   bool has_entry(const std::string &path);
   void delete_entry(const json &entry);
   void rename_entry(const json &entry);

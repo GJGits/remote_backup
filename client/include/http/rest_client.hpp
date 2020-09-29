@@ -21,8 +21,6 @@
 #include "../common/base64.hpp"
 #include "../common/json.hpp"
 #include "../filesystem/file_entry.hpp"
-#include "../http/up_worker.hpp"
-#include "../http/down_worker.hpp"
 #include "../http/http_client.hpp"
 
 namespace beast = boost::beast; // from <boost/beast.hpp>

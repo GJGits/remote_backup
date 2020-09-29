@@ -38,7 +38,6 @@ void RestClient::fill_headers(http::request<http::vector_body<char>> &req,
 
 void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
                             json &jentry) {
-  std::shared_ptr<UpWorker> up_worker = UpWorker::getIstance();
   std::shared_ptr<HTTPClient> http_client = HTTPClient::getIstance();
   std::shared_ptr<char[]> buffer = std::get<0>(chunk);
   http::request<http::vector_body<char>> req{post_prototype};
@@ -57,7 +56,6 @@ void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
 void RestClient::get_chunk() {}
 
 void RestClient::delete_file(std::string &path) {
-  std::shared_ptr<UpWorker> up_worker = UpWorker::getIstance();
   std::shared_ptr<HTTPClient> http_client = HTTPClient::getIstance();
   json jentry;
   jentry["path"] = path;
