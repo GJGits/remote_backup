@@ -7,15 +7,14 @@
 
 int main() {
 
-  std::shared_ptr<SyncSubscriber> sync_sub = SyncSubscriber::getInstance();
-  sync_sub->init();
-
   std::shared_ptr<StructSubscriber> struct_sub = StructSubscriber::getInstance();
   struct_sub->init();
 
+  std::shared_ptr<SyncSubscriber> sync_sub = SyncSubscriber::getInstance();
+  sync_sub->init();
+
   std::shared_ptr<GuiSubscriber> gui_sub = GuiSubscriber::getInstance();
   gui_sub->init();
-
 
   std::shared_ptr<LinuxWatcher> watcher = LinuxWatcher::getInstance(
       "./sync", IN_CREATE | IN_ONLYDIR | IN_CLOSE_WRITE | IN_DELETE |

@@ -33,7 +33,6 @@ void RestClient::fill_headers(http::request<http::vector_body<char>> &req,
                               size_t size) {
   req.set(http::field::host, "remote_backup_nginx-server_1");
   req.set(http::field::content_length, std::to_string(size));
-  req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
   req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 }
 
@@ -50,6 +49,7 @@ void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
              macaron::Base64::Encode(std::string{jentry["path"]}.substr(7)) +
              "/" + std::to_string(jentry["last_mod"].get<int>()));
   req.set(http::field::content_length, std::to_string(size));
+  req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
   std::move(buffer.get(), buffer.get() + size, std::back_inserter(req.body()));
   http_client->post(req);
 }
@@ -63,6 +63,7 @@ void RestClient::delete_file(std::string &path) {
   jentry["path"] = path;
   http::request<http::vector_body<char>> req{delete_prototype};
   req.target("/file/" + macaron::Base64::Encode(path.substr(7)));
+  req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
   http_client->delete_(req);
 }
 
@@ -70,5 +71,6 @@ json RestClient::get_status_list(size_t page) {
   std::shared_ptr<HTTPClient> http_client = HTTPClient::getIstance();
   http::request<http::vector_body<char>> req{get_prototype};
   req.target("/status/list/" + std::to_string(page));
+  req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
   return http_client->get_json(req);
 }
