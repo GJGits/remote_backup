@@ -12,11 +12,11 @@ void StructSubscriber::init() {
   broker->subscribe(TOPIC::ADD_CHUNK,
                     std::bind(&StructSubscriber::on_add_chunk, instance.get(),
                               std::placeholders::_1));
-  broker->subscribe(TOPIC::FILE_DELETED,
+  broker->subscribe(TOPIC::FILE_MODIFIED,
+                    std::bind(&StructSubscriber::on_file_modified, instance.get(),
+                              std::placeholders::_1));
+  broker->subscribe(TOPIC::REMOVE_ENTRY,
                     std::bind(&StructSubscriber::on_delete_entry,
-                              instance.get(), std::placeholders::_1));
-  broker->subscribe(TOPIC::TIME_OUT,
-                    std::bind(&StructSubscriber::on_time_out,
                               instance.get(), std::placeholders::_1));
 }
 
@@ -28,15 +28,16 @@ void StructSubscriber::on_add_chunk(const Message &message) {
   std::unique_lock lk{m};
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   sync->add_chunk(message.get_content());
+  sync->write_structure();
 }
 
+void StructSubscriber::on_file_modified(const Message &message) {
+  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+  json content = message.get_content();
+  sync->reset_chunks(content["path"]);
+}
 
 void StructSubscriber::on_delete_entry(const Message &message) {
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   sync->delete_entry(message.get_content());
-}
-
-void StructSubscriber::on_time_out(const Message &message) {
-  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-  sync->write_structure();
 }

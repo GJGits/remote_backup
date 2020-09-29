@@ -128,6 +128,10 @@ void SyncStructure::delete_entry(const json &entry) {
   dirty = true;
 }
 
+void SyncStructure::reset_chunks(const std::string &path) {
+  entries[path]["chunks"].clear();
+}
+
 void SyncStructure::rename_entry(const json &entry) {
   DurationLogger logger{"RENAME_ENTRY"};
   json ent = entry;

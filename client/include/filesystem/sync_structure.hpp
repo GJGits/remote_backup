@@ -33,6 +33,7 @@ public:
   void write_structure();
   void add_chunk(const json &chunk);
   bool has_entry(const std::string &path);
+  void reset_chunks(const std::string &path);
   void delete_entry(const json &entry);
   void rename_entry(const json &entry);
   std::vector<std::string> get_entry_hashes(const std::string &path);
