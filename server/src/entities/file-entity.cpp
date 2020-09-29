@@ -6,3 +6,4 @@ username{std::move(username)}, path_file{std::move(path_file)}{};
 
 std::string FileEntity::getUsername() const{ return username; };
 std::string FileEntity::getPathFile() const{return path_file;};
+Subject FileEntity::get_subject() const {return subject;}
