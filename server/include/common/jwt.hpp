@@ -78,6 +78,7 @@ public:
           if (getInstance()->tok_cache.find(token) !=
               getInstance()->tok_cache.end()) {
               std::clog << "e1\n";
+              std::clog << "token salvato nella mappa : " << token << "\n";
               JWTCacheEntry entry = getInstance()->tok_cache[token];
             if (entry.get_exp() >= std::time(nullptr)) {
                 std::clog << "e2\n";
