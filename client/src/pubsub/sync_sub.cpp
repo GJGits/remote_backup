@@ -25,7 +25,7 @@ void SyncSubscriber::init() {
   broker->subscribe(TOPIC::FILE_DELETED,
                     std::bind(&SyncSubscriber::on_file_deleted, instance.get(),
                               std::placeholders::_1));
-  // remote_check();
+  remote_check();
 }
 
 void SyncSubscriber::compute_new_size() {
@@ -99,6 +99,7 @@ void SyncSubscriber::remote_check() {
   int last_page = 1;
   while (current_page < last_page) {
     json list = rest_client->get_status_list(current_page++);
+    std::clog << "status list:\n" << list.dump() << "\n";
     current_page = list["current_page"].get<int>();
     last_page = list["last_page"].get<int>();
     // todo: processa messaggi ed eventualmente invia conflitti all'utente.
