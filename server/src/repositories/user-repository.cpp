@@ -136,44 +136,33 @@ json UserRepository::get_status_file(const UserEntity &user_entity) {
   size_t db_selected = db_repinstance->getDBbyUsername(user_entity.getUsername());
   std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
   std::clog << "e0\n";
-  if(user_entity.getpage_num() == 0) {
-      stmt =
-              std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement(
-                      "select c_path,count(c_path) as num_chunks,c_lastmod  from chunks where c_username = ? group by c_path,c_lastmod LIMIT 0,18446744073709551615;"))}; //ricordare al posto di 0, di mettere il vero valore
-      std::clog << "username: " << user_entity.getUsername() << "\n";
 
-      stmt->setString(1, sql::SQLString{user_entity.getUsername().c_str()});
-      std::clog << "e1\n";
-      res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
-      std::clog << "e2\n";
-  }
-  else{
       stmt =
               std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement(
-                      "select c_path,count(c_path) as num_chunks,c_lastmod  from chunks where c_username = ? group by c_path,c_lastmod LIMIT ?,?;"))}; //ricordare al posto di 0, di mettere il vero valore
+                      "select distinct(c_path),num_chunks,c_lastmod  from chunks where c_username = ? LIMIT ?,18446744073709551615;"))}; //ricordare al posto di 0, di mettere il vero valore
       std::clog << "username: " << user_entity.getUsername() << "\n";
       stmt->setString(1, sql::SQLString{user_entity.getUsername().c_str()});
       stmt->setInt(2, (user_entity.getpage_num() * 100));
-      stmt->setInt(3, ((user_entity.getpage_num()+1) * 100));
 
-  }
+
+    res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
 
 
     json j_single_path;
-int n_entries = 0;
+    int numRows = res->rowsCount() ;
+    std::clog << "IL NUMERO DI RIGHE: " << numRows << "\n";
 while (res->next()) {
     j_single_path["path"] = res->getString("c_path");
     j_single_path["num_chunks"] = res->getInt("num_chunks");
     j_single_path["last_mod"] = res->getInt("c_lastmod");
     j["entries"].push_back(j_single_path);
-    n_entries++;
 }
 
-    int result = std::floor(n_entries/100);
-    int rest = n_entries%100;
+    int result = std::floor(numRows/100);
+    int rest = numRows%100;
     if(rest == 0 && result > 0)
         result--;
-  j["last_page"] = result; //Perchè si parte a contare da 0
+  j["last_page"] = result;
 
   return j;
 }
