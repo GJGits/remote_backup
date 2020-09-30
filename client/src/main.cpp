@@ -6,7 +6,7 @@
 #include "../include/pubsub/gui_sub.hpp"
 
 int main() {
-
+    sleep(4);
   std::shared_ptr<StructSubscriber> struct_sub = StructSubscriber::getInstance();
   struct_sub->init();
 

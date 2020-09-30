@@ -14,6 +14,7 @@ std::string FileService::getStatusFile(const GetStatusDTO &get_status_dto) {
   //user_repository->getUserByUsername(username);
   json status_file = user_repository->get_status_file(user_entity);
   //status_file["hashed_status"] = user_repository->get_hashed_status(username);
+  std::clog << status_file.dump() << "\n";
   return status_file.dump();
 }
 

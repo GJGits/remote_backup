@@ -127,7 +127,7 @@ std::string UserRepository::get_hashed_status(const std::string &username) {
 json UserRepository::get_status_file(const UserEntity &user_entity) {
   json j;
   j["entries"] = json::array();
-  j["current_page"] = user_entity.getpage_num(); //num_received_by_client;
+  j["current_page"] = user_entity.getpage_num();
 
   std::unique_ptr<sql::PreparedStatement> stmt;
   std::unique_ptr<sql::ResultSet> res;
@@ -137,11 +137,12 @@ json UserRepository::get_status_file(const UserEntity &user_entity) {
   std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
   std::clog << "e0\n";
   stmt =
-      std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement("select c_path,count(c_path) as num_chunks,c_lastmod  from chunks where username = ? group by c_path,c_lastmod LIMIT "+std::to_string(user_entity.getpage_num())+",~0;"))}; //ricordare al posto di 0, di mettere il vero valore
+      std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement("select c_path,count(c_path) as num_chunks,c_lastmod  from chunks where c_username = ? group by c_path,c_lastmod LIMIT ?,100;"))}; //ricordare al posto di 0, di mettere il vero valore
+    std::clog << "username: "<<user_entity.getUsername() << "\n";
 
   stmt->setString(1, sql::SQLString{user_entity.getUsername().c_str()});
   std::clog << "e1\n";
-
+    stmt->setInt(2, user_entity.getpage_num());
   res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
   std::clog << "e2\n";
 

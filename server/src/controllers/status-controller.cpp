@@ -10,12 +10,13 @@ std::shared_ptr<StatusController> StatusController::getInstance() {
 }
 
 inline static std::regex user_rgx{"^/status$"};
-inline static std::regex user_rgx_file{"^\\/status\\/[\\d]+\\/file$"};
+inline static std::regex user_rgx_file{"^\\/status\\/list\\/[\\d]+$"};
 
 const http::server::reply
 StatusController::handle(const http::server::request &req) {
   Subject sub = JWT::validateToken(req);
   if (req.method == "GET") {
+      std::clog << "HELLOOOOOOOOOOOOOOOOOOOOOO FROM SERVER\n";
     std::smatch match;
     if (std::regex_search(req.uri.begin(), req.uri.end(), match, user_rgx)) {
       std::string username{std::move(match[1])};
