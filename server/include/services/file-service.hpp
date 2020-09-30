@@ -4,6 +4,8 @@
 #include "../dtos/post_chunk_dto.hpp"
 #include "../dtos/put_chunk_dto.hpp"
 #include "../dtos/get_chunk_dto.hpp"
+#include "../dtos/get_status_dto.hpp"
+
 #include "../dtos/delete_file_dto.hpp"
 #include "../dtos/delete_chunk_dto.hpp"
 
@@ -37,7 +39,7 @@ public:
     std::mutex mtx;
     static std::shared_ptr<FileService> getInstance();
 
-    std::string getStatusFile(const std::string &username);
+    std::string getStatusFile(const GetStatusDTO &get_status_dto);
     void delete_file_service(const DeleteFileDTO &del_file);
     ~FileService() {}
 

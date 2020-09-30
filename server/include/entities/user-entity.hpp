@@ -11,6 +11,7 @@ private:
     std::string device2;
     std::string device3;
     int numdevices;
+    int page_num;
 public:
     UserEntity(const std::string &username,
                const std::string &hashed_password, uint32_t salt,
@@ -26,7 +27,7 @@ public:
                            const std::string &hashed_password, uint32_t salt,
                            const std::string &device1);
 
-  UserEntity(const std::string &username);
+  UserEntity(const std::string &username, int page_num);
 
   std::string getUsername() const;
   std::string getHashedPassword() const;
@@ -35,6 +36,7 @@ public:
 std::string getDevice2() const;
 std::string getDevice3() const;
     int getnumdevices() const;
+    int getpage_num() const;
     void setDevices(int actual_num_fields, std::string mac) ;
 
 };

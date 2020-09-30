@@ -34,21 +34,21 @@ size_t UserRepository::insertUser(const UserEntity &user) {
 
 
 
-UserEntity UserRepository::getUserByUsername(const UserEntity &user) {
+UserEntity UserRepository::getUserByUsername(const std::string &username) {
   std::unique_ptr<sql::PreparedStatement> stmt;
   std::unique_ptr<sql::ResultSet> res;
   std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
-  size_t db_selected = db_repinstance->getDBbyUsername(user.getUsername());
+  size_t db_selected = db_repinstance->getDBbyUsername(username);
   std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
     std::clog << "La getUserByUsername\n";
   stmt = std::unique_ptr<sql::PreparedStatement>{
       std::move(con->prepareStatement("SELECT username,hashed_password, salt, device1, device2, device3, numdevices FROM users WHERE username = ?"))};
-  stmt->setString(1, sql::SQLString{user.getUsername().c_str()});
+  stmt->setString(1, sql::SQLString{username.c_str()});
 
-    std::clog << "username: " <<user.getUsername() << "\n";
+    std::clog << "username: " <<username << "\n";
 
     res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
-    std::clog << "username: " <<user.getUsername() << "\n";
+
 
     if (res->next()) {
     std::clog << "almeno entro\n";
@@ -58,10 +58,10 @@ UserEntity UserRepository::getUserByUsername(const UserEntity &user) {
       std::string device2 = std::move(res->getString("device2"));
       std::string device3 = std::move(res->getString("device3"));
       int numdevices = res->getInt("numdevices");
-      std::clog << "username: " <<user.getUsername() << "\n";
+      std::clog << "username: " <<username << "\n";
       std::clog << "device1: " <<device1 << "\n";
       std::clog << "numdevices: " <<numdevices << "\n";
-      UserEntity entity{user.getUsername(), hashed_password, salt, device1, device2, device3, numdevices};
+      UserEntity entity{username, hashed_password, salt, device1, device2, device3, numdevices};
     return entity;
   }
   throw UsernameNotExists();
@@ -124,61 +124,42 @@ std::string UserRepository::get_hashed_status(const std::string &username) {
   return Sha256::getSha256(data);
 }
 
-json UserRepository::get_status_file(const std::string &username) {
+json UserRepository::get_status_file(const UserEntity &user_entity) {
   json j;
   j["entries"] = json::array();
+  j["current_page"] = user_entity.getpage_num(); //num_received_by_client;
 
   std::unique_ptr<sql::PreparedStatement> stmt;
   std::unique_ptr<sql::ResultSet> res;
 
   std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
-  size_t db_selected = db_repinstance->getDBbyUsername(username);
+  size_t db_selected = db_repinstance->getDBbyUsername(user_entity.getUsername());
   std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
   std::clog << "e0\n";
   stmt =
-      std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement(
-          "select * from chunks,fileinfo where chunks.c_username = ? and "
-          "chunks.c_username = fileinfo.f_username and chunks.c_path = "
-          "fileinfo.f_path order by fileinfo.f_path;"))};
+      std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement("select c_path,count(c_path) as num_chunks,c_lastmod  from chunks where username = ? group by c_path,c_lastmod LIMIT "+std::to_string(user_entity.getpage_num())+",~0;"))}; //ricordare al posto di 0, di mettere il vero valore
 
-  stmt->setString(1, sql::SQLString{username.c_str()});
+  stmt->setString(1, sql::SQLString{user_entity.getUsername().c_str()});
   std::clog << "e1\n";
 
   res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
   std::clog << "e2\n";
 
-  json j_entry;
+json j_single_path;
+int n_entries = 0;
+while (res->next()) {
+    j_single_path["path"] = res->getString("c_path");
+    j_single_path["num_chunks"] = res->getInt("num_chunks");
+    j_single_path["last_mod"] = res->getInt("c_lastmod");
+    j["entries"].push_back(j_single_path);
+    n_entries++;
+}
 
-  json j_chunks;
-  j_chunks = json::array();
-
-  json j_single_chunk;
-
-  std::string actual_file_path{""};
-  while (res->next()) {
-
-    if (actual_file_path.compare(res->getString("f_path")) != 0) {
-      if (actual_file_path.compare("") != 0) {
-        j_entry["chunks"] = j_chunks;
-        j["entries"].push_back(j_entry);
-      }
-
-      actual_file_path = res->getString("f_path");
-      j_chunks.clear();
-
-      j_entry["path"] = res->getString("f_path");
-      j_entry["size"] = res->getInt("f_size");
-      j_entry["validity"] = "false";
-      j_entry["last_mod"] = res->getString("f_lastmod");
-    }
-    j_entry["dim_last_chunk"] = res->getInt("c_size");
-
-    j_single_chunk["hash"] = res->getString("c_hash");
-    j_single_chunk["id"] = res->getInt("c_id");
-    j_chunks.push_back(j_single_chunk);
-  }
-  j_entry["chunks"] = j_chunks;
-  j["entries"].push_back(j_entry);
+    int result = std::floor(n_entries/100);
+    int rest = n_entries%100;
+    if(rest > 0)
+        result++;
+  j["last_page"] = result + 1; //Perchè si parte a contare da 0
 
   return j;
 }

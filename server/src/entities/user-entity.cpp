@@ -17,8 +17,8 @@ UserEntity::UserEntity(const std::string &username,
                        const std::string &device1)
         : username{username}, hashed_password{hashed_password}, salt{salt}, device1{device1} {}
 
-UserEntity::UserEntity(const std::string &username)
-        : username{username} {}
+UserEntity::UserEntity(const std::string &username, int page_num)
+        : username{username}, page_num{page_num} {}
 
 std::string UserEntity::getUsername() const { return username; }
 std::string UserEntity::getHashedPassword() const { return hashed_password; }
@@ -27,6 +27,7 @@ std::string UserEntity::getDevice1() const { return device1; }
 std::string UserEntity::getDevice2() const { return device2; }
 std::string UserEntity::getDevice3() const { return device3; }
 int UserEntity::getnumdevices() const { return numdevices; }
+int UserEntity::getpage_num() const { return page_num;};
 
 void UserEntity::setDevices(int actual_num_fields, std::string mac) {
     numdevices = actual_num_fields;
@@ -34,6 +35,4 @@ void UserEntity::setDevices(int actual_num_fields, std::string mac) {
         device2 = mac;
     else
         device3 = mac;
-
-
 }

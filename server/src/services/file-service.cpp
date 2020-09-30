@@ -9,11 +9,11 @@ std::shared_ptr<FileService> FileService::getInstance() {
   return instance;
 }
 
-std::string FileService::getStatusFile(const std::string &username) {
-  UserEntity user_entity{username};
-  user_repository->getUserByUsername(username);
-  json status_file = user_repository->get_status_file(username);
-  status_file["hashed_status"] = user_repository->get_hashed_status(username);
+std::string FileService::getStatusFile(const GetStatusDTO &get_status_dto) {
+  UserEntity user_entity{get_status_dto.get_subject().get_sub(), get_status_dto.getpage_num()};
+  //user_repository->getUserByUsername(username);
+  json status_file = user_repository->get_status_file(user_entity);
+  //status_file["hashed_status"] = user_repository->get_hashed_status(username);
   return status_file.dump();
 }
 

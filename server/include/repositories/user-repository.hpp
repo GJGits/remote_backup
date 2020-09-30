@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include <optional>
-
+#include <cmath>
 #include "../common/json.hpp"
 #include "../common/sha256.hpp"
 #include "../entities/db-connect.hpp"
@@ -16,10 +16,10 @@ private:
 
 public:
   size_t insertUser(const UserEntity &user);
-  UserEntity getUserByUsername(const UserEntity &user);
+  UserEntity getUserByUsername(const std::string &username);
   bool deleteUserByUsername(const std::string &username);
   std::string get_hashed_status(const std::string &username);
-  json get_status_file(const std::string &username);
-  void update_user(const UserEntity &user);
+  json get_status_file(const UserEntity &user_entity);
+    void update_user(const UserEntity &user);
   static std::shared_ptr<UserRepository> getInstance();
 };

@@ -1,13 +1,1 @@
-{
-    "entries": [
-        {
-            "chunks": [],
-            "hash": "f545e1f55fee8abea2f84dc4c0e3a55c760809d4d80ff43e36100f062b5af6f2",
-            "last_mod": 1529875720,
-            "nchunks": 108,
-            "path": "./sync/c++ - thread.pdf",
-            "size": 441793
-        }
-    ],
-    "hashed_status": "cae1e571a83fdea06a25294809e08492f70e5dc71cb2dd3c6fa0211190579cdf"
-}
+{"entries":[{"chunks":[],"hash":"911d9e4fde7298411a8f7741ac34d803395418e4b7fa6d9862138c5b397cba0c","last_mod":1599753052,"nchunks":1,"path":"./sync/test4 (copia 3).ppt","size":4},{"chunks":[],"hash":"3aafa7d547d70edda3f8629d7b28dc701a8148c463ae57a508315c377e0f5e9f","last_mod":1599671479,"nchunks":1,"path":"./sync/test2.txt","size":322},{"chunks":[],"hash":"8abaee54927072657e286ff052bf19a7a37d096b846e8e600199f9ee47c748c7","last_mod":1589217244,"nchunks":1,"path":"./sync/test4.ppt","size":165},{"chunks":[],"hash":"61d9e24e7323bd809c8ba3b469c45a131ddeeb7bfa91626c919c8e941e512803","last_mod":1601210340,"nchunks":1,"path":"./sync/tasks.txt","size":279},{"chunks":[],"hash":"3aafa7d547d70edda3f8629d7b28dc701a8148c463ae57a508315c377e0f5e9f","last_mod":1599671479,"nchunks":1,"path":"./sync/test2 (copia).txt","size":322},{"chunks":[],"hash":"8abaee54927072657e286ff052bf19a7a37d096b846e8e600199f9ee47c748c7","last_mod":1589217244,"nchunks":1,"path":"./sync/test1.ppt","size":165},{"chunks":[],"hash":"0f371f20a234b24eb43e979fb9eca10282ff97be857dd212a8e184eafe3bf28f","last_mod":1599751145,"nchunks":1,"path":"./sync/primaprova.txt","size":10}],"hashed_status":"3e9fc5b27bee08ec1b20c65923050f3b88969028ee408989ec072f5a39823a6e"}
