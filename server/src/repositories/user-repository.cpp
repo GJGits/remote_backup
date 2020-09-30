@@ -151,11 +151,13 @@ json UserRepository::get_status_file(const UserEntity &user_entity) {
     json j_single_path;
     int numRows = res->rowsCount() ;
     std::clog << "IL NUMERO DI RIGHE: " << numRows << "\n";
-while (res->next()) {
-    j_single_path["path"] = res->getString("c_path");
-    j_single_path["num_chunks"] = res->getInt("num_chunks");
-    j_single_path["last_mod"] = res->getInt("c_lastmod");
-    j["entries"].push_back(j_single_path);
+    for(int i=0 ; i<100 ; i++) {
+        res->next();
+        j_single_path["path"] = res->getString("c_path");
+        j_single_path["num_chunks"] = res->getInt("num_chunks");
+        j_single_path["last_mod"] = res->getInt("c_lastmod");
+        j["entries"].push_back(j_single_path);
+
 }
 
     int result = std::floor(numRows/100);
