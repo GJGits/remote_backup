@@ -36,3 +36,20 @@ CREATE TABLE db_status (
 	db INT PRIMARY KEY,
 	usc INT
 );
+
+Query per chunk con last_page (sostituire range del limit e username!). Complessità:
+la seconda tabella viene unita alla prima tramite prodotto cartesiano, ma avendo questa
+una riga soltanto DI FATTO e' come agganciare una colonna alla prima. Ps last_page parte 
+da zero quindi se si ha una pagina sola questa sara' 0/0.
+
+select * 
+from (
+	select distinct c_path, num_chunks, c_lastmod 
+	from chunks where c_username="marco2" 
+	limit 0, 100
+	) as t1, 
+	(
+	select (ceil((count(distinct c_path) / 100))) -1 as last_page 
+	from chunks 
+	where c_username="marco2"
+	) as t2;

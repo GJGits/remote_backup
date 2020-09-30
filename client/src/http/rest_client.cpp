@@ -45,6 +45,7 @@ void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
   req.target("/chunk/" + std::to_string(jentry["chunks"][0]["id"].get<int>()) +
              "/" + std::to_string(std::get<1>(chunk)) + "/" +
              std::string{jentry["chunks"][0]["hash"]} + "/" +
+             std::to_string(jentry["nchunks"].get<int>()) + "/" +
              macaron::Base64::Encode(std::string{jentry["path"]}.substr(7)) +
              "/" + std::to_string(jentry["last_mod"].get<int>()));
   req.set(http::field::content_length, std::to_string(size));

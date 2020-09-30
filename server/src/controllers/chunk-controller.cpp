@@ -1,7 +1,7 @@
 #include "../../include/controllers/chunk-controller.hpp"
 
 inline static std::regex post_chunk_rgx{
-    "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+\\/[\\w]+$"};
+    "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+\\/[\\w]+$"};
 inline static std::regex put_chunk_rgx{
     "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+\\/[\\w]+$"};
 inline static std::regex get_chunk_rgx{

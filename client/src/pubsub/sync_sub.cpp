@@ -25,7 +25,7 @@ void SyncSubscriber::init() {
   broker->subscribe(TOPIC::FILE_DELETED,
                     std::bind(&SyncSubscriber::on_file_deleted, instance.get(),
                               std::placeholders::_1));
-  remote_check();
+  //remote_check();
 }
 
 void SyncSubscriber::compute_new_size() {
