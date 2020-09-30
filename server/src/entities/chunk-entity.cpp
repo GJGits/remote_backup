@@ -5,7 +5,8 @@ ChunkEntity::ChunkEntity(const PostChunkDTO &post_chunk)
       hash_chunk{std::move(post_chunk.getchunk_hash())},
       path_file{std::move(post_chunk.getfile_path())},
       size_chunk{post_chunk.getchunk_size()},
-      last_mod{post_chunk.gettimestamp_locale()} {
+      last_mod{post_chunk.gettimestamp_locale()},
+      num_chunks{post_chunk.getnum_chunks()}{
   std::move(post_chunk.getchunk_body().get()->begin(),
             post_chunk.getchunk_body().get()->end(),
             std::back_inserter(*chunk_body));
@@ -37,6 +38,8 @@ std::string ChunkEntity::getHashChunk() const { return hash_chunk; };
 std::string ChunkEntity::getPathFile() const { return path_file; };
 int ChunkEntity::getSizeChunk() const { return size_chunk; };
 int ChunkEntity::getLastMod() const { return last_mod; };
+int ChunkEntity::getNumChunks() const { return num_chunks; };
+
 int ChunkEntity::getSizeFile() const { return size_file; };
 void ChunkEntity::setSizeFile(int val) { size_file = val; };
 std::shared_ptr<std::vector<char>> ChunkEntity::getchunk_body() const {

@@ -45,7 +45,7 @@ bool ChunkRepository::add_or_update_Chunk(const ChunkEntity &chunk) {
     stmt =
         std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement(
             "INSERT INTO chunks(c_username, c_id, c_hash, c_path, "
-            "c_size,c_lastmod, device1, device2, device3) values(?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY "
+            "c_size,c_lastmod,num_chunks, device1, device2, device3) values(?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY "
             "UPDATE c_hash = ?, c_size = ? , c_lastmod = ?, device1 = ?, device2 = ?, device3 = ?;"))};
     stmt->setString(1, sql::SQLString{chunk.get_subject().get_sub().c_str()});
     stmt->setInt(2, chunk.getIdChunk());
@@ -53,17 +53,19 @@ bool ChunkRepository::add_or_update_Chunk(const ChunkEntity &chunk) {
     stmt->setString(4, sql::SQLString{chunk.getPathFile().c_str()});
     stmt->setInt(5, chunk.getSizeChunk());
     stmt->setInt(6, chunk.getLastMod());
-      stmt->setString(7, sql::SQLString{device1.c_str()});
-      stmt->setString(8, sql::SQLString{device2.c_str()});
-      stmt->setString(9, sql::SQLString{device3.c_str()});
+      stmt->setInt(7, chunk.getNumChunks());
 
-      stmt->setString(10, sql::SQLString{chunk.getHashChunk().c_str()});
-    stmt->setInt(11, chunk.getSizeChunk());
-    stmt->setInt(12, chunk.getLastMod());
+      stmt->setString(8, sql::SQLString{device1.c_str()});
+      stmt->setString(9, sql::SQLString{device2.c_str()});
+      stmt->setString(10, sql::SQLString{device3.c_str()});
 
-      stmt->setString(13, sql::SQLString{device1.c_str()});
-      stmt->setString(14, sql::SQLString{device2.c_str()});
-      stmt->setString(15, sql::SQLString{device3.c_str()});
+      stmt->setString(11, sql::SQLString{chunk.getHashChunk().c_str()});
+    stmt->setInt(12, chunk.getSizeChunk());
+    stmt->setInt(13, chunk.getLastMod());
+
+      stmt->setString(14, sql::SQLString{device1.c_str()});
+      stmt->setString(15, sql::SQLString{device2.c_str()});
+      stmt->setString(16, sql::SQLString{device3.c_str()});
 
     return stmt->executeUpdate() == 1 ? true : false;
   }

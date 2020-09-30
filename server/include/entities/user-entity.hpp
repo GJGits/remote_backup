@@ -36,6 +36,7 @@ public:
 std::string getDevice2() const;
 std::string getDevice3() const;
     int getnumdevices() const;
+
     int getpage_num() const;
     void setDevices(int actual_num_fields, std::string mac) ;
 

@@ -14,6 +14,7 @@ private:
     std::string path_file;
     int size_chunk;
     int last_mod;
+    int num_chunks;
     int size_file;
     std::shared_ptr<std::vector<char>> chunk_body{new std::vector<char>{}};
 
@@ -33,6 +34,8 @@ public:
     int getSizeChunk() const;
     int getLastMod() const;
     int getSizeFile() const;
+    int getNumChunks() const;
+
     void setSizeFile(int val);
     std::shared_ptr<std::vector<char>> getchunk_body() const;
 
