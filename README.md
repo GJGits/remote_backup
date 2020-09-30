@@ -257,7 +257,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 
 <br />  
 <details>
-<summary>GET /status/{username}</summary>
+<summary>GET /status/{page_num}</summary>
 
 * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di ottenere una checksum dell'intera cartella monitorata.*
 
