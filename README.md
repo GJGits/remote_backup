@@ -257,7 +257,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 
 <br />  
 <details>
-<summary>GET /status/{page_num}</summary>
+<summary>GET /status/</summary>
 
 * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di ottenere una checksum dell'intera cartella monitorata.*
 
@@ -267,7 +267,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 </details>
 <br />
 <details>
-<summary>GET /status/{username}/file</summary>
+<summary>GET /status/{page_num}/file</summary>
 
 * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di ottenere il JSON file del server con i dettagli sullo stato della cartella remota.*
 
