@@ -249,7 +249,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 </details>
 <br />
 <details>
-<summary>GET /chunk/{username}/{chunk_id}/{chunksize}/{file_pathBASE64}</summary>
+<summary>GET /chunk/{chunk_id}/{chunksize}/{file_pathBASE64}</summary>
 
 * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di ottenere un chunk di un file dal server.*
 
