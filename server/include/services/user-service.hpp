@@ -20,9 +20,6 @@
 #include <iostream>
 #include "../exceptions/exceptions.hpp"
 #include "../common/jwt.hpp"
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <ctime>
 #include "../common/constants.hpp"
 

@@ -20,7 +20,10 @@ bool ChunkRepository::add_or_update_Chunk(const ChunkEntity &chunk) {
     stmt->setString(1, sql::SQLString{chunk.get_subject().get_sub().c_str()});
     stmt->setInt(2, chunk.getIdChunk());
     stmt->setString(3, sql::SQLString{chunk.getHashChunk().c_str()});
-    stmt->setString(4, sql::SQLString{chunk.getPathFile().c_str()});
+
+    std::string delimiter{"../../filesystem/"+chunk.get_subject().get_sub()+"/"};
+    std::string s = chunk.getPathFile();
+    stmt->setString(4, sql::SQLString{Utility::split_string(s,delimiter).c_str()});
     stmt->setInt(5, chunk.getSizeChunk());
     stmt->setInt(6, chunk.getLastMod());
     stmt->setInt(7, chunk.getNumChunks());
@@ -34,9 +37,7 @@ bool ChunkRepository::add_or_update_Chunk(const ChunkEntity &chunk) {
   throw DatabaseInvalidConnection();
 }
 
-bool ChunkRepository::get_Chunk(const ChunkEntity &chunk) {
-  return true;
-}
+
 
 bool ChunkRepository::delete_chunks(const ChunkEntity &chunk) {
   std::unique_ptr<sql::PreparedStatement> stmt;

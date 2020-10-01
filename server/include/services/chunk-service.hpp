@@ -13,9 +13,6 @@
 #include "../exceptions/exceptions.hpp"
 #include "../common/jwt.hpp"
 #include "../common/utility.hpp"
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <ctime>
 #include <memory>
 #include "../common/constants.hpp"
@@ -33,6 +30,5 @@ public:
     void file_chunk_add(const PostChunkDTO &post_chunk);
     void file_chunk_update(const PutChunkDTO &put_chunk);
     void file_chunk_get(const GetChunkDTO &get_chunk);
-    void file_chunk_delete_service(const DeleteChunkDTO &del_chunk);
     ~ChunkService() {}
 };

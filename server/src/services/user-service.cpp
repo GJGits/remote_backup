@@ -21,7 +21,6 @@ std::string UserService::login(const SigninDTO &user) {
     Subject sub{user.getUsername(), db_sel};
     return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
   }
-
   else
     throw CredentialsNotValidException();
 }
@@ -30,7 +29,6 @@ std::string UserService::signup(const SignupDTO &user) {
 
   if (user.getPassword().compare(user.getPasswordConfirm()) != 0)
     throw PasswordNeqConfirm();
-
 
   std::string username(user.getUsername());
   unsigned int salt = abs(rand());
