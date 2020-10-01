@@ -213,21 +213,6 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
   </details> 
 
 <br />
-<details>
-  <summary>PUT /chunk/{username}/{chunk_id}/{chunksize}/{chunk_hash}/{file_pathBASE64}/{timestamp_locale}</summary>  
-
-  * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di aggiornare, se l'utente è autenticato, il contenuto di un file.*
-
-  * **Authenticated**:&nbsp;&nbsp;&nbsp;`TRUE`
-  <br /> 
-
-  * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTTP headers: MIME: application/octect-stream body: `binary data here`
-  <br />  
-  
-  * **Risposta**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;In caso negativo viene generato un messaggio HTTP 1.1 400 `{ err_msg : message here }`, in caso positivo invece viene inviata una risposta HTTP 1.1 200 OK senza alcun body all'interno.   
-</details>
-<br />  
-
 
 <details>
   <summary>DELETE /file/{username}/{file_pathBASE64}</summary>  
@@ -241,19 +226,6 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 
 </details>
 
-<br /> 
-
-<details>
-  <summary>DELETE /chunk/{username}/{chunk_id}/{file_pathBASE64}</summary>  
-
-  * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di eliminare un chunk di un file, se l'utente che è autenticato.*
-
-  * **Authenticated**:&nbsp;&nbsp;&nbsp;`TRUE`
-  <br /> 
-
-  * **Parametri**:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTTP headers: MIME: application/octect-stream body: `binary data here`
-
-</details>
 
 <br />  
 <details>
