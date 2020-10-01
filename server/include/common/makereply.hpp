@@ -2,9 +2,9 @@
 #include "../../include/http/reply.hpp"
 #include "../../include/http/request.hpp"
 #include "json.hpp"
+#include <iostream>
 #include <string.h>
 #include <vector>
-#include <iostream>
 
 using json = nlohmann::json;
 
@@ -31,9 +31,9 @@ public:
     con_type.value = "application/json";
     rep.headers.push_back(con_len);
     rep.headers.push_back(con_type);
-        for (size_t i = 0; i < rep_content.size(); i++) {
-          (*rep.content)[i] = rep_content[i];
-        }
+    for (size_t i = 0; i < rep_content.size(); i++) {
+      (*rep.content)[i] = rep_content[i];
+    }
     return;
   } // static member function
 
@@ -55,12 +55,10 @@ public:
     con_type.value = "application/json";
     rep.headers.push_back(con_len);
     rep.headers.push_back(con_type);
-    std::shared_ptr<std::array<char, CHUNK_SIZE>> buff{
-        new std::array<char, CHUNK_SIZE>{}};
-        for (size_t i = 0; i < rep_body.size(); i++) {
-          buff->data()[i] = rep_body[i];
-        }
+    std::clog << "actual body:\n";
+    for (size_t i = 0; i < rep_body.size(); i++) {
+     (*rep.content)[i] = rep_body[i];
+    }
     return;
   } // static member function
-
 };

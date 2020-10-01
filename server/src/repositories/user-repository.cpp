@@ -99,11 +99,12 @@ json UserRepository::get_status_file(const UserEntity &user_entity) {
   std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
   size_t db_selected = db_repinstance->getDBbyUsername(user_entity.getUsername());
   std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
-  stmt =std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement("select * from (select distinct c_path, num_chunks, c_lastmod from chunks where c_username=? limit ?, ?) as t1, (select (ceil((count(distinct c_path) / 100))) -1 as last_page from chunks where c_username=?) as t2;"))}; //ricordare al posto di 0, di mettere il vero valore
+  stmt =std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement("select * from (select distinct c_path, num_chunks, c_lastmod from chunks where c_username=? limit ?, ?) as t1, (select (ceil((count(distinct c_path) / ?))) -1 as last_page from chunks where c_username=?) as t2;"))}; //ricordare al posto di 0, di mettere il vero valore
   stmt->setString(1, sql::SQLString{user_entity.getUsername().c_str()});
   stmt->setInt(2, (user_entity.getpage_num() * ENTRIES_PAGE));
   stmt->setInt(3, ((user_entity.getpage_num()+1) * ENTRIES_PAGE));
-  stmt->setString(4, sql::SQLString{user_entity.getUsername().c_str()});
+  stmt->setInt(4, ENTRIES_PAGE);
+  stmt->setString(5, sql::SQLString{user_entity.getUsername().c_str()});
   res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
   json j_single_path;
 

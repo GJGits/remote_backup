@@ -1,2 +1,21 @@
 {
+    "entries": [
+        {
+            "chunks": [],
+            "hash": "1f4ffa6b231d86014d830b79cafe9c82609d17860aa42a446ae18ee099fe05fd",
+            "last_mod": 1529874820,
+            "nchunks": 124,
+            "path": "./sync/c#.pdf",
+            "size": 504412
+        },
+        {
+            "chunks": [],
+            "hash": "f545e1f55fee8abea2f84dc4c0e3a55c760809d4d80ff43e36100f062b5af6f2",
+            "last_mod": 1529875720,
+            "nchunks": 108,
+            "path": "./sync/c++ - thread.pdf",
+            "size": 441793
+        }
+    ],
+    "hashed_status": "834991e3d2fb28c96bbf9ed1c3e5ba4a64c97ec6fec1cae1e3b271d761d9232d"
 }

@@ -46,8 +46,8 @@ void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
              "/" + std::to_string(std::get<1>(chunk)) + "/" +
              std::string{jentry["chunks"][0]["hash"]} + "/" +
              std::to_string(jentry["nchunks"].get<int>()) + "/" +
-             macaron::Base64::Encode(std::string{jentry["path"]}) +
-             "/" + std::to_string(jentry["last_mod"].get<int>()));
+             macaron::Base64::Encode(std::string{jentry["path"]}) + "/" +
+             std::to_string(jentry["last_mod"].get<int>()));
   req.set(http::field::content_length, std::to_string(size));
   req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
   std::move(buffer.get(), buffer.get() + size, std::back_inserter(req.body()));
@@ -56,9 +56,11 @@ void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
 
 std::vector<char> RestClient::get_chunk(const json &chunk_info) {
   std::shared_ptr<HTTPClient> http_client = HTTPClient::getIstance();
-   http::request<http::vector_body<char>> req{get_prototype};
-   // chunk + id + file_path_base64
-  req.target("/chunk/" + std::to_string(chunk_info["id"].get<int>()) + "/" +  std::string{chunk_info["path"]});
+  http::request<http::vector_body<char>> req{get_prototype};
+  // chunk + id + file_path_base64
+  req.target("/chunk/" + std::to_string(chunk_info["id"].get<int>()) + "/" +
+             std::to_string(chunk_info["size"].get<int>()) + "/" +
+             std::string{chunk_info["path"]});
   req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
   return http_client->get_binary(req);
 }

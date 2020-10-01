@@ -16,7 +16,6 @@ const http::server::reply
 StatusController::handle(const http::server::request &req) {
   Subject sub = JWT::validateToken(req);
   if (req.method == "GET") {
-      std::clog << "HELLOOOOOOOOOOOOOOOOOOOOOO FROM SERVER\n";
     std::smatch match;
     if (std::regex_search(req.uri.begin(), req.uri.end(), match, user_rgx)) {
       std::string username{std::move(match[1])};
@@ -27,7 +26,7 @@ StatusController::handle(const http::server::request &req) {
                                  user_rgx_file)) {
         GetStatusDTO get_status_dto{sub};
         get_status_dto.fill(req.uri);
-      return MakeReply::make_1line_dump_jsonReply<std::string>(
+      return MakeReply::make_1line_dump_jsonReply<json>(
           get_status_file(get_status_dto), http::server::reply::ok);
     }
   }
@@ -38,7 +37,7 @@ const std::string StatusController::get_status(const std::string &username) {
   return user_service->getStatus(username);
 }
 
-const std::string
+const json
 StatusController::get_status_file(const GetStatusDTO &get_status_dto) {
 
   return file_service->getStatusFile(get_status_dto);

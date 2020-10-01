@@ -23,6 +23,6 @@ public:
     static std::shared_ptr<StatusController> getInstance();
 
     virtual const http::server::reply handle(const http::server::request &req);
-  const std::string get_status_file(const GetStatusDTO &get_status_dto);
+  const json get_status_file(const GetStatusDTO &get_status_dto);
   const std::string get_status(const std::string &username);
 };
