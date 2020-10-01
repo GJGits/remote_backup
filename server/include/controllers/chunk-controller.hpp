@@ -18,13 +18,10 @@ private:
     static inline std::shared_ptr<ChunkController> instance{nullptr};
     std::shared_ptr<ChunkService> chunk_service;
 public:
-    // contiene switch_case per inoltrare al metodo corretto
     static std::shared_ptr<ChunkController> getInstance();
-
     virtual const http::server::reply handle(const http::server::request &req);
     void post_file_chunk(const PostChunkDTO &post_chunk);
     void put_file_chunk(const PutChunkDTO &put_chunk);
     void get_file_chunk(const GetChunkDTO &get_chunk);
-    void delete_file_chunk(const DeleteChunkDTO &delete_chunk);
 
 };

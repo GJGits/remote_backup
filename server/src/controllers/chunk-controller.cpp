@@ -63,17 +63,6 @@ std::clog << "provo la handle\n";
     }
   }
 
-  else if (req.method == "DELETE") {
-    std::smatch match;
-    if (std::regex_search(req.uri.begin(), req.uri.end(), match,
-                          delete_chunk_rgx)) {
-
-      DeleteChunkDTO delete_chunk{sub};
-      delete_chunk.fill(req.uri);
-      delete_file_chunk(delete_chunk);
-      return http::server::reply::stock_reply(http::server::reply::ok);
-    }
-  }
   throw WrongRquestFormat();
 };
 
@@ -89,6 +78,4 @@ void ChunkController::get_file_chunk(const GetChunkDTO &get_chunk) {
   chunk_service->file_chunk_get(get_chunk);
 }
 
-void ChunkController::delete_file_chunk(const DeleteChunkDTO &delete_chunk) {
-  chunk_service->file_chunk_delete_service(delete_chunk);
-}
+

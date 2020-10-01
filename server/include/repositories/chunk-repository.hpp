@@ -1,6 +1,5 @@
 #pragma once
-#include <optional>
-
+#include "../common/utility.hpp"
 #include "../entities/chunk-entity.hpp"
 #include "../entities/db-connect.hpp"
 #include "../exceptions/exceptions.hpp"

@@ -106,14 +106,11 @@ json UserRepository::get_status_file(const UserEntity &user_entity) {
   stmt->setString(4, sql::SQLString{user_entity.getUsername().c_str()});
   res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
   json j_single_path;
-  int numRows = res->rowsCount() ;
-  if(numRows > 0) {
-      std::string delimiter{"../../filesystem/"+user_entity.getUsername()+"/"};
 
+  if(res->rowsCount() > 0) {
       for (int i = 0; i < ENTRIES_PAGE; i++) {
         if (res->next()) {
-            std::string s{res->getString("c_path")};
-            j_single_path["path"] = Utility::split_string(s,delimiter);
+            j_single_path["path"] = res->getString("c_path");
             j_single_path["num_chunks"] = res->getInt("num_chunks");
             j_single_path["last_mod"] = res->getInt("c_lastmod");
             j["entries"].push_back(j_single_path);
