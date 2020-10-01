@@ -46,7 +46,7 @@ void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
              "/" + std::to_string(std::get<1>(chunk)) + "/" +
              std::string{jentry["chunks"][0]["hash"]} + "/" +
              std::to_string(jentry["nchunks"].get<int>()) + "/" +
-             macaron::Base64::Encode(std::string{jentry["path"]}.substr(7)) +
+             macaron::Base64::Encode(std::string{jentry["path"]}) +
              "/" + std::to_string(jentry["last_mod"].get<int>()));
   req.set(http::field::content_length, std::to_string(size));
   req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
@@ -54,14 +54,21 @@ void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
   http_client->post(req);
 }
 
-void RestClient::get_chunk() {}
+std::vector<char> RestClient::get_chunk(const json &chunk_info) {
+  std::shared_ptr<HTTPClient> http_client = HTTPClient::getIstance();
+   http::request<http::vector_body<char>> req{get_prototype};
+   // chunk + id + file_path_base64
+  req.target("/chunk/" + std::to_string(chunk_info["id"].get<int>()) + "/" +  std::string{chunk_info["path"]});
+  req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
+  return http_client->get_binary(req);
+}
 
 void RestClient::delete_file(std::string &path) {
   std::shared_ptr<HTTPClient> http_client = HTTPClient::getIstance();
   json jentry;
   jentry["path"] = path;
   http::request<http::vector_body<char>> req{delete_prototype};
-  req.target("/file/" + macaron::Base64::Encode(path.substr(7)));
+  req.target("/file/" + macaron::Base64::Encode(path));
   req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
   http_client->delete_(req);
 }
