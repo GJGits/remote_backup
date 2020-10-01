@@ -18,27 +18,7 @@ std::string UserService::login(const SigninDTO &user) {
   if (user_returned.getHashedPassword().compare(hashed_password) == 0) {
     std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
     size_t db_sel = db_repinstance->getDBbyUsername(user.getUsername());
-      size_t device_id = 0;
-    if(user.getMAC().compare(user_returned.getDevice1())==0){
-        device_id = 0;
-    }
-    else if (user.getMAC().compare(user_returned.getDevice2())==0){
-        device_id = 1;
-    }
-    else if (user.getMAC().compare(user_returned.getDevice3())==0){
-        device_id = 2;
-    }
-    else if(user_returned.getnumdevices() < 3){
-        device_id = user_returned.getnumdevices();
-        std::clog << "Device id: "<<device_id << "\n";
-        user_returned.setDevices(device_id,user.getMAC());
-        user_repository->update_user(user_returned);
-    }
-    else{
-       throw ExceededNumberOfDevices();
-    }
-    std::clog << "Il device id selezionato è:"<< device_id << "\n";
-    Subject sub{user.getUsername(), db_sel, device_id};
+    Subject sub{user.getUsername(), db_sel};
     return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
   }
 
@@ -58,11 +38,10 @@ std::string UserService::signup(const SignupDTO &user) {
                                std::to_string(salt)};
   std::vector<char> vec(password_to_hash.begin(), password_to_hash.end());
   std::string hashedPassword{Sha256::getSha256(vec)};
-  UserEntity user_to_insert{username, hashedPassword, salt, user.getMAC()};
+  UserEntity user_to_insert{username, hashedPassword, salt};
   size_t db_sel = user_repository->insertUser(user_to_insert);
     std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
-    size_t device_id = 0;
-  Subject sub{user.getUsername(), db_sel, device_id};
+  Subject sub{user.getUsername(), db_sel};
   return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
 
   throw UsernameAlreadyExists();

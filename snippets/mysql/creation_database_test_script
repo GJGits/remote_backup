@@ -6,17 +6,13 @@ Creazione tabella users (db_2, db_3, db_4)
  CREATE TABLE users (
 	username VARCHAR(50) PRIMARY KEY,
 	hashed_password VARCHAR(128) NOT NULL,
-	salt INT UNSIGNED NOT NULL,
-	device1 varchar(64),
-	device2 varchar(64),
-	device3 varchar(64),
-	numdevices INT);
+	salt INT UNSIGNED NOT NULL);
 
 # AGGIUNGI N COLONNE DOVE N E' IL NUMERO DI DEVICE MASSIMO PER UTENTE
 # LO STATUS DI QUESTE COLONNE E' {OK, GET, DELETE, TODO-DELETE}
 Creazione Tabella Chunks (db_2, db_3, db_4)
 
-create table chunks(c_username varchar(100) NOT NULL, c_id integer NOT NULL, c_hash varchar(128) NOT NULL, c_path varchar(100) NOT NULL, c_size integer NOT NULL,c_lastmod integer NOT NULL,num_chunks integer,device1 varchar(16), device2 varchar(16), device3 varchar(16), primary key (c_username, c_path, c_id));
+create table chunks(c_username varchar(100) NOT NULL, c_id integer NOT NULL, c_hash varchar(128) NOT NULL, c_path varchar(100) NOT NULL, c_size integer NOT NULL,c_lastmod integer NOT NULL,num_chunks integer, primary key (c_username, c_path, c_id));
 
 
 
@@ -45,11 +41,11 @@ da zero quindi se si ha una pagina sola questa sara' 0/0.
 select * 
 from (
 	select distinct c_path, num_chunks, c_lastmod 
-	from chunks where c_username="marco2" 
+	from chunks where c_username="piero1"
 	limit 0, 100
 	) as t1, 
 	(
 	select (ceil((count(distinct c_path) / 100))) -1 as last_page 
 	from chunks 
-	where c_username="marco2"
+	where c_username="piero1"
 	) as t2;

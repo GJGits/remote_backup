@@ -25,6 +25,16 @@ public:
     return tokens;
   }
 
+  static std::string split_string(std::string &s, std::string &delimiter){
+        size_t pos = 0;
+        std::string token;
+        while ((pos = s.find(delimiter)) != std::string::npos) {
+            token = s.substr(1, pos);
+            s.erase(0, pos + delimiter.length());
+        }
+        return s;
+    }
+
 
 
   static std::string directories_path(const std::string &src,

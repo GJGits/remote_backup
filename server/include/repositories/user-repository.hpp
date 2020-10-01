@@ -3,10 +3,13 @@
 #include <optional>
 #include <cmath>
 #include "../common/json.hpp"
+#include "../common/constants.hpp"
 #include "../common/sha256.hpp"
+#include "../common/utility.hpp"
 #include "../entities/db-connect.hpp"
 #include "../entities/user-entity.hpp"
 #include "../exceptions/exceptions.hpp"
+
 
 using json = nlohmann::json;
 
@@ -20,6 +23,5 @@ public:
   bool deleteUserByUsername(const std::string &username);
   std::string get_hashed_status(const std::string &username);
   json get_status_file(const UserEntity &user_entity);
-    void update_user(const UserEntity &user);
   static std::shared_ptr<UserRepository> getInstance();
 };

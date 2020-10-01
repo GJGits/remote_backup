@@ -51,7 +51,7 @@ public:
 
   static std::string generateToken(const Subject &sub, int expiration) {
     json jwt_payload = {
-        {"sub", sub.get_sub()}, {"db", sub.get_db_id()}, {"dev_id", sub.get_device_id()} , {"exp", expiration}};
+        {"sub", sub.get_sub()}, {"db", sub.get_db_id()},  {"exp", expiration}};
     std::string payload = macaron::Base64::Encode(jwt_payload.dump());
     std::string to_sign{getInstance()->token_header + "." + payload};
     const unsigned char *text = (const unsigned char *)to_sign.c_str();
@@ -93,7 +93,7 @@ public:
             std::vector<std::string> token_parts = Utility::split(token, '.');
           if (token_parts.size() == 3) {
             json payload = json::parse(macaron::Base64::Decode(token_parts[1]));
-            Subject sbj{payload["sub"], (size_t)payload["db"].get<int>(), (size_t)payload["dev_id"].get<int>()};
+            Subject sbj{payload["sub"], (size_t)payload["db"].get<int>()};
             int exp = payload["exp"];
             std::string sign =
                 json::parse(macaron::Base64::Decode(token_parts[2]))["sign"];
