@@ -25,7 +25,7 @@ void SyncSubscriber::init() {
   broker->subscribe(TOPIC::FILE_DELETED,
                     std::bind(&SyncSubscriber::on_file_deleted, instance.get(),
                               std::placeholders::_1));
-  //remote_check();
+  // remote_check();
 }
 
 void SyncSubscriber::compute_new_size() {
@@ -95,6 +95,7 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
 void SyncSubscriber::remote_check() {
   DurationLogger logger{"PROCESS_LIST"};
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
+  std::shared_ptr<Broker> broker = Broker::getInstance();
   int current_page = 0;
   int last_page = 1;
   while (current_page < last_page) {
@@ -103,5 +104,52 @@ void SyncSubscriber::remote_check() {
     current_page = list["current_page"].get<int>();
     last_page = list["last_page"].get<int>();
     // todo: processa messaggi ed eventualmente invia conflitti all'utente.
+    for (size_t i = 0; i < list["entries"].size(); i++) {
+      std::string file_path =
+          macaron::Base64::Decode(list["entries"][i]["path"]);
+      int nchunks = list["entries"][i]["num_chunks"].get<int>();
+      int last_mod_remote = list["entries"][i]["last_mod"].get<int>();
+      if (!std::filesystem::exists(file_path)) {
+        // server ha file che io non ho
+        std::filesystem::create_directories(
+            std::filesystem::path{file_path}.parent_path());
+        std::ofstream out{file_path, std::ios::binary};
+        for (int j = 0; j < nchunks; j++) {
+          json get_chunk{{"path", list["entries"][i]["path"]}, {"id", j}};
+          std::vector<char> chunk = rest_client->get_chunk(get_chunk);
+          json jentry{{"nchunks", nchunks},
+                      {"size", 0},
+                      {"path", file_path},
+                      {"last_mod", last_mod_remote}};
+          json jchunk{{"hash", Sha256::getSha256(chunk)}, {"id", j}};
+          out.write(chunk.data(), chunk.size());
+          jentry["chunks"].push_back(jchunk);
+          broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
+        }
+        out.close();
+      } else {
+        int last_mod_local = std::filesystem::last_write_time(file_path)
+                                 .time_since_epoch()
+                                 .count() /
+                             1000000000;
+        if (last_mod_remote > last_mod_local) {
+          // server ha versione aggiornata
+          std::ofstream out{file_path, std::ios::binary};
+          for (int j = 0; j < nchunks; j++) {
+            json get_chunk{{"path", list["entries"][i]["path"]}, {"id", j}};
+            std::vector<char> chunk = rest_client->get_chunk(get_chunk);
+            json jentry{{"nchunks", nchunks},
+                        {"size", 0},
+                        {"path", file_path},
+                        {"last_mod", last_mod_remote}};
+            json jchunk{{"hash", Sha256::getSha256(chunk)}, {"id", j}};
+            out.write(chunk.data(), chunk.size());
+            jentry["chunks"].push_back(jchunk);
+            broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
+          }
+          out.close();
+        }
+      }
+    }
   }
 }

@@ -47,7 +47,7 @@ public:
   static std::shared_ptr<RestClient> getInstance();
   void post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
                   json &jentry);
-  void get_chunk();
+  std::vector<char> get_chunk(const json &chunk_info);
   void delete_file(std::string &path);
   json get_status_list(size_t page);
 };
