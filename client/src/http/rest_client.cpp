@@ -59,7 +59,6 @@ std::vector<char> RestClient::get_chunk(const json &chunk_info) {
   http::request<http::vector_body<char>> req{get_prototype};
   // chunk + id + file_path_base64
   req.target("/chunk/" + std::to_string(chunk_info["id"].get<int>()) + "/" +
-             std::to_string(chunk_info["size"].get<int>()) + "/" +
              std::string{chunk_info["path"]});
   req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
   return http_client->get_binary(req);

@@ -100,6 +100,7 @@ void SyncSubscriber::remote_check() {
   int last_page = 1;
   while (current_page < last_page) {
     json list = rest_client->get_status_list(current_page++);
+    std::clog << "lista:\n" << list.dump() << "\n";
     current_page = list["current_page"].get<int>();
     last_page = list["last_page"].get<int>();
     // todo: processa messaggi ed eventualmente invia conflitti all'utente.
@@ -108,16 +109,18 @@ void SyncSubscriber::remote_check() {
           macaron::Base64::Decode(list["entries"][i]["path"]);
       int nchunks = list["entries"][i]["num_chunks"].get<int>();
       int last_mod_remote = list["entries"][i]["last_mod"].get<int>();
+      std::clog << "file_path: " << file_path << "\n";
       if (!std::filesystem::exists(file_path)) {
         // server ha file che io non ho
         std::filesystem::create_directories(
             std::filesystem::path{file_path}.parent_path());
         std::ofstream out{file_path, std::ios::binary};
         for (int j = 0; j < nchunks; j++) {
-          json get_chunk{{"path", list["entries"][i]["path"]}, {"id", j}, {"size", 120}};
+          json get_chunk{
+              {"path", list["entries"][i]["path"]}, {"id", j}};
           std::vector<char> chunk = rest_client->get_chunk(get_chunk);
           json jentry{{"nchunks", nchunks},
-                      {"size", 120},
+                      {"size", chunk.size()},
                       {"path", file_path},
                       {"last_mod", last_mod_remote}};
           json jchunk{{"hash", Sha256::getSha256(chunk)}, {"id", j}};
@@ -136,9 +139,10 @@ void SyncSubscriber::remote_check() {
           std::ofstream out{file_path, std::ios::binary};
           for (int j = 0; j < nchunks; j++) {
             json get_chunk{{"path", list["entries"][i]["path"]}, {"id", j}};
+            std::clog << "arrivo qui\n";
             std::vector<char> chunk = rest_client->get_chunk(get_chunk);
             json jentry{{"nchunks", nchunks},
-                        {"size", 0},
+                        {"size", chunk.size()},
                         {"path", file_path},
                         {"last_mod", last_mod_remote}};
             json jchunk{{"hash", Sha256::getSha256(chunk)}, {"id", j}};

@@ -59,19 +59,19 @@ void LinuxWatcher::check_news() {
   for (auto &p : std::filesystem::recursive_directory_iterator(root_to_watch)) {
     std::string sub_path = p.path().string();
     if (std::filesystem::is_regular_file(sub_path)) {
-      size_t last_mod = std::filesystem::last_write_time(sub_path)
-                            .time_since_epoch()
-                            .count() /
-                        1000000000;
+     // size_t last_mod = std::filesystem::last_write_time(sub_path)
+     //                       .time_since_epoch()
+     //                       .count() /
+     //                   1000000000;
       message["path"] = sub_path;
       // 1. file non presente in struttura -> aggiunto off-line
       if (!sync_structure->has_entry(sub_path)) {
         broker->publish(Message{TOPIC::NEW_FILE,  message});
       }
       // 2. last_mod non coincide -> modificato off-line
-      else if (sync_structure->get_last_mod(sub_path) < last_mod) {
-        broker->publish(Message{TOPIC::FILE_MODIFIED, message});
-      }
+      //else if (sync_structure->get_last_mod(sub_path) < last_mod) {
+       // broker->publish(Message{TOPIC::FILE_MODIFIED, message});
+      //}
     }
   }
 }

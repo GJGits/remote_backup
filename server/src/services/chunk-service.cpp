@@ -51,14 +51,15 @@ void ChunkService::file_chunk_update(const PutChunkDTO &put_chunk) {
   throw ChunkCorrupted();
 }
 
-void
+size_t
 ChunkService::file_chunk_get(const GetChunkDTO &get_chunk) {
   std::string fname{"../../filesystem/" + get_chunk.get_subject().get_sub() +
                     "/" + get_chunk.getfile_name() + "/" +
                     get_chunk.getfile_name() + "__" +
                     std::to_string(get_chunk.getchunk_id()) + ".chk"};
   std::ifstream ifile{fname};
-  ChunkEntity chunk_ent{get_chunk};
-  ifile.read(get_chunk.get_content_buffer()->data(), get_chunk.getchunk_size());
+  size_t size = std::filesystem::file_size(fname);
+  ifile.read(get_chunk.get_content_buffer()->data(), size);
+  return size;
 }
 

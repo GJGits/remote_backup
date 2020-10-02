@@ -9,7 +9,6 @@ private:
   Subject subject;
   std::string file_name;
   int chunk_id;
-  int chunk_size;
   std::string file_path;
   std::shared_ptr<std::array<char, CHUNK_SIZE>> rep_content{nullptr};
 
@@ -18,7 +17,6 @@ public:
   GetChunkDTO() {}
   Subject get_subject() const;
   int getchunk_id() const;
-  int getchunk_size() const;
   std::string getfile_path() const;
   std::string getfile_name() const;
   void link_content_buffer(std::shared_ptr<std::array<char, CHUNK_SIZE>> &buff);

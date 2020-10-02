@@ -5,7 +5,7 @@ inline static std::regex post_chunk_rgx{
 inline static std::regex put_chunk_rgx{
     "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+\\/[\\w]+$"};
 inline static std::regex get_chunk_rgx{
-    "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w=+]+$"};
+    "^\\/chunk\\/[\\w]+\\/[\\w=+]+$"};
 inline static std::regex delete_chunk_rgx{"^\\/chunk\\/[\\w]+\\/[\\w=+]+$"};
 
 std::shared_ptr<ChunkController> ChunkController::getInstance() {
@@ -50,10 +50,10 @@ std::clog << "provo la handle\n";
       http::server::reply rep =
           http::server::reply::stock_reply(http::server::reply::ok);
       get_chunk.link_content_buffer(rep.content);
-      get_file_chunk(get_chunk);
+      size_t size = get_file_chunk(get_chunk);
       struct http::server::header con_len;
       con_len.name = "Content-Length";
-      con_len.value = std::to_string(get_chunk.getchunk_size());
+      con_len.value = std::to_string(size);
       struct http::server::header con_type;
       con_type.name = "Content-Type";
       con_type.value = "application/stream";
@@ -74,8 +74,8 @@ void ChunkController::put_file_chunk(const PutChunkDTO &put_chunk) {
   chunk_service->file_chunk_update(put_chunk);
 }
 
-void ChunkController::get_file_chunk(const GetChunkDTO &get_chunk) {
-  chunk_service->file_chunk_get(get_chunk);
+size_t ChunkController::get_file_chunk(const GetChunkDTO &get_chunk) {
+  return chunk_service->file_chunk_get(get_chunk);
 }
 
 

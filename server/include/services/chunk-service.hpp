@@ -29,6 +29,6 @@ public:
     static std::shared_ptr<ChunkService> getInstance();
     void file_chunk_add(const PostChunkDTO &post_chunk);
     void file_chunk_update(const PutChunkDTO &put_chunk);
-    void file_chunk_get(const GetChunkDTO &get_chunk);
+    size_t file_chunk_get(const GetChunkDTO &get_chunk);
     ~ChunkService() {}
 };

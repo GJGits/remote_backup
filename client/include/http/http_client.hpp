@@ -75,6 +75,7 @@ public:
   std::vector<char>
   get_binary(const http::request<http::vector_body<char>> &req) {
     stream.connect(results);
+    send(stream, req);
     http::response<http::vector_body<char>> res = read(stream);
     return res.body();
   }
