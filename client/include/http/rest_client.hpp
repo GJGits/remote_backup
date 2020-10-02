@@ -18,10 +18,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../filesystem/file_entry.hpp"
 #include "../common/base64.hpp"
 #include "../common/json.hpp"
-#include "up_worker.hpp"
+#include "../filesystem/file_entry.hpp"
+#include "../http/http_client.hpp"
 
 namespace beast = boost::beast; // from <boost/beast.hpp>
 namespace http = beast::http;   // from <boost/beast/http.hpp>
@@ -33,18 +33,21 @@ class RestClient {
 
 private:
   json config;
+  http::request<http::vector_body<char>> post_prototype;
+  http::request<http::vector_body<char>> put_prototype;
+  http::request<http::vector_body<char>> get_prototype;
+  http::request<http::vector_body<char>> delete_prototype;
   static inline std::shared_ptr<RestClient> instance{nullptr};
-
-  RestClient(){}
   void read_info();
+  void fill_headers(http::request<http::vector_body<char>> &req,
+                    size_t size = 0);
+  RestClient();
 
 public:
   static std::shared_ptr<RestClient> getInstance();
-  void post_chunk(FileEntry &fentry);
-  void put_chunk(FileEntry &fentry);
-  void delete_chunk(json &chk_info, size_t size);
-  void get_chunk();
+  void post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
+                  json &jentry);
+  std::vector<char> get_chunk(const json &chunk_info);
   void delete_file(std::string &path);
-  void get_status();
-  void get_status_file();
+  json get_status_list(size_t page);
 };

@@ -1,45 +1,25 @@
 #pragma once
-#include "json-serializable.hpp"
-#include "../common/utility.hpp"
 #include "../common/base64.hpp"
+#include "../common/utility.hpp"
+#include "json-serializable.hpp"
+#include "subject.hpp"
 
-
-class GetChunkDTO{
+class GetChunkDTO {
 private:
-    std::string username;
-    int chunk_id;
-    int chunk_size;
-    std::string file_path;
+  Subject subject;
+  std::string file_name;
+  int chunk_id;
+  std::string file_path;
+  std::shared_ptr<std::array<char, CHUNK_SIZE>> rep_content{nullptr};
 
 public:
-    GetChunkDTO(){};
-    std::string getusername() const;
-    int getchunk_id() const;
-    int getchunk_size() const;
-
-    std::string getfile_path() const;
-
-    const void fill( std::string requri) {
-        std::vector<std::string> uri_elements = Utility::split(requri, '/');
-        for (unsigned int i = 0; i < uri_elements.size(); i++) {
-            switch (i) {
-                case 2 :
-                    username = uri_elements[i];
-                    break;
-                case 3 :
-                    chunk_id = std::stoi(uri_elements[i]);
-                    break;
-                case 4 :
-                    chunk_size = std::stoi(uri_elements[i]);
-
-                    break;
-                case 5 :
-                    file_path = macaron::Base64::Decode(uri_elements[i]);
-                    break;
-
-                default :
-                    break;
-            }
-        }
-    }
+  GetChunkDTO(const Subject &subject) : subject{subject} {}
+  GetChunkDTO() {}
+  Subject get_subject() const;
+  int getchunk_id() const;
+  std::string getfile_path() const;
+  std::string getfile_name() const;
+  void link_content_buffer(std::shared_ptr<std::array<char, CHUNK_SIZE>> &buff);
+  std::shared_ptr<std::array<char, CHUNK_SIZE>> get_content_buffer() const;
+  const void fill(const std::string &requri);
 };

@@ -4,14 +4,16 @@
 #include "hmac-sha256.hpp"
 #include "json.hpp"
 #include "utility.hpp"
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <ctime>
 #include <fstream>
 #include <iostream>
 #include <regex>
 #include <string>
+#include <tuple>
+#include <unordered_map>
+
+#include "../dtos/subject.hpp"
+#include "jwt_cache_entry.hpp"
 
 using json = nlohmann::json;
 inline static std::regex time_rgx{"^\\d+$"};
@@ -19,6 +21,9 @@ inline static std::regex time_rgx{"^\\d+$"};
 class JWT {
 
 private:
+  std::unordered_map<std::string, JWTCacheEntry> tok_cache;
+  inline static std::regex raw_tok_rgx{
+      "^[a-zA-Z0-9+=\\/]+\\.[a-zA-Z0-9+=\\/]+\\.[a-zA-Z0-9+=\\/]+$"};
   std::string token_header;
   inline static JWT *instance = nullptr;
   std::string secret;
@@ -31,11 +36,9 @@ private:
       std::ifstream i("../config/server-struct.json");
       i >> config;
       json jwt_header = {{"alg", "HS256"}, {"typ", "JWT"}};
-      std::clog << "header dump = " << jwt_header.dump() << "\n";
       instance->token_header = macaron::Base64::Encode(jwt_header.dump());
       instance->secret = config["token-conf"]["secret"];
       instance->expiration = config["token-conf"]["expiration"];
-
     }
     return instance;
   }
@@ -43,9 +46,9 @@ private:
 public:
   static int getExpiration() { return getInstance()->expiration; }
 
-  static std::string generateToken(const std::string &subscriber,
-                                   int expiration) {
-    json jwt_payload = {{"sub", subscriber}, {"exp", expiration}};
+  static std::string generateToken(const Subject &sub, int expiration) {
+    json jwt_payload = {
+        {"sub", sub.get_sub()}, {"db", sub.get_db_id()},  {"exp", expiration}};
     std::string payload = macaron::Base64::Encode(jwt_payload.dump());
     std::string to_sign{getInstance()->token_header + "." + payload};
     const unsigned char *text = (const unsigned char *)to_sign.c_str();
@@ -55,59 +58,50 @@ public:
     HmacSha256::hmac_sha256(
         text, text_len, (const unsigned char *)getInstance()->secret.c_str(),
         (int)getInstance()->secret.size(), kdigest);
-    json jwt_sign; 
+    json jwt_sign;
     jwt_sign["sign"] = macaron::Base64::Encode(std::string{kdigest});
-    std::clog << "sign = " << jwt_sign["sign"] << "\n";
     std::string sign = macaron::Base64::Encode(jwt_sign.dump());
     return getInstance()->token_header + "." + payload + "." + sign;
   }
 
-  static bool validateToken(const http::server::request &req) {
-    std::clog << "e0\n";
+  static Subject validateToken(const http::server::request &req) {
     for (http::server::header h : req.headers) {
       if (h.name.compare("Authorization") == 0) {
         std::vector<std::string> tokens = Utility::split(h.value, ' ');
-        std::clog << "token = " << tokens[1] << "\n";
         if (tokens.size() == 2 && tokens[0].compare("Bearer") == 0) {
-          std::clog << "e1\n";
           std::string token = tokens[1];
-          std::vector<std::string> token_parts = Utility::split(token, '.');
+          // inizialmente cerco nella cache
+          if (getInstance()->tok_cache.find(token) !=
+              getInstance()->tok_cache.end()) {
+              JWTCacheEntry entry = getInstance()->tok_cache[token];
+            if (entry.get_exp() >= std::time(nullptr)) {
+                return entry.get_sub();
+            } else
+              getInstance()->tok_cache.erase(token);
+          }
+          // altrimenti procedo normalmente
+
+            std::vector<std::string> token_parts = Utility::split(token, '.');
           if (token_parts.size() == 3) {
-            // todo: verificare che le str siano codificabili in base64
-            std::string jwt_header_str =
-                macaron::Base64::Decode(token_parts[0]);
-            std::string jwt_payload_str =
-                macaron::Base64::Decode(token_parts[1]);
-            std::string jwt_sign_str = macaron::Base64::Decode(token_parts[2]);
-            std::clog << "head = " << jwt_header_str
-                      << ", pay = " << jwt_payload_str << "\n";
-            std::clog << "head = " << token_parts[0]
-                      << ", pay = " << token_parts[1] << "\n";
-            // todo: check sul formato di jwt_xxx_str
-            json jwt_header = json::parse(jwt_header_str);
-            json jwt_payload = json::parse(jwt_payload_str);
-            json jwt_sign = json::parse(jwt_sign_str);
-            std::smatch match;
-            std::string ex_str = std::to_string(jwt_payload["exp"].get<int>());
-            if (std::regex_match(ex_str, match, time_rgx)) {
-              std::clog << "e3\n";
-              int exp = jwt_payload["exp"];
-              std::string sign = jwt_sign["sign"];
-              if (exp >= std::time(nullptr)) {
-                std::clog << "e4\n";
-                std::string token_calc = generateToken(jwt_payload["sub"], exp);
-                std::clog << "token calc = " << token_calc << "\n";
-                json sign_cal =
-                    json::parse(macaron::Base64::Decode(Utility::split(
-                        generateToken(jwt_payload["sub"], exp), '.')[2]));
-                if (sign.compare(sign_cal["sign"]) == 0)
-                  return true;
-              }
+            json payload = json::parse(macaron::Base64::Decode(token_parts[1]));
+            Subject sbj{payload["sub"], (size_t)payload["db"].get<int>()};
+            int exp = payload["exp"];
+            std::string sign =
+                json::parse(macaron::Base64::Decode(token_parts[2]))["sign"];
+            std::string sign_calc = json::parse(macaron::Base64::Decode(
+                Utility::split(generateToken(sbj, exp), '.')[2]))["sign"];
+
+              if (sign.compare(sign_calc) == 0) {
+              JWTCacheEntry ce{sbj, exp};
+              // todo: valutare politica di replace per evitare di intasare
+              // memoria
+              getInstance()->tok_cache[token] = ce;
+              return sbj;
             }
           }
         }
       }
     }
-    return false;
+    throw InvalidJWT();
   }
 };

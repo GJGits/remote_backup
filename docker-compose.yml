@@ -11,7 +11,7 @@ services:
     server:
         build: ./server
         ports: 
-            - "3500:3500"
+            - "3500-3503:3500"
         volumes:
             - filesystem:/home/filesystem
     nginx-server:

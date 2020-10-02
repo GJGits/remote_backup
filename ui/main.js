@@ -15,7 +15,6 @@ const mb = menubar(
     }
   });
 
-var conf = new ClientConf();
 
 
 mb.on('ready', () => {
@@ -24,14 +23,14 @@ mb.on('ready', () => {
 
   // MESSAGE HANDLERS
 
-  ipcMain.on('token', (event, data) => {
-    if (data && data.username && data.token && conf.set(data)) {
-      mb.window.webContents.send('status-changed', "log-in");
-      event.returnValue = "ok";
-    } else {
-      event.returnValue = "ko";
-      mb.window.webContents.send('status-changed', "log-off");
-    }
+  ipcMain.on('config', (event, data) => {
+    let conf = new ClientConf();
+    conf.set(data);
+  });
+
+  ipcMain.on('reset-config', (event, data) => {
+    let conf = new ClientConf();
+    conf.reset();
   });
 
   // UDP INSTANCE DEFINITION
@@ -44,8 +43,10 @@ mb.on('ready', () => {
     console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
     msg = new TextDecoder("utf-8").decode(msg);
     mb.window.webContents.send('asynchronous-message', msg);
-    if (msg === "log-in" || msg === "log-off")
+    if (msg === "login" || msg === "logged")
       mb.window.webContents.send('status-changed', msg);
+    if (msg === "start-sync" || msg == "end-sync")
+      mb.window.webContents.send('sync', msg);
   });
 
   server.on('listening', () => {
@@ -58,11 +59,11 @@ mb.on('ready', () => {
 });
 
 mb.on('after-create-window', () => {
-  if (token && token.isValid()) {
-    mb.window.webContents.send('status-changed', "log-in");
-  } else {
-    token.reset();
-    mb.window.webContents.send('status-changed', "log-off");
-  }
+  let conf = new ClientConf();
+  if (conf.isValid())
+    mb.window.webContents.send('status-changed', "logged");
+  else
+    mb.window.webContents.send('status-changed', "login");
+  mb.window.webContents.send('sync', "synced");
   mb.window.openDevTools();
 });

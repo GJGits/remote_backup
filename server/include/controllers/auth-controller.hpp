@@ -12,16 +12,12 @@
 class AuthController : public Controller {
 
 private:
-  inline static AuthController *instance = nullptr;
+    static inline std::shared_ptr<AuthController> instance{nullptr};
+    std::shared_ptr<UserService> user_service;
 
 public:
-  // contiene switch_case per inoltrare al metodo corretto
-  static AuthController *getInstance() {
-    if (instance == nullptr) {
-      instance = new AuthController();
-    }
-    return instance;
-  }
+    static std::shared_ptr<AuthController> getInstance();
+
   virtual const http::server::reply handle(const http::server::request &req);
   const std::string post_signin(const SigninDTO &req);
   const std::string post_signup(const SignupDTO &req);

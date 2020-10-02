@@ -24,11 +24,13 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include "../exceptions/exceptions.hpp"
 #include <string>
 
 namespace macaron {
 
 class Base64 {
+
 public:
   static std::string Encode(const std::string data) {
     static constexpr char sEncodingTable[] = {
@@ -89,7 +91,7 @@ public:
     std::string out;
     size_t in_len = input.size();
     if (in_len % 4 != 0)
-      return "Input data size is not a multiple of 4";
+      throw Base64DecodeFailed();
 
     size_t out_len = in_len / 4 * 3;
     if (input[in_len - 1] == '=')
@@ -100,6 +102,8 @@ public:
     out.resize(out_len);
 
     for (size_t i = 0, j = 0; i < in_len;) {
+      if (!valid_char(input[i]))
+        throw Base64DecodeFailed();
       uint32_t a = input[i] == '='
                        ? 0 & i++
                        : kDecodingTable[static_cast<int>(input[i++])];
@@ -125,6 +129,20 @@ public:
     }
 
     return out;
+  }
+
+  static bool valid_char(char c) {
+    const char list[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
+                         'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+                         'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
+                         'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+                         's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2',
+                         '3', '4', '5', '6', '7', '8', '9', '+', '/', '='};
+    for (size_t i = 0; i < 65; i++) {
+      if (c == list[i])
+        return true;
+    }
+    return false;
   }
 };
 

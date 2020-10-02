@@ -9,6 +9,7 @@ FileEntry::FileEntry(const std::string &path) : path{path} {
   size = std::filesystem::file_size(path);
   entry["size"] = size;
   nchunks = ceil((double)size / CHUNK_SIZE);
+  entry["nchunks"] = nchunks;
   buffer = std::shared_ptr<char[]>{new char[CHUNK_SIZE]};
   memset(buffer.get(), '\0', CHUNK_SIZE);
 }

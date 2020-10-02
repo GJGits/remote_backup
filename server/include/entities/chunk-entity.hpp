@@ -1,31 +1,42 @@
 #pragma once
 #include <string>
 #include "../common/logger.hpp"
+#include "../dtos/post_chunk_dto.hpp"
+#include "../dtos/put_chunk_dto.hpp"
+#include "../dtos/delete_chunk_dto.hpp"
+#include "../dtos/get_chunk_dto.hpp"
 
 class ChunkEntity {
 private:
-    std::string username;
+    Subject subject;
     int id_chunk;
     std::string hash_chunk;
     std::string path_file;
     int size_chunk;
-    std::string last_mod;
+    int last_mod;
+    int num_chunks;
     int size_file;
+    std::shared_ptr<std::vector<char>> chunk_body{new std::vector<char>{}};
+
 public:
-    ChunkEntity(std::string username, int id_chunk, std::string hash_chunk, std::string path_file, int size_chunk, std::string last_mod):
-    username{std::move(username)}, id_chunk{id_chunk}, hash_chunk{std::move(hash_chunk)}, path_file{std::move(path_file)}, size_chunk{size_chunk}, last_mod{std::move(last_mod)}{};
+    ChunkEntity(const PostChunkDTO &post_chunk);
 
-    ChunkEntity(std::string username, int id_chunk, std::string path_file, int size_chunk,  std::string last_mod):
-            username{std::move(username)}, id_chunk{id_chunk}, path_file{std::move(path_file)}, size_chunk{size_chunk},last_mod{std::move(last_mod)}{};
+    ChunkEntity(const PutChunkDTO &put_chunk);
 
+    ChunkEntity(const DeleteChunkDTO &del_chunk);
 
-    std::string getUsername() const{ return username; };
-    int getIdChunk() const{return id_chunk;};
-    std::string getHashChunk() const{return hash_chunk;};
-    std::string getPathFile() const{return path_file;};
-    int getSizeChunk() const{return size_chunk;};
-    std::string getLastMod() const{return last_mod;};
-    int getSizeFile() const{return size_file;};
-    void setSizeFile(int val)  {size_file = val;};
+    ChunkEntity(const GetChunkDTO &get_chunk);
+
+    Subject get_subject() const;
+    int getIdChunk() const;
+    std::string getHashChunk() const;
+    std::string getPathFile() const;
+    int getSizeChunk() const;
+    int getLastMod() const;
+    int getSizeFile() const;
+    int getNumChunks() const;
+
+    void setSizeFile(int val);
+    std::shared_ptr<std::vector<char>> getchunk_body() const;
 
 };

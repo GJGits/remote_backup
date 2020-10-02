@@ -4,6 +4,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include <openssl/sha.h>
 
@@ -20,7 +21,7 @@ public:
   Sha256 &operator=(const Sha256 &) = delete;
   Sha256 &operator=(Sha256 &&) = delete;
 
-  static std::string getSha256(const std::vector<char> buf) {
+  static std::string getSha256(const std::vector<char> &buf) {
     /*
     if (instance == nullptr) {
       instance = new Sha256();

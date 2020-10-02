@@ -7,13 +7,18 @@ private:
   std::string username;
   std::string hashed_password;
   unsigned int salt;
+  int page_num;
 
 public:
-  UserEntity(std::string username, std::string hashed_password,
+
+  UserEntity(const std::string &username, const std::string &hashed_password,
              unsigned int salt);
+
+  UserEntity(const std::string &username, int page_num);
 
   std::string getUsername() const;
   std::string getHashedPassword() const;
   unsigned int getSalt() const;
+  int getpage_num() const;
 
 };

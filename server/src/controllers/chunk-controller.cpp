@@ -1,132 +1,81 @@
 #include "../../include/controllers/chunk-controller.hpp"
 
 inline static std::regex post_chunk_rgx{
-    "^\\/chunk\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+\\S+)\\/"
-    "(\\w+)$"};
+    "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+\\/[\\w]+$"};
 inline static std::regex put_chunk_rgx{
-    "^\\/chunk\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+\\S+)\\/(\\w+)$"};
+    "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+\\/[\\w]+$"};
 inline static std::regex get_chunk_rgx{
-    "^\\/chunk\\/(\\w+)\\/(\\w+)\\/(\\w+)\\/(\\w+\\S+)$"};
-inline static std::regex delete_chunk_rgx{"^\\/chunk\\/(\\w+)\\/(\\w+\\S+)$"};
+    "^\\/chunk\\/[\\w]+\\/[\\w=+]+$"};
+inline static std::regex delete_chunk_rgx{"^\\/chunk\\/[\\w]+\\/[\\w=+]+$"};
+
+std::shared_ptr<ChunkController> ChunkController::getInstance() {
+  if (instance.get() == nullptr) {
+    instance = std::shared_ptr<ChunkController>(new ChunkController{});
+    instance->chunk_service = ChunkService::getInstance();
+  }
+  return instance;
+}
 
 const http::server::reply
 ChunkController::handle(const http::server::request &req) {
+std::clog << "provo la handle\n";
+  Subject sub = JWT::validateToken(req);
+    std::clog << "try la handle\n";
 
-  if (req.method == "POST") { // todo: migliorare la selezione dello username,
-                              // invece di prendere tutti i campi all'inizio
-
-    std::smatch match;
-    if (std::regex_search(
-            req.uri.begin(), req.uri.end(), match,
-            post_chunk_rgx)) { // todo: La regex prende un pò tutto, migliorare
-
-      // if (JWT::validateToken(req)) {
-      PostChunkDTO post_chunk{};
-      post_chunk.fill(req.uri, req.body);
-      std::string response = post_file_chunk(post_chunk);
-      if (response.compare("200_OK") == 0)
-        return http::server::reply::stock_reply(http::server::reply::ok);
-      else
-        return MakeReply::make_1line_jsonReply<std::string>(
-            "err_msg", response, http::server::reply::bad_request);
-
-      /* }
-       else
-           throw CredentialsExpired();*/
-
-    } else
-      throw WrongRquestFormat();
-  }
-  if (req.method == "PUT") {
-    std::smatch match;
-    if (std::regex_search(
-            req.uri.begin(), req.uri.end(), match,
-            put_chunk_rgx)) { // todo: La regex prende un pò tutto, migliorare
-
-      // if (JWT::validateToken(req)) {
-      PutChunkDTO put_chunk{};
-      put_chunk.fill(req.uri, req.body);
-      std::string response = put_file_chunk(put_chunk);
-      if (response.compare("200_OK") == 0)
-        return http::server::reply::stock_reply(http::server::reply::ok);
-      else
-        return MakeReply::make_1line_jsonReply<std::string>(
-            "err_msg", response, http::server::reply::bad_request);
-
-      /*}
-      else
-          throw CredentialsExpired();*/
-    } else
-      throw WrongRquestFormat();
-  }
-  if (req.method == "GET") {
-    std::smatch match;
-    if (std::regex_search(
-            req.uri.begin(), req.uri.end(), match,
-            get_chunk_rgx)) { // todo: La regex prende un pò tutto, migliorare
-
-      // if (JWT::validateToken(req)) {
-      GetChunkDTO get_chunk{};
-      get_chunk.fill(req.uri);
-      return MakeReply::make_1line_dump_jsonReply<std::string>(
-          get_file_chunk(
-              get_chunk), // todo: al momento ritorna una roba strana,
-                          // aggiustare il return tornando solo il json del file
-          http::server::reply::ok);
-      /*}
-      else
-          throw CredentialsExpired();*/
-    } else
-      throw WrongRquestFormat();
-  }
-
-  if (req.method == "DELETE") {
+  if (req.method == "POST") {
     std::smatch match;
     if (std::regex_search(req.uri.begin(), req.uri.end(), match,
-                          delete_chunk_rgx)) { // todo: La regex prende un pò
-                                               // tutto, migliorare
+                          post_chunk_rgx)) {
+      PostChunkDTO post_chunk{sub};
+      post_chunk.fill(req);
+      post_file_chunk(post_chunk);
+      return http::server::reply::stock_reply(http::server::reply::ok);
+    }
+  } else if (req.method == "PUT") {
+    std::smatch match;
+    if (std::regex_search(req.uri.begin(), req.uri.end(), match,
+                          put_chunk_rgx)) {
+      PutChunkDTO put_chunk{sub};
+      put_chunk.fill(req);
+      put_file_chunk(put_chunk);
+      return http::server::reply::stock_reply(http::server::reply::ok);
+    }
+  } else if (req.method == "GET") {
+    std::smatch match;
+    if (std::regex_search(req.uri.begin(), req.uri.end(), match,
+                          get_chunk_rgx)) {
 
-      // if (JWT::validateToken(req)) {
-      DeleteChunkDTO delete_chunk{};
-      delete_chunk.fill(req.uri);
-      std::string response = delete_file_chunk(delete_chunk);
-      if (response.compare("200_OK") == 0)
-        return http::server::reply::stock_reply(http::server::reply::ok);
-      else
-        return MakeReply::make_1line_jsonReply<std::string>(
-            "err_msg", response, http::server::reply::bad_request);
-
-      /*}
-      else
-          throw CredentialsExpired();*/
-    } else
-      throw WrongRquestFormat();
+      GetChunkDTO get_chunk{sub};
+      get_chunk.fill(req.uri);
+      http::server::reply rep =
+          http::server::reply::stock_reply(http::server::reply::ok);
+      get_chunk.link_content_buffer(rep.content);
+      size_t size = get_file_chunk(get_chunk);
+      struct http::server::header con_len;
+      con_len.name = "Content-Length";
+      con_len.value = std::to_string(size);
+      struct http::server::header con_type;
+      con_type.name = "Content-Type";
+      con_type.value = "application/stream";
+      rep.headers.push_back(con_len);
+      rep.headers.push_back(con_type);
+      return rep;
+    }
   }
 
-  throw WrongRquestFormat(); // todo: creare eccezione
+  throw WrongRquestFormat();
 };
 
-std::string ChunkController::post_file_chunk(const PostChunkDTO &post_chunk) {
-
-  UserService *user_service = UserService::getInstance();
-  return user_service->file_chunk_add(post_chunk);
+void ChunkController::post_file_chunk(const PostChunkDTO &post_chunk) {
+  chunk_service->file_chunk_add(post_chunk);
 }
 
-std::string ChunkController::put_file_chunk(const PutChunkDTO &put_chunk) {
-
-  UserService *user_service = UserService::getInstance();
-  return user_service->file_chunk_update(put_chunk);
+void ChunkController::put_file_chunk(const PutChunkDTO &put_chunk) {
+  chunk_service->file_chunk_update(put_chunk);
 }
 
-std::string ChunkController::get_file_chunk(const GetChunkDTO &get_chunk) {
-
-  UserService *user_service = UserService::getInstance();
-  return user_service->file_chunk_get(get_chunk);
+size_t ChunkController::get_file_chunk(const GetChunkDTO &get_chunk) {
+  return chunk_service->file_chunk_get(get_chunk);
 }
 
-std::string
-ChunkController::delete_file_chunk(const DeleteChunkDTO &delete_chunk) {
 
-  UserService *user_service = UserService::getInstance();
-  return user_service->file_chunk_delete_service(delete_chunk);
-}

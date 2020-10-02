@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <optional>
 
 #include "../entities/db-connect.hpp"
@@ -7,9 +8,9 @@
 
 class FileRepository {
 private:
+  static inline std::shared_ptr<FileRepository> instance{nullptr};
+
 public:
-    bool deleteFile(const FileEntity &chunk);
-
-
-
+  bool deleteFile(const FileEntity &chunk);
+  static std::shared_ptr<FileRepository> getInstance();
 };

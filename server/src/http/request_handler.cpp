@@ -22,7 +22,7 @@ void request_handler::handle_request(const request &req, reply &rep) {
 
   try {
 
-    Controller *c = ControllerRouter::getController(req.uri);
+    std::shared_ptr<Controller> c = ControllerRouter::getController(req.uri);
     rep = c->handle(req);
     return;
 
@@ -62,26 +62,71 @@ void request_handler::handle_request(const request &req, reply &rep) {
     return;
 
   } catch (CredentialsExpired &e) {
-        rep = MakeReply::make_1line_jsonReply<std::string>(
-                "error", e.what(), http::server::reply::internal_server_error);
-        return;
-    }
-  catch (ChunkCorrupted &e) {
-      rep = MakeReply::make_1line_jsonReply<std::string>(
-              "error", e.what(), http::server::reply::internal_server_error);
-      return;
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
+  } catch (ChunkCorrupted &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
+  } catch (FileSizeNotAvailable &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
+  } catch (sql::SQLException &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error",
+        std::string{"Error code:  "} + e.what() +
+            std::string{"___ Error Explanation: "} +
+            std::to_string(e.getErrorCode()) + std::string{"___ SQL STATE: "} +
+            e.getSQLState(),
+        http::server::reply::internal_server_error);
+    return;
+  } catch (FileNotDeleted &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
+  } catch (FileNotOpened &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
+  } catch (std::filesystem::__cxx11::filesystem_error &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
   }
-    catch (FileSizeNotAvailable &e) {
-        rep = MakeReply::make_1line_jsonReply<std::string>(
-                "error", e.what(), http::server::reply::internal_server_error);
-        return;
-    }
-  catch (sql::SQLException &e) {
-      rep = MakeReply::make_1line_jsonReply<std::string>(
-              "error", std::to_string(e.getErrorCode()), http::server::reply::internal_server_error);
-      return;
+
+  catch (DatabaseInvalidConnection &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
   }
+
+  catch (nlohmann::json::exception &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
+  }
+
+  catch (InvalidJWT &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
+  }
+
+  catch (Base64DecodeFailed &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
+  }
+
+   catch(ExceededNumberOfDevices &e){
+       rep = MakeReply::make_1line_jsonReply<std::string>(
+               "error", e.what(), http::server::reply::internal_server_error);
+       return;
+    }
 }
+
 
 } // namespace server
 } // namespace http

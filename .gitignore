@@ -7,3 +7,6 @@ sync/*
 *.txt
 *.pdf
 *.ppt
+*.c
+*.zip
+*.json

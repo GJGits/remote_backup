@@ -2,7 +2,7 @@
 #include <exception>
 #include "../http/reply.hpp"
 #include "../http/request.hpp"
-
+#include "../common/logger.hpp"
 
 
 struct UsernameAlreadyExists : public std::exception
@@ -88,9 +88,9 @@ struct ChunkCorrupted : public std::exception
 {
     const char * what () const throw ()
     {
-        Logger::log(" The chunk is no ok\n");
+        Logger::log("The chunk received is different from the one calculated\n");
 
-        return "The chunk is no ok";
+        return "The chunk received is different from the one calculated";
     }
 
 
@@ -105,5 +105,64 @@ struct FileSizeNotAvailable : public std::exception
         return "The size of file is not retrievable";
     }
 
+};
+
+struct FileNotDeleted : public std::exception
+{
+    const char * what () const throw ()
+    {
+        Logger::log("The file could not be deleted\n");
+
+        return "The file could not be deleted";
+    }
+
+};
+
+struct FileNotOpened : public std::exception
+{
+    const char * what () const throw ()
+    {
+        Logger::log("The file could not be open\n");
+
+        return "The file could not be open";
+    }
+
+};
+
+struct DatabaseInvalidConnection : public std::exception
+{
+    const char * what () const throw ()
+    {
+        Logger::log("The database connection is not available\n");
+
+        return "The database connection is not available";
+    }
+
+};
+
+struct InvalidJWT : public std::exception
+{
+    const char * what () const throw ()
+    {
+        return "Auth failed";
+    }
+
+};
+
+struct Base64DecodeFailed : public std::exception
+{
+    const char * what () const throw ()
+    {
+        return "decoding failed";
+    }
+
+};
+
+struct ExceededNumberOfDevices : public std::exception
+{
+const char * what () const throw ()
+{
+    return "Exceeded maximum number of devices allowed";
+}
 
 };

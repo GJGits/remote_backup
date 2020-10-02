@@ -11,7 +11,7 @@
 
 using json = nlohmann::json;
 
-#define CHUNK_SIZE 2097152
+#define CHUNK_SIZE 4096
 
 class FileEntry {
 private:

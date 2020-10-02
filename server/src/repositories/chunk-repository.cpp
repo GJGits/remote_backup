@@ -1,221 +1,60 @@
 #include "../../include/repositories/chunk-repository.hpp"
 
-bool ChunkRepository::getFilePath(const ChunkEntity &chunk) {
-    std::unique_ptr <sql::PreparedStatement> stmt;
-    std::unique_ptr <sql::ResultSet> res;
+ std::shared_ptr<ChunkRepository> ChunkRepository::getInstance() {
+  if(instance.get() == nullptr) {
+    instance = std::shared_ptr<ChunkRepository>{};
+  }
+  return instance;
+}
 
-    try {
+bool ChunkRepository::add_or_update_Chunk(const ChunkEntity &chunk) {
+  std::unique_ptr<sql::PreparedStatement> stmt;
+  std::unique_ptr<sql::ResultSet> res;
+  std::shared_ptr<sql::Connection> con = DBConnect::getConnection(chunk.get_subject().get_db_id());
 
-        std::shared_ptr <sql::Connection> con = DBConnect::getConnection();
-        stmt = std::unique_ptr < sql::PreparedStatement > {
-                std::move(con->prepareStatement("SELECT f_username FROM fileinfo WHERE f_path = ? and f_username = ?"))};
-        stmt->setString(1, chunk.getPathFile());
-        stmt->setString(2, sql::SQLString{chunk.getUsername().c_str()});
+  if (con->isValid() && !con->isClosed()) {
+    stmt =std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement(
+            "INSERT INTO chunks(c_username, c_id, c_hash, c_path, "
+            "c_size,c_lastmod,num_chunks) values(?,?,?,?,?,?,?) ON DUPLICATE KEY "
+            "UPDATE c_hash = ?, c_size = ? , c_lastmod = ?;"))};
+    stmt->setString(1, sql::SQLString{chunk.get_subject().get_sub().c_str()});
+    stmt->setInt(2, chunk.getIdChunk());
+    stmt->setString(3, sql::SQLString{chunk.getHashChunk().c_str()});
+
+    std::string delimiter{"../../filesystem/"+chunk.get_subject().get_sub()+"/"};
+    std::string s = chunk.getPathFile();
+    stmt->setString(4, sql::SQLString{Utility::split_string(s,delimiter).c_str()});
+    stmt->setInt(5, chunk.getSizeChunk());
+    stmt->setInt(6, chunk.getLastMod());
+    stmt->setInt(7, chunk.getNumChunks());
+    stmt->setString(8, sql::SQLString{chunk.getHashChunk().c_str()});
+    stmt->setInt(9, chunk.getSizeChunk());
+    stmt->setInt(10, chunk.getLastMod());
 
 
-        res = std::unique_ptr < sql::ResultSet > {std::move(stmt->executeQuery())};
-        if (res->next()) {
-            return true;
-        } else {
-            return false;
-        }
-
-        throw UsernameNotExists();
-
-    } catch (sql::SQLException &e) {
-        //std::clog << "select mysql error\n";
-        Logger::log(std::string{"select mysql error("} +
-                    std::to_string(e.getErrorCode()) + std::string{")"});
-        // ce la caviamo con un generico not found
-        throw UknownError();
-
-    }
-
-    throw UknownError();
+    return stmt->executeUpdate() == 1 ? true : false;
+  }
+  throw DatabaseInvalidConnection();
 }
 
 
-bool ChunkRepository::addChunk(const ChunkEntity &chunk){
-    std::unique_ptr<sql::PreparedStatement> stmt;
-    std::unique_ptr<sql::ResultSet> res;
 
-    try {
-
-        std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
-
-        stmt = std::unique_ptr<
-               sql::PreparedStatement>{std::move(con->prepareStatement(
-                "insert into chunks(c_username, c_id, c_hash, c_path, c_size) values(?,?,?,?,?);"))};
-
-        stmt->setString(1, sql::SQLString{chunk.getUsername().c_str()});
-        stmt->setInt(2, chunk.getIdChunk());
-        stmt->setString(3, sql::SQLString{chunk.getHashChunk().c_str()});
-        stmt->setString(4, sql::SQLString{chunk.getPathFile().c_str()});
-        stmt->setInt(5, chunk.getSizeChunk());
+bool ChunkRepository::delete_chunks(const ChunkEntity &chunk) {
+  std::unique_ptr<sql::PreparedStatement> stmt;
+  std::unique_ptr<sql::ResultSet> res;
+  std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
+  size_t db_selected = db_repinstance->getDBbyUsername(chunk.get_subject().get_sub());
+  std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
+  if (con->isValid() && !con->isClosed()) {
 
 
-
-        return stmt->executeUpdate() == 1 ? true : false;
-
-    } catch (sql::SQLException &e) {
-        //std::clog << "insert mysql error\n";
-        Logger::log(std::string{"insert mysql error("} +
-                    std::to_string(e.getErrorCode()) + std::string{")"});
-        // ce la caviamo con una generica not
-        return false;
-    }
-
-    return false;
+    stmt = std::unique_ptr<sql::PreparedStatement>{
+        std::move(con->prepareStatement("DELETE from chunks WHERE c_path = ? "
+                                        "AND c_username = ? AND c_id >= ?;"))};
+    stmt->setString(1, sql::SQLString{chunk.getPathFile().c_str()});
+    stmt->setString(2, sql::SQLString{chunk.get_subject().get_sub().c_str()});
+    stmt->setInt(3, chunk.getIdChunk());
+    return stmt->executeUpdate() == 1 ? true : false;
+  }
+  throw DatabaseInvalidConnection();
 }
-
-
-bool ChunkRepository::addFileInfo(const ChunkEntity &chunk){
-    std::unique_ptr<sql::PreparedStatement> stmt;
-    std::unique_ptr<sql::ResultSet> res;
-
-    try {
-
-        std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
-
-        stmt = std::unique_ptr<
-               sql::PreparedStatement>{std::move(con->prepareStatement(
-                "insert into fileinfo(f_username, f_path, f_size, f_lastmod) values(?,?,?,?);"))};
-
-        stmt->setString(1, sql::SQLString{chunk.getUsername().c_str()});
-        stmt->setString(2, sql::SQLString{chunk.getPathFile().c_str()});
-        stmt->setInt(3, chunk.getSizeFile());
-        stmt->setString(4, sql::SQLString{chunk.getLastMod().c_str()});
-
-
-        return stmt->executeUpdate() == 1 ? true : false;
-
-    } catch (sql::SQLException &e) {
-        //std::clog << "insert mysql error\n";
-        Logger::log(std::string{"insert mysql error("} +
-                    std::to_string(e.getErrorCode()) + std::string{")"});
-        // ce la caviamo con una generica not
-        return false;
-    }
-
-    return false;
-}
-
-int ChunkRepository::getFileSize(const ChunkEntity &chunk){
-    std::unique_ptr<sql::PreparedStatement> stmt;
-    std::unique_ptr<sql::ResultSet> res;
-
-
-
-        std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
-        stmt = std::unique_ptr<sql::PreparedStatement>{
-                std::move(con->prepareStatement("SELECT f_size FROM fileinfo WHERE f_username = ? and f_path = ?"))};
-        stmt->setString(1, sql::SQLString{chunk.getUsername().c_str()});
-        stmt->setString(2, sql::SQLString{chunk.getPathFile().c_str()});
-
-        res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
-        if (res->next()) {
-            return res->getInt("f_size");
-
-        }
-
-        throw FileSizeNotAvailable();
-
-
-
-    throw UknownError();
-}
-
-bool ChunkRepository::updateFileInfo(const ChunkEntity &chunk){
-    std::unique_ptr<sql::PreparedStatement> stmt;
-    std::unique_ptr<sql::ResultSet> res;
-
-    try {
-
-        std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
-
-        stmt = std::unique_ptr<
-               sql::PreparedStatement>{std::move(con->prepareStatement(
-                "UPDATE fileinfo SET f_size = ? , f_lastmod = ? WHERE f_path = ? AND f_username = ?;"))};
-
-        stmt->setInt(1, chunk.getSizeFile());
-        stmt->setString(2, sql::SQLString{chunk.getLastMod().c_str()});
-        stmt->setString(3, sql::SQLString{chunk.getPathFile().c_str()});
-        stmt->setString(4, sql::SQLString{chunk.getUsername().c_str()});
-
-
-        return stmt->executeUpdate() == 1 ? true : false;
-
-    } catch (sql::SQLException &e) {
-        //std::clog << "insert mysql error\n";
-        Logger::log(std::string{"insert mysql error("} +
-                    std::to_string(e.getErrorCode()) + std::string{")"});
-        // ce la caviamo con una generica not
-        return false;
-    }
-
-    return false;
-}
-
-
-bool ChunkRepository::updateChunk(const ChunkEntity &chunk){
-    std::unique_ptr<sql::PreparedStatement> stmt;
-    std::unique_ptr<sql::ResultSet> res;
-
-    try {
-
-        std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
-
-        stmt = std::unique_ptr<
-               sql::PreparedStatement>{std::move(con->prepareStatement(
-                "UPDATE chunks SET c_hash = ? , c_size = ? WHERE c_path = ? AND c_username = ? AND c_id = ?;"))};
-
-        stmt->setString(1, sql::SQLString{chunk.getHashChunk().c_str()});
-        stmt->setInt(2, chunk.getSizeChunk());
-        stmt->setString(3, sql::SQLString{chunk.getPathFile().c_str()});
-        stmt->setString(4, sql::SQLString{chunk.getUsername().c_str()});
-        stmt->setInt(5, chunk.getIdChunk());
-
-
-        return stmt->executeUpdate() == 1 ? true : false;
-
-    } catch (sql::SQLException &e) {
-        //std::clog << "insert mysql error\n";
-        Logger::log(std::string{"insert mysql error("} +
-                    std::to_string(e.getErrorCode()) + std::string{")"});
-        // ce la caviamo con una generica not
-        return false;
-    }
-
-    return false;
-}
-
-bool ChunkRepository::delete_chunks(const ChunkEntity &chunk){
-    std::unique_ptr<sql::PreparedStatement> stmt;
-    std::unique_ptr<sql::ResultSet> res;
-
-    try {
-
-        std::shared_ptr<sql::Connection> con = DBConnect::getConnection();
-
-        stmt = std::unique_ptr<
-               sql::PreparedStatement>{std::move(con->prepareStatement(
-                "DELETE from chunks WHERE c_path = ? AND c_username = ? AND c_id >= ?;"))};
-
-        stmt->setString(1, sql::SQLString{chunk.getPathFile().c_str()});
-        stmt->setString(2, sql::SQLString{chunk.getUsername().c_str()});
-        stmt->setInt(3, chunk.getIdChunk());
-
-
-        return stmt->executeUpdate() == 1 ? true : false;
-
-    } catch (sql::SQLException &e) {
-        //std::clog << "insert mysql error\n";
-        Logger::log(std::string{"insert mysql error("} +
-                    std::to_string(e.getErrorCode()) + std::string{")"});
-        // ce la caviamo con una generica not
-        return false;
-    }
-
-    return false;
-}
-

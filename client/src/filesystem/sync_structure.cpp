@@ -104,27 +104,19 @@ void SyncStructure::add_chunk(const json &chunk) {
   } else {
     entries[chunk["path"]]["chunks"].push_back(chk);
   }
-  dirty = true;
-}
-
-void SyncStructure::replace_chunk(const json &chunk) {
-  DurationLogger logger{"REPLACE_CHUNK"};
-  for (size_t i = 0; i < entries[chunk["path"]]["chunks"].size(); i++) {
-    if (entries[chunk["path"]]["chunks"][i]["id"] == chunk["id"]) {
-      entries[chunk["path"]]["chunks"][i] = chunk;
+  if (entries[chunk["path"]]["chunks"].size() ==
+      (size_t)chunk["nchunks"].get<int>()) {
+    std::string file_hash{""};
+    for (size_t i = 0; i < entries[chunk["path"]]["chunks"].size(); i++) {
+      file_hash += entries[chunk["path"]]["chunks"][i]["hash"];
+      std::shared_ptr<char[]> buff{new char[file_hash.size()]};
+      for (size_t j = 0; j < file_hash.size(); j++) {
+        buff.get()[j] = file_hash[j];
+      }
+      file_hash = Sha256::getSha256(buff, file_hash.size());
     }
-  }
-  dirty = true;
-}
-
-void SyncStructure::delete_chunk(const json &chunk) {
-  DurationLogger logger{"DELETE_CHUNK"};
-  size_t n_chunks = entries[chunk["path"]]["chunks"].size();
-  for (size_t i = 0; i < n_chunks; i++) {
-    size_t chk_id = entries[chunk["path"]]["chunks"][i]["id"];
-    if (chk_id == chunk["id"]) {
-      entries[chunk["path"]]["chunks"].erase(i);
-    }
+    entries[chunk["path"]]["hash"] = file_hash;
+    entries[chunk["path"]]["chunks"].clear();
   }
   dirty = true;
 }
@@ -134,6 +126,10 @@ void SyncStructure::delete_entry(const json &entry) {
   std::string path = entry["path"];
   entries.erase(path);
   dirty = true;
+}
+
+void SyncStructure::reset_chunks(const std::string &path) {
+  entries[path]["chunks"].clear();
 }
 
 void SyncStructure::rename_entry(const json &entry) {

@@ -8,22 +8,19 @@
 #include "../dtos/get_chunk_dto.hpp"
 #include "../dtos/post_chunk_dto.hpp"
 #include "../services/user-service.hpp"
+#include "../services/file-service.hpp"
 #include <regex>
 #include "../common/utility.hpp"
 
 class FileController : public Controller {
 
 private:
-    inline static FileController *instance = nullptr;
+    static inline std::shared_ptr<FileController> instance{nullptr};
+    std::shared_ptr<FileService> file_service;
 
 public:
-    // contiene switch_case per inoltrare al metodo corretto
-    static FileController *getInstance() {
-        if (instance == nullptr) {
-            instance = new FileController();
-        }
-        return instance;
-    }
+    static std::shared_ptr<FileController> getInstance();
+
     virtual const http::server::reply handle(const http::server::request &req);
-    const std::string delete_file(const DeleteFileDTO &del_file);
+    void delete_file(const DeleteFileDTO &del_file);
 };

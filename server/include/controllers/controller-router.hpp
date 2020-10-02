@@ -10,15 +10,17 @@
 
 class ControllerRouter {
 private:
-  inline static std::unordered_map<std::string, Controller *> controller_map{};
-  inline static ControllerRouter *instance = nullptr;
+  inline static std::unordered_map<std::string, std::shared_ptr<Controller>> controller_map{};
+    static inline std::shared_ptr<ControllerRouter> instance{nullptr};
+
 
 public:
 
-  static Controller * getController(const std::string &key) {
+
+  static std::shared_ptr<Controller> getController(const std::string &key) {
     // se mappa non inizializzata
-    if (instance == nullptr) {
-      instance = new ControllerRouter();
+    if (instance.get() == nullptr) {
+        instance = std::shared_ptr<ControllerRouter>(new ControllerRouter{});
       controller_map["auth"] = AuthController::getInstance();
       controller_map["status"] = StatusController::getInstance();
       controller_map["chunk"] = ChunkController::getInstance();

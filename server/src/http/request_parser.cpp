@@ -198,7 +198,7 @@ request_parser::result_type request_parser::consume(request &req, char input) {
 
 request_parser::result_type request_parser::consume_body(request &req, char input, int &left) { 
   left--;
-  req.body.push_back(input);
+  req.body->push_back(input);
   return left == 0 ? good : indeterminate;
 }
 

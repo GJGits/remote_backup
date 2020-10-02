@@ -1,66 +1,18 @@
 const { ipcRenderer } = require('electron');
-const textEncoding = require('text-encoding');
-var logged = false;
-var transfers = [];
-
-const check_creds = (username, password, ripPassword) => {
-
-    const user_rgx = /^\w+$/
-    const pass_rgx = /^\w+$/
-
-    if (!username) {
-        $(".alert.alert-danger.error").show();
-        $(".alert.alert-danger.error").text("inserire username");
-        return false;
-    }
-
-    if (!user_rgx.test(username)) {
-        $(".alert.alert-danger.error").show();
-        $(".alert.alert-danger.error").text("username non valido. Caretteri consentiti: a-zA-Z0-9_");
-        return false;
-    }
-
-    if (!password) {
-        $(".alert.alert-danger.error").show();
-        $(".alert.alert-danger.error").text("inserire password");
-        return false;
-    }
-
-    if (!pass_rgx.test(password)) {
-        $(".alert.alert-danger.error").show();
-        $(".alert.alert-danger.error").text("password non valida. Caretteri consentiti: a-zA-Z0-9_");
-        return false;
-    }
-
-    if (!ripPassword) {
-        $(".alert.alert-danger.error").show();
-        $(".alert.alert-danger.error").text("ripetere password");
-        return false;
-    }
-
-    if (password !== ripPassword) {
-        $(".alert.alert-danger.error").show();
-        $(".alert.alert-danger.error").text("le due password non coincidono");
-        return false;
-    }
-
-    return true;
-};
+const du = require('du');
+const getMAC = require('getmac').default
 
 var change_status = (status) => {
-    if ($("#login")) {
-        if (status) {
-            $("#login").hide();
-            $("#signup").hide();
-            $("#logged").show();
-            $(".alert.alert-danger.error").hide();
-        } else {
-            $("#login").show();
-            $("#signup").hide();
-            $("#logged").hide();
-            $(".alert.alert-danger.error").hide();
-        }
+    let stats = ["login", "signup", "logged"];
+    let index = stats.findIndex((el) => { return el === status; });
+    index = index === -1 ? 0 : index;
+    for (let i = 0; i < stats.length; i++) {
+        if (i === index)
+            $("#" + stats[i]).show();
+        else
+            $("#" + stats[i]).hide();
     }
+    $(".alert.alert-danger.error").hide();
 }
 
 /* MESSAGES HANDLERS */
@@ -77,62 +29,42 @@ ipcRenderer.on('synchronous-message', (event, arg) => {
 
 ipcRenderer.on('status-changed', (event, arg) => {
     arg = arg.replace("\n", "");
-    console.log(JSON.stringify(arg));
-    logged = arg === "log-in";
-    change_status(logged);
+    console.log("status changed:", arg);
+    change_status(arg);
 });
 
-ipcRenderer.on('transfer', (event, arg) => {
-    const tokens = arg.split(";");
-    const transfer = {
-        direction: tokens[0],
-        file_name: tokens[1],
-        done: tokens[2],
-        total: tokens[3],
-    };
-    let dir_img = "";
-    if (direction === "up") {
-        dir_img = "imgs/icons8-upload-48.png";
-    } else if (direction === "down") {
-        dir_img = "imgs/icons8-download-48.png";
+ipcRenderer.on('sync', (event, arg) => {
+    if (arg === 'start-sync') {
+        $("#loading").show();
+        $("#synced").hide();
     } else {
-        dir_img = "imgs/icons8-cancel-48.png";
-    }
-    const dom_element = $("#" + transfer.file_name);
-    if (!dom_element.length) {
-        // nuovo elemento
-        $("#transfers").append("");
-    } else {
-        if (done === total) {
-            // caricamento completato
-        }
-        if (direction === "abort") {
-            // caricamento cancellato
-        }
+        $("#loading").hide();
+        $("#synced").show();
+        let size_prom = du('../client/sync/');
+        size_prom.then((size) => {
+            let percentage = ((size / (2 * 1024 * 1024 * 1024)) * 100) > 100 ? 100 : ((size / (2 * 1024 * 1024 * 1024)) * 100).toFixed(2);
+            $("#usage").text("Total space usage: " + percentage + "%");
+            $("#us_prog").removeClass();
+            $("#us_prog").addClass("progress-bar");
+            $("#us_prog").css("width", "" + parseInt(percentage) + "%");
+            $("#us_prog").attr("aria-valuenow", parseInt(percentage));
+        });
+
     }
 });
-
 
 $(document).ready(function () {
-
-    change_status(logged);
 
     /* EVENTS HANDLERS */
 
     $("#registrati").click((event) => {
         event.preventDefault();
-        $("#login").hide();
-        $("#signup").show();
-        $("#logged").hide();
-        $(".alert.alert-danger.error").hide();
+        change_status("signup");
     });
 
     $("#accedi").click((event) => {
         event.preventDefault();
-        $("#login").show();
-        $("#signup").hide();
-        $("#logged").hide();
-        $(".alert.alert-danger.error").hide();
+        change_status("login");
     });
 
     $("#signin-btn").click((event) => {
@@ -140,52 +72,63 @@ $(document).ready(function () {
         console.log("login clicked");
         username = $("#username").val();
         password = $("#password").val();
+        mac = getMAC();
+        //mac = "aa:bb:cc:dd:ee:ff";
+        console.log("mac:", mac);
         $.ajax({
             url: "http://0.0.0.0:3200/auth/signin",
             type: "POST",
-            data: JSON.stringify({ username: username, password: password.toString() }),
+            data: JSON.stringify({ username: username, password: password.toString(), mac_address: mac }),
             contentType: "application/json",
             dataType: "json",
-            success: function (result) {
-                if (result && result.token) {
-                    ipcRenderer.sendSync('token', {user:username, token:result.token});
-                }
-
-            },
-            statusCode: {
-                500: function (message) {
-                    $(".alert.alert-danger.error").show();
-                    $(".alert.alert-danger.error").text(message.responseJSON.error);
-                }
+        }).done(function (data) {
+            console.log("dati successo", data);
+            ipcRenderer.send('config', { username: username, token: data.token });
+            change_status("logged");
+        }).fail(function (error) {
+            $(".alert.alert-danger.error").show();
+            if (error.status === 404) {
+                $(".alert.alert-danger.error").text("server non raggiungibile");
+            } else {
+                $(".alert.alert-danger.error").text(error.responseJSON.error);
             }
+
         });
     });
 
     $("#signup-btn").click((event) => {
         event.preventDefault();
-        console.log("login clicked");
+        console.log("signup clicked");
         username = $("#username2").val();
         password = $("#password2").val();
         ripPassword = $("#rip-password").val();
-        if (check_creds(username, password.toString(), ripPassword.toString())) {
-            $.ajax({
-                url: "http://0.0.0.0:3200/auth/signup",
-                type: "POST",
-                data: JSON.stringify({ username: username, password: password.toString(), password_confirm: ripPassword.toString() }),
-                contentType: "application/json",
-                dataType: "json",
-                success: function (result) {
-                    ipcRenderer.sendSync('token', result);
-                },
-                statusCode: {
-                    500: function (message) {
-                        $(".alert.alert-danger.error").show();
-                        $(".alert.alert-danger.error").text(message.responseJSON.error);
-                    }
-                }
-            });
-        }
+        mac = getMAC();
+        //mac = "aa:bb:cc:dd:ee:ff";
 
+        $.ajax({
+            url: "http://0.0.0.0:3200/auth/signup",
+            type: "POST",
+            data: JSON.stringify({ username: username, password: password.toString(), password_confirm: ripPassword.toString(), mac_address: mac }),
+            contentType: "application/json",
+            dataType: "json"
+        }).done(function (data) {
+            console.log("dati successo", data);
+            ipcRenderer.send('config', { username: username, token: data.token });
+            change_status("logged");
+        }).fail(function (error) {
+            $(".alert.alert-danger.error").show();
+            if (error.status === 404) {
+                $(".alert.alert-danger.error").text("server non raggiungibile");
+            } else {
+                $(".alert.alert-danger.error").text(error.responseJSON.error);
+            }
+        });
+
+    });
+
+    $("#loggoff").click((event) => {
+        ipcRenderer.send('reset-config', {});
+        change_status("login");
     });
 
 });

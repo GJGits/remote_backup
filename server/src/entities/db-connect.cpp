@@ -1,30 +1,31 @@
 #include "../../include/entities/db-connect.hpp"
 
-DBConnect* DBConnect::instance = nullptr;
-std::shared_ptr<sql::Connection>
-DBConnect::getConnection()
-{
-    if (DBConnect::instance == nullptr) {
-        DBConnect::instance = new DBConnect();
-        sql::Driver* driver = get_driver_instance();
-        // TODO: convertire 16 con il campo max_connections letto da file
-        for (int i = 0; i < 16; i++) {
-            try {
-                sql::Connection* con;
-                con = driver->connect("tcp://remote_backup_db_1:3306", "root", "example");
-                con->setSchema("db_utenti");
-                DBConnect::instance->connections[i] = std::shared_ptr<sql::Connection> { con };
-            } catch (sql::SQLException& e) {
-                // 1. print to debug
-                std::clog << " (MySQL error code: " << e.getErrorCode();
-                // 2. log to a file
-                Logger::log(" (MySQL error code: " + e.getErrorCode());
-                // 3. do something
-            }
-        }
+DBConnect *DBConnect::instance = nullptr;
+std::shared_ptr<sql::Connection> DBConnect::getConnection(size_t db_selected) {
+  std::unique_lock lk{DBConnect::m};
+  if (DBConnect::instance == nullptr) {
+    DBConnect::instance = new DBConnect();
+    sql::Driver *driver = get_driver_instance();
+    for (size_t db_id = 0; db_id < 4; db_id++) {
+      for (size_t conn_num = 0; conn_num < 4; conn_num++) {
+        std::string db_off = std::to_string(db_id + 1) + ":3306";
+        sql::Connection *con = driver->connect(
+            "tcp://remote_backup_db_" + db_off, "root", "example");
+        con->setSchema("db_utenti");
+        DBConnect::instance->connections_map[db_id][conn_num] =
+            std::shared_ptr<sql::Connection>{con};
+      }
     }
-    int scelta = DBConnect::instance->index;
-    DBConnect::instance->index == 15 ? 0 : DBConnect::instance->index++;
-    //std::clog << "Restituita connection: @" << scelta << "\n";
-    return DBConnect::instance->connections[scelta];
+  }
+  DBConnect::instance->indexes[db_selected] =
+      DBConnect::instance->indexes[db_selected] == 4
+          ? 0
+          : DBConnect::instance->indexes[db_selected];
+  int scelta = DBConnect::instance->indexes[db_selected];
+  DBConnect::instance->indexes[db_selected]++;
+
+  std::clog << "Restituita connection: @" << scelta << " del db: @"
+            << db_selected << "\n";
+
+  return instance->connections_map[db_selected][scelta];
 }

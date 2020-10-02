@@ -1,18 +1,16 @@
 #pragma once
-#include <optional>
-
-#include "../entities/db-connect.hpp"
+#include "../common/utility.hpp"
 #include "../entities/chunk-entity.hpp"
+#include "../entities/db-connect.hpp"
 #include "../exceptions/exceptions.hpp"
 
 class ChunkRepository {
 private:
+  static inline std::shared_ptr<ChunkRepository> instance{nullptr};
+
 public:
-    bool getFilePath(const ChunkEntity &chunk);
-    bool addChunk(const ChunkEntity &chunk);
-    bool addFileInfo(const ChunkEntity &chunk);
-    int getFileSize(const ChunkEntity &chunk);
-    bool updateFileInfo(const ChunkEntity &chunk);
-    bool updateChunk(const ChunkEntity &chunk);
-    bool delete_chunks(const ChunkEntity &chunk);
+  bool add_or_update_Chunk(const ChunkEntity &chunk);
+  bool get_Chunk(const ChunkEntity &chunk);
+  bool delete_chunks(const ChunkEntity &chunk);
+  static std::shared_ptr<ChunkRepository> getInstance();
 };

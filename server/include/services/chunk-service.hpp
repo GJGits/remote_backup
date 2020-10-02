@@ -12,31 +12,23 @@
 #include <iostream>
 #include "../exceptions/exceptions.hpp"
 #include "../common/jwt.hpp"
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
+#include "../common/utility.hpp"
 #include <ctime>
+#include <memory>
+#include "../common/constants.hpp"
+
+#include "../repositories/chunk-repository.hpp"
 
 
-
-class UserService {
+class ChunkService {
 private:
-    inline static UserService *instance = nullptr;
-
+    static inline std::shared_ptr<ChunkService> instance{nullptr};
+    std::shared_ptr<ChunkRepository> chunk_repository;
 public:
-
-
-    static UserService *getInstance() {
-        if (instance == nullptr) {
-            instance = new UserService();
-        }
-        return instance;
-    }
-
-
-    std::string getStatus(const std::string &username);
-    std::string file_chunk_add(const PostChunkDTO &post_file);
-    std::string file_chunk_update(const PutChunkDTO &put_file);
-    std::string file_chunk_get(const GetChunkDTO &get_file);
-    std::string file_chunk_delete_service(const DeleteChunkDTO &del_chunk);
+    std::mutex mtx;
+    static std::shared_ptr<ChunkService> getInstance();
+    void file_chunk_add(const PostChunkDTO &post_chunk);
+    void file_chunk_update(const PutChunkDTO &put_chunk);
+    size_t file_chunk_get(const GetChunkDTO &get_chunk);
+    ~ChunkService() {}
 };
