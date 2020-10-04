@@ -5,15 +5,15 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <mutex>
+#include <string.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <string.h>
-#include <mutex>
 
-#include "../common/sha256.hpp"
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
+#include "../common/sha256.hpp"
 
 using json = nlohmann::json;
 

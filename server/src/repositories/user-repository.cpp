@@ -106,7 +106,7 @@ json UserRepository::get_status_file(const UserEntity &user_entity) {
   stmt->setInt(4, ENTRIES_PAGE);
   stmt->setString(5, sql::SQLString{user_entity.getUsername().c_str()});
   res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
-  json j_single_path;
+  json j_single_path = {};
 
   if(res->rowsCount() > 0) {
       for (int i = 0; i < ENTRIES_PAGE; i++) {
