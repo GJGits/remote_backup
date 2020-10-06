@@ -26,6 +26,13 @@ void SyncSubscriber::init() {
                     std::bind(&SyncSubscriber::on_file_deleted, instance.get(),
                               std::placeholders::_1));
   remote_check();
+  init_workers();
+}
+
+void SyncSubscriber::push(const json &task) {
+  std::unique_lock lk{m};
+  down_tasks.push(task);
+  cv.notify_one();
 }
 
 void SyncSubscriber::compute_new_size() {
@@ -95,64 +102,101 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
 void SyncSubscriber::remote_check() {
   DurationLogger logger{"PROCESS_LIST"};
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-  std::shared_ptr<Broker> broker = Broker::getInstance();
+  std::shared_ptr<SyncStructure> sync_structure = SyncStructure::getInstance();
   int current_page = 0;
   int last_page = 1;
   while (current_page < last_page) {
     json list = rest_client->get_status_list(current_page++);
-    std::clog << "lista:\n" << list.dump() << "\n";
+    std::clog << "list dump: " << list.dump() << "\n";
     current_page = list["current_page"].get<int>();
     last_page = list["last_page"].get<int>();
-    // todo: processa messaggi ed eventualmente invia conflitti all'utente.
     for (size_t i = 0; i < list["entries"].size(); i++) {
-      std::string file_path =
-          macaron::Base64::Decode(list["entries"][i]["path"]);
+      std::string file_path = list["entries"][i]["path"];
       int nchunks = list["entries"][i]["num_chunks"].get<int>();
-      int last_mod_remote = list["entries"][i]["last_mod"].get<int>();
-      std::clog << "file_path: " << file_path << "\n";
-      if (!std::filesystem::exists(file_path)) {
-        // server ha file che io non ho
-        std::filesystem::create_directories(
-            std::filesystem::path{file_path}.parent_path());
-        std::ofstream out{file_path, std::ios::binary};
-        for (int j = 0; j < nchunks; j++) {
-          json get_chunk{
-              {"path", list["entries"][i]["path"]}, {"id", j}};
-          std::vector<char> chunk = rest_client->get_chunk(get_chunk);
-          json jentry{{"nchunks", nchunks},
-                      {"size", chunk.size()},
-                      {"path", file_path},
-                      {"last_mod", last_mod_remote}};
-          json jchunk{{"hash", Sha256::getSha256(chunk)}, {"id", j}};
-          out.write(chunk.data(), chunk.size());
-          jentry["chunks"].push_back(jchunk);
-          broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
-        }
-        out.close();
-      } else {
-        int last_mod_local = std::filesystem::last_write_time(file_path)
-                                 .time_since_epoch()
-                                 .count() /
-                             1000000000;
-        if (last_mod_remote > last_mod_local) {
-          // server ha versione aggiornata
-          std::ofstream out{file_path, std::ios::binary};
-          for (int j = 0; j < nchunks; j++) {
-            json get_chunk{{"path", list["entries"][i]["path"]}, {"id", j}};
-            std::clog << "arrivo qui\n";
-            std::vector<char> chunk = rest_client->get_chunk(get_chunk);
-            json jentry{{"nchunks", nchunks},
-                        {"size", chunk.size()},
-                        {"path", file_path},
-                        {"last_mod", last_mod_remote}};
-            json jchunk{{"hash", Sha256::getSha256(chunk)}, {"id", j}};
-            out.write(chunk.data(), chunk.size());
-            jentry["chunks"].push_back(jchunk);
-            broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
+      size_t remote_last_mod =
+          (size_t)list["entries"][i]["last_mod"].get<int>();
+      for (int j = 0; j < nchunks; j++) {
+        json task{{"path", list["entries"][i]["path"]},
+                  {"id", j},
+                  {"last_mod", remote_last_mod},
+                  {"nchunks", list["entries"][i]["num_chunks"]}};
+        push(task);
+      }
+    }
+  }
+}
+void SyncSubscriber::init_workers() {
+  for (size_t i = 0; i < 2; i++) {
+    down_workers.emplace_back([&]() {
+      std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
+      std::shared_ptr<Broker> broker = Broker::getInstance();
+      while (is_running) {
+        json task;
+        // sezione critica
+        {
+          std::unique_lock lk{m};
+          if (!down_tasks.empty()) {
+            task = down_tasks.front();
+            down_tasks.pop();
+          } else {
+            restore_files();
+            cv.wait(lk, [&]() { return !down_tasks.empty() || !is_running; });
+            continue;
           }
-          out.close();
+        }
+        // sezione non critica
+        std::vector<char> chunk = rest_client->get_chunk(task);
+        std::string folder = "./sync/.tmp/" + std::string{task["path"]};
+        std::string file_path = macaron::Base64::Decode(task["path"]);
+        std::string chunk_path = folder + "/" + std::string{task["path"]} +
+                                 "_" + std::to_string(task["id"].get<int>()) +
+                                 ".chk";
+        std::filesystem::create_directories(std::filesystem::path{folder});
+        std::ofstream out{chunk_path, std::ios::binary};
+        out.write(chunk.data(), chunk.size());
+        out.close();
+        std::string chunk_hash = Sha256::getSha256(chunk);
+        json entry = {{"path", file_path},
+                      {"last_mod", task["last_mod"]},
+                      {"size", chunk.size()},
+                      {"nchunks", task["num_chunks"]}};
+        entry["chunks"].push_back(
+            {{"id", task["id"].get<int>()}, {"hash", chunk_hash}});
+        broker->publish(Message{TOPIC::ADD_CHUNK, entry});
+      }
+    });
+  }
+}
+
+void SyncSubscriber::restore_files() {
+  for (auto &p : std::filesystem::directory_iterator("./sync/.tmp")) {
+    if (p.is_directory()) {
+      std::vector<std::string> chunks{};
+      for (const auto &entry : std::filesystem::directory_iterator(p.path())) {
+        if (entry.is_regular_file()) {
+          chunks.push_back(entry.path().string());
         }
       }
+      std::sort(
+          chunks.begin(), chunks.end(), [&](std::string &s1, std::string &s2) {
+            std::vector<std::string> tok11 = Utility::split(s1, '_');
+            std::vector<std::string> tok12 = Utility::split(s2, '_');
+            std::vector<std::string> tok21 = Utility::split(tok11[1], '.');
+            std::vector<std::string> tok22 = Utility::split(tok21[1], '.');
+            return std::stoi(tok21[0]) < std::stoi(tok22[0]);
+          });
+      std::string new_path = macaron::Base64::Decode(p.path().string());
+      std::string temp_path = p.path().string() + ".out";
+      std::ofstream out{temp_path, std::ios::binary};
+      for (size_t i = 0; i < chunks.size(); i++) {
+        std::ifstream in{chunks[i], std::ios::binary};
+        int fsize = std::filesystem::file_size(chunks[i]);
+        char buff[fsize];
+        memset(buff, '\0', fsize);
+        in.read(buff, fsize);
+        out.write(buff, fsize);
+      }
+      std::filesystem::rename(temp_path, new_path);
     }
   }
 }

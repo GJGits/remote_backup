@@ -14,8 +14,9 @@ LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
     perror("inotify_init1");
     exit(-1);
   }
-  // start checks
-  check_news();
+  // regex che serve per evitare eventi su e da cartella .tmp
+  // cartella utilizzata per poggiare i download
+  temp_rgx = std::move(std::regex{"\\.\\/sync\\/\\.tmp\\/.*"});
 }
 
 std::shared_ptr<LinuxWatcher>
@@ -23,6 +24,7 @@ LinuxWatcher::getInstance(const std::string &root_path, uint32_t mask) {
   if (instance.get() == nullptr) {
     instance = std::shared_ptr<LinuxWatcher>(new LinuxWatcher{root_path, mask});
     instance->add_watch(root_path);
+    instance->check_news();
   }
   return instance;
 }
@@ -59,18 +61,18 @@ void LinuxWatcher::check_news() {
   for (auto &p : std::filesystem::recursive_directory_iterator(root_to_watch)) {
     std::string sub_path = p.path().string();
     if (std::filesystem::is_regular_file(sub_path)) {
-     // size_t last_mod = std::filesystem::last_write_time(sub_path)
-     //                       .time_since_epoch()
-     //                       .count() /
-     //                   1000000000;
+      // size_t last_mod = std::filesystem::last_write_time(sub_path)
+      //                       .time_since_epoch()
+      //                       .count() /
+      //                   1000000000;
       message["path"] = sub_path;
       // 1. file non presente in struttura -> aggiunto off-line
       if (!sync_structure->has_entry(sub_path)) {
-        broker->publish(Message{TOPIC::NEW_FILE,  message});
+        broker->publish(Message{TOPIC::NEW_FILE, message});
       }
       // 2. last_mod non coincide -> modificato off-line
-      //else if (sync_structure->get_last_mod(sub_path) < last_mod) {
-       // broker->publish(Message{TOPIC::FILE_MODIFIED, message});
+      // else if (sync_structure->get_last_mod(sub_path) < last_mod) {
+      // broker->publish(Message{TOPIC::FILE_MODIFIED, message});
       //}
     }
   }
@@ -117,12 +119,13 @@ void LinuxWatcher::handle_events() {
         event = (const struct inotify_event *)ptr;
 
         json message;
-        std::string path =
+        const std::string path =
             wd_path_map[event->wd] + "/" + std::string{event->name};
         message["path"] = path;
 
         try {
           timer = TIMER;
+          std::clog << "watch path: " << wd_path_map[event->wd] << "\n";
           std::clog << "MASK: " << event->mask << "NAME" << event->name << "\n";
 
           //
@@ -142,13 +145,23 @@ void LinuxWatcher::handle_events() {
             // Un file relativamente grande genera in seguito ad una NEW_FILE
             // una serie di FILE_MODIFIED. In questo modo lascio fare tutto
             // alla NEW_FILE
-            if (new_files.find(path) == new_files.end())
-              broker->publish(Message{TOPIC::FILE_MODIFIED, message});
+            if (new_files.find(path) == new_files.end()) {
+              std::smatch match;
+              if (!std::regex_search(path.begin(), path.end(), match,
+                                     temp_rgx))
+                broker->publish(Message{TOPIC::FILE_MODIFIED, message});
+            }
+
           } break;
-          case 256:
+          case 256: {
             new_files.insert(path);
-            broker->publish(Message{TOPIC::NEW_FILE, message});
-            break;
+            std::smatch match;
+            if (!std::regex_search(path.begin(), path.end(), match,
+                                   temp_rgx))
+              broker->publish(Message{TOPIC::NEW_FILE, message});
+          }
+
+          break;
           case 1073742080:
             add_watch(message["path"]);
             broker->publish(Message{TOPIC::NEW_FOLDER, message});
@@ -159,7 +172,7 @@ void LinuxWatcher::handle_events() {
             break;
           case 1073741888:
             remove_watch(message["path"]);
-            //broker->publish(TOPIC::CONTENT_MOVED, Message{});
+            // broker->publish(TOPIC::CONTENT_MOVED, Message{});
             break;
           case 64:
             cookie_map[event->cookie] = message["path"];
@@ -167,9 +180,13 @@ void LinuxWatcher::handle_events() {
             break;
           case 128: {
             if (cookie_map.find(event->cookie) != cookie_map.end()) {
-              message["old_path"] = cookie_map[event->cookie];
-              broker->publish(Message{TOPIC::FILE_RENAMED, message});
-              cookie_map.erase(event->cookie);
+              std::smatch match;
+              if (!std::regex_search(path.begin(), path.end(), match,
+                                     temp_rgx)) {
+                message["old_path"] = cookie_map[event->cookie];
+                broker->publish(Message{TOPIC::FILE_RENAMED, message});
+                cookie_map.erase(event->cookie);
+              }
             }
           } break;
           case 512:

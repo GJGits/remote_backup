@@ -1,6 +1,7 @@
 #include "../../include/http/rest_client.hpp"
 
 RestClient::RestClient() {
+  config = json::object();
   post_prototype = http::request<http::vector_body<char>>{http::verb::post,
                                                           "/some_target", 10};
   put_prototype = http::request<http::vector_body<char>>{http::verb::put,
