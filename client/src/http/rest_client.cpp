@@ -77,8 +77,10 @@ void RestClient::delete_file(std::string &path) {
 
 json RestClient::get_status_list(size_t page) {
   std::shared_ptr<HTTPClient> http_client = HTTPClient::getIstance();
+  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   http::request<http::vector_body<char>> req{get_prototype};
-  req.target("/status/list/" + std::to_string(page));
+  // todo: settare effettivo last_check
+  req.target("/status/list/" + std::to_string(page) + "/" + std::to_string(sync->get_last_check()));
   req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
   return http_client->get_json(req);
 }

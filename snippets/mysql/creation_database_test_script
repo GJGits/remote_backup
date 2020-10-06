@@ -47,14 +47,21 @@ la seconda tabella viene unita alla prima tramite prodotto cartesiano, ma avendo
 una riga soltanto DI FATTO e' come agganciare una colonna alla prima. Ps last_page parte 
 da zero quindi se si ha una pagina sola questa sara' 0/0.
 
-select * 
+select t1.c_path, t1.num_chunks, t1.c_lastmod, t2.last_page, case 
+when t1.check1 = ? then 'deleted'
+else 'updated'
+end as check1
 from (
-	select distinct c_path, num_chunks, c_lastmod 
-	from chunks where c_username="piero1"
-	limit 0, 100
+	select distinct c_path, num_chunks, c_lastmod, device_id ^ ? as check1
+	from chunks where c_username=?
+	AND (device_id ^ ?) != 0 
+	AND c_lastmod > ? 
+	limit ?, ?
 	) as t1, 
 	(
-	select (ceil((count(distinct c_path) / 100))) -1 as last_page 
+	select (ceil((count(distinct c_path) / 20))) -1 as last_page 
 	from chunks 
-	where c_username="piero1"
+	where c_username=?
+	AND (device_id ^ ?) != 0 
+	AND c_lastmod > ? 
 	) as t2;

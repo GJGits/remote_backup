@@ -10,6 +10,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <ctime>
 
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
@@ -24,6 +25,7 @@ private:
   inline static std::shared_ptr<SyncStructure> instance{nullptr};
   std::mutex m;
   bool dirty;
+  int last_check = 0;
 
   void create_structure();
   void read_structure();
@@ -39,4 +41,5 @@ public:
   std::vector<std::string> get_entry_hashes(const std::string &path);
   std::vector<std::string> get_paths();
   size_t get_last_mod(const std::string &path);
+  int get_last_check();
 };

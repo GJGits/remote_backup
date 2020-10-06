@@ -22,6 +22,7 @@
 #include "../common/json.hpp"
 #include "../filesystem/file_entry.hpp"
 #include "../http/http_client.hpp"
+#include "../filesystem/sync_structure.hpp"
 
 namespace beast = boost::beast; // from <boost/beast.hpp>
 namespace http = beast::http;   // from <boost/beast/http.hpp>

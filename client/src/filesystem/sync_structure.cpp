@@ -46,6 +46,7 @@ void SyncStructure::write_structure() {
     if (entries.empty()) {
       (*structure)["hashed_status"] = std::string{"empty_hashed_status"};
       (*structure)["entries"] = json::array();
+      (*structure)["last_check"] = 0;
     } else {
       std::string entries_dump;
       for (auto it = entries.begin(); it != entries.end(); it++) {
@@ -59,6 +60,8 @@ void SyncStructure::write_structure() {
           (*structure)["entries"].empty()
               ? std::string{"empty_hashed_status"}
               : Sha256::getSha256(data, entries_dump.size());
+      last_check = (int)std::time(nullptr);
+      (*structure)["last_check"] = last_check;
     }
     std::ofstream o("./config/client-struct.json");
     o << (*structure) << "\n";
@@ -67,6 +70,10 @@ void SyncStructure::write_structure() {
     entries.clear();
     dirty = false;
   }
+}
+
+int SyncStructure::get_last_check() {
+  return last_check;
 }
 
 bool SyncStructure::has_entry(const std::string &path) {

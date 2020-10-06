@@ -10,7 +10,7 @@ std::shared_ptr<StatusController> StatusController::getInstance() {
 }
 
 inline static std::regex user_rgx{"^/status$"};
-inline static std::regex user_rgx_file{"^\\/status\\/list\\/[\\d]+$"};
+inline static std::regex user_rgx_file{"^\\/status\\/list\\/[\\d]+\\/[\\d]+$"};
 
 const http::server::reply
 StatusController::handle(const http::server::request &req) {
@@ -39,6 +39,5 @@ const std::string StatusController::get_status(const std::string &username) {
 
 const json
 StatusController::get_status_file(const GetStatusDTO &get_status_dto) {
-
   return file_service->getStatusFile(get_status_dto);
 }

@@ -11,6 +11,7 @@ UserEntity::UserEntity(const std::string &username,
 UserEntity::UserEntity(const std::string &username, int page_num)
         : username{username}, page_num{page_num} {}
 
+Subject UserEntity::get_subject() const { return subject; }
 std::string UserEntity::getUsername() const { return username; }
 std::string UserEntity::getHashedPassword() const { return hashed_password; }
 uint32_t UserEntity::getSalt() const { return salt; }
