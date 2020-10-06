@@ -14,7 +14,7 @@ Creazione tabella users (db_2, db_3, db_4)
 	device_5_MAC VARCHAR(50) DEFAULT '',
 	device_6_MAC VARCHAR(50) DEFAULT '',
 	device_7_MAC VARCHAR(50) DEFAULT '',
-	device_8_MAC VARCHAR(50) DEFAULT '',
+	device_8_MAC VARCHAR(50) DEFAULT ''
 	);
 
 # AGGIUNGI N COLONNE DOVE N E' IL NUMERO DI DEVICE MASSIMO PER UTENTE

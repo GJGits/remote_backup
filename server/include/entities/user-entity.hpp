@@ -9,8 +9,6 @@ private:
   std::string hashed_password;
   unsigned int salt;
   int page_num;
-  std::unordered_map<std::string, size_t> mac_addresses;
-  std::unordered_map<size_t, std::string> device_ids;
   std::string device_1_MAC;
 std::string device_2_MAC;
 std::string device_3_MAC;

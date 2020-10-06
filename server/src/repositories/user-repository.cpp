@@ -20,9 +20,7 @@ size_t UserRepository::insertUser(const UserEntity &user) {
 
   stmt = std::unique_ptr<
       sql::PreparedStatement>{std::move(con->prepareStatement(
-      "INSERT INTO users(username, hashed_password, salt, device_1_MAC,device_2_MAC,device_3_MAC,device_4_MAC,device_5_MAC,device_6_MAC,device_7_MAC,device_8_MAC) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-      "ON DUPLICATE KEY UPDATE device_1_MAC = ?, device_2_MAC = ?, device_3_MAC = ?, device_4_MAC = ?, device_5_MAC = ?, device_6_MAC = ?,"
-      "device_7_MAC = ?, device_8_MAC = ?"))};
+      "INSERT INTO users(username, hashed_password, salt, device_1_MAC,device_2_MAC,device_3_MAC,device_4_MAC,device_5_MAC,device_6_MAC,device_7_MAC,device_8_MAC) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"))};
 
   stmt->setString(1, sql::SQLString{user.getUsername().c_str()});
   stmt->setString(2, sql::SQLString{user.getHashedPassword().c_str()});
@@ -35,20 +33,31 @@ size_t UserRepository::insertUser(const UserEntity &user) {
     stmt->setString(9, sql::SQLString{user.get_device_6_MAC().c_str()});
     stmt->setString(10, sql::SQLString{user.get_device_7_MAC().c_str()});
     stmt->setString(11, sql::SQLString{user.get_device_8_MAC().c_str()});
-    stmt->setString(12, sql::SQLString{user.get_device_1_MAC().c_str()});
-    stmt->setString(13, sql::SQLString{user.get_device_2_MAC().c_str()});
-    stmt->setString(14, sql::SQLString{user.get_device_3_MAC().c_str()});
-    stmt->setString(15, sql::SQLString{user.get_device_4_MAC().c_str()});
-    stmt->setString(16, sql::SQLString{user.get_device_5_MAC().c_str()});
-    stmt->setString(17, sql::SQLString{user.get_device_6_MAC().c_str()});
-    stmt->setString(18, sql::SQLString{user.get_device_7_MAC().c_str()});
-    stmt->setString(19, sql::SQLString{user.get_device_8_MAC().c_str()});
+
 
     stmt->executeUpdate();
   return db_selected;
 }
 
-
+void UserRepository::updateUser(const UserEntity &user) {
+    std::unique_ptr<sql::PreparedStatement> stmt;
+    std::unique_ptr<sql::ResultSet> res;
+    std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
+    size_t db_selected = db_repinstance->getDBbyUsername(user.getUsername());
+    std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
+    stmt = std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement("update users set device_1_MAC = ?, device_2_MAC = ?, device_3_MAC = ?, device_4_MAC = ?, device_5_MAC = ?, device_6_MAC = ?, device_7_MAC = ?, device_8_MAC = ? where username = ?"))};
+    stmt->setString(1, sql::SQLString{user.get_device_1_MAC().c_str()});
+    stmt->setString(2, sql::SQLString{user.get_device_2_MAC().c_str()});
+    stmt->setString(3, sql::SQLString{user.get_device_3_MAC().c_str()});
+    stmt->setString(4, sql::SQLString{user.get_device_4_MAC().c_str()});
+    stmt->setString(5, sql::SQLString{user.get_device_5_MAC().c_str()});
+    stmt->setString(6, sql::SQLString{user.get_device_6_MAC().c_str()});
+    stmt->setString(7, sql::SQLString{user.get_device_7_MAC().c_str()});
+    stmt->setString(8, sql::SQLString{user.get_device_8_MAC().c_str()});
+    stmt->setString(9, sql::SQLString{user.getUsername().c_str()});
+    stmt->executeUpdate();
+    return;
+}
 
 UserEntity UserRepository::getUserByUsername(const std::string &username) {
   std::unique_ptr<sql::PreparedStatement> stmt;

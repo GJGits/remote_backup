@@ -58,8 +58,7 @@ public:
     HmacSha256::hmac_sha256(
         text, text_len, (const unsigned char *)getInstance()->secret.c_str(),
         (int)getInstance()->secret.size(), kdigest);
-    json jwt_sign;
-    jwt_sign["sign"] = macaron::Base64::Encode(std::string{kdigest});
+    json jwt_sign{"sign",macaron::Base64::Encode(std::string{kdigest})};
     std::string sign = macaron::Base64::Encode(jwt_sign.dump());
     return getInstance()->token_header + "." + payload + "." + sign;
   }
