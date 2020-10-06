@@ -23,5 +23,6 @@ public:
   bool deleteUserByUsername(const std::string &username);
   std::string get_hashed_status(const std::string &username);
   json get_status_file(const UserEntity &user_entity);
+  void updateUser(const UserEntity &user);
   static std::shared_ptr<UserRepository> getInstance();
 };
