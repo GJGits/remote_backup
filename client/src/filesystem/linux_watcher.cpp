@@ -16,7 +16,7 @@ LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
   }
   // regex che serve per evitare eventi su e da cartella .tmp
   // cartella utilizzata per poggiare i download
-  temp_rgx = std::move(std::regex{"./sync/.tmp/[a-zA-Z0-9/]+"});
+  temp_rgx = std::move(std::regex{"\\.\\/sync\\/\\.tmp\\/.*"});
 }
 
 std::shared_ptr<LinuxWatcher>
@@ -119,7 +119,7 @@ void LinuxWatcher::handle_events() {
         event = (const struct inotify_event *)ptr;
 
         json message;
-        std::string path =
+        const std::string path =
             wd_path_map[event->wd] + "/" + std::string{event->name};
         message["path"] = path;
 
@@ -147,8 +147,7 @@ void LinuxWatcher::handle_events() {
             // alla NEW_FILE
             if (new_files.find(path) == new_files.end()) {
               std::smatch match;
-              const std::string folder = wd_path_map[event->wd];
-              if (!std::regex_search(folder.begin(), folder.end(), match,
+              if (!std::regex_search(path.begin(), path.end(), match,
                                      temp_rgx))
                 broker->publish(Message{TOPIC::FILE_MODIFIED, message});
             }
@@ -157,8 +156,7 @@ void LinuxWatcher::handle_events() {
           case 256: {
             new_files.insert(path);
             std::smatch match;
-            const std::string folder = wd_path_map[event->wd];
-            if (!std::regex_search(folder.begin(), folder.end(), match,
+            if (!std::regex_search(path.begin(), path.end(), match,
                                    temp_rgx))
               broker->publish(Message{TOPIC::NEW_FILE, message});
           }
@@ -183,8 +181,7 @@ void LinuxWatcher::handle_events() {
           case 128: {
             if (cookie_map.find(event->cookie) != cookie_map.end()) {
               std::smatch match;
-              const std::string folder = wd_path_map[event->wd];
-              if (!std::regex_search(folder.begin(), folder.end(), match,
+              if (!std::regex_search(path.begin(), path.end(), match,
                                      temp_rgx)) {
                 message["old_path"] = cookie_map[event->cookie];
                 broker->publish(Message{TOPIC::FILE_RENAMED, message});

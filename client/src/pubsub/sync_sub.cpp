@@ -107,20 +107,20 @@ void SyncSubscriber::remote_check() {
   int last_page = 1;
   while (current_page < last_page) {
     json list = rest_client->get_status_list(current_page++);
+    std::clog << "list dump: " << list.dump() << "\n";
     current_page = list["current_page"].get<int>();
     last_page = list["last_page"].get<int>();
     for (size_t i = 0; i < list["entries"].size(); i++) {
       std::string file_path = list["entries"][i]["path"];
       int nchunks = list["entries"][i]["num_chunks"].get<int>();
-      int remote_last_mod = list["entries"][i]["last_mod"].get<int>();
-      if (remote_last_mod > sync_structure->get_last_mod(file_path)) {
-        for (int j = 0; j < nchunks; j++) {
-          json task{{"path", list["entries"][i]["path"]},
-                    {"id", j},
-                    {"last_mod", remote_last_mod},
-                    {"nchunks", list["entries"][i]["num_chunks"]}};
-          push(task);
-        }
+      size_t remote_last_mod =
+          (size_t)list["entries"][i]["last_mod"].get<int>();
+      for (int j = 0; j < nchunks; j++) {
+        json task{{"path", list["entries"][i]["path"]},
+                  {"id", j},
+                  {"last_mod", remote_last_mod},
+                  {"nchunks", list["entries"][i]["num_chunks"]}};
+        push(task);
       }
     }
   }
@@ -174,7 +174,7 @@ void SyncSubscriber::restore_files() {
       std::vector<std::string> chunks{};
       for (const auto &entry : std::filesystem::directory_iterator(p.path())) {
         if (entry.is_regular_file()) {
-          chunks.push_back(p.path());
+          chunks.push_back(entry.path().string());
         }
       }
       std::sort(
@@ -186,7 +186,7 @@ void SyncSubscriber::restore_files() {
             return std::stoi(tok21[0]) < std::stoi(tok22[0]);
           });
       std::string new_path = macaron::Base64::Decode(p.path().string());
-      std::string temp_path = "./sync/.tmp/" + p.path().string();
+      std::string temp_path = p.path().string() + ".out";
       std::ofstream out{temp_path, std::ios::binary};
       for (size_t i = 0; i < chunks.size(); i++) {
         std::ifstream in{chunks[i], std::ios::binary};
