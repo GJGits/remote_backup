@@ -239,7 +239,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 </details>
 <br />
 <details>
-<summary>GET /status/list/{num_pages}</summary>
+<summary>GET /status/list/{num_pages}/{timestamp_locale}</summary>
 
 * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di ottenere il JSON file del server con i dettagli sullo stato della cartella remota.*
 
