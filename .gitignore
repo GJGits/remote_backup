@@ -1,7 +1,8 @@
 # non committare node modules
 node_modules/
 # non committare sync content
-sync/*
+*/config/*
+*/sync/*
 !sync/.gitkeep
 # non committare file con le seguenti estensioni
 *.txt
@@ -9,4 +10,3 @@ sync/*
 *.ppt
 *.c
 *.zip
-*.json

@@ -25,6 +25,7 @@ void SyncStructure::read_structure() {
       json entry = (*structure)["entries"][i];
       entries[path] = entry;
     }
+    last_check = (*structure)["last_check"].get<int>();
   }
 }
 
