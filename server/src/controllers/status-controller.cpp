@@ -26,8 +26,10 @@ StatusController::handle(const http::server::request &req) {
                                  user_rgx_file)) {
         GetStatusDTO get_status_dto{sub};
         get_status_dto.fill(req.uri);
+        json list = get_status_file(get_status_dto);
+        std::clog << "list dump server: " << list.dump() << "\n";
       return MakeReply::make_1line_dump_jsonReply<json>(
-          get_status_file(get_status_dto), http::server::reply::ok);
+          list, http::server::reply::ok);
     }
   }
   throw WrongRquestFormat();

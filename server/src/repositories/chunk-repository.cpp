@@ -19,7 +19,7 @@ bool ChunkRepository::add_or_update_Chunk(const ChunkEntity &chunk) {
             "c_size,c_lastmod,num_chunks, device_id) values(?,?,?,?,?,?,?,?) "
             "ON DUPLICATE KEY "
             "UPDATE c_hash = ?, c_size = ? , c_lastmod = ?, device_id = "
-            "device_id XOR ? ;"))};
+            "device_id ^ ? ;"))};
     stmt->setString(1, sql::SQLString{chunk.get_subject().get_sub().c_str()});
     stmt->setInt(2, chunk.getIdChunk());
     stmt->setString(3, sql::SQLString{chunk.getHashChunk().c_str()});

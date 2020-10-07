@@ -111,17 +111,8 @@ void SyncSubscriber::remote_check() {
     current_page = list["current_page"].get<int>();
     last_page = list["last_page"].get<int>();
     for (size_t i = 0; i < list["entries"].size(); i++) {
-      std::string file_path = list["entries"][i]["path"];
-      int nchunks = list["entries"][i]["num_chunks"].get<int>();
-      size_t remote_last_mod =
-          (size_t)list["entries"][i]["last_mod"].get<int>();
-      for (int j = 0; j < nchunks; j++) {
-        json task{{"path", list["entries"][i]["path"]},
-                  {"id", j},
-                  {"last_mod", remote_last_mod},
-                  {"nchunks", list["entries"][i]["num_chunks"]}};
-        push(task);
-      }
+      json task = list["entries"][i];
+      push(task);
     }
   }
 }
@@ -145,24 +136,31 @@ void SyncSubscriber::init_workers() {
           }
         }
         // sezione non critica
-        std::vector<char> chunk = rest_client->get_chunk(task);
-        std::string folder = "./sync/.tmp/" + std::string{task["path"]};
-        std::string file_path = macaron::Base64::Decode(task["path"]);
-        std::string chunk_path = folder + "/" + std::string{task["path"]} +
-                                 "_" + std::to_string(task["id"].get<int>()) +
-                                 ".chk";
-        std::filesystem::create_directories(std::filesystem::path{folder});
-        std::ofstream out{chunk_path, std::ios::binary};
-        out.write(chunk.data(), chunk.size());
-        out.close();
-        std::string chunk_hash = Sha256::getSha256(chunk);
-        json entry = {{"path", file_path},
-                      {"last_mod", task["last_mod"]},
-                      {"size", chunk.size()},
-                      {"nchunks", task["num_chunks"]}};
-        entry["chunks"].push_back(
-            {{"id", task["id"].get<int>()}, {"hash", chunk_hash}});
-        broker->publish(Message{TOPIC::ADD_CHUNK, entry});
+        if(std::string{task["command"]}.compare("updated") == 0) {
+          for (int j = 0; j < task["num_chunks"].get<int>(); j++) {
+            json chunk_info = {{"path", task["path"]}, {"id", j}};
+            std::vector<char> chunk = rest_client->get_chunk(chunk_info);
+            std::string folder = "./sync/.tmp/" + std::string{task["path"]};
+            std::string file_path = macaron::Base64::Decode(task["path"]);
+            std::string chunk_path = folder + "/" + std::string{task["path"]} +
+                                     "_" + std::to_string(j) + ".chk";
+            std::filesystem::create_directories(std::filesystem::path{folder});
+            std::ofstream out{chunk_path, std::ios::binary};
+            out.write(chunk.data(), chunk.size());
+            out.close();
+            std::string chunk_hash = Sha256::getSha256(chunk);
+            json entry = {{"path", file_path},
+                          {"last_mod", task["last_mod"]},
+                          {"size", chunk.size()},
+                          {"nchunks", task["num_chunks"]}};
+            entry["chunks"].push_back(
+                {{"id", task["id"].get<int>()}, {"hash", chunk_hash}});
+            broker->publish(Message{TOPIC::ADD_CHUNK, entry});
+          }
+        } else {
+          // todo: elimina file
+        }
+        
       }
     });
   }

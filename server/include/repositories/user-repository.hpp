@@ -22,7 +22,7 @@ public:
   UserEntity getUserByUsername(const std::string &username);
   bool deleteUserByUsername(const std::string &username);
   std::string get_hashed_status(const std::string &username);
-  json get_status_file(const std::string &user, int device, int page_num, int last_check);
+  json get_status_file(const Subject &subject, int page_num, int last_check);
   void updateUser(const UserEntity &user);
   static std::shared_ptr<UserRepository> getInstance();
 };

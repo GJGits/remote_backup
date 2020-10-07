@@ -139,29 +139,37 @@ std::string UserRepository::get_hashed_status(const std::string &username) {
   return Sha256::getSha256(data);
 }
 
-json UserRepository::get_status_file(const std::string &user, int device, int page_num, int last_check) {
+json UserRepository::get_status_file(const Subject &subject,
+                                     int page_num, int last_check) {
   json j;
   j["entries"] = json::array();
   j["current_page"] = page_num;
   std::unique_ptr<sql::PreparedStatement> stmt;
   std::unique_ptr<sql::ResultSet> res;
   std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
-  size_t db_selected =
-      db_repinstance->getDBbyUsername(user);
+  size_t db_selected = subject.get_db_id();
+  std::clog << "query list....\n";
   std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
-  std::string query = "select t1.c_path, t1.num_chunks, t1.c_lastmod, t2.last_page, case when t1.check1 = ? then 'deleted' else 'updated' end as check1 from (select distinct c_path, num_chunks, c_lastmod, device_id ^ ? as check1 from chunks where c_username = ? AND(device_id ^ ?) != 0 AND c_lastmod > ? limit ?, ?) as t1, (select(ceil((count(distinct c_path) / 20))) -1 as last_page from chunks where c_username = ? AND(device_id ^ ?) != 0 AND c_lastmod > ?) as t2;";
-      stmt = std::unique_ptr<sql::PreparedStatement>{
-          std::move(con->prepareStatement(
-              query))}; // ricordare al posto di 0, di mettere il vero valore
-  stmt->setInt(1, device);
-  stmt->setInt(2, device);
-  stmt->setString(3, sql::SQLString{user.c_str()});
-  stmt->setInt(4, device);
+  std::string query =
+      "select t1.c_path, t1.num_chunks, t1.c_lastmod, t2.last_page, case when "
+      "t1.check1 = ? then 'deleted' else 'updated' end as command from (select "
+      "distinct c_path, num_chunks, c_lastmod, device_id ^ ? as check1 from "
+      "chunks where c_username = ? AND(device_id ^ ?) != 0 AND c_lastmod > ? "
+      "limit ?, ?) as t1, (select(ceil((count(distinct c_path) / 20))) -1 as "
+      "last_page from chunks where c_username = ? AND(device_id ^ ?) != 0 AND "
+      "c_lastmod > ?) as t2;";
+  stmt =
+      std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement(
+          query))}; // ricordare al posto di 0, di mettere il vero valore
+  stmt->setInt(1, subject.get_device_id());
+  stmt->setInt(2, subject.get_device_id());
+  stmt->setString(3, sql::SQLString{subject.get_sub().c_str()});
+  stmt->setInt(4, subject.get_device_id());
   stmt->setInt(5, last_check);
   stmt->setInt(6, (page_num * ENTRIES_PAGE));
   stmt->setInt(7, ((page_num + 1) * ENTRIES_PAGE));
-  stmt->setString(8, sql::SQLString{user.c_str()});
-  stmt->setInt(9, device);
+  stmt->setString(8, sql::SQLString{subject.get_sub().c_str()});
+  stmt->setInt(9, subject.get_device_id());
   stmt->setInt(10, last_check);
   res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
   json j_single_path = {};
@@ -169,17 +177,16 @@ json UserRepository::get_status_file(const std::string &user, int device, int pa
   if (res->rowsCount() > 0) {
     for (int i = 0; i < ENTRIES_PAGE; i++) {
       if (res->next()) {
-        j_single_path["path"] = res->getString("c_path");
-        j_single_path["num_chunks"] = res->getInt("num_chunks");
-        j_single_path["last_mod"] = res->getInt("c_lastmod");
-        j_single_path["command"] = res->getString("check1");
+        j_single_path["path"] = res->getString(1);
+        j_single_path["num_chunks"] = res->getInt(2);
+        j_single_path["last_mod"] = res->getInt(3);
+        j_single_path["command"] = res->getString(5);
         j["entries"].push_back(j_single_path);
-        j["last_page"] = res->getInt("last_page");
+        j["last_page"] = res->getInt(4);
       } else
         break;
     }
   } else
     j["last_page"] = 0;
-
   return j;
 }
