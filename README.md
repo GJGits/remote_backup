@@ -215,7 +215,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 <br />
 
 <details>
-  <summary>DELETE /file/{username}/{file_pathBASE64}</summary>  
+  <summary>DELETE /file/{file_pathBASE64}</summary>  
 
   * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di eliminare un file, se l'utente che è autenticato.*
 
