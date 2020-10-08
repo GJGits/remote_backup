@@ -2,7 +2,6 @@
 #include <string>
 #include "../common/logger.hpp"
 #include "../dtos/post_chunk_dto.hpp"
-#include "../dtos/put_chunk_dto.hpp"
 #include "../dtos/delete_chunk_dto.hpp"
 #include "../dtos/get_chunk_dto.hpp"
 
@@ -21,7 +20,6 @@ private:
 public:
     ChunkEntity(const PostChunkDTO &post_chunk);
 
-    ChunkEntity(const PutChunkDTO &put_chunk);
 
     ChunkEntity(const DeleteChunkDTO &del_chunk);
 

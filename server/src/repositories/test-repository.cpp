@@ -185,3 +185,45 @@ json TestRepository::getTestDatabaseTableUsersDB(const GetTestDatabaseDTO &get_t
 
     return j;
 }
+
+
+json TestRepository::getTestDatabaseFilesystemFilename(const GetTestFilesystemFilenameDTO &get_test_filesystem_filename){
+    json j;
+    j["entries"] = json::array();
+    std::unique_ptr<sql::PreparedStatement> stmt;
+    std::unique_ptr<sql::ResultSet> res;
+    std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
+    size_t db_selected = get_test_filesystem_filename.get_subject().get_db_id();
+    std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
+
+
+    std::string query =       "select t1.c_id, t1.c_size, t2.last_page from (select "
+                              "c_id, c_size from chunks where c_path = ? limit ?, ?) as t1, (select(ceil((count(distinct c_id) / ?))) -1 as "
+                              "last_page from chunks) as t2;";
+    stmt = std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement(query))}; // ricordare al posto di 0, di mettere il vero valore
+
+    stmt->setString(1, sql::SQLString{get_test_filesystem_filename.get_file_name().c_str()});
+    stmt->setInt(2, get_test_filesystem_filename.getpage_num());
+    stmt->setInt(3, ENTRIES_PAGE);
+    stmt->setInt(4, ENTRIES_PAGE);
+
+    res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
+
+
+    json j_single_path = {};
+
+    if (res->rowsCount() > 0) {
+        for (int i = 0; i < ENTRIES_PAGE; i++) {
+            if (res->next()) {
+                j_single_path["c_id"] = res->getInt(1);
+                j_single_path["c_size"] = res->getInt(2);
+                j["entries"].push_back(j_single_path);
+                j["last_page"] = res->getInt(3);
+            } else
+                break;
+        }
+    } else
+        j["last_page"] = 0;
+
+    return j;
+}

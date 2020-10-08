@@ -30,27 +30,6 @@ void ChunkService::file_chunk_add(const PostChunkDTO &post_chunk) {
   throw ChunkCorrupted();
 }
 
-void ChunkService::file_chunk_update(const PutChunkDTO &put_chunk) {
-  if (Sha256::getSha256(*put_chunk.getchunk_body())
-          .compare(put_chunk.getchunk_hash()) == 0) {
-    ChunkEntity chunk_ent{put_chunk};
-    std::string chk_fname{put_chunk.getfile_path() + "/" +
-                          put_chunk.getfile_name() + "__" +
-                          std::to_string(put_chunk.getchunk_id()) + ".chk"};
-    // todo: verificare che questa scrittura butta tutto e riscrive
-    std::ofstream out_file{chk_fname, std::ios::binary};
-    if (!out_file.is_open()) {
-      out_file.write(
-          reinterpret_cast<char *>(put_chunk.getchunk_body()->data()),
-          put_chunk.getchunk_size());
-      chunk_repository->add_or_update_Chunk(chunk_ent);
-    }
-
-    throw FileNotOpened();
-  }
-  throw ChunkCorrupted();
-}
-
 size_t
 ChunkService::file_chunk_get(const GetChunkDTO &get_chunk) {
   std::string fname{"../../filesystem/" + get_chunk.get_subject().get_sub() +

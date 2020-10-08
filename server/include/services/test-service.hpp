@@ -21,6 +21,7 @@ public:
 
 
     const json getTestDatabaseTable(const GetTestDatabaseDTO &get_test_database);
+    const json getTestFilesystemFilename(const GetTestFilesystemFilenameDTO &get_test_filesystem_filename);
     ~TestService() {}
 
 };

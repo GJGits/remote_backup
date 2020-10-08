@@ -2,7 +2,6 @@
 #include "../dtos/get_chunk_dto.hpp"
 #include "../dtos/get_status_dto.hpp"
 #include "../dtos/post_chunk_dto.hpp"
-#include "../dtos/put_chunk_dto.hpp"
 #include "../dtos/signin_dto.hpp"
 #include "../dtos/signup_dto.hpp"
 
@@ -12,7 +11,6 @@
 #include "../common/constants.hpp"
 #include "../common/jwt.hpp"
 #include "../common/sha256.hpp"
-#include "../entities/chunk-entity.hpp"
 #include "../exceptions/exceptions.hpp"
 #include "../filesystem/client_struct.hpp"
 #include "../repositories/chunk-repository.hpp"

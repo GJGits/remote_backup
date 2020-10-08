@@ -21,7 +21,6 @@ public:
     static std::shared_ptr<ChunkController> getInstance();
     virtual const http::server::reply handle(const http::server::request &req);
     void post_file_chunk(const PostChunkDTO &post_chunk);
-    void put_file_chunk(const PutChunkDTO &put_chunk);
     size_t get_file_chunk(const GetChunkDTO &get_chunk);
 
 };

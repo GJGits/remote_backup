@@ -9,8 +9,8 @@ std::shared_ptr<TestController> TestController::getInstance() {
 }
 
 inline static std::regex get_test_database{"^\\/test\\/database\\/\\w+\\/\\d+$"};
-inline static std::regex get_test_filesystem_namefile{"^\\/test\\/filesystem\\/[\\w=+]+$"};
-inline static std::regex get_test_filesystem_chunkid{"^\\/test\\/filesystem\\/[\\w=+]+\\/\\d+$"};
+inline static std::regex get_test_filesystem_namefile{"^\\/test\\/filesystem\\/[\\w=+]+\\/\\d+$"};
+inline static std::regex get_test_filesystem_chunkid{"^\\/test\\/filesystem\\/[\\w=+]+\\/\\d+\\/\\d+$"};
 
 
 const http::server::reply
@@ -25,6 +25,11 @@ TestController::handle(const http::server::request &req) {
             return MakeReply::make_1line_dump_jsonReply<json>(
                     list, http::server::reply::ok);
         } else if (std::regex_search(req.uri.begin(), req.uri.end(), match, get_test_filesystem_namefile)) {
+            GetTestFilesystemFilenameDTO get_test_filesystem_filename_dto{sub};
+            get_test_filesystem_filename_dto.fill(req.uri);
+            json list = get_test_filesystem_filename(get_test_filesystem_filename_dto);
+            return MakeReply::make_1line_dump_jsonReply<json>(
+                    list, http::server::reply::ok);
 
         } else if (std::regex_search(req.uri.begin(), req.uri.end(), match, get_test_filesystem_chunkid)) {
 
@@ -36,4 +41,9 @@ TestController::handle(const http::server::request &req) {
 const json
 TestController::get_test_database_table_name(const GetTestDatabaseDTO &get_test_database) {
     return test_service->getTestDatabaseTable(get_test_database);
+}
+
+const json
+TestController::get_test_filesystem_filename(const GetTestFilesystemFilenameDTO &get_test_filesystem_filename_dto) {
+    return test_service->getTestFilesystemFilename(get_test_filesystem_filename_dto);
 }

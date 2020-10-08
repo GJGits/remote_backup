@@ -12,16 +12,6 @@ ChunkEntity::ChunkEntity(const PostChunkDTO &post_chunk)
             std::back_inserter(*chunk_body));
 };
 
-ChunkEntity::ChunkEntity(const PutChunkDTO &put_chunk)
-    : subject{put_chunk.get_subject()}, id_chunk{put_chunk.getchunk_id()},
-      hash_chunk{std::move(put_chunk.getchunk_hash())},
-      path_file{std::move(put_chunk.getfile_path())},
-      size_chunk{put_chunk.getchunk_size()},
-      last_mod{put_chunk.gettimestamp_locale()} {
-  std::move(put_chunk.getchunk_body().get()->begin(),
-            put_chunk.getchunk_body().get()->end(),
-            std::back_inserter(*chunk_body));
-};
 
 ChunkEntity::ChunkEntity(const DeleteChunkDTO &del_chunk)
     : subject{del_chunk.get_subject()}, id_chunk{del_chunk.getchunk_id()},

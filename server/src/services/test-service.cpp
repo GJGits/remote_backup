@@ -21,3 +21,10 @@ const json TestService::getTestDatabaseTable(const GetTestDatabaseDTO &get_test_
 
     throw UknownError();
 }
+
+
+const json TestService::getTestFilesystemFilename(const GetTestFilesystemFilenameDTO &get_test_filesystem_filename) {
+
+    return test_repository->getTestDatabaseFilesystemFilename(get_test_filesystem_filename);
+
+}
