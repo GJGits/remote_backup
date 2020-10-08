@@ -150,22 +150,18 @@ json TestRepository::getTestDatabaseTableUsersDB(const GetTestDatabaseDTO &get_t
 
     json j;
     j["entries"] = json::array();
-    std::unique_ptr<sql::PreparedStatement> stmt;
+    std::unique_ptr<sql::Statement> stmt;
     std::unique_ptr<sql::ResultSet> res;
     std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
     size_t db_selected = 0;
-    std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
+    std::shared_ptr<sql::mysql::MySQL_Connection> mysqlConn = DBConnect::getConnection(db_selected);
 
 
-    std::string query =       "select t1.username, t1.db, t2.last_page from (select "
-                              "username, db from UsersDB limit ?, ?) as t1, (select(ceil((count(distinct username) / ?))) -1 as "
-                              "last_page from UsersDB) as t2;";
-    stmt = std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement(query))}; // ricordare al posto di 0, di mettere il vero valore
-    stmt->setInt(1, get_test_database.getpage_num());
-    stmt->setInt(2, ENTRIES_PAGE);
-    stmt->setInt(3, ENTRIES_PAGE);
+    std::string query = "select t1.username, t1.db, t2.last_page from (select username, db from UsersDB limit "+std::to_string(get_test_database.getpage_num())+", "+std::to_string(ENTRIES_PAGE)+") as t1, (select(ceil((count(distinct username) / "+std::to_string(ENTRIES_PAGE)+"))) -1 as last_page from UsersDB) as t2;";
+    query = mysqlConn->escapeString(query);
+    stmt = std::unique_ptr<sql::Statement>{std::move(mysqlConn->prepareStatement(query))}; // ricordare al posto di 0, di mettere il vero valore
 
-    res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
+    res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery(query))};
 
 
     json j_single_path = {};
@@ -190,24 +186,19 @@ json TestRepository::getTestDatabaseTableUsersDB(const GetTestDatabaseDTO &get_t
 json TestRepository::getTestDatabaseFilesystemFilename(const GetTestFilesystemFilenameDTO &get_test_filesystem_filename){
     json j;
     j["entries"] = json::array();
-    std::unique_ptr<sql::PreparedStatement> stmt;
+    std::unique_ptr<sql::Statement>  stmt;
     std::unique_ptr<sql::ResultSet> res;
     std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
     size_t db_selected = get_test_filesystem_filename.get_subject().get_db_id();
-    std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
+    std::shared_ptr<sql::mysql::MySQL_Connection> mysqlConn = DBConnect::getConnection(db_selected);
 
 
-    std::string query =       "select t1.c_id, t1.c_size, t2.last_page from (select "
-                              "c_id, c_size from chunks where c_path = ? limit ?, ?) as t1, (select(ceil((count(distinct c_id) / ?))) -1 as "
-                              "last_page from chunks) as t2;";
-    stmt = std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement(query))}; // ricordare al posto di 0, di mettere il vero valore
+    std::string query = "select t1.c_id, t1.c_size, t2.last_page from (select c_id, c_size from chunks where c_path = '"+get_test_filesystem_filename.get_file_name()+"' limit "+std::to_string(get_test_filesystem_filename.getpage_num())+", "+std::to_string(ENTRIES_PAGE)+") as t1, (select(ceil((count(distinct c_id) / "+std::to_string(ENTRIES_PAGE)+"))) -1 as last_page from chunks) as t2;";
 
-    stmt->setString(1, sql::SQLString{get_test_filesystem_filename.get_file_name().c_str()});
-    stmt->setInt(2, get_test_filesystem_filename.getpage_num());
-    stmt->setInt(3, ENTRIES_PAGE);
-    stmt->setInt(4, ENTRIES_PAGE);
+    //query = mysqlConn->escapeString(query);
+    stmt = std::unique_ptr<sql::Statement>{std::move(mysqlConn->createStatement())}; // ricordare al posto di 0, di mettere il vero valore
 
-    res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery())};
+    res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery(query))};
 
 
     json j_single_path = {};

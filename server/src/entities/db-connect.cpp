@@ -1,7 +1,8 @@
 #include "../../include/entities/db-connect.hpp"
 
+
 DBConnect *DBConnect::instance = nullptr;
-std::shared_ptr<sql::Connection> DBConnect::getConnection(size_t db_selected) {
+std::shared_ptr<sql::mysql::MySQL_Connection> DBConnect::getConnection(size_t db_selected) {
   std::unique_lock lk{DBConnect::m};
   if (DBConnect::instance == nullptr) {
     DBConnect::instance = new DBConnect();
@@ -12,8 +13,11 @@ std::shared_ptr<sql::Connection> DBConnect::getConnection(size_t db_selected) {
         sql::Connection *con = driver->connect(
             "tcp://remote_backup_db_" + db_off, "root", "example");
         con->setSchema("db_utenti");
-        DBConnect::instance->connections_map[db_id][conn_num] =
-            std::shared_ptr<sql::Connection>{con};
+
+
+          std::shared_ptr<sql::mysql::MySQL_Connection> mysqlConn(dynamic_cast<sql::mysql::MySQL_Connection*>(con));
+
+        DBConnect::instance->connections_map[db_id][conn_num] = mysqlConn;
       }
     }
   }

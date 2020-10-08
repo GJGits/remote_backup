@@ -30,7 +30,7 @@ class DBConnect {
 
 private:
 
-    std::unordered_map<int, std::array<std::shared_ptr<sql::Connection>, 4>> connections_map;
+    std::unordered_map<int, std::array<std::shared_ptr<sql::mysql::MySQL_Connection>, 4>> connections_map;
   std::array<int,3> indexes;
   static DBConnect *instance;
   DBConnect()  {
@@ -44,6 +44,6 @@ public:
   DBConnect &operator=(const DBConnect &) = delete; // assegnazione off
   DBConnect &operator=(DBConnect &&) = delete; // assegnazione movimento off
 
-  static std::shared_ptr<sql::Connection> getConnection(size_t db_selected);
+  static std::shared_ptr<sql::mysql::MySQL_Connection> getConnection(size_t db_selected);
 
 };
