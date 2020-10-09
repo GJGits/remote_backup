@@ -9,19 +9,23 @@ std::shared_ptr<FileRepository> FileRepository::getInstance() {
 
 bool FileRepository::deleteFile(const FileEntity &file) {
 
-  std::unique_ptr<sql::PreparedStatement> stmt;
+  std::unique_ptr<sql::Statement> stmt;
   std::unique_ptr<sql::ResultSet> res;
   std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
   size_t db_selected = db_repinstance->getDBbyUsername(file.getUsername());
-  std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
-    if (con->isValid() && !con->isClosed()) {
-                stmt =
-                        std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement(
-                                "DELETE from chunks WHERE c_username = ? and c_path = ?;"))};
-                stmt->setString(1, sql::SQLString{file.getUsername().c_str()});
-                stmt->setString(2, sql::SQLString{file.getPathFile().c_str()});
-        return stmt->executeUpdate() == 1 ? true : false;
+    std::shared_ptr<sql::mysql::MySQL_Connection> mysqlConn = DBConnect::getConnection(db_selected);
 
-  }
-  throw DatabaseInvalidConnection();
+    std::string username = mysqlConn->escapeString(file.getUsername());
+    std::string path = mysqlConn->escapeString(file.getPathFile());
+
+    std::clog << username << "\n";
+    std::clog << path << "\n";
+
+    std::string query = "DELETE from chunks WHERE c_username = '"+username+"' and c_path = '"+path+"';";
+
+    stmt = std::unique_ptr<sql::Statement>{std::move(mysqlConn->createStatement())}; // ricordare al posto di 0, di mettere il vero valore
+    stmt->execute(query);
+
+    return true;
+
 }

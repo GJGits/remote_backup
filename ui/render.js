@@ -72,8 +72,8 @@ $(document).ready(function () {
         console.log("login clicked");
         username = $("#username").val();
         password = $("#password").val();
-        mac = getMAC();
-        //mac = "aa:bb:cc:dd:ee:ff";
+        //mac = getMAC();
+        mac = "aa:bb:cc:dd:ee:ff";
         console.log("mac:", mac);
         $.ajax({
             url: "http://0.0.0.0:3200/auth/signin",
@@ -102,8 +102,8 @@ $(document).ready(function () {
         username = $("#username2").val();
         password = $("#password2").val();
         ripPassword = $("#rip-password").val();
-        mac = getMAC();
-        //mac = "aa:bb:cc:dd:ee:ff";
+        //mac = getMAC();
+        mac = "aa:bb:cc:dd:ee:ff";
 
         $.ajax({
             url: "http://0.0.0.0:3200/auth/signup",

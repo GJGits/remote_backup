@@ -1,14 +1,1 @@
-{
-    "entries": [
-        {
-            "chunks": [],
-            "hash": "d813b758f728b770657362cbd2973aa4df54a9c13458f1b18a35061910cdb1b9",
-            "last_mod": 1600333898,
-            "nchunks": 1,
-            "path": "./sync/a.txt",
-            "size": 120
-        }
-    ],
-    "hashed_status": "3eae49a262a203575a31de166edbb9c1a8d28583fc10166922a182d1acd84024",
-    "last_check": 1602088153
-}
+{"entries":[],"hashed_status":"empty_hashed_status","last_check":0}
