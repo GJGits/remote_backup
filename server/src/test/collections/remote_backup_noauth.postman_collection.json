@@ -1,28 +1,25 @@
 {
 	"info": {
-		"_postman_id": "889d7d8e-193f-4206-a983-eb82e1522ca4",
+		"_postman_id": "80c014a0-937c-41a2-9e5e-74418dbb4bc7",
 		"name": "remote_backup_noauth",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "signin",
+			"name": "signup",
 			"event": [
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "5768e5aa-b8bd-406d-902b-872e21bf0ecb",
+						"id": "b094d390-2d43-45b4-980a-b79b5a71177f",
 						"exec": [
-							"var combinations     = pm.environment.get(\"combinations\");",
-							"var expected_resutls = pm.environment.get(\"expected_resutls\"); ",
+							"var combinations     = pm.environment.get(\"combinations_signup\");",
+							"var expected_resutls = pm.environment.get(\"expected_resutls_signup\"); ",
 							"",
 							"if (!combinations) {",
 							"  // inizializzazione array di combinazioni da testare  ",
 							"  combinations = [",
-							"    {},",
-							"    {username: \"alessandra\", password: \"123456\"},",
-							"    {username: \"marco\", password: \"123456\"},",
-							"    {username: \"piero\", password: \"123456\"},",
+							"    {username: \"paolo\", password: \"1234\", password_confirm: \"567\"}",
 							"  ];",
 							"}",
 							"",
@@ -32,10 +29,7 @@
 							"  // essere coerente con l'ordine dell'array delle",
 							"  // combinazioni. ",
 							"  expected_resutls = [",
-							"    {status: 500, error:\"bla bla bla\"},",
-							"    {status: 500},",
-							"    {status: 500},  ",
-							"    {status: 500},   ",
+							"     {status: 500, msg: \"messaggio errore qui...\"}",
 							"  ];",
 							"}",
 							"",
@@ -43,15 +37,16 @@
 							"var combination = combinations.shift();",
 							"var result      = expected_resutls.shift();",
 							"// eventuale body da passare sottoforma di stringa",
-							"pm.variables.set(\"combination\", JSON.stringify(combination));",
+							"pm.variables.set(\"combination_signup\", JSON.stringify(combination));",
 							"// Set necessario affinche' le variabili siano accessibili",
 							"// da test scripts",
-							"pm.environment.set(\"combination\", combination);",
-							"pm.environment.set(\"result\", result);",
+							"pm.environment.set(\"combination_signup\", combination);",
+							"pm.environment.set(\"result_signup\", result);",
+							"pm.environment.set(\"left_signup\", combinations.length);",
 							"// Aggiornamento delle variabili necessario altrimenti nel pre-script",
 							"// si rileggerebbe il valore iniziale ciclando all'infinito.",
-							"var combinations     = pm.environment.set(\"combinations\", combinations);",
-							"var expected_resutls = pm.environment.set(\"expected_resutls\", expected_resutls); "
+							"var combinations     = pm.environment.set(\"combinations_signup\", combinations);",
+							"var expected_resutls = pm.environment.set(\"expected_resutls_signup\", expected_resutls); "
 						],
 						"type": "text/javascript"
 					}
@@ -59,20 +54,26 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "5ea992b1-f132-495c-ba53-164df7d0dad7",
+						"id": "30ca4d5c-8f86-4fb9-8ca1-2bd85d946d6c",
 						"exec": [
-							"var body = (pm.request && pm.request.body && pm.request.body.raw) ? JSON.parse(pm.request.body.raw) : undefined;",
-							"var expected_result = pm.environment.get(\"result\"); ",
+							"var body = pm.environment.get(\"combination_signup\");",
+							"var expected_result = pm.environment.get(\"result_signup\"); ",
+							"var left = pm.environment.get(\"left_signup\");",
 							"",
-							"if(body) {",
-							"  postman.setNextRequest(\"signin\");",
+							"if(left > 0) {",
+							"  postman.setNextRequest(\"signup\");",
+							"} else {",
+							"   postman.setNextRequest(\"signin\"); ",
+							"}",
+							"",
+							"// todo: inserire test qui...",
 							"  pm.test(\"Check status\", function () {",
 							"    pm.expect(pm.response.code).to.be.eql(expected_result.status);",
 							"  });",
-							"  // todo: inserire altri test qui",
-							"} else {",
-							"   postman.setNextRequest(null); ",
-							"}",
+							"  pm.test(\"Check message\", function () {",
+							"    res = JSON.parse(pm.response.body);  ",
+							"    pm.expect(res.error).to.be.eql(expected_result.msg);",
+							"  });",
 							"",
 							"",
 							""
@@ -86,7 +87,116 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{{combination}}",
+					"raw": "{{combination_signup}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://0.0.0.0:3200/auth/signup",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "3200",
+					"path": [
+						"auth",
+						"signup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "signin",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "2e192381-2636-4c04-8ea9-907813dbd721",
+						"exec": [
+							"var combinations     = pm.environment.get(\"combinations_signin\");",
+							"var expected_results = pm.environment.get(\"expected_results_signin\"); ",
+							"",
+							"if (!combinations) {",
+							"  // inizializzazione array di combinazioni da testare  ",
+							"  combinations = [",
+							"    {},",
+							"    {username: \"alessandra\", password: \"123456\"},",
+							"    {username: \"marco\", password: \"123456\"},",
+							"    {username: \"piero\", password: \"123456\"},",
+							"  ];",
+							"}",
+							"",
+							"if (!expected_results) {",
+							"  // inizializzazione array di risultati aspettati",
+							"  // l'ordine degli elementi in questo array deve",
+							"  // essere coerente con l'ordine dell'array delle",
+							"  // combinazioni. ",
+							"  expected_results = [",
+							"    {status: 500, error:\"bla bla bla\"},",
+							"    {status: 500},",
+							"    {status: 500},  ",
+							"    {status: 500},   ",
+							"  ];",
+							"}",
+							"",
+							"// Combinazione testata e relativo risultato aspettato",
+							"var combination = combinations.shift();",
+							"var result      = expected_results.shift();",
+							"// eventuale body da passare sottoforma di stringa",
+							"pm.variables.set(\"combination_signin\", JSON.stringify(combination));",
+							"// Set necessario affinche' le variabili siano accessibili",
+							"// da test scripts",
+							"pm.environment.set(\"combination_signin\", combination);",
+							"pm.environment.set(\"result_signin\", result);",
+							"pm.environment.set(\"left_signin\", combinations.length);",
+							"// Aggiornamento delle variabili necessario altrimenti nel pre-script",
+							"// si rileggerebbe il valore iniziale ciclando all'infinito.",
+							"var combinations     = pm.environment.set(\"combinations_signin\", combinations);",
+							"var expected_results = pm.environment.set(\"expected_results_signin\", expected_results); "
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "02af9541-dba8-49b9-a41e-fe67fb660ea8",
+						"exec": [
+							"var body = pm.environment.get(\"combination_signin\");",
+							"var expected_result = pm.environment.get(\"result_signin\"); ",
+							"var left = pm.environment.get(\"left_signin\"); ",
+							"",
+							"if(left > 0) {",
+							"  postman.setNextRequest(\"signin\");",
+							"} else {",
+							"   postman.setNextRequest(null); ",
+							"}",
+							"",
+							"// todo: inserire altri test qui",
+							"pm.test(\"Check status\", function () {",
+							"    pm.expect(pm.response.code).to.be.eql(expected_result.status);",
+							"});",
+							"",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{{combination_signin}}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -106,6 +216,74 @@
 					"path": [
 						"auth",
 						"signin"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "dbuser",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "2020b697-af8e-411c-a922-b598ed802047",
+						"exec": [
+							"var combinations     = pm.environment.get(\"combinations_signup\");",
+							"var expected_resutls = pm.environment.get(\"expected_resutls_signup\"); ",
+							"",
+							"if (!combinations) {",
+							"  // inizializzazione array di combinazioni da testare  ",
+							"  combinations = [",
+							"    {username: \"paolo\", password: \"1234\", password_confirm: \"567\"}",
+							"  ];",
+							"}",
+							"",
+							"if (!expected_resutls) {",
+							"  // inizializzazione array di risultati aspettati",
+							"  // l'ordine degli elementi in questo array deve",
+							"  // essere coerente con l'ordine dell'array delle",
+							"  // combinazioni. ",
+							"  expected_resutls = [",
+							"     {status: 500, msg: \"messaggio errore qui...\"}",
+							"  ];",
+							"}",
+							"",
+							"// Combinazione testata e relativo risultato aspettato",
+							"var combination = combinations.shift();",
+							"var result      = expected_resutls.shift();",
+							"// Set necessario affinche' le variabili siano accessibili",
+							"// da test scripts",
+							"pm.environment.set(\"combination_signup\", combination);",
+							"pm.environment.set(\"result_signup\", result);",
+							"pm.environment.set(\"left_signup\", combinations.length);",
+							"// Aggiornamento delle variabili necessario altrimenti nel pre-script",
+							"// si rileggerebbe il valore iniziale ciclando all'infinito.",
+							"var combinations     = pm.environment.set(\"combinations_signup\", combinations);",
+							"var expected_resutls = pm.environment.set(\"expected_resutls_signup\", expected_resutls); "
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://0.0.0.0:3200/test/database/users/0",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "3200",
+					"path": [
+						"test",
+						"database",
+						"users",
+						"0"
 					]
 				}
 			},
