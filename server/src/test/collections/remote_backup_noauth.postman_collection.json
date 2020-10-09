@@ -1,0 +1,116 @@
+{
+	"info": {
+		"_postman_id": "889d7d8e-193f-4206-a983-eb82e1522ca4",
+		"name": "remote_backup_noauth",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "signin",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "5768e5aa-b8bd-406d-902b-872e21bf0ecb",
+						"exec": [
+							"var combinations     = pm.environment.get(\"combinations\");",
+							"var expected_resutls = pm.environment.get(\"expected_resutls\"); ",
+							"",
+							"if (!combinations) {",
+							"  // inizializzazione array di combinazioni da testare  ",
+							"  combinations = [",
+							"    {},",
+							"    {username: \"alessandra\", password: \"123456\"},",
+							"    {username: \"marco\", password: \"123456\"},",
+							"    {username: \"piero\", password: \"123456\"},",
+							"  ];",
+							"}",
+							"",
+							"if (!expected_resutls) {",
+							"  // inizializzazione array di risultati aspettati",
+							"  // l'ordine degli elementi in questo array deve",
+							"  // essere coerente con l'ordine dell'array delle",
+							"  // combinazioni. ",
+							"  expected_resutls = [",
+							"    {status: 500, error:\"bla bla bla\"},",
+							"    {status: 500},",
+							"    {status: 500},  ",
+							"    {status: 500},   ",
+							"  ];",
+							"}",
+							"",
+							"// Combinazione testata e relativo risultato aspettato",
+							"var combination = combinations.shift();",
+							"var result      = expected_resutls.shift();",
+							"// eventuale body da passare sottoforma di stringa",
+							"pm.variables.set(\"combination\", JSON.stringify(combination));",
+							"// Set necessario affinche' le variabili siano accessibili",
+							"// da test scripts",
+							"pm.environment.set(\"combination\", combination);",
+							"pm.environment.set(\"result\", result);",
+							"// Aggiornamento delle variabili necessario altrimenti nel pre-script",
+							"// si rileggerebbe il valore iniziale ciclando all'infinito.",
+							"var combinations     = pm.environment.set(\"combinations\", combinations);",
+							"var expected_resutls = pm.environment.set(\"expected_resutls\", expected_resutls); "
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "5ea992b1-f132-495c-ba53-164df7d0dad7",
+						"exec": [
+							"var body = (pm.request && pm.request.body && pm.request.body.raw) ? JSON.parse(pm.request.body.raw) : undefined;",
+							"var expected_result = pm.environment.get(\"result\"); ",
+							"",
+							"if(body) {",
+							"  postman.setNextRequest(\"signin\");",
+							"  pm.test(\"Check status\", function () {",
+							"    pm.expect(pm.response.code).to.be.eql(expected_result.status);",
+							"  });",
+							"  // todo: inserire altri test qui",
+							"} else {",
+							"   postman.setNextRequest(null); ",
+							"}",
+							"",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{{combination}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://0.0.0.0:3200/auth/signin",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "3200",
+					"path": [
+						"auth",
+						"signin"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
