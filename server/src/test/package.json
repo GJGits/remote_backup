@@ -9,6 +9,7 @@
   "author": "GJCode",
   "license": "ISC",
   "dependencies": {
-    "console-table-printer": "^2.4.16"
+    "console-table-printer": "^2.4.16",
+    "sync-request": "^6.1.0"
   }
 }

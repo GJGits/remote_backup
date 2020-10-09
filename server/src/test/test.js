@@ -1,38 +1,52 @@
-const { Table } = require('console-table-printer');
-var http = require('http');
+var request = require('sync-request');
 const fs = require("fs");
 
-const p = new Table({
-    columns: [
-        { name: "test", alignment: "center", color: "white_bold" },
-        { name: "status", alignment: "center" }
-    ]
-});
+Reset = "\x1b[0m"
+Bright = "\x1b[1m"
+Dim = "\x1b[2m"
+Underscore = "\x1b[4m"
+Blink = "\x1b[5m"
+Reverse = "\x1b[7m"
+Hidden = "\x1b[8m"
+
+FgBlack = "\x1b[30m"
+FgRed = "\x1b[31m"
+FgGreen = "\x1b[32m"
+FgYellow = "\x1b[33m"
+FgBlue = "\x1b[34m"
+FgMagenta = "\x1b[35m"
+FgCyan = "\x1b[36m"
+FgWhite = "\x1b[37m"
+
+BgBlack = "\x1b[40m"
+BgRed = "\x1b[41m"
+BgGreen = "\x1b[42m"
+BgYellow = "\x1b[43m"
+BgBlue = "\x1b[44m"
+BgMagenta = "\x1b[45m"
+BgCyan = "\x1b[46m"
+BgWhite = "\x1b[47m"
+
 var test_cases = [];
 const token1 = "";
 const token2 = "";
 const token3 = "";
 const chunk_size = 4096;
-
-const post_chunk = function (chunk, content_length, expected_status, token = undefined) {
-    let headers = { 'Content-Type': 'octect/stream', 'Content-Length': content_length };
-    if (token)
-        headers.Authorization = 'Bearer ' + token;
-    const options = {
-        hostname: '0.0.0.0',
-        port: 3200,
-        path: '/chunk/' + chunk.id + '/' + content_length + '/' + chunk.hash + '/' + chunk.nchunks + '/' + chunk.path_base64 + '/' + chunk.last_mod,
-        method: 'POST',
-        headers: headers
-    };
-    const req = http.request(options, (res) => {
-        return res.statusCode;
-    });
-    return req;
-}
+const base_url = "http://0.0.0.0:3200/chunk/";
 
 const test = function (test_name, callback) {
     test_cases.push({ name: test_name, call: callback });
+}
+
+const run_test = function (combination, result) {
+    for (let z = 0; z < test_cases.length; z++) {
+        const passed = test_cases[z].call(combination, result);
+        if (passed) {
+            console.log(" - " + test_cases[z].name + ": %s%s%s", FgGreen, '\u2713', Reset);
+        } else {
+            console.log(" - " + test_cases[z].name + ": %s%s%s", FgRed, '\u2716', Reset);
+        }
+    }
 }
 
 // 1. genero chunks da file
@@ -59,21 +73,31 @@ file_list.forEach(fname => {
 });
 
 // 2. genero test
-test("No auth post", () => {
-    return true;
+test("Check status", (res, exp) => {
+    return res.statusCode === exp;
 });
 
-test("Wrong format post", () => {
+test("Check response message", (res, exp) => {
     return false;
 });
 
 // 3. eseguo test
-for (let z = 0; z < test_cases.length; z++) {
-    const passed = test_cases[z].call();
-    if (passed) {
-        p.addRow({ test: test_cases[z].name, status: '\u2713' }, { color: 'green' });
-    } else {
-        p.addRow({ test: test_cases[z].name, status: '\u2716' }, { color: 'red' });
+const combinations = [
+    {   
+        description: "no auth req:",
+        url: base_url + "/0/abc/1/abd/12345",
+        content: Buffer.alloc(0),
+        headers: { 'Content-Type': 'octect/stream', 'Content-Length': 0 }
     }
+];
+const expected_results = [
+    { status: 500, msg: "some error message here..." }
+];
+
+console.log("\n");
+for (let y = 0; y < combinations.length; y++) {
+    console.log("%s%s%s", FgWhite, combinations[y].description, Reset);
+    const res = request("POST", combinations[y].url, { body: combinations[y].content, headers: combinations[y].headers });
+    run_test(res, expected_results[y]);
+    console.log("\n");
 }
-p.printTable();
