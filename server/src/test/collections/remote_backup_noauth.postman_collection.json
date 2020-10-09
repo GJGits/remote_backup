@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "889d7d8e-193f-4206-a983-eb82e1522ca4",
+		"_postman_id": "80c014a0-937c-41a2-9e5e-74418dbb4bc7",
 		"name": "remote_backup_noauth",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -11,7 +11,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "da474f99-b4b7-4ad2-bf5a-1646bc62419d",
+						"id": "b094d390-2d43-45b4-980a-b79b5a71177f",
 						"exec": [
 							"var combinations     = pm.environment.get(\"combinations_signup\");",
 							"var expected_resutls = pm.environment.get(\"expected_resutls_signup\"); ",
@@ -54,7 +54,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "a538966c-0031-44cd-b5a6-be6c4efc6f37",
+						"id": "30ca4d5c-8f86-4fb9-8ca1-2bd85d946d6c",
 						"exec": [
 							"var body = pm.environment.get(\"combination_signup\");",
 							"var expected_result = pm.environment.get(\"result_signup\"); ",
@@ -118,7 +118,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "5768e5aa-b8bd-406d-902b-872e21bf0ecb",
+						"id": "2e192381-2636-4c04-8ea9-907813dbd721",
 						"exec": [
 							"var combinations     = pm.environment.get(\"combinations_signin\");",
 							"var expected_results = pm.environment.get(\"expected_results_signin\"); ",
@@ -167,7 +167,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "5ea992b1-f132-495c-ba53-164df7d0dad7",
+						"id": "02af9541-dba8-49b9-a41e-fe67fb660ea8",
 						"exec": [
 							"var body = pm.environment.get(\"combination_signin\");",
 							"var expected_result = pm.environment.get(\"result_signin\"); ",
@@ -227,7 +227,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "403d1dc1-ae0a-4f9c-9493-2d31bf280bd5",
+						"id": "2020b697-af8e-411c-a922-b598ed802047",
 						"exec": [
 							"var combinations     = pm.environment.get(\"combinations_signup\");",
 							"var expected_resutls = pm.environment.get(\"expected_resutls_signup\"); ",

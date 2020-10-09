@@ -166,3 +166,12 @@ const char * what () const throw ()
 }
 
 };
+
+struct MissingElementInDB : public std::exception
+{
+    const char * what () const throw ()
+    {
+        return "The element searched in the DB is not found";
+    }
+
+};
