@@ -29,7 +29,10 @@ AuthController::handle(const http::server::request &req) {
     } else if (req.uri == "/auth/signup") {
       std::string req_body = std::string{req.body.get()->begin(), req.body.get()->end()};
       std::smatch match;
+      std::clog << "ciao\n";
+      std::clog << req_body << "\n";
       if (std::regex_match(req_body, match, signup_rgx)) {
+          std::clog << "helloo\n";
           SignupDTO user{};
           user.deserialize(req_body);
           return MakeReply::make_1line_jsonReply<std::string>("token", post_signup(user), http::server::reply::ok);

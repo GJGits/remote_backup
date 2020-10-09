@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "80c014a0-937c-41a2-9e5e-74418dbb4bc7",
+		"_postman_id": "259410e9-77dd-449c-b6da-f76c7b04598b",
 		"name": "remote_backup_noauth",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -11,31 +11,50 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "b094d390-2d43-45b4-980a-b79b5a71177f",
+						"id": "630a9265-a9ee-4a4d-b342-1a93780d2233",
 						"exec": [
 							"var combinations     = pm.environment.get(\"combinations_signup\");",
-							"var expected_resutls = pm.environment.get(\"expected_resutls_signup\"); ",
+							"var expected_results = pm.environment.get(\"expected_results_signup\"); ",
 							"",
 							"if (!combinations) {",
 							"  // inizializzazione array di combinazioni da testare  ",
 							"  combinations = [",
-							"    {username: \"paolo\", password: \"1234\", password_confirm: \"567\"}",
+							"    {username:\"renatone\",password:\"1234\",password_confirm:\"1234\",mac_address:\"aa:bb:cc:dd:ee:ff\"},",
+							"    {username: \"renatone\", password: \"1234\", password_confirm: \"2345\",mac_address:\"aa:bb:cc:dd:ee:ff\"},",
+							"    {username: \"renatone\", password: \"1234\"},",
+							"    {username: \"renatone\", password: \"1234\", password_confirmed: \"1234\",mac_address:\"aa:bb:cc:dd:ee:ff\"},",
+							"    {user: \"renatone\", password: \"1234\", password_confirm: \"1234\",mac_address:\"aa:bb:cc:dd:ee:ff\"},",
+							"    {user: \"renatone\", pw: \"1234\", password_confirm: \"1234\",mac_address:\"aa:bb:cc:dd:ee:ff\"},",
+							"    {user: \"renatone\", pw: \"1234\", pw_confirm: \"1234\",mac_address:\"aa:bb:cc:dd:ee:ff\"},",
+							"    {username: \"renatone\", password: \"1234\", password_confirm: \"12345\",mac_address:\"aa:bb:cc:dd:ee:ff\"},",
+							"    {username: \"renatone\", password: \"1234\", password_confirm: \"1235\",mac_address:\"aa:bb:cc:dd:ee:ff\"},",
+							"    {username: \"renatone\", password: \"123456\", password_confirm: \"123456\",mac_address:\"aa:bb:cc:dd:ee:ff\"},",
 							"  ];",
 							"}",
 							"",
-							"if (!expected_resutls) {",
+							"if (!expected_results) {",
 							"  // inizializzazione array di risultati aspettati",
 							"  // l'ordine degli elementi in questo array deve",
 							"  // essere coerente con l'ordine dell'array delle",
 							"  // combinazioni. ",
-							"  expected_resutls = [",
-							"     {status: 500, msg: \"messaggio errore qui...\"}",
+							"  expected_results = [",
+							"     {status: 200},",
+							"     {status: 500, error: \"Password and Password confirm are not equal, please try again\"},",
+							"     {status: 500, error: \"The format of the request is wrong, please contact administrator for further infos\"},",
+							"     {status: 500, error: \"The format of the request is wrong, please contact administrator for further infos\"},",
+							"     {status: 500, error: \"The format of the request is wrong, please contact administrator for further infos\"},",
+							"     {status: 500, error: \"The format of the request is wrong, please contact administrator for further infos\"},",
+							"     {status: 500, error: \"The format of the request is wrong, please contact administrator for further infos\"},",
+							"     {status: 500, error: \"Password and Password confirm are not equal, please try again\"},",
+							"     {status: 500, error: \"Password and Password confirm are not equal, please try again\"},",
+							"     {status: 500, error: \"Username already exists!\"},",
+							"",
 							"  ];",
 							"}",
 							"",
 							"// Combinazione testata e relativo risultato aspettato",
 							"var combination = combinations.shift();",
-							"var result      = expected_resutls.shift();",
+							"var result      = expected_results.shift();",
 							"// eventuale body da passare sottoforma di stringa",
 							"pm.variables.set(\"combination_signup\", JSON.stringify(combination));",
 							"// Set necessario affinche' le variabili siano accessibili",
@@ -45,8 +64,8 @@
 							"pm.environment.set(\"left_signup\", combinations.length);",
 							"// Aggiornamento delle variabili necessario altrimenti nel pre-script",
 							"// si rileggerebbe il valore iniziale ciclando all'infinito.",
-							"var combinations     = pm.environment.set(\"combinations_signup\", combinations);",
-							"var expected_resutls = pm.environment.set(\"expected_resutls_signup\", expected_resutls); "
+							"var combinations = pm.environment.set(\"combinations_signup\", combinations);",
+							"var expected_results = pm.environment.set(\"expected_results_signup\", expected_results);"
 						],
 						"type": "text/javascript"
 					}
@@ -54,7 +73,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "30ca4d5c-8f86-4fb9-8ca1-2bd85d946d6c",
+						"id": "258e23f1-5e1e-480a-8cf5-14faca805f6a",
 						"exec": [
 							"var body = pm.environment.get(\"combination_signup\");",
 							"var expected_result = pm.environment.get(\"result_signup\"); ",
@@ -71,12 +90,8 @@
 							"    pm.expect(pm.response.code).to.be.eql(expected_result.status);",
 							"  });",
 							"  pm.test(\"Check message\", function () {",
-							"    res = JSON.parse(pm.response.body);  ",
-							"    pm.expect(res.error).to.be.eql(expected_result.msg);",
-							"  });",
-							"",
-							"",
-							""
+							"    pm.expect(pm.response.json().error).to.be.eql(expected_result.error);",
+							"  });"
 						],
 						"type": "text/javascript"
 					}
@@ -84,7 +99,14 @@
 			],
 			"request": {
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
 				"body": {
 					"mode": "raw",
 					"raw": "{{combination_signup}}",
@@ -118,7 +140,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "2e192381-2636-4c04-8ea9-907813dbd721",
+						"id": "6f145092-a36e-44ee-9829-ecd97193ce54",
 						"exec": [
 							"var combinations     = pm.environment.get(\"combinations_signin\");",
 							"var expected_results = pm.environment.get(\"expected_results_signin\"); ",
@@ -127,9 +149,13 @@
 							"  // inizializzazione array di combinazioni da testare  ",
 							"  combinations = [",
 							"    {},",
-							"    {username: \"alessandra\", password: \"123456\"},",
-							"    {username: \"marco\", password: \"123456\"},",
-							"    {username: \"piero\", password: \"123456\"},",
+							"    {username: \"renatobis\", password: \"1234\"},",
+							"    {username: \"marco\", password: \"1234\"},",
+							"    {username: \"renatobis\", password: \"123456\"},",
+							"    {user: \"renatobis\", password: \"1234\"},",
+							"    {username: \"renatobis\", pw: \"1234\"},",
+							"    {user: \"renatobis\", pw: \"1234\"},",
+							"    {username: \"marco23\", password: \"123457\"},",
 							"  ];",
 							"}",
 							"",
@@ -139,10 +165,13 @@
 							"  // essere coerente con l'ordine dell'array delle",
 							"  // combinazioni. ",
 							"  expected_results = [",
-							"    {status: 500, error:\"bla bla bla\"},",
-							"    {status: 500},",
-							"    {status: 500},  ",
-							"    {status: 500},   ",
+							"    {status: 200},",
+							"    {status: 500 , error:\"username or password inserted are not valid, please try again\"},",
+							"    {status: 500 , error:\"username or password inserted are not valid, please try again\"},",
+							"    {status: 500, error:\"The format of the request is wrong, please contact administrator for further infos\"},  ",
+							"    {status: 500, error:\"The format of the request is wrong, please contact administrator for further infos\"}, ",
+							"    {status: 500, error:\"The format of the request is wrong, please contact administrator for further infos\"},",
+							"    {status: 500 , error:\"username or password inserted are not valid, please try again\"}, ",
 							"  ];",
 							"}",
 							"",
@@ -159,7 +188,7 @@
 							"// Aggiornamento delle variabili necessario altrimenti nel pre-script",
 							"// si rileggerebbe il valore iniziale ciclando all'infinito.",
 							"var combinations     = pm.environment.set(\"combinations_signin\", combinations);",
-							"var expected_results = pm.environment.set(\"expected_results_signin\", expected_results); "
+							"var expected_results = pm.environment.set(\"expected_results_signin\", expected_results);"
 						],
 						"type": "text/javascript"
 					}
@@ -167,7 +196,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "02af9541-dba8-49b9-a41e-fe67fb660ea8",
+						"id": "b4592633-be47-4e36-a5bf-90a19b4a9248",
 						"exec": [
 							"var body = pm.environment.get(\"combination_signin\");",
 							"var expected_result = pm.environment.get(\"result_signin\"); ",
@@ -183,9 +212,9 @@
 							"pm.test(\"Check status\", function () {",
 							"    pm.expect(pm.response.code).to.be.eql(expected_result.status);",
 							"});",
-							"",
-							"",
-							""
+							"pm.test(\"Check message\", function () {",
+							"    pm.expect(pm.response.json().error).to.be.eql(expected_result.error);",
+							"  });"
 						],
 						"type": "text/javascript"
 					}
@@ -227,7 +256,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "2020b697-af8e-411c-a922-b598ed802047",
+						"id": "fcb4a8fa-d979-4196-804b-bc56156e57d6",
 						"exec": [
 							"var combinations     = pm.environment.get(\"combinations_signup\");",
 							"var expected_resutls = pm.environment.get(\"expected_resutls_signup\"); ",

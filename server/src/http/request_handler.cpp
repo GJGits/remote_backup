@@ -74,12 +74,18 @@ void request_handler::handle_request(const request &req, reply &rep) {
         "error", e.what(), http::server::reply::internal_server_error);
     return;
   } catch (sql::SQLException &e) {
+      std::string error_message;
+      if(e.getErrorCode() == 1062)
+          error_message = "Username already exists!";
+      else
+          error_message = std::string{"Error code:  "} + e.what() +
+                          std::string{"___ Error Explanation: "} +
+                          std::to_string(e.getErrorCode()) + std::string{"___ SQL STATE: "} +
+                          e.getSQLState();
+
     rep = MakeReply::make_1line_jsonReply<std::string>(
         "error",
-        std::string{"Error code:  "} + e.what() +
-            std::string{"___ Error Explanation: "} +
-            std::to_string(e.getErrorCode()) + std::string{"___ SQL STATE: "} +
-            e.getSQLState(),
+        error_message,
         http::server::reply::internal_server_error);
     return;
   } catch (FileNotDeleted &e) {
