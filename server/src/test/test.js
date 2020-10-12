@@ -49,6 +49,7 @@ const run_test = function (combination, result) {
     }
 }
 
+
 // 1. genero chunks da file
 file_list = ["./input/thread.pdf", "./input/generali.pdf"];
 file_list.forEach(fname => {
@@ -84,8 +85,9 @@ test("Check response message", (res, exp) => {
 // 3. eseguo test
 const combinations = [
     {   
-        description: "no auth req:",
-        url: base_url + "/0/abc/1/abd/12345",
+        method: "POST",
+        url: base_url + "0/abc/1/abd/12345",
+        description: "richiesta senza token",
         content: Buffer.alloc(0),
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': 0 }
     }
@@ -96,8 +98,8 @@ const expected_results = [
 
 console.log("\n");
 for (let y = 0; y < combinations.length; y++) {
-    console.log("%s%s%s", FgWhite, combinations[y].description, Reset);
-    const res = request("POST", combinations[y].url, { body: combinations[y].content, headers: combinations[y].headers });
+    console.log("%s%s%s%s", FgWhite, '\u2192', " " + combinations[y].method + " " + combinations[y].url + " [" + combinations[y].description + "]", Reset);
+    const res = request(combinations[y].method, combinations[y].url, { body: combinations[y].content, headers: combinations[y].headers });
     run_test(res, expected_results[y]);
     console.log("\n");
 }

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# 1. run no-auth tests
+newman run collections/remote_backup_noauth.postman_collection.json
+
+# 2. run post chunk tests
+node test.js
