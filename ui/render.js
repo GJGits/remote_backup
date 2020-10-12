@@ -97,32 +97,46 @@ $(document).ready(function () {
     });
 
     $("#signup-btn").click((event) => {
-        event.preventDefault();
         console.log("signup clicked");
+        $("#rip-password").removeAttr("title");
+        event.preventDefault();
         username = $("#username2").val();
         password = $("#password2").val();
         ripPassword = $("#rip-password").val();
         //mac = getMAC();
         mac = "aa:bb:cc:dd:ee:ff";
-
-        $.ajax({
-            url: "http://0.0.0.0:3200/auth/signup",
-            type: "POST",
-            data: JSON.stringify({ username: username, password: password.toString(), password_confirm: ripPassword.toString(), mac_address: mac }),
-            contentType: "application/json",
-            dataType: "json"
-        }).done(function (data) {
-            console.log("dati successo", data);
-            ipcRenderer.send('config', { username: username, token: data.token });
-            change_status("logged");
-        }).fail(function (error) {
-            $(".alert.alert-danger.error").show();
-            if (error.status === 404) {
-                $(".alert.alert-danger.error").text("server non raggiungibile");
-            } else {
-                $(".alert.alert-danger.error").text(error.responseJSON.error);
+        const supf = $("#supf");
+        if (password !== ripPassword) {
+            $("#rip-password")[0].setCustomValidity('Le due password non coincidono');
+            $("#rip-password").attr('title', 'Le due password non coincidono');
+            $("#rip-password")[0].reportValidity(); 
+        } else {
+            if (supf.valid()) {
+                $.ajax({
+                    url: "http://0.0.0.0:3200/auth/signup",
+                    type: "POST",
+                    data: JSON.stringify({ username: username, password: password.toString(), password_confirm: ripPassword.toString(), mac_address: mac }),
+                    contentType: "application/json",
+                    dataType: "json"
+                }).done(function (data) {
+                    console.log("dati successo", data);
+                    ipcRenderer.send('config', { username: username, token: data.token });
+                    change_status("logged");
+                }).fail(function (error) {
+                    $(".alert.alert-danger.error").text(error);
+                    $(".alert.alert-danger.error").show();
+                    if (error.status === 404) {
+                        $(".alert.alert-danger.error").text("server non raggiungibile");
+                    } else {
+                        $(".alert.alert-danger.error").text(error.responseJSON.error);
+                    }
+                });
             }
-        });
+        }
+
+
+
+
 
     });
 

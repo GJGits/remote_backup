@@ -13,3 +13,8 @@
     border-radius: 15px;
     margin-left: 5px;
 }
+
+/* Selects any invalid <input> */
+input:invalid {
+    background-color: pink;
+  }
