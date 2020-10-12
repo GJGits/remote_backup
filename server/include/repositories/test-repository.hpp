@@ -16,6 +16,7 @@ private:
     static inline std::shared_ptr<TestRepository> instance{nullptr};
 
 public:
+    void reset_db();
     static std::shared_ptr<TestRepository> getInstance();
     json getTestDatabaseTableChunks(const GetTestDatabaseDTO &get_test_database);
     json getTestDatabaseTableUsers(const GetTestDatabaseDTO &get_test_database);

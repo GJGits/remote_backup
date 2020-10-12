@@ -31,10 +31,12 @@ class DBConnect {
 private:
 
     std::unordered_map<int, std::array<std::shared_ptr<sql::mysql::MySQL_Connection>, 4>> connections_map;
-  std::array<int,3> indexes;
-  static DBConnect *instance;
+  
+  std::array<int,4> indexes;
+  static inline std::shared_ptr<DBConnect>instance{nullptr};
   DBConnect()  {
-      indexes = {0, 0, 0};
+     // ogni posizione in questo array indica l'utilizzo di una connessione per un determinato db
+      indexes = {0, 0, 0, 0};
   }
 
 public:

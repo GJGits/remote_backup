@@ -9,9 +9,10 @@ std::shared_ptr<UserService> UserService::getInstance() {
 }
 
 std::string UserService::login(const SigninDTO &user) {
-    std::clog << "Entro nella login\n";
+  std::clog << "Entro nella login\n";
 
-    UserEntity user_returned = user_repository->getUserByUsername(user.getUsername());
+  UserEntity user_returned =
+      user_repository->getUserByUsername(user.getUsername());
   unsigned int salt = user_returned.getSalt();
   std::string password_to_hash{std::to_string(salt) + user.getPassword() +
                                std::to_string(salt)};
@@ -22,26 +23,26 @@ std::string UserService::login(const SigninDTO &user) {
     size_t db_sel = db_repinstance->getDBbyUsername(user.getUsername());
     int device_id = user_returned.check_validity_id(user.getMAC());
     std::clog << "device_id: " << device_id << "\n";
-    if(device_id < 0){
-        user_repository->updateUser(user_returned);
-        device_id = abs(device_id);
-        std::clog << "Sono entrato e metto roba\n";
-
+    if (device_id < 0) {
+      user_repository->updateUser(user_returned);
+      device_id = abs(device_id);
+      std::clog << "Sono entrato e metto roba\n";
     }
     Subject sub{user.getUsername(), db_sel, (size_t)device_id};
-      std::clog << "Torno il token\n";
+    std::clog << "Torno il token\n";
 
-      return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
-  }
-  else
+    return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
+  } else
     throw CredentialsNotValidException();
 }
 
 std::string UserService::signup(const SignupDTO &user) {
 
   if (user.getPassword().compare(user.getPasswordConfirm()) != 0)
-    throw PasswordNeqConfirm();
+    throw WrongRquestFormat();
 
+  // todo: check user already exists
+  throw UsernameAlreadyExists();
 
   std::string username(user.getUsername());
   unsigned int salt = abs(rand());
@@ -52,11 +53,8 @@ std::string UserService::signup(const SignupDTO &user) {
   UserEntity user_to_insert{username, hashedPassword, salt};
   user_to_insert.set_device_1_MAC(user.getMAC());
   size_t db_sel = user_repository->insertUser(user_to_insert);
-    std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
   Subject sub{user.getUsername(), db_sel, 1};
   return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
-
-  throw UsernameAlreadyExists();
 }
 
 std::string UserService::getStatus(const std::string &username) {

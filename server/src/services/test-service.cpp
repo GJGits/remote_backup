@@ -28,3 +28,7 @@ const json TestService::getTestFilesystemFilename(const GetTestFilesystemFilenam
     return test_repository->getTestDatabaseFilesystemFilename(get_test_filesystem_filename);
 
 }
+
+void TestService::cleanDB() {
+    test_repository->reset_db();
+}

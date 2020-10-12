@@ -1,13 +1,14 @@
 #include "../../include/entities/db-connect.hpp"
 
 
-DBConnect *DBConnect::instance = nullptr;
 std::shared_ptr<sql::mysql::MySQL_Connection> DBConnect::getConnection(size_t db_selected) {
   std::unique_lock lk{DBConnect::m};
   if (DBConnect::instance == nullptr) {
-    DBConnect::instance = new DBConnect();
+    instance = std::shared_ptr<DBConnect>{new DBConnect{}};
     sql::Driver *driver = get_driver_instance();
+    // itero sui db
     for (size_t db_id = 0; db_id < 4; db_id++) {
+      // ogni db ha 4 connessioni
       for (size_t conn_num = 0; conn_num < 4; conn_num++) {
         std::string db_off = std::to_string(db_id + 1) + ":3306";
         sql::Connection *con = driver->connect(

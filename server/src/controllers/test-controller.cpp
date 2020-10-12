@@ -34,10 +34,18 @@ TestController::handle(const http::server::request &req) {
         } else if (std::regex_search(req.uri.begin(), req.uri.end(), match, get_test_filesystem_chunkid)) {
 
         }
+    } else if (req.method == "DELETE") {
+        delete_them_all();
+        return http::server::reply::stock_reply(http::server::reply::ok);
     }
     throw WrongRquestFormat();
 
 }
+
+void TestController::delete_them_all() {
+    test_service->cleanDB();
+}
+
 const json
 TestController::get_test_database_table_name(const GetTestDatabaseDTO &get_test_database) {
     return test_service->getTestDatabaseTable(get_test_database);

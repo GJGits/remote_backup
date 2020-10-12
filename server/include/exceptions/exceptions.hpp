@@ -55,9 +55,9 @@ struct WrongRquestFormat : public std::exception
 {
 const char * what () const throw ()
 {
-    Logger::log(" The format of the request is wrong, please contact administrator for further infos => ");
+    Logger::log("The format of the request is wrong!");
 
-    return "The format of the request is wrong, please contact administrator for further infos";
+    return "The format of the request is wrong!";
 }
 
 };

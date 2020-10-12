@@ -19,7 +19,7 @@ public:
 
     static std::shared_ptr<TestService> getInstance();
 
-
+    void cleanDB();
     const json getTestDatabaseTable(const GetTestDatabaseDTO &get_test_database);
     const json getTestFilesystemFilename(const GetTestFilesystemFilenameDTO &get_test_filesystem_filename);
     ~TestService() {}

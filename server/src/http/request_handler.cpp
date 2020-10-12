@@ -48,7 +48,7 @@ void request_handler::handle_request(const request &req, reply &rep) {
 
   } catch (WrongRquestFormat &e) {
     rep = MakeReply::make_1line_jsonReply<std::string>(
-        "error", e.what(), http::server::reply::internal_server_error);
+        "error", e.what(), http::server::reply::bad_request);
     return;
 
   } catch (ControllerNotRetrievable &e) {
@@ -74,19 +74,17 @@ void request_handler::handle_request(const request &req, reply &rep) {
         "error", e.what(), http::server::reply::internal_server_error);
     return;
   } catch (sql::SQLException &e) {
-      std::string error_message;
-      if(e.getErrorCode() == 1062)
-          error_message = "Username already exists!";
-      else
-          error_message = std::string{"Error code:  "} + e.what() +
-                          std::string{"___ Error Explanation: "} +
-                          std::to_string(e.getErrorCode()) + std::string{"___ SQL STATE: "} +
-                          e.getSQLState();
+    std::string error_message;
+    if (e.getErrorCode() == 1062)
+      error_message = "Username already exists!";
+    else
+      error_message = std::string{"Error code:  "} + e.what() +
+                      std::string{"___ Error Explanation: "} +
+                      std::to_string(e.getErrorCode()) +
+                      std::string{"___ SQL STATE: "} + e.getSQLState();
 
     rep = MakeReply::make_1line_jsonReply<std::string>(
-        "error",
-        error_message,
-        http::server::reply::internal_server_error);
+        "error", error_message, http::server::reply::internal_server_error);
     return;
   } catch (FileNotDeleted &e) {
     rep = MakeReply::make_1line_jsonReply<std::string>(
@@ -126,19 +124,16 @@ void request_handler::handle_request(const request &req, reply &rep) {
     return;
   }
 
-   catch(ExceededNumberOfDevices &e){
-       rep = MakeReply::make_1line_jsonReply<std::string>(
-               "error", e.what(), http::server::reply::internal_server_error);
-       return;
-    }
-  catch(MissingElementInDB &e){
-      rep = MakeReply::make_1line_jsonReply<std::string>(
-              "error", e.what(), http::server::reply::internal_server_error);
-      return;
+  catch (ExceededNumberOfDevices &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
+  } catch (MissingElementInDB &e) {
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::internal_server_error);
+    return;
   }
-
 }
-
 
 } // namespace server
 } // namespace http
