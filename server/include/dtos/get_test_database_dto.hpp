@@ -6,13 +6,13 @@
 
 class GetTestDatabaseDTO {
 private:
-    Subject subject;
     int page_num;
+    int db_num;
     std::string table_name;
 public:
-    GetTestDatabaseDTO(const Subject &subject) : subject{subject} {}
-    Subject get_subject() const;
+    GetTestDatabaseDTO() {}
     int getpage_num() const;
+    int getdb_num() const;
     std::string get_table_name() const;
     const void fill(const std::string &requri);
 };

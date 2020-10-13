@@ -15,7 +15,7 @@ json TestRepository::getTestDatabaseTableChunks(
   std::unique_ptr<sql::Statement> stmt;
   std::unique_ptr<sql::ResultSet> res;
   std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
-  size_t db_selected = get_test_database.get_subject().get_db_id();
+  size_t db_selected = get_test_database.getdb_num();
   std::shared_ptr<sql::mysql::MySQL_Connection> mysqlConn =
       DBConnect::getConnection(db_selected);
 
@@ -71,7 +71,7 @@ json TestRepository::getTestDatabaseTableUsers(
   std::unique_ptr<sql::Statement> stmt;
   std::unique_ptr<sql::ResultSet> res;
   std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
-  size_t db_selected = get_test_database.get_subject().get_db_id();
+  size_t db_selected = get_test_database.getdb_num();
   std::shared_ptr<sql::mysql::MySQL_Connection> mysqlConn =
       DBConnect::getConnection(db_selected);
 
@@ -222,52 +222,7 @@ json TestRepository::getTestDatabaseTableUsersDB(
   return j;
 }
 
-json TestRepository::getTestDatabaseFilesystemFilename(
-    const GetTestFilesystemFilenameDTO &get_test_filesystem_filename) {
-  json j;
-  j["entries"] = json::array();
-  std::unique_ptr<sql::Statement> stmt;
-  std::unique_ptr<sql::ResultSet> res;
-  std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
-  size_t db_selected = get_test_filesystem_filename.get_subject().get_db_id();
-  std::shared_ptr<sql::mysql::MySQL_Connection> mysqlConn =
-      DBConnect::getConnection(db_selected);
 
-  std::string filename =
-      mysqlConn->escapeString(get_test_filesystem_filename.get_file_name());
-  std::string num_page = mysqlConn->escapeString(std::to_string(
-      get_test_filesystem_filename.getpage_num() * ENTRIES_PAGE));
-  std::string limit_page_num = mysqlConn->escapeString(std::to_string(
-      (get_test_filesystem_filename.getpage_num() + 1) * ENTRIES_PAGE));
-
-  std::string query = "select t1.c_id, t1.c_size, t2.last_page from (select "
-                      "c_id, c_size from chunks where c_path = '" +
-                      filename + "' limit " + num_page + ", " + limit_page_num +
-                      ") as t1, (select(ceil((count(distinct c_id) / " +
-                      std::to_string(ENTRIES_PAGE) +
-                      "))) -1 as last_page from chunks) as t2;";
-  stmt = std::unique_ptr<sql::Statement>{
-      std::move(mysqlConn->createStatement())}; // ricordare al posto di 0, di
-                                                // mettere il vero valore
-  res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery(query))};
-
-  json j_single_path = {};
-
-  if (res->rowsCount() > 0) {
-    for (int i = 0; i < ENTRIES_PAGE; i++) {
-      if (res->next()) {
-        j_single_path["c_id"] = res->getInt(1);
-        j_single_path["c_size"] = res->getInt(2);
-        j["entries"].push_back(j_single_path);
-        j["last_page"] = res->getInt(3);
-      } else
-        break;
-    }
-  } else
-    j["last_page"] = 0;
-
-  return j;
-}
 
 void TestRepository::reset_db() {
   std::unique_ptr<sql::Statement> stmt;

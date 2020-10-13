@@ -20,6 +20,7 @@ private:
 public:
   size_t insertUser(const UserEntity &user);
   UserEntity getUserByUsername(const std::string &username);
+  bool UserAlreadyPresent(const std::string &username);
   bool deleteUserByUsername(const std::string &username);
   std::string get_hashed_status(const std::string &username);
   json get_status_file(const Subject &subject, int page_num, int last_check);

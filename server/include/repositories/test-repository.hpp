@@ -22,6 +22,5 @@ public:
     json getTestDatabaseTableUsers(const GetTestDatabaseDTO &get_test_database);
     json getTestDatabaseTabledbstatus(const GetTestDatabaseDTO &get_test_database);
     json getTestDatabaseTableUsersDB(const GetTestDatabaseDTO &get_test_database);
-    json getTestDatabaseFilesystemFilename(const GetTestFilesystemFilenameDTO &get_test_filesystem_filename);
 
 };

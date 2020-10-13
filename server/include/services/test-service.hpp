@@ -8,7 +8,7 @@
 #include "../common/jwt.hpp"
 #include <ctime>
 #include "../common/constants.hpp"
-
+#include "../common/json.hpp"
 
 class TestService {
 private:

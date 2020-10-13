@@ -6,13 +6,13 @@
 
 class GetTestFilesystemFilenameDTO {
 private:
-    Subject subject;
     std::string file_name;
+    std::string username;
     int page_num;
 public:
-    GetTestFilesystemFilenameDTO(const Subject &subject) : subject{subject} {}
-    Subject get_subject() const;
+    GetTestFilesystemFilenameDTO() {}
     std::string get_file_name() const;
+    std::string get_username() const;
     int getpage_num() const;
     const void fill(const std::string &requri);
 };

@@ -40,6 +40,22 @@ size_t UserRepository::insertUser(const UserEntity &user) {
   return db_selected;
 }
 
+bool UserRepository::UserAlreadyPresent(const std::string &username){
+    std::unique_ptr<sql::Statement> stmt;
+    std::unique_ptr<sql::ResultSet> res;
+
+    std::shared_ptr<sql::mysql::MySQL_Connection> mysqlConn = DBConnect::getConnection(0);
+    std::string username_escaped = mysqlConn->escapeString(username);
+    std::string query = "Select username from UsersDB where username = '"+username_escaped+"';";
+    stmt = std::unique_ptr<sql::Statement>{std::move(mysqlConn->createStatement())}; // ricordare al posto di 0, di mettere il vero valore
+    res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery(query))};
+
+    if (res->next()) {
+        return true;
+    }
+    return false;
+}
+
 void UserRepository::updateUser(const UserEntity &user) {
   std::unique_ptr<sql::Statement> stmt;
   std::unique_ptr<sql::ResultSet> res;

@@ -41,10 +41,12 @@ std::string UserService::signup(const SignupDTO &user) {
   if (user.getPassword().compare(user.getPasswordConfirm()) != 0)
     throw WrongRquestFormat();
 
-  // todo: check user already exists
-  throw UsernameAlreadyExists();
-
   std::string username(user.getUsername());
+
+  // todo: check user already exists
+  if(user_repository->UserAlreadyPresent(user.getUsername()))
+    throw UsernameAlreadyExists();
+
   unsigned int salt = abs(rand());
   std::string password_to_hash{std::to_string(salt) + user.getPassword() +
                                std::to_string(salt)};
