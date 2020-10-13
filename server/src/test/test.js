@@ -45,7 +45,7 @@ const run_test = function (combination, result) {
         if (passed) {
             console.log(" - " + test_cases[z].name + ": %s%s%s", FgGreen, '\u2713', Reset);
         } else {
-            console.log(" - " + test_cases[z].name + ": %s%s%s [%s]", FgRed, '\u2716', Reset, test_cases[z].error);
+            console.log(" - " + test_cases[z].name + ": %s%s%s [%s]", FgRed, '\u2716', Reset, test_cases[z].call.error);
         }
     }
 }
@@ -95,7 +95,7 @@ file_list.forEach(fname => {
 test("Check status", (res, exp) => {
     if (res.statusCode === exp.status)
         return true;
-    exp.error = "got: " + res.statusCode + ", expected: " + exp.status;
+    this.error = "got: " + res.statusCode + ", expected: " + exp.status;
     return false;
 });
 
