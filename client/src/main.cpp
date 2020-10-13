@@ -9,7 +9,7 @@ int main() {
   sleep(4);
   std::shared_ptr<StructSubscriber> struct_sub =
       StructSubscriber::getInstance();
-  struct_sub->init();
+  struct_sub->init_sub_list();
 
   std::shared_ptr<SyncSubscriber> sync_sub = SyncSubscriber::getInstance();
   sync_sub->init_sub_list();

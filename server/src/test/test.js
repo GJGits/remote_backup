@@ -1,5 +1,6 @@
 var request = require('sync-request');
 const fs = require("fs");
+const crypto = require('crypto');
 
 Reset = "\x1b[0m"
 Bright = "\x1b[1m"
@@ -44,7 +45,7 @@ const run_test = function (combination, result) {
         if (passed) {
             console.log(" - " + test_cases[z].name + ": %s%s%s", FgGreen, '\u2713', Reset);
         } else {
-            console.log(" - " + test_cases[z].name + ": %s%s%s", FgRed, '\u2716', Reset);
+            console.log(" - " + test_cases[z].name + ": %s%s%s [%s]", FgRed, '\u2716', Reset, test_cases[z].error);
         }
     }
 }
@@ -52,6 +53,7 @@ const run_test = function (combination, result) {
 
 // 1. genero chunks da file
 file_list = ["./input/thread.pdf", "./input/generali.pdf"];
+buff_list = []; // lista dalla quale attingere buffer da inviare
 file_list.forEach(fname => {
     let stats = fs.statSync(fname);
     let fileSizeInBytes = stats["size"];
@@ -63,6 +65,22 @@ file_list.forEach(fname => {
         fs.readSync(fd_in, buf, 0, to_read, (i * chunk_size));
         let fname_base64 = new Buffer(fname);
         fname_base64 = fname_base64.toString("base64");
+        // memorizzo solo 1/5 dei buffer per non utilizzare
+        // troppa memoria
+        if (i % 5 == 0) {
+            const hash = crypto.createHash('sha256');
+            hash.update(buf);
+            buff_list.push(
+                {
+                    content: buf,
+                    id: i,
+                    hash: hash.digest("hex"),
+                    fname: fname_base64,
+                    size: to_read,
+                    last_mod: Math.floor(new Date().getTime() / 1000)
+                });
+        }
+
         if (!fs.existsSync("./output/" + fname_base64)) {
             fs.mkdirSync("./output/" + fname_base64);
         }
@@ -75,7 +93,10 @@ file_list.forEach(fname => {
 
 // 2. genero test
 test("Check status", (res, exp) => {
-    return res.statusCode === exp;
+    if (res.statusCode === exp.status)
+        return true;
+    exp.error = "got: " + res.statusCode + ", expected: " + exp.status;
+    return false;
 });
 
 test("Check response message", (res, exp) => {
@@ -84,7 +105,7 @@ test("Check response message", (res, exp) => {
 
 // 3. eseguo test
 const combinations = [
-    {   
+    {
         method: "POST",
         url: base_url + "0/abc/1/abd/12345",
         description: "richiesta senza token",
@@ -93,7 +114,7 @@ const combinations = [
     }
 ];
 const expected_results = [
-    { status: 500, msg: "some error message here..." }
+    { status: 400, msg: "some error message here..." }
 ];
 
 console.log("\n");

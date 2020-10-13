@@ -7,7 +7,7 @@ std::shared_ptr<StructSubscriber> StructSubscriber::getInstance() {
   return instance;
 }
 
-void StructSubscriber::init() {
+void StructSubscriber::init_sub_list() {
   std::shared_ptr<Broker> broker = Broker::getInstance();
   broker->subscribe(TOPIC::ADD_CHUNK,
                     std::bind(&StructSubscriber::on_add_chunk, instance.get(),
