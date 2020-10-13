@@ -28,7 +28,7 @@ void request_handler::handle_request(const request &req, reply &rep) {
 
   } catch (UsernameAlreadyExists &e) {
     rep = MakeReply::make_1line_jsonReply<std::string>(
-        "error", e.what(), http::server::reply::internal_server_error);
+        "error", e.what(), http::server::reply::bad_request);
     return;
 
   } catch (CredentialsNotValidException &e) {
