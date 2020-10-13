@@ -11,7 +11,7 @@ int main() {
   struct_sub->init();
 
   std::shared_ptr<SyncSubscriber> sync_sub = SyncSubscriber::getInstance();
-  sync_sub->init();
+  sync_sub->init_sub_list();
 
   std::shared_ptr<GuiSubscriber> gui_sub = GuiSubscriber::getInstance();
   gui_sub->init();
@@ -20,7 +20,7 @@ int main() {
       "./sync", IN_CREATE | IN_ONLYDIR | IN_CLOSE_WRITE | IN_DELETE |
                     IN_MODIFY | IN_MOVED_TO | IN_MOVED_FROM | IN_ISDIR);
 
-  watcher->handle_events();
+  watcher->init_sub_list();
 
   return 0;
 }

@@ -1,7 +1,7 @@
 #include "../../include/filesystem/linux_watcher.hpp"
 
 LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
-    : root_to_watch{root_to_watch}, watcher_mask{mask} {
+    : root_to_watch{root_to_watch}, watcher_mask{mask}, running{false} {
   timer = TIMER;
   // Richiedo un file descriptor al kernel da utilizzare
   // per la watch. L'API fornita prevede, come spesso avviene
@@ -23,10 +23,30 @@ std::shared_ptr<LinuxWatcher>
 LinuxWatcher::getInstance(const std::string &root_path, uint32_t mask) {
   if (instance.get() == nullptr) {
     instance = std::shared_ptr<LinuxWatcher>(new LinuxWatcher{root_path, mask});
-    instance->add_watch(root_path);
-    instance->check_news();
   }
   return instance;
+}
+
+void LinuxWatcher::init_sub_list() {
+  std::shared_ptr<Broker> broker = Broker::getInstance();
+  broker->subscribe(TOPIC::LOGGED_IN,
+                    std::bind(&LinuxWatcher::start, instance.get(),
+                              std::placeholders::_1));
+  broker->subscribe(TOPIC::LOGGED_OUT,
+                    std::bind(&LinuxWatcher::stop, instance.get(),
+                              std::placeholders::_1));
+}
+
+void LinuxWatcher::start(const Message &message) {
+  running = true;
+  instance->add_watch(root_to_watch);
+  instance->check_news();
+  instance->handle_events();
+}
+
+void LinuxWatcher::stop(const Message &message) {
+  running = false;
+  instance->remove_watch(root_to_watch);
 }
 
 bool LinuxWatcher::add_watch(const std::string &path) {
@@ -82,7 +102,7 @@ void LinuxWatcher::handle_events() {
 
   std::clog << "Start monitoring...\n";
   std::shared_ptr<Broker> broker = Broker::getInstance();
-  for (;;) {
+  while (running) {
     std::clog << "Wating for an event...\n";
     // Some systems cannot read integer variables if they are not
     // properly aligned. On other systems, incorrect alignment may
@@ -107,6 +127,8 @@ void LinuxWatcher::handle_events() {
     // poll until an event occurs.Timeout = -1 -> BLOCKING,
     // else timeout expressed in milliseconds
     poll_num = poll(fds, nfds, timer);
+    if (!running)
+      break;
     if (poll_num > 0) {
       len = read(inotify_descriptor, buf, sizeof buf);
       // todo: check su read qui...
@@ -147,8 +169,7 @@ void LinuxWatcher::handle_events() {
             // alla NEW_FILE
             if (new_files.find(path) == new_files.end()) {
               std::smatch match;
-              if (!std::regex_search(path.begin(), path.end(), match,
-                                     temp_rgx))
+              if (!std::regex_search(path.begin(), path.end(), match, temp_rgx))
                 broker->publish(Message{TOPIC::FILE_MODIFIED, message});
             }
 
@@ -156,8 +177,7 @@ void LinuxWatcher::handle_events() {
           case 256: {
             new_files.insert(path);
             std::smatch match;
-            if (!std::regex_search(path.begin(), path.end(), match,
-                                   temp_rgx))
+            if (!std::regex_search(path.begin(), path.end(), match, temp_rgx))
               broker->publish(Message{TOPIC::NEW_FILE, message});
           }
 

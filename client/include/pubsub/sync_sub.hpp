@@ -26,20 +26,22 @@ private:
   std::queue<json> down_tasks;
   std::mutex m;
   std::condition_variable cv;
-  bool is_running;
+  bool running;
   size_t dir_size;
   static inline std::shared_ptr<SyncSubscriber> instance{nullptr};
-  SyncSubscriber() : is_running{true}, dir_size{0} {}
+  SyncSubscriber() : running{false}, dir_size{0} {}
 
 public:
   ~SyncSubscriber() {
-    is_running = false;
+    running = false;
     for (size_t i = 0; i < down_workers.size(); i++) {
       down_workers[i].join();
     }
   }
   static std::shared_ptr<SyncSubscriber> getInstance();
-  void init();
+  void start(const Message &message);
+  void stop(const Message &message);
+  void init_sub_list();
   void init_workers();
   void on_new_file(const Message &message);
   void on_new_folder(const Message &message);

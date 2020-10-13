@@ -6,6 +6,8 @@
 #include <iostream>
 #include <memory>
 #include <poll.h>
+#include <regex>
+#include <set>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,14 +15,12 @@
 #include <sys/inotify.h>
 #include <unistd.h>
 #include <unordered_map>
-#include <set>
-#include <regex>
 
-#include "sync_structure.hpp"
-#include "../pubsub/message.hpp"
+#include "../common/duration.hpp"
 #include "../common/json.hpp"
 #include "../pubsub/broker.hpp"
-#include "../common/duration.hpp"
+#include "../pubsub/message.hpp"
+#include "sync_structure.hpp"
 
 #define TIMER 5000
 #define WAIT -1
@@ -33,6 +33,7 @@ private:
   int inotify_descriptor;
   std::string root_to_watch;
   uint32_t watcher_mask;
+  bool running;
   std::regex temp_rgx;
   std::set<std::string> new_files;
   std::unordered_map<std::string, int> path_wd_map;
@@ -66,11 +67,10 @@ public:
    */
   bool remove_watch(const std::string &path);
 
-
   /**
    * Metodo eseguito a startup e che permette di notificare l'aggiunta
-   * di nuovi o modifica di file avvenuta off-line. Il controllo che viene 
-   * effettuato per la modifica si basa su last_modified.
+   * di nuovi o modifica di file avvenuta off-line. Il controllo che viene
+   * effettuato per la modifica si basa su last_mod.
    */
   void check_news();
 
@@ -79,6 +79,22 @@ public:
    * al broker.
    */
   void handle_events();
+
+  /**
+   * Metodo che permette di chiamare le subscribe ai topic ai quali questo
+   * modulo è interessato.
+   */
+  void init_sub_list();
+
+  /**
+   * Esegue chiamate necessarie in fase di inizializzazione del modulo.
+   */
+  void start(const Message &message);
+
+  /**
+   * Esegue chiamate necessarie in fase di stop del modulo.
+   */
+  void stop(const Message &message);
 
   ~LinuxWatcher() {
     // Quando l'oggetto viene distrutto rilascio il file descriptor

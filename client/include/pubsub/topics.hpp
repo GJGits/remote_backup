@@ -17,5 +17,7 @@ enum TOPIC {
     DOWN_EMPTY,
     GET_STATUS,
     LIST,
+    LOGGED_IN,
+    LOGGED_OUT,
     TIME_OUT
     };

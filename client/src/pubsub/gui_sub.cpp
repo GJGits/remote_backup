@@ -1,5 +1,31 @@
 #include "../../include/pubsub/gui_sub.hpp"
 
+class udp_server {
+public:
+  udp_server(boost::asio::io_context &io_context)
+      : socket_(io_context, udp::endpoint(udp::v4(), 2800)) {
+    start_receive();
+  }
+
+private:
+  void start_receive() {
+    socket_.async_receive_from(
+        boost::asio::buffer(recv_buffer_), remote_endpoint_,
+        std::bind(&udp_server::handle_receive, this));
+  }
+
+  void handle_receive() {
+
+      std::clog << "Code received by client: " << recv_buffer_[0] << "\n";
+
+      start_receive();
+  }
+
+  udp::socket socket_;
+  udp::endpoint remote_endpoint_;
+  boost::array<char, 1> recv_buffer_;
+};
+
 std::shared_ptr<GuiSubscriber> GuiSubscriber::getInstance() {
   if (instance.get() == nullptr) {
     instance = std::shared_ptr<GuiSubscriber>(new GuiSubscriber{});
@@ -24,6 +50,13 @@ void GuiSubscriber::init() {
   broker->subscribe(TOPIC::UP_EMPTY,
                     std::bind(&GuiSubscriber::on_finish, instance.get(),
                               std::placeholders::_1));
+  try {
+    boost::asio::io_context io_context;
+    udp_server server(io_context);
+    io_context.run();
+  } catch (std::exception &e) {
+    std::cerr << e.what() << std::endl;
+  }
 }
 
 void GuiSubscriber::on_action(const Message &message) {

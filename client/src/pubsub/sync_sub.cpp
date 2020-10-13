@@ -8,8 +8,14 @@ std::shared_ptr<SyncSubscriber> SyncSubscriber::getInstance() {
   return instance;
 }
 
-void SyncSubscriber::init() {
+void SyncSubscriber::init_sub_list() {
   std::shared_ptr<Broker> broker = Broker::getInstance();
+  broker->subscribe(
+      TOPIC::LOGGED_IN,
+      std::bind(&SyncSubscriber::start, instance.get(), std::placeholders::_1));
+  broker->subscribe(
+      TOPIC::LOGGED_OUT,
+      std::bind(&SyncSubscriber::stop, instance.get(), std::placeholders::_1));
   broker->subscribe(TOPIC::NEW_FILE,
                     std::bind(&SyncSubscriber::on_new_file, instance.get(),
                               std::placeholders::_1));
@@ -25,9 +31,15 @@ void SyncSubscriber::init() {
   broker->subscribe(TOPIC::FILE_DELETED,
                     std::bind(&SyncSubscriber::on_file_deleted, instance.get(),
                               std::placeholders::_1));
+}
+
+void SyncSubscriber::start(const Message &message) {
+  running = true;
   remote_check();
   init_workers();
 }
+
+void SyncSubscriber::stop(const Message &message) { running = false; }
 
 void SyncSubscriber::push(const json &task) {
   std::unique_lock lk{m};
@@ -121,7 +133,7 @@ void SyncSubscriber::init_workers() {
     down_workers.emplace_back([&]() {
       std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
       std::shared_ptr<Broker> broker = Broker::getInstance();
-      while (is_running) {
+      while (running) {
         json task;
         // sezione critica
         {
@@ -131,12 +143,12 @@ void SyncSubscriber::init_workers() {
             down_tasks.pop();
           } else {
             restore_files();
-            cv.wait(lk, [&]() { return !down_tasks.empty() || !is_running; });
+            cv.wait(lk, [&]() { return !down_tasks.empty() || !running; });
             continue;
           }
         }
         // sezione non critica
-        if(std::string{task["command"]}.compare("updated") == 0) {
+        if (std::string{task["command"]}.compare("updated") == 0) {
           for (int j = 0; j < task["num_chunks"].get<int>(); j++) {
             json chunk_info = {{"path", task["path"]}, {"id", j}};
             std::vector<char> chunk = rest_client->get_chunk(chunk_info);
@@ -160,7 +172,6 @@ void SyncSubscriber::init_workers() {
         } else {
           // todo: elimina file
         }
-        
       }
     });
   }
