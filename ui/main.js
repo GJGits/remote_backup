@@ -2,6 +2,7 @@
 const { menubar } = require('menubar');
 const dgram = require('dgram');
 const server = dgram.createSocket('udp4');
+const client = dgram.createSocket('udp4');
 const { ipcMain } = require('electron');
 const ClientConf = require('./modules/client-conf.js');
 
@@ -15,6 +16,12 @@ const mb = menubar(
     }
   });
 
+// tenere i codici in questa mappa in sync con la
+// mappa dei topics in utente.
+var topics = new Map();
+topics.set("LOGGED_IN", 16);
+topics.set("LOGGED_OUT", 17);
+
 
 
 mb.on('ready', () => {
@@ -26,11 +33,13 @@ mb.on('ready', () => {
   ipcMain.on('config', (event, data) => {
     let conf = new ClientConf();
     conf.set(data);
+    client.send(Buffer.from([topics.get("LOGGED_IN")]), 2800, "172.18.0.8", (err) => { console.log(err) });
   });
 
   ipcMain.on('reset-config', (event, data) => {
     let conf = new ClientConf();
     conf.reset();
+    client.send(Buffer.from([topics.get("LOGGED_OUT")]), 2800, "172.18.0.8", (err) => { console.log(err) });
   });
 
   // UDP INSTANCE DEFINITION
@@ -42,7 +51,6 @@ mb.on('ready', () => {
   server.on('message', (msg, rinfo) => {
     console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
     msg = new TextDecoder("utf-8").decode(msg);
-    mb.window.webContents.send('asynchronous-message', msg);
     if (msg === "login" || msg === "logged")
       mb.window.webContents.send('status-changed', msg);
     if (msg === "start-sync" || msg == "end-sync")
@@ -60,10 +68,16 @@ mb.on('ready', () => {
 
 mb.on('after-create-window', () => {
   let conf = new ClientConf();
-  if (conf.isValid())
+  if (conf.isValid()) {
     mb.window.webContents.send('status-changed', "logged");
-  else
+    client.send(Buffer.from([topics.get("LOGGED_IN")]), 2800, "172.18.0.8", (err) => { console.log(err) });
+  }
+
+  else {
     mb.window.webContents.send('status-changed', "login");
+    client.send(Buffer.from([topics.get("LOGGED_OUT")]), 2800, "172.18.0.8", (err) => { console.log(err) });
+  }
+
   mb.window.webContents.send('sync', "synced");
   mb.window.openDevTools();
 });

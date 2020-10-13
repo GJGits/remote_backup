@@ -38,6 +38,7 @@ void LinuxWatcher::init_sub_list() {
 }
 
 void LinuxWatcher::start(const Message &message) {
+  std::clog << "watcher started...\n";
   running = true;
   instance->add_watch(root_to_watch);
   instance->check_news();
@@ -47,6 +48,7 @@ void LinuxWatcher::start(const Message &message) {
 void LinuxWatcher::stop(const Message &message) {
   running = false;
   instance->remove_watch(root_to_watch);
+  std::clog << "watcher exit...\n";
 }
 
 bool LinuxWatcher::add_watch(const std::string &path) {
