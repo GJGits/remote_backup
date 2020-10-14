@@ -17,6 +17,9 @@ LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
   // regex che serve per evitare eventi su e da cartella .tmp
   // cartella utilizzata per poggiare i download
   temp_rgx = std::move(std::regex{"\\.\\/sync\\/\\.tmp\\/.*"});
+  // regex che serve per evitare eventi su e da cartella .bin
+  // cartella utilizzata per poggiare i file da eliminare
+  bin_rgx = std::move(std::regex{"\\.\\/sync\\/\\.bin\\/.*"});
 }
 
 std::shared_ptr<LinuxWatcher>
@@ -29,12 +32,12 @@ LinuxWatcher::getInstance(const std::string &root_path, uint32_t mask) {
 
 void LinuxWatcher::init_sub_list() {
   std::shared_ptr<Broker> broker = Broker::getInstance();
-  broker->subscribe(TOPIC::LOGGED_IN,
-                    std::bind(&LinuxWatcher::start, instance.get(),
-                              std::placeholders::_1));
-  broker->subscribe(TOPIC::LOGGED_OUT,
-                    std::bind(&LinuxWatcher::stop, instance.get(),
-                              std::placeholders::_1));
+  broker->subscribe(
+      TOPIC::LOGGED_IN,
+      std::bind(&LinuxWatcher::start, instance.get(), std::placeholders::_1));
+  broker->subscribe(
+      TOPIC::LOGGED_OUT,
+      std::bind(&LinuxWatcher::stop, instance.get(), std::placeholders::_1));
 }
 
 void LinuxWatcher::start(const Message &message) {
@@ -171,15 +174,21 @@ void LinuxWatcher::handle_events() {
             // alla NEW_FILE
             if (new_files.find(path) == new_files.end()) {
               std::smatch match;
-              if (!std::regex_search(path.begin(), path.end(), match, temp_rgx))
+              std::smatch match2;
+              if (!std::regex_search(path.begin(), path.end(), match,
+                                     temp_rgx) &&
+                  !std::regex_search(path.begin(), path.end(), match2, bin_rgx))
                 broker->publish(Message{TOPIC::FILE_MODIFIED, message});
             }
 
           } break;
           case 256: {
             new_files.insert(path);
-            std::smatch match;
-            if (!std::regex_search(path.begin(), path.end(), match, temp_rgx))
+            std::smatch match1;
+            std::smatch match2;
+            if (!std::regex_search(path.begin(), path.end(), match1,
+                                   temp_rgx) &&
+                !std::regex_search(path.begin(), path.end(), match2, bin_rgx))
               broker->publish(Message{TOPIC::NEW_FILE, message});
           }
 
@@ -202,18 +211,25 @@ void LinuxWatcher::handle_events() {
             break;
           case 128: {
             if (cookie_map.find(event->cookie) != cookie_map.end()) {
-              std::smatch match;
-              if (!std::regex_search(path.begin(), path.end(), match,
-                                     temp_rgx)) {
+              std::smatch match1;
+              std::smatch match2;
+              if (!std::regex_search(path.begin(), path.end(), match1,
+                                     temp_rgx) &&
+                  !std::regex_search(path.begin(), path.end(), match2,
+                                     bin_rgx)) {
                 message["old_path"] = cookie_map[event->cookie];
                 broker->publish(Message{TOPIC::FILE_RENAMED, message});
                 cookie_map.erase(event->cookie);
               }
             }
           } break;
-          case 512:
-            broker->publish(Message{TOPIC::FILE_DELETED, message});
-            break;
+          case 512: {
+            std::smatch match;
+            if (!std::regex_search(path.begin(), path.end(), match, bin_rgx))
+              broker->publish(Message{TOPIC::FILE_DELETED, message});
+          }
+
+          break;
           default:
             break;
           }

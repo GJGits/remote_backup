@@ -25,10 +25,8 @@ void GuiModule::start_receive() {
 }
 
 void GuiModule::handle_gui_message() {
-  std::clog << "received from gui: " << (int)recv_buffer_[0] << "\n";
-  // decommentare quando i moduli saranno pronti
-  // std::shared_ptr<Broker> broker = Broker::getInstance();
-  // broker->publish(Message{(TOPIC)recv_buffer_[0]});
+  std::shared_ptr<Broker> broker = Broker::getInstance();
+  broker->publish(Message{(TOPIC)recv_buffer_[0]});
   start_receive();
 }
 

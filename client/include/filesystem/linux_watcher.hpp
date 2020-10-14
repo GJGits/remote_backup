@@ -35,6 +35,7 @@ private:
   uint32_t watcher_mask;
   bool running;
   std::regex temp_rgx;
+  std::regex bin_rgx;
   std::set<std::string> new_files;
   std::unordered_map<std::string, int> path_wd_map;
   std::unordered_map<int, std::string> wd_path_map;

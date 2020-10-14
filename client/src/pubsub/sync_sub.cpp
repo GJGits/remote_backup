@@ -3,7 +3,6 @@
 std::shared_ptr<SyncSubscriber> SyncSubscriber::getInstance() {
   if (instance.get() == nullptr) {
     instance = std::shared_ptr<SyncSubscriber>(new SyncSubscriber{});
-    instance->compute_new_size();
   }
   return instance;
 }
@@ -35,6 +34,7 @@ void SyncSubscriber::init_sub_list() {
 
 void SyncSubscriber::start(const Message &message) {
   running = true;
+  compute_new_size();
   remote_check();
   init_workers();
 }
@@ -128,6 +128,7 @@ void SyncSubscriber::remote_check() {
     }
   }
 }
+
 void SyncSubscriber::init_workers() {
   for (size_t i = 0; i < 2; i++) {
     down_workers.emplace_back([&]() {
@@ -170,7 +171,13 @@ void SyncSubscriber::init_workers() {
             broker->publish(Message{TOPIC::ADD_CHUNK, entry});
           }
         } else {
-          // todo: elimina file
+          std::string file_path = macaron::Base64::Decode(task["path"]);
+          std::string new_path =
+              std::string{"./sync/.bin/"} + std::string{task["path"]};
+          std::filesystem::rename(file_path, new_path);
+          std::remove(new_path.c_str());
+          broker->publish(Message{TOPIC::REMOVE_ENTRY, task});
+          compute_new_size();
         }
       }
     });
@@ -194,7 +201,9 @@ void SyncSubscriber::restore_files() {
             std::vector<std::string> tok22 = Utility::split(tok21[1], '.');
             return std::stoi(tok21[0]) < std::stoi(tok22[0]);
           });
-      std::string new_path = macaron::Base64::Decode(p.path().string());
+      std::string new_path =
+          macaron::Base64::Decode(p.path().filename().string());
+      std::clog << "new path: " << new_path << "\n";
       std::string temp_path = p.path().string() + ".out";
       std::ofstream out{temp_path, std::ios::binary};
       for (size_t i = 0; i < chunks.size(); i++) {
