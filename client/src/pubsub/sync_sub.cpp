@@ -8,6 +8,9 @@ void SyncSubscriber::init_sub_list() {
   broker->subscribe(
       TOPIC::LOGGED_OUT,
       std::bind(&SyncSubscriber::stop, instance.get(), std::placeholders::_1));
+  broker->subscribe(
+      TOPIC::CLOSE,
+      std::bind(&SyncSubscriber::stop, instance.get(), std::placeholders::_1));
   broker->subscribe(TOPIC::NEW_FILE,
                     std::bind(&SyncSubscriber::on_new_file, instance.get(),
                               std::placeholders::_1));
@@ -26,13 +29,17 @@ void SyncSubscriber::init_sub_list() {
 }
 
 void SyncSubscriber::start(const Message &message) {
+  std::clog << "sync module started...\n";
   running = true;
   compute_new_size();
   remote_check();
   init_workers();
 }
 
-void SyncSubscriber::stop(const Message &message) { running = false; }
+void SyncSubscriber::stop(const Message &message) {
+  std::clog << "sync module closed...\n";
+  running = false;
+}
 
 void SyncSubscriber::push(const json &task) {
   std::unique_lock lk{m};
@@ -158,8 +165,7 @@ void SyncSubscriber::init_workers() {
             json entry = {{"path", file_path},
                           {"last_mod", task["last_mod"]},
                           {"nchunks", task["num_chunks"]}};
-            entry["chunks"].push_back(
-                {{"id", task["id"].get<int>()}});
+            entry["chunks"].push_back({{"id", task["id"].get<int>()}});
             broker->publish(Message{TOPIC::ADD_CHUNK, entry});
           }
         } else {

@@ -16,6 +16,8 @@
 #include <unistd.h>
 #include <unordered_map>
 
+#include <stdio.h> 
+#include <unistd.h> 
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"
@@ -32,6 +34,7 @@ class LinuxWatcher
     : public ParamSingleton<LinuxWatcher, std::string, u_int32_t> {
 private:
   friend class ParamSingleton;
+  int pipe_[2];
   int timer;
   int inotify_descriptor;
   std::string root_to_watch;

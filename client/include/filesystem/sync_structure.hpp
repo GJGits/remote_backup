@@ -12,30 +12,35 @@
 #include <vector>
 #include <ctime>
 
+#include "../common/singleton.hpp"
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
 #include "../common/sha256.hpp"
 
 using json = nlohmann::json;
 
-class SyncStructure {
+class SyncStructure: public Singleton<SyncStructure> {
 
 private:
+  friend class Singleton;
   std::unordered_map<std::string, json> entries;
-  inline static std::shared_ptr<SyncStructure> instance{nullptr};
   std::mutex m;
-  bool dirty;
   int last_check = 0;
-
-  void create_structure();
+  
+  SyncStructure(){
+    read_structure();
+  }
+  
   void read_structure();
+  void write_structure();
 
 public:
-  static std::shared_ptr<SyncStructure> getInstance();
-  void write_structure();
+  ~SyncStructure() {
+    write_structure();
+  }
+  
   void add_chunk(const json &chunk);
   bool has_entry(const std::string &path);
-  void reset_chunks(const std::string &path);
   void delete_entry(const json &entry);
   void rename_entry(const json &entry);
   std::vector<std::string> get_entry_hashes(const std::string &path);

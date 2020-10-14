@@ -1,14 +1,10 @@
 #include "../../include/modules/gui_module.hpp"
 
-std::shared_ptr<GuiModule> GuiModule::getInstance() {
-  if (instance.get() == nullptr) {
-    instance = std::shared_ptr<GuiModule>{new GuiModule()};
-  }
-  return instance;
-}
-
 void GuiModule::init_sub_list() {
   std::shared_ptr<Broker> broker = Broker::getInstance();
+  broker->subscribe(
+      TOPIC::CLOSE,
+      std::bind(&GuiModule::stop, instance.get(), std::placeholders::_1));
 }
 
 void GuiModule::start() {
@@ -18,6 +14,14 @@ void GuiModule::start() {
   io_context.run();
 }
 
+void GuiModule::stop(const Message &message) { 
+  std::clog << "gui module closed...\n";
+  running = false; 
+  socket_.cancel();
+  socket_.close();
+  io_context.stop();
+  }
+
 void GuiModule::start_receive() {
   socket_.async_receive_from(boost::asio::buffer(recv_buffer_),
                              remote_endpoint_,
@@ -26,6 +30,7 @@ void GuiModule::start_receive() {
 
 void GuiModule::handle_gui_message() {
   std::shared_ptr<Broker> broker = Broker::getInstance();
+  std::clog << "ricevo da gui: " << std::to_string((int)recv_buffer_[0]) << "\n";
   broker->publish(Message{(TOPIC)recv_buffer_[0]});
   start_receive();
 }

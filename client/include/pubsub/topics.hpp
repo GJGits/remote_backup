@@ -19,5 +19,6 @@ enum TOPIC {
     LIST,
     LOGGED_IN,
     LOGGED_OUT,
+    CLOSE,
     TIME_OUT
     };

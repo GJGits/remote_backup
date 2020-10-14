@@ -2,6 +2,10 @@
 
 LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
     : root_to_watch{root_to_watch}, watcher_mask{mask}, running{false} {
+  // pipe per segnale exit al poll.
+  //  - watcher scrive su 1, legge su 0
+  //  - poll scrive su 0, legge su 1.
+  pipe(pipe_);
   timer = TIMER;
   // Richiedo un file descriptor al kernel da utilizzare
   // per la watch. L'API fornita prevede, come spesso avviene
@@ -30,6 +34,8 @@ void LinuxWatcher::init_sub_list() {
   broker->subscribe(
       TOPIC::LOGGED_OUT,
       std::bind(&LinuxWatcher::stop, instance.get(), std::placeholders::_1));
+  broker->subscribe(TOPIC::CLOSE, std::bind(&LinuxWatcher::stop, instance.get(),
+                                            std::placeholders::_1));
 }
 
 void LinuxWatcher::start(const Message &message) {
@@ -43,6 +49,7 @@ void LinuxWatcher::start(const Message &message) {
 void LinuxWatcher::stop(const Message &message) {
   running = false;
   instance->remove_watch(root_to_watch);
+  write(pipe_[1], "a", 1);
   std::clog << "watcher exit...\n";
 }
 
@@ -116,10 +123,12 @@ void LinuxWatcher::handle_events() {
     // Puo' questo blocco essere spostato fuori dal for per singola
     // inizializzazione?
     int poll_num;
-    nfds_t nfds = 1;
-    struct pollfd fds[1];
+    nfds_t nfds = 2;
+    struct pollfd fds[2];
     fds[0].fd = inotify_descriptor;
     fds[0].events = POLLIN; // maschera generale per eventi su fd?
+    fds[1].fd = pipe_[0];
+    fds[1].events = POLLIN;
 
     // poll until an event occurs.Timeout = -1 -> BLOCKING,
     // else timeout expressed in milliseconds

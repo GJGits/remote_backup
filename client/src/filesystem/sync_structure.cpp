@@ -2,22 +2,11 @@
 
 /* PRIVATE SECTION */
 
-void SyncStructure::create_structure() {
-  if (!std::filesystem::exists("./config/client-struct.json") ||
-      std::filesystem::is_empty("./config/client-struct.json")) {
-    json temp;
-    temp["hashed_status"] = "empty_hashed_status";
-    temp["entries"] = json::array();
-    temp["last_check"] = 0;
-    std::ofstream out{"./config/client-struct.json"};
-    out << std::setw(4) << temp << std::endl;
-  }
-}
-
 void SyncStructure::read_structure() {
   std::unique_lock lk{m};
   DurationLogger logger{"READ_STRUCTURE"};
-  if (entries.empty() && !dirty) {
+  if (std::filesystem::exists("./config/client-struct.json") ||
+      !std::filesystem::is_empty("./config/client-struct.json")) {
     std::ifstream i("./config/client-struct.json");
     std::unique_ptr<json> structure = std::make_unique<json>();
     i >> (*structure);
@@ -32,51 +21,27 @@ void SyncStructure::read_structure() {
 
 /* PUBLIC SECTION */
 
-std::shared_ptr<SyncStructure> SyncStructure::getInstance() {
-  if (instance.get() == nullptr) {
-    instance = std::shared_ptr<SyncStructure>(new SyncStructure{});
-  }
-  instance->create_structure();
-  instance->read_structure();
-  return instance;
-}
-
 void SyncStructure::write_structure() {
-  if (dirty) {
-    std::unique_ptr<json> structure = std::make_unique<json>();
-    DurationLogger duration{"WRITE_STRUCTURE"};
-    if (entries.empty()) {
-      (*structure)["hashed_status"] = std::string{"empty_hashed_status"};
-      (*structure)["entries"] = json::array();
-      (*structure)["last_check"] = 0;
-    } else {
-      std::string entries_dump;
-      for (auto it = entries.begin(); it != entries.end(); it++) {
-        (*structure)["entries"].push_back(it->second);
-        entries_dump += it->second.dump();
-      }
-      char *dump_str = new char[entries_dump.size() + 1];
-      strcpy(dump_str, entries_dump.c_str());
-      std::shared_ptr<char[]> data{dump_str};
-      (*structure)["hashed_status"] =
-          (*structure)["entries"].empty()
-              ? std::string{"empty_hashed_status"}
-              : Sha256::getSha256(data, entries_dump.size());
-      last_check = (int)std::time(nullptr);
-      (*structure)["last_check"] = last_check;
+  std::unique_ptr<json> structure = std::make_unique<json>();
+  DurationLogger duration{"WRITE_STRUCTURE"};
+  if (entries.empty()) {
+    (*structure)["entries"] = json::array();
+    (*structure)["last_check"] = 0;
+  } else {
+    std::string entries_dump;
+    for (auto it = entries.begin(); it != entries.end(); it++) {
+      (*structure)["entries"].push_back(it->second);
+      entries_dump += it->second.dump();
     }
-    std::ofstream o("./config/client-struct.json");
-    o << (*structure) << "\n";
-    o.close();
-    (*structure).clear();
-    entries.clear();
-    dirty = false;
+    last_check = (int)std::time(nullptr);
+    (*structure)["last_check"] = last_check;
   }
+  std::ofstream o("./config/client-struct.json");
+  o << (*structure) << "\n";
+  o.close();
 }
 
-int SyncStructure::get_last_check() {
-  return last_check;
-}
+int SyncStructure::get_last_check() { return last_check; }
 
 bool SyncStructure::has_entry(const std::string &path) {
   return entries.find(path) != entries.end();
@@ -127,18 +92,12 @@ void SyncStructure::add_chunk(const json &chunk) {
     entries[chunk["path"]]["hash"] = file_hash;
     entries[chunk["path"]]["chunks"].clear();
   }
-  dirty = true;
 }
 
 void SyncStructure::delete_entry(const json &entry) {
   DurationLogger logger{"DELETE_ENTRY"};
   std::string path = entry["path"];
   entries.erase(path);
-  dirty = true;
-}
-
-void SyncStructure::reset_chunks(const std::string &path) {
-  entries[path]["chunks"].clear();
 }
 
 void SyncStructure::rename_entry(const json &entry) {
@@ -150,5 +109,4 @@ void SyncStructure::rename_entry(const json &entry) {
     ent["path"] = new_path;
     entries.erase(old_path);
   }
-  dirty = true;
 }
