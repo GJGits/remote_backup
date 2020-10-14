@@ -4,17 +4,17 @@
 #include <memory>
 #include <mutex>
 
+#include "../common/singleton.hpp"
 #include "../filesystem/sync_structure.hpp"
 #include "broker.hpp"
 
-class StructSubscriber {
+class StructSubscriber : public Singleton<StructSubscriber> {
 private:
-  std::mutex m;
-  static inline std::shared_ptr<StructSubscriber> instance{nullptr};
+  friend class Singleton;
+  std::mutex m1;
   StructSubscriber() {}
 
 public:
-  static std::shared_ptr<StructSubscriber> getInstance();
   void init_sub_list();
   void on_add_chunk(const Message &message);
   void on_file_modified(const Message &message);

@@ -8,6 +8,7 @@ void SyncStructure::create_structure() {
     json temp;
     temp["hashed_status"] = "empty_hashed_status";
     temp["entries"] = json::array();
+    temp["last_check"] = 0;
     std::ofstream out{"./config/client-struct.json"};
     out << std::setw(4) << temp << std::endl;
   }

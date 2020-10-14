@@ -1,12 +1,5 @@
 #include "../../include/pubsub/struct_sub.hpp"
 
-std::shared_ptr<StructSubscriber> StructSubscriber::getInstance() {
-  if (instance.get() == nullptr) {
-    instance = std::shared_ptr<StructSubscriber>(new StructSubscriber{});
-  }
-  return instance;
-}
-
 void StructSubscriber::init_sub_list() {
   std::shared_ptr<Broker> broker = Broker::getInstance();
   broker->subscribe(TOPIC::ADD_CHUNK,
@@ -25,7 +18,7 @@ void StructSubscriber::on_add_chunk(const Message &message) {
   // la medesima posizione, di conseguenza perderei il primo.
   // L'ordine tuttavia non importa perche' ogni chunk porta con se
   // il suo id.
-  std::unique_lock lk{m};
+  std::unique_lock lk{m1};
   std::shared_ptr<Broker> broker = Broker::getInstance();
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   sync->add_chunk(message.get_content());

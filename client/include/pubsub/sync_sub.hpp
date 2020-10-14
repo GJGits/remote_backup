@@ -9,8 +9,9 @@
 #include <thread>
 #include <vector>
 
-#include "../common/utility.hpp"
 #include "../common/json.hpp"
+#include "../common/singleton.hpp"
+#include "../common/utility.hpp"
 #include "../filesystem/file_entry.hpp"
 #include "../filesystem/sync_structure.hpp"
 #include "../http/rest_client.hpp"
@@ -20,15 +21,15 @@
 
 using json = nlohmann::json;
 
-class SyncSubscriber {
+class SyncSubscriber : public Singleton<SyncSubscriber> {
 private:
+  friend class Singleton;
   std::vector<std::thread> down_workers;
   std::queue<json> down_tasks;
   std::mutex m;
   std::condition_variable cv;
   bool running;
   size_t dir_size;
-  static inline std::shared_ptr<SyncSubscriber> instance{nullptr};
   SyncSubscriber() : running{false}, dir_size{0} {}
 
 public:
@@ -38,7 +39,6 @@ public:
       down_workers[i].join();
     }
   }
-  static std::shared_ptr<SyncSubscriber> getInstance();
   void start(const Message &message);
   void stop(const Message &message);
   void init_sub_list();
@@ -50,6 +50,6 @@ public:
   void remote_check();
   void increment_size(size_t size);
   void compute_new_size();
-  void push(const json& task);
+  void push(const json &task);
   void restore_files();
 };

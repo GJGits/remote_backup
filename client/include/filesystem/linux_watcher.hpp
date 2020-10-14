@@ -18,6 +18,7 @@
 
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
+#include "../common/singleton.hpp"
 #include "../pubsub/broker.hpp"
 #include "../pubsub/message.hpp"
 #include "sync_structure.hpp"
@@ -27,8 +28,10 @@
 
 using json = nlohmann::json;
 
-class LinuxWatcher {
+class LinuxWatcher
+    : public ParamSingleton<LinuxWatcher, std::string, u_int32_t> {
 private:
+  friend class ParamSingleton;
   int timer;
   int inotify_descriptor;
   std::string root_to_watch;
@@ -40,13 +43,9 @@ private:
   std::unordered_map<std::string, int> path_wd_map;
   std::unordered_map<int, std::string> wd_path_map;
   std::unordered_map<int, std::string> cookie_map;
-  static inline std::shared_ptr<LinuxWatcher> instance{nullptr};
-
   LinuxWatcher(const std::string &root_to_watch, uint32_t mask);
 
 public:
-  static std::shared_ptr<LinuxWatcher> getInstance(const std::string &root_path,
-                                                   uint32_t mask);
   /**
    * Permette di aggiungere o modificare un watch all'inotify descriptor.
    *

@@ -22,14 +22,6 @@ LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
   bin_rgx = std::move(std::regex{"\\.\\/sync\\/\\.bin\\/.*"});
 }
 
-std::shared_ptr<LinuxWatcher>
-LinuxWatcher::getInstance(const std::string &root_path, uint32_t mask) {
-  if (instance.get() == nullptr) {
-    instance = std::shared_ptr<LinuxWatcher>(new LinuxWatcher{root_path, mask});
-  }
-  return instance;
-}
-
 void LinuxWatcher::init_sub_list() {
   std::shared_ptr<Broker> broker = Broker::getInstance();
   broker->subscribe(

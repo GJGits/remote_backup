@@ -1,12 +1,5 @@
 #include "../../include/pubsub/sync_sub.hpp"
 
-std::shared_ptr<SyncSubscriber> SyncSubscriber::getInstance() {
-  if (instance.get() == nullptr) {
-    instance = std::shared_ptr<SyncSubscriber>(new SyncSubscriber{});
-  }
-  return instance;
-}
-
 void SyncSubscriber::init_sub_list() {
   std::shared_ptr<Broker> broker = Broker::getInstance();
   broker->subscribe(
@@ -164,10 +157,9 @@ void SyncSubscriber::init_workers() {
             std::string chunk_hash = Sha256::getSha256(chunk);
             json entry = {{"path", file_path},
                           {"last_mod", task["last_mod"]},
-                          {"size", chunk.size()},
                           {"nchunks", task["num_chunks"]}};
             entry["chunks"].push_back(
-                {{"id", task["id"].get<int>()}, {"hash", chunk_hash}});
+                {{"id", task["id"].get<int>()}});
             broker->publish(Message{TOPIC::ADD_CHUNK, entry});
           }
         } else {
