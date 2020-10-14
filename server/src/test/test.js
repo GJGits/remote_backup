@@ -45,7 +45,7 @@ const run_test = function (combination, result) {
         if (passed) {
             console.log(" - " + test_cases[z].name + ": %s%s%s", FgGreen, '\u2713', Reset);
         } else {
-            console.log(" - " + test_cases[z].name + ": %s%s%s [%s]", FgRed, '\u2716', Reset, test_cases[z].call.error);
+            console.log(" - " + test_cases[z].name + ": %s%s%s      [%s]", FgRed, '\u2716', Reset, test_cases[z].error);
         }
     }
 }
@@ -92,14 +92,18 @@ file_list.forEach(fname => {
 });
 
 // 2. genero test
-test("Check status", (res, exp) => {
+test("Check status", function (res, exp) {
     if (res.statusCode === exp.status)
         return true;
     this.error = "got: " + res.statusCode + ", expected: " + exp.status;
     return false;
 });
 
-test("Check response message", (res, exp) => {
+test("Check response message", function (res, exp) {
+    const body = JSON.parse(res.body.toString());
+    if (body.error === exp.msg)
+        return true;
+    this.error = "got: " + body.error + ", expected: " + exp.msg;
     return false;
 });
 
@@ -114,7 +118,7 @@ const combinations = [
     }
 ];
 const expected_results = [
-    { status: 400, msg: "some error message here..." }
+    { status: 400, msg: "Auth failed" }
 ];
 
 console.log("\n");
