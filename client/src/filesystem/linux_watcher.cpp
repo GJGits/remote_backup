@@ -3,8 +3,8 @@
 LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
     : root_to_watch{root_to_watch}, watcher_mask{mask}, running{false} {
   // pipe per segnale exit al poll.
-  //  - watcher scrive su 1, legge su 0
-  //  - poll scrive su 0, legge su 1.
+  //  - watcher scrive su 1
+  //  - poll scrive su 0
   pipe(pipe_);
   timer = TIMER;
   // Richiedo un file descriptor al kernel da utilizzare
@@ -49,7 +49,8 @@ void LinuxWatcher::start(const Message &message) {
 void LinuxWatcher::stop(const Message &message) {
   running = false;
   instance->remove_watch(root_to_watch);
-  write(pipe_[1], "a", 1);
+  short poll_sig = 1;
+  write(pipe_[1], &poll_sig, 1);
   std::clog << "watcher exit...\n";
 }
 
@@ -133,8 +134,14 @@ void LinuxWatcher::handle_events() {
     // poll until an event occurs.Timeout = -1 -> BLOCKING,
     // else timeout expressed in milliseconds
     poll_num = poll(fds, nfds, timer);
-    if (!running)
+    std::clog << "revent[1]" << std::to_string(fds[1].revents) << "\n";
+    if (!running || fds[1].revents & POLLIN) {
+      std::clog << "poll da pipe\n";
+      char sig_buff;
+      read(fds[1].fd, &sig_buff, 1);
       break;
+    }
+      
     if (poll_num > 0) {
       len = read(inotify_descriptor, buf, sizeof buf);
       // todo: check su read qui...

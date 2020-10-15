@@ -106,6 +106,7 @@ $(document).ready(function () {
         //mac = getMAC();
         mac = "aa:bb:cc:dd:ee:ff";
         const supf = $("#supf");
+        supf.validate();
         if (password !== ripPassword) {
             $("#rip-password")[0].setCustomValidity('Le due password non coincidono');
             $("#rip-password").attr('title', 'Le due password non coincidono');

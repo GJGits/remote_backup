@@ -11,6 +11,10 @@
     window.jQuery = window.$ = require('jquery');
   </script>
 
+  <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/additional-methods.min.js"></script>
+
+
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
     integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
     crossorigin="anonymous"></script>
@@ -77,13 +81,15 @@
 
     <form id="supf" class="offset-2 col-8">
       <div class="form-group">
-        <input type="text" class="form-control" id="username2" aria-describedby="emailHelp" placeholder="Username..." pattern="\w+" required>
+        <input type="text" class="form-control" id="username2" aria-describedby="emailHelp" placeholder="Username..."
+          pattern="\w+" required>
       </div>
       <div class="form-group">
         <input type="password" class="form-control" id="password2" placeholder="Password" pattern="\w+" required>
       </div>
       <div class="form-group">
-        <input type="password" class="form-control" id="rip-password" placeholder="Ripeti password" pattern="\w+" required>
+        <input type="password" class="form-control" id="rip-password" placeholder="Ripeti password" pattern="\w+"
+          required>
       </div>
       <button type="button" class="btn btn-primary btn-block" id="signup-btn">Registrati</button>
     </form>

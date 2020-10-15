@@ -32,6 +32,7 @@ void GuiModule::handle_gui_message() {
   std::shared_ptr<Broker> broker = Broker::getInstance();
   std::clog << "ricevo da gui: " << std::to_string((int)recv_buffer_[0]) << "\n";
   broker->publish(Message{(TOPIC)recv_buffer_[0]});
+  std::clog << "attendo nuovo comando\n";
   start_receive();
 }
 

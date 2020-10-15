@@ -1,5 +1,6 @@
 // INCLUDES
 const { menubar } = require('menubar');
+const execSync = require('child_process').execSync;
 const dgram = require('dgram');
 const server = dgram.createSocket('udp4');
 const client = dgram.createSocket('udp4');
@@ -8,7 +9,12 @@ const ClientConf = require('./modules/client-conf.js');
 
 // CONSTANTS
 app.on('ready', () => {
-
+  //console.log(execSync('docker container ls').toString());
+  //var command = "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' remote_backup_client_1";
+  //command = '"'+command.replace(/(["\s'$`\\])/g,'\\$1')+'"';
+  //const client_ip = execSync(command).toString();
+  const client_ip = "172.18.0.8";
+  console.log(client_ip);
   // tenere i codici in questa mappa in sync con la
   // mappa dei topics in utente.
   var topics = new Map();
@@ -22,7 +28,7 @@ app.on('ready', () => {
 
   function on_close(menutItem, browserWindow, event) {
     console.log("click close");
-    client.send(Buffer.from([topics.get("CLOSE")]), 2800, "172.18.0.8", (err) => { console.log(err) });
+    client.send(Buffer.from([topics.get("CLOSE")]), 2800, client_ip, (err) => { console.log(err) });
   }
 
   //const tray = new Tray("remote-icon.png");
@@ -52,13 +58,13 @@ app.on('ready', () => {
     ipcMain.on('config', (event, data) => {
       let conf = new ClientConf();
       conf.set(data);
-      client.send(Buffer.from([topics.get("LOGGED_IN")]), 2800, "172.18.0.8", (err) => { console.log(err) });
+      client.send(Buffer.from([topics.get("LOGGED_IN")]), 2800, client_ip, (err) => { console.log(err) });
     });
 
     ipcMain.on('reset-config', (event, data) => {
       let conf = new ClientConf();
       conf.reset();
-      client.send(Buffer.from([topics.get("LOGGED_OUT")]), 2800, "172.18.0.8", (err) => { console.log(err) });
+      client.send(Buffer.from([topics.get("LOGGED_OUT")]), 2800, client_ip, (err) => { console.log(err) });
     });
 
     // UDP INSTANCE DEFINITION
@@ -89,12 +95,12 @@ app.on('ready', () => {
     let conf = new ClientConf();
     if (conf.isValid()) {
       mb.window.webContents.send('status-changed', "logged");
-      client.send(Buffer.from([topics.get("LOGGED_IN")]), 2800, "172.18.0.8", (err) => { console.log(err) });
+      client.send(Buffer.from([topics.get("LOGGED_IN")]), 2800, client_ip, (err) => { console.log(err) });
     }
 
     else {
       mb.window.webContents.send('status-changed', "login");
-      client.send(Buffer.from([topics.get("LOGGED_OUT")]), 2800, "172.18.0.8", (err) => { console.log(err) });
+      client.send(Buffer.from([topics.get("LOGGED_OUT")]), 2800, client_ip, (err) => { console.log(err) });
     }
 
     mb.window.webContents.send('sync', "synced");

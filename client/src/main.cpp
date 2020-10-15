@@ -14,15 +14,20 @@ int main() {
   std::shared_ptr<SyncSubscriber> sync_sub = SyncSubscriber::getInstance();
   sync_sub->init_sub_list();
 
-  std::shared_ptr<GuiModule> gui_module = GuiModule::getInstance();
-  gui_module->init_sub_list();
-  gui_module->start();
-
   std::shared_ptr<LinuxWatcher> watcher = LinuxWatcher::getInstance(
       "./sync", IN_CREATE | IN_ONLYDIR | IN_CLOSE_WRITE | IN_DELETE |
                     IN_MODIFY | IN_MOVED_TO | IN_MOVED_FROM | IN_ISDIR);
 
   watcher->init_sub_list();
 
+  std::shared_ptr<GuiModule> gui_module = GuiModule::getInstance();
+  gui_module->init_sub_list();
+  
+  // azione bloccante, questo modulo rimane in vita per tutta
+  // la durata dell'applicazione, idealmente infatti e' il client
+  // tramite interfaccia a comunicare la chiusura.
+  gui_module->start();
+
+  
   return 0;
 }
