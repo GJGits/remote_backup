@@ -5,3 +5,7 @@ newman run collections/remote_backup_noauth.postman_collection.json
 
 # 2. run post chunk tests
 node test.js
+
+# 3. run auth tests
+newman run collections/remote_backup_auth.postman_collection.json
+

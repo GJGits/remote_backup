@@ -114,8 +114,16 @@ const combinations = [
         url: base_url + "0/abc/1/abd/12345",
         description: "richiesta senza token",
         content: Buffer.alloc(0),
-        headers: { 'Content-Type': 'octect/stream', 'Content-Length': 0 }
-    }
+        headers: { 'Content-Type': 'octect/stream', 'Content-Length': 0}
+    },
+    //{
+    //    method: "POST",
+    //    url: base_url + "...",
+    //    description: "...",
+    //    content: buff_list[4].content,
+    //    headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[4].size,  'Authorization' : 'Bearer ' + token1 }
+    //}
+
 ];
 const expected_results = [
     { status: 400, msg: "Auth failed" }
