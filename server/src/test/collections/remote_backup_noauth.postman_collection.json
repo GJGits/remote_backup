@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "a7f4adc9-e039-442d-845c-dc5dc25a4c16",
+		"_postman_id": "3f306eb2-00f1-47b3-984f-34b2141cac59",
 		"name": "remote_backup_noauth",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -11,7 +11,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "1c0325dd-6d99-47cc-b363-217600447862",
+						"id": "c974ce3f-afa5-44e9-8f54-37a854e80055",
 						"exec": [
 							"var combinations     = pm.environment.get(\"combinations_signup\");",
 							"var expected_results = pm.environment.get(\"expected_results_signup\"); ",
@@ -138,7 +138,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "a4df4686-b3db-4469-9e3e-73f0485b1fdb",
+						"id": "65a44296-756f-4e39-b08c-dd3b633c3cb0",
 						"exec": [
 							"var body = pm.environment.get(\"combination_signup\");",
 							"var expected_result = pm.environment.get(\"result_signup\"); ",
@@ -222,7 +222,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "0621126f-8343-4f90-8bed-0c0ae96761c6",
+						"id": "fac1c363-37d9-4a81-aa8c-d2c8cca4b7d5",
 						"exec": [
 							"var combinations     = pm.environment.get(\"combinations_signin\");",
 							"var expected_results = pm.environment.get(\"expected_results_signin\"); ",
@@ -254,7 +254,10 @@
 							"    {username: \"renatò\", password: \"123456\", mac_address: \"aa:bb:cc:dd:ee:ff\"},",
 							"    {username: \"ren at0\", password: \"123456\",  mac_address: \"aa:bb:cc:dd:ee:ff\"},",
 							"    {username: \"renato\", password: \"123456\",  mac_address: \"aa:bb:cc:dd:ee:ff:aa\"},  ",
-							"    {username: \"renato\", password: \"123456\",  mac_address: \"aa:bb:cc:dd:ee:ff\"}, ",
+							"    {username: \"renato\", password: \"123456\",  mac_address: \"aa:bb:cc:dd:ee:ff\"},",
+							"    {username: \"renato\", password: \"1212\",  mac_address: \"aa:bb:cc:dd:ee:ff\"}, ",
+							"    {username: \"pippo\", password: \"1212\",  mac_address: \"aa:bb:cc:dd:ee:ff\"}, ",
+							"",
 							"  ];",
 							"}",
 							"",
@@ -289,6 +292,8 @@
 							"    {status: 400, error: \"The format of the request is wrong!\"},",
 							"    {status: 400, error: \"The format of the request is wrong!\"},",
 							"    {status: 200, token: \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.\"},",
+							"    {status: 400, error: \"username or password inserted are not valid, please try again\"},",
+							"    {status: 400, error: \"username or password inserted are not valid, please try again\"},",
 							"  ];",
 							"}",
 							"",
@@ -313,7 +318,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "277a9a07-f520-4a73-89c1-9d19addf5a1e",
+						"id": "3fad4b18-b2c3-4649-81c7-fca75ae39d29",
 						"exec": [
 							"var body = pm.environment.get(\"combination_signin\");",
 							"var expected_result = pm.environment.get(\"result_signin\"); ",
@@ -384,7 +389,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "9bba3dd7-b8a5-43e8-9bbd-d331528cfc76",
+						"id": "85371e65-fc97-4e6d-b02c-b0351f677062",
 						"exec": [
 							"var combinations     = pm.environment.get(\"combinations_signup\");",
 							"var expected_resutls = pm.environment.get(\"expected_resutls_signup\"); ",
