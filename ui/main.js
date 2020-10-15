@@ -1,6 +1,7 @@
 // INCLUDES
 const { menubar } = require('menubar');
 const execSync = require('child_process').execSync;
+const remote = require('electron').remote
 const dgram = require('dgram');
 const server = dgram.createSocket('udp4');
 const client = dgram.createSocket('udp4');
@@ -9,12 +10,9 @@ const ClientConf = require('./modules/client-conf.js');
 
 // CONSTANTS
 app.on('ready', () => {
-  //console.log(execSync('docker container ls').toString());
-  //var command = "docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' remote_backup_client_1";
-  //command = '"'+command.replace(/(["\s'$`\\])/g,'\\$1')+'"';
-  //const client_ip = execSync(command).toString();
-  const client_ip = "172.18.0.8";
-  console.log(client_ip);
+  var command = "./find_client_ip";
+  const client_ip = execSync(command).toString().replace(/(\r\n|\n|\r)/gm, "");
+  console.log("client ip: ", client_ip);
   // tenere i codici in questa mappa in sync con la
   // mappa dei topics in utente.
   var topics = new Map();
@@ -29,6 +27,7 @@ app.on('ready', () => {
   function on_close(menutItem, browserWindow, event) {
     console.log("click close");
     client.send(Buffer.from([topics.get("CLOSE")]), 2800, client_ip, (err) => { console.log(err) });
+    mb.app.quit();
   }
 
   //const tray = new Tray("remote-icon.png");

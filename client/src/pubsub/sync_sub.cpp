@@ -39,6 +39,7 @@ void SyncSubscriber::start(const Message &message) {
 void SyncSubscriber::stop(const Message &message) {
   std::clog << "sync module closed...\n";
   running = false;
+  cv.notify_all();
 }
 
 void SyncSubscriber::push(const json &task) {

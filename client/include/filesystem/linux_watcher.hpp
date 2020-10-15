@@ -16,14 +16,14 @@
 #include <unistd.h>
 #include <unordered_map>
 
-#include <stdio.h> 
-#include <unistd.h> 
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"
 #include "../pubsub/broker.hpp"
 #include "../pubsub/message.hpp"
 #include "sync_structure.hpp"
+#include <stdio.h>
+#include <unistd.h>
 
 #define TIMER 5000
 #define WAIT -1
@@ -100,6 +100,7 @@ public:
   void stop(const Message &message);
 
   ~LinuxWatcher() {
+    std::clog << "Linux Watcher destroy...\n";
     // Quando l'oggetto viene distrutto rilascio il file descriptor
     // in questo modo il kernel ha la possibilità di riassegnarlo ad
     // un altro processo.

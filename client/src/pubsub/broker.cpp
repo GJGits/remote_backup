@@ -13,7 +13,8 @@ void Broker::publish(const Message &message) {
   TOPIC topic = message.get_topic();
   if (subs.find(topic) != subs.end()) {
     for (auto const &call : subs[topic]) {
-      std::async(std::launch::async, call, message);
+      std::thread{call, message}.detach();
+      //std::async(std::launch::async, call, message);
     }
   }
 }

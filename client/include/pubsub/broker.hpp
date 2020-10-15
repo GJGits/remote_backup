@@ -6,6 +6,7 @@
 #include <memory>
 #include <tuple>
 #include <unordered_map>
+#include <thread>
 
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"

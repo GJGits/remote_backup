@@ -2,6 +2,7 @@
 
 LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
     : root_to_watch{root_to_watch}, watcher_mask{mask}, running{false} {
+  std::clog << "Linux watcher module started...\n";
   // pipe per segnale exit al poll.
   //  - watcher scrive su 1
   //  - poll scrive su 0
@@ -135,10 +136,10 @@ void LinuxWatcher::handle_events() {
     // else timeout expressed in milliseconds
     poll_num = poll(fds, nfds, timer);
     std::clog << "revent[1]" << std::to_string(fds[1].revents) << "\n";
-    if (!running || fds[1].revents & POLLIN) {
+    if (fds[1].revents & POLLIN) {
       std::clog << "poll da pipe\n";
-      char sig_buff;
-      read(fds[1].fd, &sig_buff, 1);
+      //char sig_buff;
+      //read(fds[1].fd, &sig_buff, 1);
       break;
     }
       
