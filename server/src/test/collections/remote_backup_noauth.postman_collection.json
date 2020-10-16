@@ -257,7 +257,6 @@
 							"    {username: \"renato\", password: \"123456\",  mac_address: \"aa:bb:cc:dd:ee:ff\"},",
 							"    {username: \"renato\", password: \"1212\",  mac_address: \"aa:bb:cc:dd:ee:ff\"}, ",
 							"    {username: \"pippo\", password: \"1212\",  mac_address: \"aa:bb:cc:dd:ee:ff\"}, ",
-							"",
 							"  ];",
 							"}",
 							"",
@@ -378,72 +377,6 @@
 					"path": [
 						"auth",
 						"signin"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "dbuser",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"id": "85371e65-fc97-4e6d-b02c-b0351f677062",
-						"exec": [
-							"var combinations     = pm.environment.get(\"combinations_signup\");",
-							"var expected_resutls = pm.environment.get(\"expected_resutls_signup\"); ",
-							"",
-							"if (!combinations) {",
-							"  // inizializzazione array di combinazioni da testare  ",
-							"  combinations = [",
-							"  ];",
-							"}",
-							"",
-							"if (!expected_resutls) {",
-							"  // inizializzazione array di risultati aspettati",
-							"  // l'ordine degli elementi in questo array deve",
-							"  // essere coerente con l'ordine dell'array delle",
-							"  // combinazioni. ",
-							"  expected_resutls = [",
-							"  ];",
-							"}",
-							"",
-							"// Combinazione testata e relativo risultato aspettato",
-							"var combination = combinations.shift();",
-							"var result      = expected_resutls.shift();",
-							"// Set necessario affinche' le variabili siano accessibili",
-							"// da test scripts",
-							"pm.environment.set(\"combination_signup\", combination);",
-							"pm.environment.set(\"result_signup\", result);",
-							"pm.environment.set(\"left_signup\", combinations.length);",
-							"// Aggiornamento delle variabili necessario altrimenti nel pre-script",
-							"// si rileggerebbe il valore iniziale ciclando all'infinito.",
-							"var combinations     = pm.environment.set(\"combinations_signup\", combinations);",
-							"var expected_resutls = pm.environment.set(\"expected_resutls_signup\", expected_resutls); "
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://0.0.0.0:3200/test/database/users/0",
-					"protocol": "http",
-					"host": [
-						"0",
-						"0",
-						"0",
-						"0"
-					],
-					"port": "3200",
-					"path": [
-						"test",
-						"database",
-						"users",
-						"0"
 					]
 				}
 			},

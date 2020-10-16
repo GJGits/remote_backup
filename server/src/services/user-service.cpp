@@ -59,7 +59,3 @@ std::string UserService::signup(const SignupDTO &user) {
   return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
 }
 
-std::string UserService::getStatus(const std::string &username) {
-  user_repository->getUserByUsername(username);
-  return user_repository->get_hashed_status(username);
-}
