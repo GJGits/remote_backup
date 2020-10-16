@@ -71,13 +71,6 @@ public:
   bool remove_watch(const std::string &path);
 
   /**
-   * Metodo eseguito a startup e che permette di notificare l'aggiunta
-   * di nuovi o modifica di file avvenuta off-line. Il controllo che viene
-   * effettuato per la modifica si basa su last_mod.
-   */
-  void check_news();
-
-  /**
    * Effettua watch degli eventi on-line per poi effettuare una publish
    * al broker.
    */

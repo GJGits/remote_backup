@@ -31,7 +31,6 @@ void SyncSubscriber::init_sub_list() {
 void SyncSubscriber::start(const Message &message) {
   std::clog << "sync module started...\n";
   running = true;
-  compute_new_size();
   remote_check();
   init_workers();
 }
@@ -48,16 +47,6 @@ void SyncSubscriber::push(const json &task) {
   cv.notify_one();
 }
 
-void SyncSubscriber::compute_new_size() {
-  for (auto &p : std::filesystem::recursive_directory_iterator("./sync")) {
-    if (p.is_regular_file()) {
-      increment_size(std::filesystem::file_size(p.path().string()));
-    }
-  }
-}
-
-void SyncSubscriber::increment_size(size_t size) { dir_size += size; }
-
 void SyncSubscriber::on_new_file(const Message &message) {
   DurationLogger logger{"NEW_FILE"};
   std::shared_ptr<Broker> broker = Broker::getInstance();
@@ -67,8 +56,6 @@ void SyncSubscriber::on_new_file(const Message &message) {
       !std::filesystem::is_empty(file_path)) {
     std::shared_ptr<Broker> broker = Broker::getInstance();
     std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-    increment_size(std::filesystem::file_size(file_path));
-    if (dir_size < MAX_SYNC_SIZE) {
       FileEntry fentry{file_path};
       size_t i = 0;
       while (fentry.has_chunk()) {
@@ -79,9 +66,9 @@ void SyncSubscriber::on_new_file(const Message &message) {
         fentry.clear_chunks();
         i++;
       }
-    }
   }
 }
+
 void SyncSubscriber::on_new_folder(const Message &message) {
   DurationLogger logger{"NEW_FOLDER"};
   json mex;
@@ -109,7 +96,6 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   rest_client->delete_file(path);
   broker->publish(Message{TOPIC::REMOVE_ENTRY, content});
-  compute_new_size();
 }
 
 void SyncSubscriber::remote_check() {
@@ -176,7 +162,6 @@ void SyncSubscriber::init_workers() {
           std::filesystem::rename(file_path, new_path);
           std::remove(new_path.c_str());
           broker->publish(Message{TOPIC::REMOVE_ENTRY, task});
-          compute_new_size();
         }
       }
     });

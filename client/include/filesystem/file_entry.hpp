@@ -5,6 +5,9 @@
 #include <math.h>
 #include <fstream>
 #include <tuple>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "../common/sha256.hpp"
 #include "../common/json.hpp"

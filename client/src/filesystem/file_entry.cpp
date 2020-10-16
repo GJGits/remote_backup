@@ -3,11 +3,10 @@
 FileEntry::FileEntry(const std::string &path) : path{path} {
   read_count = 0;
   entry["path"] = path;
-  entry["last_mod"] =
-      std::filesystem::last_write_time(path).time_since_epoch().count() /
-      1000000000;
+  struct stat sb;
+  stat(path.c_str(), &sb);
+  entry["last_mod"] = sb.st_ctime;
   size = std::filesystem::file_size(path);
-  entry["size"] = size;
   nchunks = ceil((double)size / CHUNK_SIZE);
   entry["nchunks"] = nchunks;
   buffer = std::shared_ptr<char[]>{new char[CHUNK_SIZE]};

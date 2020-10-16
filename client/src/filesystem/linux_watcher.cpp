@@ -2,7 +2,7 @@
 
 LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
     : root_to_watch{root_to_watch}, watcher_mask{mask}, running{false} {
-  std::clog << "Linux watcher module started...\n";
+  std::clog << "Linux watcher module init...\n";
   // pipe per segnale exit al poll.
   //  - watcher scrive su 1
   //  - poll scrive su 0
@@ -40,10 +40,9 @@ void LinuxWatcher::init_sub_list() {
 }
 
 void LinuxWatcher::start(const Message &message) {
-  std::clog << "watcher started...\n";
+  std::clog << "Linux watcher module start...\n";
   running = true;
   instance->add_watch(root_to_watch);
-  instance->check_news();
   instance->handle_events();
 }
 
@@ -52,7 +51,7 @@ void LinuxWatcher::stop(const Message &message) {
   instance->remove_watch(root_to_watch);
   short poll_sig = 1;
   write(pipe_[1], &poll_sig, 1);
-  std::clog << "watcher exit...\n";
+  std::clog << "Linux watcher module exit...\n";
 }
 
 bool LinuxWatcher::add_watch(const std::string &path) {
@@ -78,30 +77,6 @@ bool LinuxWatcher::remove_watch(const std::string &path) {
   wd_path_map.erase(path_wd_map[path]);
   path_wd_map.erase(path);
   return true;
-}
-
-void LinuxWatcher::check_news() {
-  std::shared_ptr<SyncStructure> sync_structure = SyncStructure::getInstance();
-  std::shared_ptr<Broker> broker = Broker::getInstance();
-  json message;
-  for (auto &p : std::filesystem::recursive_directory_iterator(root_to_watch)) {
-    std::string sub_path = p.path().string();
-    if (std::filesystem::is_regular_file(sub_path)) {
-      // size_t last_mod = std::filesystem::last_write_time(sub_path)
-      //                       .time_since_epoch()
-      //                       .count() /
-      //                   1000000000;
-      message["path"] = sub_path;
-      // 1. file non presente in struttura -> aggiunto off-line
-      if (!sync_structure->has_entry(sub_path)) {
-        broker->publish(Message{TOPIC::NEW_FILE, message});
-      }
-      // 2. last_mod non coincide -> modificato off-line
-      // else if (sync_structure->get_last_mod(sub_path) < last_mod) {
-      // broker->publish(Message{TOPIC::FILE_MODIFIED, message});
-      //}
-    }
-  }
 }
 
 void LinuxWatcher::handle_events() {
