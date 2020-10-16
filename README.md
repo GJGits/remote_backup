@@ -228,16 +228,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 
 
 <br />  
-<details>
-<summary>GET /status/</summary>
 
-* **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette di ottenere una checksum dell'intera cartella monitorata.*
-
-* **Authenticated**:&nbsp;&nbsp;&nbsp;`TRUE`
-  <br /> 
-
-</details>
-<br />
 <details>
 <summary>GET /status/list/{num_pages}/{timestamp_locale}</summary>
 
