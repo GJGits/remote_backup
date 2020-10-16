@@ -17,11 +17,10 @@ Creazione tabella users (db_2, db_3, db_4)
 	device_8_MAC VARCHAR(50) DEFAULT ''
 	);
 
-# AGGIUNGI N COLONNE DOVE N E' IL NUMERO DI DEVICE MASSIMO PER UTENTE
-# LO STATUS DI QUESTE COLONNE E' {OK, GET, DELETE, TODO-DELETE}
+
 Creazione Tabella Chunks (db_2, db_3, db_4)
 
-create table chunks(c_username varchar(100) NOT NULL, c_id integer NOT NULL, c_hash varchar(128) NOT NULL, c_path varchar(512) NOT NULL, c_size integer NOT NULL,c_lastmod integer NOT NULL,num_chunks integer, primary key (c_username, c_path, c_id));
+create table chunks(c_username varchar(100) NOT NULL, c_id integer NOT NULL, c_path varchar(512) NOT NULL, c_size integer NOT NULL,c_lastmod integer NOT NULL,num_chunks integer,device_id integer, primary key (c_username, c_path, c_id, device_id));
 
 
 
@@ -65,3 +64,8 @@ from (
 	AND (device_id ^ ?) != 0 
 	AND c_lastmod > ? 
 	) as t2;
+
+
+
+Ottenere il timestamp di un file
+$ perl -le 'print((stat shift)[9])' test.txt

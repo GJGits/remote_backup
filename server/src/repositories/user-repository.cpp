@@ -140,27 +140,7 @@ bool UserRepository::deleteUserByUsername(const std::string &username) {
   return true;
 }
 
-std::string UserRepository::get_hashed_status(const std::string &username) {
-  std::unique_ptr<sql::Statement> stmt;
-  std::unique_ptr<sql::ResultSet> res;
-  std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
-  size_t db_selected = db_repinstance->getDBbyUsername(username);
-    std::shared_ptr<sql::mysql::MySQL_Connection> mysqlConn = DBConnect::getConnection(db_selected);
-    std::string username_escaped = mysqlConn->escapeString(username);
 
-    std::string query = "SELECT c_hash FROM chunks WHERE c_username = '"+username_escaped+"' ORDER BY c_path,c_id;";
-
-    stmt = std::unique_ptr<sql::Statement>{std::move(mysqlConn->createStatement())}; // ricordare al posto di 0, di mettere il vero valore
-    res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery(query))};
-
-  std::string hashed_status_concat;
-  while (res->next()) {
-    hashed_status_concat.append(std::move(res->getString("c_hash")));
-  }
-  std::vector<char> data(hashed_status_concat.begin(),
-                         hashed_status_concat.end());
-  return Sha256::getSha256(data);
-}
 
 json UserRepository::get_status_file(const Subject &subject,
                                      int page_num, int last_check) {

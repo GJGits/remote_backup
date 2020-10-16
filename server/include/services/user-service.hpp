@@ -34,7 +34,6 @@ public:
 
     std::string login(const SigninDTO &user);
     std::string signup(const SignupDTO &user);
-    std::string getStatus(const std::string &username);
     ~UserService() {}
 
 };
