@@ -28,7 +28,7 @@ bool ChunkRepository::add_or_update_Chunk(const ChunkEntity &chunk) {
             "c_size,c_lastmod,num_chunks, device_id) values('"+username_escaped+"',"+c_id+",'"+c_path+"',"+c_size_chunks+","+c_last_mod+","+c_num_chunks+","+c_device_id+") "
             "ON DUPLICATE KEY "
             "UPDATE  c_size = "+c_size_chunks+" , c_lastmod = "+c_last_mod+", device_id = device_id ^ "+c_device_id+" ;";
-
+    
     stmt = std::unique_ptr<sql::Statement>{std::move(mysqlConn->createStatement())}; // ricordare al posto di 0, di mettere il vero valore
     stmt->execute(query);
 

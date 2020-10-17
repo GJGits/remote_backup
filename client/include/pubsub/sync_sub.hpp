@@ -8,6 +8,9 @@
 #include <queue>
 #include <thread>
 #include <vector>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"
@@ -45,7 +48,9 @@ public:
   void on_new_folder(const Message &message);
   void on_file_renamed(const Message &message);
   void on_file_deleted(const Message &message);
-  void remote_check();
+  json collect_unfinished_transfers();
+  json collect_local_changes();
+  json collect_remote_changes();
   void push(const json &task);
   void restore_files();
 };
