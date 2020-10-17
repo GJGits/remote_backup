@@ -31,8 +31,14 @@ void SyncSubscriber::init_sub_list() {
 void SyncSubscriber::start(const Message &message) {
   std::clog << "sync module started...\n";
   running = true;
-  remote_check();
   init_workers();
+  // 1. collect transfers
+  // 2. collect local changes
+  json local_changes = collect_local_changes();
+  // 3. collect remote changes
+  json remote_changes = collect_remote_changes();
+  // 4. merge changes
+  // 5. run corrections
 }
 
 void SyncSubscriber::stop(const Message &message) {
@@ -56,16 +62,16 @@ void SyncSubscriber::on_new_file(const Message &message) {
       !std::filesystem::is_empty(file_path)) {
     std::shared_ptr<Broker> broker = Broker::getInstance();
     std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-      FileEntry fentry{file_path};
-      size_t i = 0;
-      while (fentry.has_chunk()) {
-        std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
-        json jentry = fentry.get_json_representation();
-        rest_client->post_chunk(chunk, jentry);
-        broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
-        fentry.clear_chunks();
-        i++;
-      }
+    FileEntry fentry{file_path};
+    size_t i = 0;
+    while (fentry.has_chunk()) {
+      std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
+      json jentry = fentry.get_json_representation();
+      rest_client->post_chunk(chunk, jentry);
+      broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
+      fentry.clear_chunks();
+      i++;
+    }
   }
 }
 
@@ -83,6 +89,7 @@ void SyncSubscriber::on_new_folder(const Message &message) {
     }
   }
 }
+
 void SyncSubscriber::on_file_renamed(const Message &message) {
   // todo: inviare richiesta al server
   DurationLogger logger{"FILE_RENAMED"};
@@ -98,22 +105,47 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
   broker->publish(Message{TOPIC::REMOVE_ENTRY, content});
 }
 
-void SyncSubscriber::remote_check() {
+json SyncSubscriber::collect_unfinished_transfers() {
+  return json::object();
+}
+
+json SyncSubscriber::collect_local_changes() {
+  std::shared_ptr<SyncStructure> syn = SyncStructure::getInstance();
+  int last_check = syn->get_last_check();
+  json news = json::object();
+  for (auto &p : std::filesystem::recursive_directory_iterator("./sync")) {
+    if (p.is_regular_file()) {
+      std::string file_path = p.path().string();
+      struct stat sb;
+      stat(file_path.c_str(), &sb);
+      int last_change = sb.st_ctime;
+      if (last_change > last_check) {
+        news["entries"].push_back(
+            {{"path", file_path}, {"last_local_change", last_change}});
+      }
+    }
+  }
+  return news;
+}
+
+json SyncSubscriber::collect_remote_changes() {
   DurationLogger logger{"PROCESS_LIST"};
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   std::shared_ptr<SyncStructure> sync_structure = SyncStructure::getInstance();
   int current_page = 0;
   int last_page = 1;
+  json news = json::object();
+  news["entries"] = json::array();
   while (current_page < last_page) {
     json list = rest_client->get_status_list(current_page++);
     std::clog << "list dump: " << list.dump() << "\n";
     current_page = list["current_page"].get<int>();
     last_page = list["last_page"].get<int>();
     for (size_t i = 0; i < list["entries"].size(); i++) {
-      json task = list["entries"][i];
-      push(task);
+      news["entries"].push_back(list["entries"][i]);
     }
   }
+  return news;
 }
 
 void SyncSubscriber::init_workers() {
@@ -150,7 +182,7 @@ void SyncSubscriber::init_workers() {
             out.close();
             std::string chunk_hash = Sha256::getSha256(chunk);
             json entry = {{"path", file_path},
-                          {"last_mod", task["last_mod"]},
+                          {"last_remote_change", task["last_remote_change"]},
                           {"nchunks", task["num_chunks"]}};
             entry["chunks"].push_back({{"id", task["id"].get<int>()}});
             broker->publish(Message{TOPIC::ADD_CHUNK, entry});
