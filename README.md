@@ -197,7 +197,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 <br />  
 
 <details>
-  <summary>POST /chunk/{chunk_id}/{chunk_size}/{chunk_hash}/{num_chunks}/{file_pathBASE64}/{timestamp_locale}/{up_time}</summary>
+  <summary>POST /chunk/{chunk_id}/{chunk_hash}/{num_chunks}/{file_pathBASE64}/{timestamp_locale}/{up_time}</summary>
   <br />  
   
   * **Descrizione**:&nbsp;&nbsp;&nbsp;*endpoint che permette, se il client è autenticato, di aggiungere un file appena creato. `{chunk_id}` corrisponde al numero di chunk che stiamo inviando, 0 per il primo chunk. Il parametro `{chunk_size}` corrisponde alla dimensione del chunk che stiamo inviando, questo corrisponde a `full` se si invia un chunk di dimensione massima (2MB), altrimenti la dimensione in byte.*  
