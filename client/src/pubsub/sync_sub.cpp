@@ -105,7 +105,9 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
   broker->publish(Message{TOPIC::REMOVE_ENTRY, content});
 }
 
-json SyncSubscriber::collect_unfinished_transfers() {}
+json SyncSubscriber::collect_unfinished_transfers() {
+  return json::object();
+}
 
 json SyncSubscriber::collect_local_changes() {
   std::shared_ptr<SyncStructure> syn = SyncStructure::getInstance();
@@ -123,6 +125,7 @@ json SyncSubscriber::collect_local_changes() {
       }
     }
   }
+  return news;
 }
 
 json SyncSubscriber::collect_remote_changes() {
