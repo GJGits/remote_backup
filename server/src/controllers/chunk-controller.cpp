@@ -1,7 +1,7 @@
 #include "../../include/controllers/chunk-controller.hpp"
 
 inline static std::regex post_chunk_rgx{
-    "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+\\/[\\w]+$"};
+    "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+\\/[\\w]+$"};
 
 inline static std::regex get_chunk_rgx{
     "^\\/chunk\\/[\\w]+\\/[\\w=+]+$"};
@@ -22,8 +22,9 @@ ChunkController::handle(const http::server::request &req) {
     std::smatch match;
     if (std::regex_search(req.uri.begin(), req.uri.end(), match,
                           post_chunk_rgx)) {
+        std::clog <<"La size è: "<< (*req.body).size() << "\n";
       PostChunkDTO post_chunk{sub};
-      post_chunk.fill(req);
+      post_chunk.fill(req, (*req.body).size());
       post_file_chunk(post_chunk);
       return http::server::reply::stock_reply(http::server::reply::ok);
     }

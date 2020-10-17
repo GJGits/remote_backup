@@ -25,9 +25,9 @@ json TestRepository::getTestDatabaseTableChunks(
       std::to_string((get_test_database.getpage_num() + 1) * ENTRIES_PAGE));
 
   std::string query =
-      "select t1.c_username, t1.c_id,  t1.c_path, t1.c_size, "
+      "select t1.c_username, t1.c_id,  t1.c_path,  "
       "t1.c_lastmod, t1.num_chunks, t2.last_page from (select "
-      "c_username, c_id, c_path, c_size, c_lastmod, num_chunks from "
+      "c_username, c_id, c_path, c_lastmod, num_chunks from "
       "chunks limit " +
       num_page + ", " + limit_page_num +
       ") as t1, (select(ceil((count(distinct c_path,c_id) / " +
@@ -48,11 +48,10 @@ json TestRepository::getTestDatabaseTableChunks(
         j_single_path["c_username"] = res->getString(1);
         j_single_path["c_id"] = res->getInt(2);
         j_single_path["c_path"] = res->getString(3);
-        j_single_path["c_size"] = res->getInt(4);
-        j_single_path["c_lastmod"] = res->getInt(5);
-        j_single_path["num_chunks"] = res->getInt(6);
+        j_single_path["c_lastmod"] = res->getInt(4);
+        j_single_path["num_chunks"] = res->getInt(5);
         j["entries"].push_back(j_single_path);
-        j["last_page"] = res->getInt(7);
+        j["last_page"] = res->getInt(6);
       } else
         break;
     }

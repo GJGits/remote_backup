@@ -5,6 +5,7 @@
 #include "../entities/db-connect.hpp"
 #include "../entities/file-entity.hpp"
 #include "../exceptions/exceptions.hpp"
+#include "../common/utility.hpp"
 
 class FileRepository {
 private:

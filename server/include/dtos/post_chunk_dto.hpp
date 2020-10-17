@@ -31,5 +31,5 @@ public:
   int gettimestamp_locale() const;
   std::shared_ptr<std::vector<char>> getchunk_body() const;
 
-  const void fill(const http::server::request &req);
+  const void fill(const http::server::request &req,size_t ck_size);
 };
