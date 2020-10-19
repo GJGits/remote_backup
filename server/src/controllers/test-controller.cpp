@@ -1,12 +1,6 @@
 #include "../../include/controllers/test-controller.hpp"
 
-std::shared_ptr<TestController> TestController::getInstance() {
-    if (instance.get() == nullptr) {
-        instance = std::shared_ptr<TestController>(new TestController{});
-        instance->test_service = TestService::getInstance();
-    }
-    return instance;
-}
+
 
 inline static std::regex get_test_database{"^\\/test\\/database\\/\\w+\\/\\d+\\/\\d+$"};
 inline static std::regex get_test_filesystem_namefile{"^\\/test\\/filesystem\\/\\w+\\/[\\w=+]+\\/\\d+$"};

@@ -9,12 +9,6 @@ std::shared_ptr<DBRepository> DBRepository::getInstance() {
 
 int DBRepository::getDBbyUsername(const std::string &username) {
 
-  if (users_db_map.count(username))
-    return users_db_map[username];
-
-  if (users_db_map.size() >= 100)
-    users_db_map.clear();
-
   std::unique_ptr<sql::Statement> stmt;
   std::unique_ptr<sql::ResultSet> res;
   std::shared_ptr<sql::mysql::MySQL_Connection> mysqlConn = DBConnect::getConnection(0);
@@ -27,7 +21,6 @@ int DBRepository::getDBbyUsername(const std::string &username) {
 
     res->next();
     int db_selected = res->getInt("db");
-    users_db_map[username] = db_selected;
     return db_selected;
 
 

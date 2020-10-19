@@ -2,13 +2,6 @@
 
 inline static std::regex delete_rgx{"^\\/file\\/[\\w=+]+$"};
 
-std::shared_ptr<FileController> FileController::getInstance() {
-  if (instance.get() == nullptr) {
-    instance = std::shared_ptr<FileController>(new FileController{});
-    instance->file_service = FileService::getInstance();
-  }
-  return instance;
-}
 
 const http::server::reply
 FileController::handle(const http::server::request &req) {

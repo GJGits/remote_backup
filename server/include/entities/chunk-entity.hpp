@@ -11,7 +11,6 @@ private:
     int id_chunk;
     std::string hash_chunk;
     std::string path_file;
-    int size_chunk;
     int last_mod;
     int num_chunks;
     int size_file;
@@ -29,7 +28,6 @@ public:
     int getIdChunk() const;
     std::string getHashChunk() const;
     std::string getPathFile() const;
-    int getSizeChunk() const;
     int getLastMod() const;
     int getSizeFile() const;
     int getNumChunks() const;

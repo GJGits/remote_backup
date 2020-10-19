@@ -11,14 +11,16 @@
 #include "../services/chunk-service.hpp"
 #include <regex>
 #include "../common/utility.hpp"
+#include "../common/singleton.hpp"
 
-class ChunkController : public Controller {
+class ChunkController : public Controller, public Singleton<ChunkController> {
 
 private:
-    static inline std::shared_ptr<ChunkController> instance{nullptr};
+    friend class Singleton;
     std::shared_ptr<ChunkService> chunk_service;
+    ChunkController(){    this->chunk_service = ChunkService::getInstance();}
+
 public:
-    static std::shared_ptr<ChunkController> getInstance();
     virtual const http::server::reply handle(const http::server::request &req);
     void post_file_chunk(const PostChunkDTO &post_chunk);
     size_t get_file_chunk(const GetChunkDTO &get_chunk);

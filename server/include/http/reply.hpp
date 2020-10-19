@@ -57,6 +57,7 @@ struct reply {
 
   /// Get a stock reply.
   static reply stock_reply(status_type status);
+
 };
 
 } // namespace server
