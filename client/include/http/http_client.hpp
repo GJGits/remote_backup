@@ -43,7 +43,7 @@ private:
   boost::asio::ip::basic_resolver_results<boost::asio::ip::tcp> results;
 
   HTTPClient() {
-     this->results = resolver.resolve(instance->host, instance->port);
+     this->results = resolver.resolve(host, port);
   }
 
 public:

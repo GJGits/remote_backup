@@ -10,7 +10,7 @@ void SyncStructure::read_structure() {
     for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
       std::string path = (*structure)["entries"][i]["path"];
       json entry = (*structure)["entries"][i];
-      entries[path] = entry;
+      (*entries)[path] = entry;
     }
     last_check = (*structure)["last_check"].get<int>();
   }
@@ -19,12 +19,12 @@ void SyncStructure::read_structure() {
 void SyncStructure::write_structure() {
   std::unique_ptr<json> structure = std::make_unique<json>();
   DurationLogger duration{"WRITE_STRUCTURE"};
-  if (entries.empty()) {
+  if ((*entries).empty()) {
     (*structure)["entries"] = json::array();
     (*structure)["last_check"] = 0;
   } else {
     std::string entries_dump;
-    for (auto it = entries.begin(); it != entries.end(); it++) {
+    for (auto it = (*entries).begin(); it != (*entries).end(); it++) {
       (*structure)["entries"].push_back(it->second);
       entries_dump += it->second.dump();
     }
@@ -40,7 +40,7 @@ int SyncStructure::get_last_check() { return last_check; }
 
 std::vector<std::string> SyncStructure::get_paths() {
   std::vector<std::string> paths{};
-  for (auto it = entries.begin(); it != entries.end(); ++it) {
+  for (auto it = (*entries).begin(); it != (*entries).end(); ++it) {
     paths.push_back(it->first);
   }
   return paths;
@@ -48,22 +48,23 @@ std::vector<std::string> SyncStructure::get_paths() {
 
 void SyncStructure::add_chunk(const json &chunk) {
   DurationLogger logger{"ADD_CHUNK"};
-  json chk = chunk["chunks"][0];
-  if (entries.find(chunk["path"]) == entries.end()) {
-    entries[chunk["path"]] = chunk;
+  json chk = chunk["transfers"]["chunks"][0];
+  if ((*entries).find(chunk["path"]) == (*entries).end()) {
+    (*entries)[chunk["path"]] = chunk;
   } else {
-    entries[chunk["path"]]["chunks"].push_back(chk);
+    (*entries)[chunk["path"]]["transfers"]["chunks"].push_back(chk);
   }
-  if (entries[chunk["path"]]["chunks"].size() ==
-      (size_t)chunk["nchunks"].get<int>()) {
-    entries[chunk["path"]]["chunks"].clear();
+  if ((*entries)[chunk["path"]]["transfers"]["chunks"].size() ==
+      (size_t)chunk["transfers"]["nchunks"].get<int>()) {
+    (*entries)[chunk["path"]].erase("transfers");
+    std::clog << "struct new file: " << (*entries)[chunk["path"]].dump() << "\n";
   }
 }
 
 void SyncStructure::delete_entry(const json &entry) {
   DurationLogger logger{"DELETE_ENTRY"};
   std::string path = entry["path"];
-  entries.erase(path);
+  (*entries).erase(path);
 }
 
 void SyncStructure::rename_entry(const json &entry) {
@@ -71,8 +72,8 @@ void SyncStructure::rename_entry(const json &entry) {
   json ent = entry;
   std::string old_path = entry["old_path"];
   std::string new_path = entry["path"];
-  if (entries.find(old_path) != entries.end()) {
+  if ((*entries).find(old_path) != (*entries).end()) {
     ent["path"] = new_path;
-    entries.erase(old_path);
+    (*entries).erase(old_path);
   }
 }

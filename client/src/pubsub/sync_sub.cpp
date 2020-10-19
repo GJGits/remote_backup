@@ -51,6 +51,7 @@ void SyncSubscriber::start(const Message &message) {
     }
   }
   // 5. run corrections
+  run_corrections(changes);
 }
 
 void SyncSubscriber::stop(const Message &message) {
@@ -79,7 +80,7 @@ void SyncSubscriber::on_new_file(const Message &message) {
     while (fentry.has_chunk()) {
       std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
       json jentry = fentry.get_json_representation();
-      rest_client->post_chunk(chunk, jentry);
+      //rest_client->post_chunk(chunk, jentry);
       broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
       fentry.clear_chunks();
       i++;
@@ -96,7 +97,7 @@ void SyncSubscriber::on_new_folder(const Message &message) {
        std::filesystem::recursive_directory_iterator(content["path"])) {
     std::string new_path = p.path().string();
     if (std::filesystem::is_regular_file(new_path)) {
-      mex["path"] = new_path;
+      mex["path"] = std::string{new_path};
       on_new_file(Message{TOPIC::NEW_FILE, mex});
     }
   }
@@ -113,7 +114,7 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
   json content = message.get_content();
   std::string path = content["path"];
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-  rest_client->delete_file(path);
+  //rest_client->delete_file(path);
   broker->publish(Message{TOPIC::REMOVE_ENTRY, content});
 }
 
@@ -212,9 +213,8 @@ void SyncSubscriber::init_workers() {
             out.close();
             std::string chunk_hash = Sha256::getSha256(chunk);
             json entry = {{"path", file_path},
-                          {"last_remote_change", task["last_remote_change"]},
-                          {"nchunks", task["num_chunks"]}};
-            entry["chunks"].push_back({ {"id", task["id"].get<int>()}, {"direction", "down"} });
+                          {"nchunks", task["num_chunks"]}, {"direction", "down"} };
+            entry["chunks"].push_back({ {"id", task["id"].get<int>()} });
             broker->publish(Message{TOPIC::ADD_CHUNK, entry});
           }
         } else {
