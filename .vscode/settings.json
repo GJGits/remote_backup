@@ -1,4 +1,5 @@
-{
+{   
+    "workbench.editor.enablePreview": false,
     "files.associations": {
         "cctype": "cpp",
         "clocale": "cpp",

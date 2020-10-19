@@ -68,24 +68,23 @@ void SyncSubscriber::push(const json &task) {
 
 void SyncSubscriber::on_new_file(const Message &message) {
   DurationLogger logger{"NEW_FILE"};
-  std::shared_ptr<Broker> broker = Broker::getInstance();
-  json content = message.get_content();
-  std::string file_path = content["path"];
-  if (std::filesystem::exists(file_path) &&
-      !std::filesystem::is_empty(file_path)) {
+  //json content = message.get_content();
+  //std::string file_path = content["path"];
+  //if (std::filesystem::exists(file_path) &&
+  //    !std::filesystem::is_empty(file_path)) {
     std::shared_ptr<Broker> broker = Broker::getInstance();
     std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-    FileEntry fentry{file_path};
+    FileEntry fentry{message.get_content()["path"]};
     size_t i = 0;
     while (fentry.has_chunk()) {
-      std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
+      std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();  
       json jentry = fentry.get_json_representation();
       //rest_client->post_chunk(chunk, jentry);
       broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
       fentry.clear_chunks();
       i++;
     }
-  }
+  //}
 }
 
 void SyncSubscriber::on_new_folder(const Message &message) {
