@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../common/singleton.hpp"
 #include "../common/base64.hpp"
 #include "../common/json.hpp"
 #include "../filesystem/file_entry.hpp"
@@ -30,22 +31,21 @@ namespace net = boost::asio;    // from <boost/asio.hpp>
 using tcp = net::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 using json = nlohmann::json;
 
-class RestClient {
+class RestClient : public Singleton<RestClient>{
 
 private:
+  friend class Singleton;
   json config;
   http::request<http::vector_body<char>> post_prototype;
   http::request<http::vector_body<char>> put_prototype;
   http::request<http::vector_body<char>> get_prototype;
   http::request<http::vector_body<char>> delete_prototype;
-  static inline std::shared_ptr<RestClient> instance{nullptr};
   void read_info();
   void fill_headers(http::request<http::vector_body<char>> &req,
                     size_t size = 0);
   RestClient();
 
 public:
-  static std::shared_ptr<RestClient> getInstance();
   void post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
                   json &jentry);
   std::vector<char> get_chunk(const json &chunk_info);

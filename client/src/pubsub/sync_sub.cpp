@@ -32,12 +32,24 @@ void SyncSubscriber::start(const Message &message) {
   std::clog << "sync module started...\n";
   running = true;
   init_workers();
+  json changes = json::array();
   // 1. collect transfers
   // 2. collect local changes
   json local_changes = collect_local_changes();
   // 3. collect remote changes
   json remote_changes = collect_remote_changes();
   // 4. merge changes
+  for (size_t x = 0; x < local_changes.size(); x++) {
+    json change = json::object();
+    change["path"] = local_changes[x]["path"];
+    change["path"]["local"] = local_changes[x];
+    for (size_t y = 0; y < remote_changes.size(); y++) {
+      std::string remote_path = remote_changes[y]["path"];
+      if (remote_path.compare(change["path"]) == 0) {
+        change["path"]["remote"] = remote_changes[y];
+      }
+    }
+  }
   // 5. run corrections
 }
 
@@ -105,14 +117,12 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
   broker->publish(Message{TOPIC::REMOVE_ENTRY, content});
 }
 
-json SyncSubscriber::collect_unfinished_transfers() {
-  return json::object();
-}
+json SyncSubscriber::collect_unfinished_transfers() { return json::object(); }
 
 json SyncSubscriber::collect_local_changes() {
   std::shared_ptr<SyncStructure> syn = SyncStructure::getInstance();
   int last_check = syn->get_last_check();
-  json news = json::object();
+  json news = json::array();
   for (auto &p : std::filesystem::recursive_directory_iterator("./sync")) {
     if (p.is_regular_file()) {
       std::string file_path = p.path().string();
@@ -120,7 +130,7 @@ json SyncSubscriber::collect_local_changes() {
       stat(file_path.c_str(), &sb);
       int last_change = sb.st_ctime;
       if (last_change > last_check) {
-        news["entries"].push_back(
+        news.push_back(
             {{"path", file_path}, {"last_local_change", last_change}});
       }
     }
@@ -134,18 +144,38 @@ json SyncSubscriber::collect_remote_changes() {
   std::shared_ptr<SyncStructure> sync_structure = SyncStructure::getInstance();
   int current_page = 0;
   int last_page = 1;
-  json news = json::object();
-  news["entries"] = json::array();
+  json news = json::array();
   while (current_page < last_page) {
     json list = rest_client->get_status_list(current_page++);
     std::clog << "list dump: " << list.dump() << "\n";
     current_page = list["current_page"].get<int>();
     last_page = list["last_page"].get<int>();
     for (size_t i = 0; i < list["entries"].size(); i++) {
-      news["entries"].push_back(list["entries"][i]);
+      news.push_back(list["entries"][i]);
     }
   }
   return news;
+}
+
+void SyncSubscriber::run_corrections(const json &changes) {
+  for (size_t i = 0; i < changes.size(); i++) {
+    json local = changes["local"];
+    json remote = changes["remote"];
+    int local_change = 0;
+    int remote_change = 0;
+    if (!local.is_null()) {
+      local_change = local["last_local_change"].get<int>();
+    }
+    if (!remote.is_null()) {
+      remote_change = remote["last_remote_change"].get<int>();
+    }
+    if (local_change > remote_change) {
+      on_new_file(Message(TOPIC::NEW_FILE, local));
+    }
+    if (remote_change > local_change) {
+      push(remote);
+    }
+  }
 }
 
 void SyncSubscriber::init_workers() {
@@ -184,7 +214,7 @@ void SyncSubscriber::init_workers() {
             json entry = {{"path", file_path},
                           {"last_remote_change", task["last_remote_change"]},
                           {"nchunks", task["num_chunks"]}};
-            entry["chunks"].push_back({{"id", task["id"].get<int>()}});
+            entry["chunks"].push_back({ {"id", task["id"].get<int>()}, {"direction", "down"} });
             broker->publish(Message{TOPIC::ADD_CHUNK, entry});
           }
         } else {

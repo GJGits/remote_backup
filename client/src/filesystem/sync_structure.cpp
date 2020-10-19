@@ -1,11 +1,8 @@
 #include "../../include/filesystem/sync_structure.hpp"
 
-/* PRIVATE SECTION */
-
 void SyncStructure::read_structure() {
-  std::unique_lock lk{m};
   DurationLogger logger{"READ_STRUCTURE"};
-  if (std::filesystem::exists("./config/client-struct.json") ||
+  if (std::filesystem::exists("./config/client-struct.json") &&
       !std::filesystem::is_empty("./config/client-struct.json")) {
     std::ifstream i("./config/client-struct.json");
     std::unique_ptr<json> structure = std::make_unique<json>();
@@ -18,8 +15,6 @@ void SyncStructure::read_structure() {
     last_check = (*structure)["last_check"].get<int>();
   }
 }
-
-/* PUBLIC SECTION */
 
 void SyncStructure::write_structure() {
   std::unique_ptr<json> structure = std::make_unique<json>();
@@ -43,31 +38,12 @@ void SyncStructure::write_structure() {
 
 int SyncStructure::get_last_check() { return last_check; }
 
-bool SyncStructure::has_entry(const std::string &path) {
-  return entries.find(path) != entries.end();
-}
-
-size_t SyncStructure::get_last_mod(const std::string &path) {
-  return entries[path]["last_mod"];
-}
-
 std::vector<std::string> SyncStructure::get_paths() {
   std::vector<std::string> paths{};
   for (auto it = entries.begin(); it != entries.end(); ++it) {
     paths.push_back(it->first);
   }
   return paths;
-}
-
-std::vector<std::string>
-SyncStructure::get_entry_hashes(const std::string &path) {
-  std::vector<std::string> hashes{};
-  std::sort(entries[path]["chunks"].begin(), entries[path]["chunks"].begin(),
-            [&](json c1, json c2) { return c1["id"] < c2["id"]; });
-  for (size_t i = 0; i < entries[path]["chunks"].size(); i++) {
-    hashes.push_back(entries[path]["chunks"]);
-  }
-  return hashes;
 }
 
 void SyncStructure::add_chunk(const json &chunk) {
@@ -80,16 +56,6 @@ void SyncStructure::add_chunk(const json &chunk) {
   }
   if (entries[chunk["path"]]["chunks"].size() ==
       (size_t)chunk["nchunks"].get<int>()) {
-    std::string file_hash{""};
-    for (size_t i = 0; i < entries[chunk["path"]]["chunks"].size(); i++) {
-      file_hash += entries[chunk["path"]]["chunks"][i]["hash"];
-      std::shared_ptr<char[]> buff{new char[file_hash.size()]};
-      for (size_t j = 0; j < file_hash.size(); j++) {
-        buff.get()[j] = file_hash[j];
-      }
-      file_hash = Sha256::getSha256(buff, file_hash.size());
-    }
-    entries[chunk["path"]]["hash"] = file_hash;
     entries[chunk["path"]]["chunks"].clear();
   }
 }

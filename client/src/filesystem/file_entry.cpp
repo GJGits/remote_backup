@@ -5,10 +5,11 @@ FileEntry::FileEntry(const std::string &path) : path{path} {
   entry["path"] = path;
   struct stat sb;
   stat(path.c_str(), &sb);
-  entry["last_mod"] = sb.st_ctime;
+  entry["local_last_change"] = sb.st_ctime;
   size = std::filesystem::file_size(path);
   nchunks = ceil((double)size / CHUNK_SIZE);
   entry["nchunks"] = nchunks;
+  entry["direction"] = std::string{"up"};
   buffer = std::shared_ptr<char[]>{new char[CHUNK_SIZE]};
   memset(buffer.get(), '\0', CHUNK_SIZE);
 }

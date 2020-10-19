@@ -51,6 +51,7 @@ public:
   json collect_unfinished_transfers();
   json collect_local_changes();
   json collect_remote_changes();
+  void run_corrections(const json &changes);
   void push(const json &task);
   void restore_files();
 };
