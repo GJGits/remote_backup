@@ -55,7 +55,6 @@ void UserRepository::updateUser(const UserEntity &user) {
 
     std::string query = "update users set device_1_MAC = '?', device_2_MAC = '?', device_3_MAC = '?', device_4_MAC = '?', device_5_MAC = '?', device_6_MAC = '?',device_7_MAC = '?', device_8_MAC = '?' where username = '?'";
     std::list<std::string> entries_of_query;
-    entries_of_query.push_back(user.getUsername());
     entries_of_query.push_back(user.get_device_1_MAC());
     entries_of_query.push_back(user.get_device_2_MAC());
     entries_of_query.push_back(user.get_device_3_MAC());
@@ -64,6 +63,7 @@ void UserRepository::updateUser(const UserEntity &user) {
     entries_of_query.push_back(user.get_device_6_MAC());
     entries_of_query.push_back(user.get_device_7_MAC());
     entries_of_query.push_back(user.get_device_8_MAC());
+    entries_of_query.push_back(user.getUsername());
     Utility::update_query(query,entries_of_query,db_selected);
     return;
 }
@@ -126,6 +126,7 @@ json UserRepository::get_status_file(const Subject &subject,
 
     std::list<std::string> entries_of_query;
     entries_of_query.push_back(subject.get_sub());
+    entries_of_query.push_back(subject.get_sub());
     res = Utility::select_query(query,entries_of_query,db_selected);
 
   std::clog << "query list....\n";
@@ -140,7 +141,7 @@ json UserRepository::get_status_file(const Subject &subject,
       if (res->next()) {
         j_single_path["path"] = res->getString(1);
         j_single_path["num_chunks"] = res->getInt(2);
-        j_single_path["last_mod"] = res->getInt(3);
+        j_single_path["last_remote_change"] = res->getInt(3);
         j_single_path["command"] = res->getString(5);
         j["entries"].push_back(j_single_path);
         j["last_page"] = res->getInt(4);

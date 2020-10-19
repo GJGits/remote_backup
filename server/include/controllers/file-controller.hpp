@@ -11,15 +11,16 @@
 #include "../services/file-service.hpp"
 #include <regex>
 #include "../common/utility.hpp"
+#include "../common/singleton.hpp"
 
-class FileController : public Controller {
+class FileController : public Controller, public Singleton<FileController> {
 
 private:
-    static inline std::shared_ptr<FileController> instance{nullptr};
+    friend class Singleton;
     std::shared_ptr<FileService> file_service;
+    FileController(){    this->file_service = FileService::getInstance();}
 
 public:
-    static std::shared_ptr<FileController> getInstance();
 
     virtual const http::server::reply handle(const http::server::request &req);
     void delete_file(const DeleteFileDTO &del_file);

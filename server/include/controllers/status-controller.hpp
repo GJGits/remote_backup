@@ -8,17 +8,18 @@
 #include "../http/header.hpp"
 #include <regex>
 #include "../common/makereply.hpp"
+#include "../common/singleton.hpp"
 
 
 
 
-class StatusController : public Controller {
+class StatusController : public Controller, public Singleton<StatusController> {
 private:
-    static inline std::shared_ptr<StatusController> instance{nullptr};
+    friend class Singleton;
     std::shared_ptr<FileService> file_service;
+    StatusController(){    this->file_service = FileService::getInstance();}
 
 public:
-    static std::shared_ptr<StatusController> getInstance();
 
     virtual const http::server::reply handle(const http::server::request &req);
   const json get_status_file(const GetStatusDTO &get_status_dto);

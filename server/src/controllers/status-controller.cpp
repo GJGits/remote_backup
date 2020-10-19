@@ -1,12 +1,5 @@
 #include "../../include/controllers/status-controller.hpp"
 
-std::shared_ptr<StatusController> StatusController::getInstance() {
-  if (instance.get() == nullptr) {
-    instance = std::shared_ptr<StatusController>(new StatusController{});
-    instance->file_service = FileService::getInstance();
-  }
-  return instance;
-}
 
 inline static std::regex user_rgx_file{"^\\/status\\/list\\/[\\d]+\\/[\\d]+$"};
 

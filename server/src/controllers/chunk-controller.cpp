@@ -6,13 +6,6 @@ inline static std::regex post_chunk_rgx{
 inline static std::regex get_chunk_rgx{
     "^\\/chunk\\/[\\w]+\\/[\\w=+]+$"};
 
-std::shared_ptr<ChunkController> ChunkController::getInstance() {
-  if (instance.get() == nullptr) {
-    instance = std::shared_ptr<ChunkController>(new ChunkController{});
-    instance->chunk_service = ChunkService::getInstance();
-  }
-  return instance;
-}
 
 const http::server::reply
 ChunkController::handle(const http::server::request &req) {

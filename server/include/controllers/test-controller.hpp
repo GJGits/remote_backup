@@ -4,20 +4,20 @@
 #include "../dtos/get_test_filesystem_filename_dto.hpp"
 
 #include "../services/test-service.hpp"
-
+#include "../common/singleton.hpp"
 #include "../dtos/subject.hpp"
 #include "../http/header.hpp"
 #include <regex>
 #include "../common/makereply.hpp"
 
 
-class TestController : public Controller {
+class TestController : public Controller, public Singleton<TestController> {
 private:
-    static inline std::shared_ptr<TestController> instance{nullptr};
+    friend class Singleton;
     std::shared_ptr<TestService> test_service;
+    TestController(){    this->test_service = TestService::getInstance();}
 
 public:
-    static std::shared_ptr<TestController> getInstance();
     void delete_them_all();
     virtual const http::server::reply handle(const http::server::request &req);
     const json get_test_database_table_name(const GetTestDatabaseDTO &get_test_database);
