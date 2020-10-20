@@ -2,6 +2,7 @@
 #include <string>
 #include "../common/logger.hpp"
 #include "../dtos/post_chunk_dto.hpp"
+#include "../dtos/put_chunk_dto.hpp"
 #include "../dtos/delete_chunk_dto.hpp"
 #include "../dtos/get_chunk_dto.hpp"
 
@@ -11,6 +12,8 @@ private:
     int id_chunk;
     std::string hash_chunk;
     std::string path_file;
+    std::string old_path_64;
+    std::string new_path_64;
     int last_mod;
     int num_chunks;
     int size_file;
@@ -19,10 +22,11 @@ private:
 public:
     ChunkEntity(const PostChunkDTO &post_chunk);
 
-
     ChunkEntity(const DeleteChunkDTO &del_chunk);
 
     ChunkEntity(const GetChunkDTO &get_chunk);
+
+    ChunkEntity(const PutChunkDTO &put_chunk);
 
     Subject get_subject() const;
     int getIdChunk() const;
@@ -31,6 +35,8 @@ public:
     int getLastMod() const;
     int getSizeFile() const;
     int getNumChunks() const;
+    std::string getold_path_64() const;
+    std::string getnew_path_64() const;
 
     void setSizeFile(int val);
     std::shared_ptr<std::vector<char>> getchunk_body() const;

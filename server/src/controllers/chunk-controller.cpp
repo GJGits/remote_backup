@@ -6,6 +6,7 @@ inline static std::regex post_chunk_rgx{
 inline static std::regex get_chunk_rgx{
     "^\\/chunk\\/[\\w]+\\/[\\w=+]+$"};
 
+inline static std::regex put_chunk_rgx{"^\\/chunk\\/[\\w=+]+\\/[\\w=+]+$"};
 
 const http::server::reply
 ChunkController::handle(const http::server::request &req) {
@@ -43,7 +44,17 @@ ChunkController::handle(const http::server::request &req) {
       return rep;
     }
   }
+  else if(req.method == "PUT") {
+      std::smatch match;
+      if (std::regex_search(req.uri.begin(), req.uri.end(), match,
+                            put_chunk_rgx)) {
 
+          PutChunkDTO put_chunk{sub};
+          put_chunk.fill(req);
+          put_file_chunk(put_chunk);
+          return http::server::reply::stock_reply(http::server::reply::ok);
+      }
+  }
   throw WrongRquestFormat();
 };
 
@@ -56,4 +67,6 @@ size_t ChunkController::get_file_chunk(const GetChunkDTO &get_chunk) {
   return chunk_service->file_chunk_get(get_chunk);
 }
 
-
+void ChunkController::put_file_chunk(const PutChunkDTO &put_chunk) {
+    chunk_service->file_chunk_put(put_chunk);
+}
