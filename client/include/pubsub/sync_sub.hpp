@@ -49,8 +49,8 @@ public:
   void on_file_renamed(const Message &message);
   void on_file_deleted(const Message &message);
   json collect_unfinished_transfers();
-  json collect_local_changes();
-  json collect_remote_changes();
+  void collect_local_changes(std::unordered_map<std::string, json> &changes);
+  void collect_remote_changes(std::unordered_map<std::string, json> &changes);
   void run_corrections(const json &changes);
   void push(const json &task);
   void restore_files();

@@ -32,25 +32,13 @@ void SyncSubscriber::start(const Message &message) {
   std::clog << "sync module started...\n";
   running = true;
   init_workers();
-  json changes = json::array();
+  std::unordered_map<std::string, json> changes;
   // 1. collect transfers
   // 2. collect local changes
-  json local_changes = collect_local_changes();
+  collect_local_changes(changes);
   // 3. collect remote changes
-  json remote_changes = collect_remote_changes();
-  // 4. merge changes
-  for (size_t x = 0; x < local_changes.size(); x++) {
-    json change = json::object();
-    change["path"] = local_changes[x]["path"];
-    change["path"]["local"] = local_changes[x];
-    for (size_t y = 0; y < remote_changes.size(); y++) {
-      std::string remote_path = remote_changes[y]["path"];
-      if (remote_path.compare(change["path"]) == 0) {
-        change["path"]["remote"] = remote_changes[y];
-      }
-    }
-  }
-  // 5. run corrections
+  collect_remote_changes(changes);
+  // 4. run corrections
   run_corrections(changes);
 }
 
@@ -68,23 +56,18 @@ void SyncSubscriber::push(const json &task) {
 
 void SyncSubscriber::on_new_file(const Message &message) {
   DurationLogger logger{"NEW_FILE"};
-  //json content = message.get_content();
-  //std::string file_path = content["path"];
-  //if (std::filesystem::exists(file_path) &&
-  //    !std::filesystem::is_empty(file_path)) {
-    std::shared_ptr<Broker> broker = Broker::getInstance();
-    std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-    FileEntry fentry{message.get_content()["path"]};
-    size_t i = 0;
-    while (fentry.has_chunk()) {
-      std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();  
-      json jentry = fentry.get_json_representation();
-      //rest_client->post_chunk(chunk, jentry);
-      broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
-      fentry.clear_chunks();
-      i++;
-    }
-  //}
+  std::shared_ptr<Broker> broker = Broker::getInstance();
+  std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
+  FileEntry fentry{message.get_content()["path"]};
+  size_t i = 0;
+  while (fentry.has_chunk()) {
+    std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
+    json jentry = fentry.get_json_representation();
+    // rest_client->post_chunk(chunk, jentry);
+    broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
+    fentry.clear_chunks();
+    i++;
+  }
 }
 
 void SyncSubscriber::on_new_folder(const Message &message) {
@@ -113,16 +96,16 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
   json content = message.get_content();
   std::string path = content["path"];
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-  //rest_client->delete_file(path);
+  // rest_client->delete_file(path);
   broker->publish(Message{TOPIC::REMOVE_ENTRY, content});
 }
 
 json SyncSubscriber::collect_unfinished_transfers() { return json::object(); }
 
-json SyncSubscriber::collect_local_changes() {
+void SyncSubscriber::collect_local_changes(
+    std::unordered_map<std::string, json> &changes) {
   std::shared_ptr<SyncStructure> syn = SyncStructure::getInstance();
   int last_check = syn->get_last_check();
-  json news = json::array();
   for (auto &p : std::filesystem::recursive_directory_iterator("./sync")) {
     if (p.is_regular_file()) {
       std::string file_path = p.path().string();
@@ -130,31 +113,31 @@ json SyncSubscriber::collect_local_changes() {
       stat(file_path.c_str(), &sb);
       int last_change = sb.st_ctime;
       if (last_change > last_check) {
-        news.push_back(
-            {{"path", file_path}, {"last_local_change", last_change}});
+        json change = {{"path", file_path}, {"last_local_change", last_change}};
+        changes[file_path]["local"] = change;
       }
     }
   }
-  return news;
 }
 
-json SyncSubscriber::collect_remote_changes() {
+void SyncSubscriber::collect_remote_changes(
+    std::unordered_map<std::string, json> &changes) {
   DurationLogger logger{"PROCESS_LIST"};
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   std::shared_ptr<SyncStructure> sync_structure = SyncStructure::getInstance();
   int current_page = 0;
   int last_page = 1;
-  json news = json::array();
   while (current_page < last_page) {
     json list = rest_client->get_status_list(current_page++);
     std::clog << "list dump: " << list.dump() << "\n";
     current_page = list["current_page"].get<int>();
     last_page = list["last_page"].get<int>();
     for (size_t i = 0; i < list["entries"].size(); i++) {
-      news.push_back(list["entries"][i]);
+      std::string file_path =
+          macaron::Base64::Decode(list["entries"][i]["path"]);
+      changes[file_path]["remote"] = list["entries"][i];
     }
   }
-  return news;
 }
 
 void SyncSubscriber::run_corrections(const json &changes) {
@@ -212,8 +195,9 @@ void SyncSubscriber::init_workers() {
             out.close();
             std::string chunk_hash = Sha256::getSha256(chunk);
             json entry = {{"path", file_path},
-                          {"nchunks", task["num_chunks"]}, {"direction", "down"} };
-            entry["chunks"].push_back({ {"id", task["id"].get<int>()} });
+                          {"nchunks", task["num_chunks"]},
+                          {"direction", "down"}};
+            entry["chunks"].push_back({{"id", task["id"].get<int>()}});
             broker->publish(Message{TOPIC::ADD_CHUNK, entry});
           }
         } else {
