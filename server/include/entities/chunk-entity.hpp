@@ -12,6 +12,7 @@ private:
     int id_chunk;
     std::string hash_chunk;
     std::string path_file;
+    std::string file_name;
     std::string old_path_64;
     std::string new_path_64;
     int last_mod;
@@ -32,6 +33,7 @@ public:
     int getIdChunk() const;
     std::string getHashChunk() const;
     std::string getPathFile() const;
+    std::string getFileName() const;
     int getLastMod() const;
     int getSizeFile() const;
     int getNumChunks() const;

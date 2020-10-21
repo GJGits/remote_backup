@@ -41,8 +41,7 @@ void ChunkService::file_chunk_put(const PutChunkDTO &put_chunk) {
                              std::to_string(i) + ".chk"};
         std::string new_path{put_chunk.getold_file_path_64() + "/" + put_chunk.getnew_path_64() + "__" +
                          std::to_string(i) + ".chk"};
-        std::clog << "old path: " << old_path << "\n";
-        std::clog << "new path: " << new_path << "\n";
+
 
     while(std::rename(old_path.c_str(),new_path.c_str())==0){
             i++;
@@ -50,8 +49,7 @@ void ChunkService::file_chunk_put(const PutChunkDTO &put_chunk) {
                      std::to_string(i) + ".chk";
             new_path = put_chunk.getold_file_path_64() + "/" + put_chunk.getnew_path_64() + "__" +
                      std::to_string(i) + ".chk";
-            std::clog << "old path: " << old_path << "\n";
-            std::clog << "new path: " << new_path << "\n";
+
         }
     if(i>0) {
         std::rename(put_chunk.getold_file_path_64().c_str(),put_chunk.getnew_file_path_64().c_str());

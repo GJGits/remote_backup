@@ -18,11 +18,7 @@ bool ChunkRepository::add_or_update_Chunk(const ChunkEntity &chunk) {
                                                                                                                                                                                                                                                                                                "ON DUPLICATE KEY ""UPDATE c_lastmod = "+std::to_string(chunk.getLastMod())+", device_id = device_id ^ "+std::to_string((int)chunk.get_subject().get_device_id())+" ;";
     std::list<std::string> entries_of_query;
     entries_of_query.push_back(chunk.get_subject().get_sub());
-    std::string s = chunk.getPathFile();
-    std::string delimiter{"../../filesystem/" + chunk.get_subject().get_sub() + "/"};
-    entries_of_query.push_back(Utility::split_string(s, delimiter));
-
-
+    entries_of_query.push_back(chunk.getFileName());
 
     return Utility::update_query(query,entries_of_query,db_selected);
 }
