@@ -133,6 +133,16 @@ void request_handler::handle_request(const request &req, reply &rep) {
         "error", e.what(), http::server::reply::internal_server_error);
     return;
   }
+  catch (std::invalid_argument &e) {
+      rep = MakeReply::make_1line_jsonReply<std::string>(
+              "error", e.what(), http::server::reply::internal_server_error);
+      return;
+  }
+  catch (std::out_of_range &e) {
+      rep = MakeReply::make_1line_jsonReply<std::string>(
+              "error", e.what(), http::server::reply::internal_server_error);
+      return;
+  }
 }
 
 } // namespace server
