@@ -35,7 +35,7 @@ bool ChunkRepository::rename_Chunk(const ChunkEntity &chunk) {
 
     std::string query =
             "UPDATE chunks SET c_path = '?' WHERE c_path = '?' and c_username = '?'";
-    
+
     std::list<std::string> entries_of_query;
     entries_of_query.push_back(chunk.getnew_path_64());
     entries_of_query.push_back(chunk.getold_path_64());
