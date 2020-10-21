@@ -58,12 +58,14 @@ void SyncSubscriber::on_new_file(const Message &message) {
   DurationLogger logger{"NEW_FILE"};
   std::shared_ptr<Broker> broker = Broker::getInstance();
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-  FileEntry fentry{message.get_content()["path"]};
+  json content = message.get_content();
+  std::string file_path = content["path"];
+  FileEntry fentry{file_path};
   size_t i = 0;
   while (fentry.has_chunk()) {
     std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
     json jentry = fentry.get_json_representation();
-    // rest_client->post_chunk(chunk, jentry);
+    rest_client->post_chunk(chunk, jentry);
     broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
     fentry.clear_chunks();
     i++;
@@ -75,8 +77,9 @@ void SyncSubscriber::on_new_folder(const Message &message) {
   json mex;
   std::shared_ptr<Broker> broker = Broker::getInstance();
   json content = message.get_content();
+  std::string path = content["path"];
   for (auto &p :
-       std::filesystem::recursive_directory_iterator(content["path"])) {
+       std::filesystem::recursive_directory_iterator(path)) {
     std::string new_path = p.path().string();
     if (std::filesystem::is_regular_file(new_path)) {
       mex["path"] = std::string{new_path};
@@ -96,7 +99,7 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
   json content = message.get_content();
   std::string path = content["path"];
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-  // rest_client->delete_file(path);
+  rest_client->delete_file(path);
   broker->publish(Message{TOPIC::REMOVE_ENTRY, content});
 }
 

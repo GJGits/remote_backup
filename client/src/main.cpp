@@ -27,7 +27,7 @@ int main() {
 
   std::shared_ptr<LinuxWatcher> watcher = LinuxWatcher::getInstance(
       "./sync", IN_CREATE | IN_ONLYDIR | IN_CLOSE_WRITE | IN_DELETE |
-                    IN_MODIFY | IN_MOVED_TO | IN_MOVED_FROM | IN_ISDIR);
+                    IN_MODIFY | IN_MOVED_TO | IN_MOVED_FROM | IN_ISDIR | IN_IGNORED);
 
   watcher->init_sub_list();
 

@@ -129,7 +129,6 @@ json UserRepository::get_status_file(const Subject &subject,
     entries_of_query.push_back(subject.get_sub());
     res = Utility::select_query(query,entries_of_query,db_selected);
 
-  std::clog << "query list....\n";
 
     json j;
     j["entries"] = json::array();

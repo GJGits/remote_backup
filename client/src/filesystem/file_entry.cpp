@@ -5,6 +5,8 @@ FileEntry::FileEntry(const std::string &path) : path{path} {
   entry["path"] = path;
   struct stat sb;
   stat(path.c_str(), &sb);
+  int last_change = sb.st_ctime;
+  entry["last_local_change"] = last_change;
   size = std::filesystem::file_size(path);
   nchunks = ceil((double)size / CHUNK_SIZE);
   entry["transfers"]["nchunks"] = nchunks;
@@ -20,11 +22,14 @@ std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
     in = std::move(std::ifstream{path, std::ios::binary});
   }
   memset(buffer.get(), '\0', CHUNK_SIZE);
-  size_t to_read =
-      read_count < (nchunks - 1) ? CHUNK_SIZE : (size - ((nchunks - 1) * CHUNK_SIZE));
+  size_t to_read = read_count < (nchunks - 1)
+                       ? CHUNK_SIZE
+                       : (size - ((nchunks - 1) * CHUNK_SIZE));
   in.seekg(read_count * CHUNK_SIZE);
   in.read(buffer.get(), to_read);
-  entry["transfers"]["chunks"].push_back(read_count);
+  json chunk = {{"id", read_count},
+                {"hash", Sha256::getSha256(buffer, to_read)}};
+  entry["transfers"]["chunks"].push_back(chunk);
   read_count++;
   return std::tuple(buffer, to_read);
 }

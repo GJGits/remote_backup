@@ -137,7 +137,7 @@ void LinuxWatcher::handle_events() {
         try {
           timer = TIMER;
           std::clog << "watch path: " << wd_path_map[event->wd] << "\n";
-          std::clog << "MASK: " << event->mask << "NAME" << event->name << "\n";
+          std::clog << "MASK: " << event->mask << " NAME" << event->name << "\n";
 
           //
           //  TABELLA RIASSUNTIVA CODICI EVENTI:
@@ -205,6 +205,9 @@ void LinuxWatcher::handle_events() {
                 broker->publish(Message{TOPIC::FILE_RENAMED, message});
                 cookie_map.erase(event->cookie);
               }
+            } else {
+              // nuovo file da fuori
+              broker->publish(Message{TOPIC::NEW_FILE, message});
             }
           } break;
           case 512: {

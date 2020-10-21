@@ -28,9 +28,5 @@ std::shared_ptr<sql::mysql::MySQL_Connection> DBConnect::getConnection(size_t db
           : DBConnect::instance->indexes[db_selected];
   int scelta = DBConnect::instance->indexes[db_selected];
   DBConnect::instance->indexes[db_selected]++;
-
-  std::clog << "Restituita connection: @" << scelta << " del db: @"
-            << db_selected << "\n";
-
   return instance->connections_map[db_selected][scelta];
 }

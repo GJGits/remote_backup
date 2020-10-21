@@ -9,8 +9,6 @@ std::shared_ptr<UserService> UserService::getInstance() {
 }
 
 std::string UserService::login(const SigninDTO &user) {
-  std::clog << "Entro nella login\n";
-
   UserEntity user_returned =
       user_repository->getUserByUsername(user.getUsername());
   unsigned int salt = user_returned.getSalt();
@@ -22,14 +20,11 @@ std::string UserService::login(const SigninDTO &user) {
     std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
     size_t db_sel = db_repinstance->getDBbyUsername(user.getUsername());
     int device_id = user_returned.check_validity_id(user.getMAC());
-    std::clog << "device_id: " << device_id << "\n";
     if (device_id < 0) {
       user_repository->updateUser(user_returned);
       device_id = abs(device_id);
-      std::clog << "Sono entrato e metto roba\n";
     }
     Subject sub{user.getUsername(), db_sel, (size_t)device_id};
-    std::clog << "Torno il token\n";
 
     return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
   } else

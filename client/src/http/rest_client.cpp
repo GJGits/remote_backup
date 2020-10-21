@@ -35,15 +35,17 @@ void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
   std::shared_ptr<char[]> buffer = std::get<0>(chunk);
   http::request<http::vector_body<char>> req{post_prototype};
   size_t size = std::get<1>(chunk);
-  req.target("/chunk/" + std::to_string(jentry["chunks"][0]["id"].get<int>()) +
-             "/" + std::string{jentry["chunks"][0]["hash"]} + "/" +
-             std::to_string(jentry["nchunks"].get<int>()) + "/" +
+  req.target("/chunk/" + std::to_string(jentry["transfers"]["chunks"][0]["id"].get<int>()) +
+             "/" + std::string{jentry["transfers"]["chunks"][0]["hash"]} + "/" +
+             std::to_string(jentry["transfers"]["nchunks"].get<int>()) + "/" +
              macaron::Base64::Encode(std::string{jentry["path"]}) + "/" +
              std::to_string(jentry["last_local_change"].get<int>()));
+  std::clog << "req created\n";
   req.set(http::field::content_length, std::to_string(size));
   req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
   std::move(buffer.get(), buffer.get() + size, std::back_inserter(req.body()));
   http_client->post(req);
+  std::clog << "req posted\n";
 }
 
 std::vector<char> RestClient::get_chunk(const json &chunk_info) {
