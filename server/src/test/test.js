@@ -52,7 +52,7 @@ const run_test = function (combination, result) {
 
 
 // 1. genero chunks da file
-file_list = ["./input/thread.pdf", "./input/generali.pdf"];
+file_list = ["./input/thread.pdf","./input/bello.txt", "./input/generali.pdf"];
 buff_list = []; // lista dalla quale attingere buffer da inviare
 file_list.forEach(fname => {
     let stats = fs.statSync(fname);
@@ -341,17 +341,31 @@ const combinations = [
     },
     {
         method: "POST",
-        url: base_url + "0/ab7957a32eef08e3c9b2f7493b706b546316fd421cecb5c1da90e200c9a72c7c/143/Z2VuZXJhbGkucGRm/1602506511",
-        description: "Chunk 0 Esatto e giusto Generali.pdf",
+        url: base_url + "0/20c606802c9d54f9b9e48d44c421e9c4a2b2f35748aa6e8d89c461aafff7cc2f/2/YmVsbG8udHh0/1602506513",
+        description: "Chunk 0 di bello.txt",
         content: buff_list[128].content,
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[128].size,  'Authorization' : 'Bearer ' + token1 }
     },
     {
         method: "POST",
+        url: base_url + "1/4a0a08009e3687c8ef9e4d8b90fc76918a1ad35eb143eb38ac99123e8af8a486/2/YmVsbG8udHh0/1602506513",
+        description: "Chunk 1 di bello.txt",
+        content: buff_list[129].content,
+        headers: { 'Content-Type': 'octect/stream', 'Content-Length': 883,  'Authorization' : 'Bearer ' + token1 }
+    },
+    {
+        method: "POST",
+        url: base_url + "0/ab7957a32eef08e3c9b2f7493b706b546316fd421cecb5c1da90e200c9a72c7c/143/Z2VuZXJhbGkucGRm/1602506511",
+        description: "Chunk 0 Esatto e giusto Generali.pdf",
+        content: buff_list[130].content,
+        headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[130].size,  'Authorization' : 'Bearer ' + token1 }
+    },
+    {
+        method: "POST",
         url: base_url + "1/7d96cd8fc8a94ea2c04eac39a4ab22e7a8e0e017778846cf21ffc1c9161a7fed/143/Z2VuZXJhbGkucGRm/1602506511",
         description: "Chunk 1 Esatto e giusto Generali.pdf",
-        content: buff_list[129].content,
-        headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[129].size,  'Authorization' : 'Bearer ' + token1 }
+        content: buff_list[131].content,
+        headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[131].size,  'Authorization' : 'Bearer ' + token1 }
     },
 
 ];
@@ -364,6 +378,8 @@ const expected_results = [
     { status: 400, msg: "The format of the request is wrong!"},
     { status: 400, msg: "The format of the request is wrong!"},
     { status: 400, msg: "The format of the request is wrong!"},
+    { status: 200},
+    { status: 200},
     { status: 200},
     { status: 200},
     { status: 200},
