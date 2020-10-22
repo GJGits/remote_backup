@@ -26,6 +26,7 @@ const json TestService::getTestDatabaseTable(const GetTestDatabaseDTO &get_test_
 const json TestService::getTestFilesystemFilename(const GetTestFilesystemFilenameDTO &get_test_filesystem_filename) {
 
     std::string prefix{"../../filesystem/"+get_test_filesystem_filename.get_username()+"/"};
+    std::clog << prefix << "\n";
     std::string path;
     json j;
     j["entries"] = json::array();

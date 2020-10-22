@@ -135,12 +135,12 @@ void request_handler::handle_request(const request &req, reply &rep) {
   }
   catch (std::invalid_argument &e) {
       rep = MakeReply::make_1line_jsonReply<std::string>(
-              "error", e.what(), http::server::reply::internal_server_error);
+              "error", e.what(), http::server::reply::bad_request);
       return;
   }
   catch (std::out_of_range &e) {
       rep = MakeReply::make_1line_jsonReply<std::string>(
-              "error", e.what(), http::server::reply::internal_server_error);
+              "error", e.what(), http::server::reply::bad_request);
       return;
   }
 }
