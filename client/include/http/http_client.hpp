@@ -58,7 +58,6 @@ public:
     stream.connect(results);
     send(stream, req);
     http::response<http::vector_body<char>> res = read(stream);
-    std::clog << "response: " << res << "\n";
   }
 
   json get_json(const http::request<http::vector_body<char>> &req) {

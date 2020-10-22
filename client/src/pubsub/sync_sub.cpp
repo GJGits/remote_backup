@@ -80,9 +80,8 @@ void SyncSubscriber::on_new_folder(const Message &message) {
   std::string path = content["path"];
   for (auto &p :
        std::filesystem::recursive_directory_iterator(path)) {
-    std::string new_path = p.path().string();
-    if (std::filesystem::is_regular_file(new_path)) {
-      mex["path"] = std::string{new_path};
+    if (p.is_regular_file()) {
+      mex["path"] = p.path().string();
       on_new_file(Message{TOPIC::NEW_FILE, mex});
     }
   }
