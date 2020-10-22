@@ -367,6 +367,13 @@ const combinations = [
         content: buff_list[131].content,
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[131].size,  'Authorization' : 'Bearer ' + token1 }
     },
+    {
+        method: "POST",
+        url: base_url + "1/7d96cd8fc8a94ea2c04eac39a4ab22e7a8e0e017778846cf21ffc1c9161a7fed/143/Z2VuZXJhbGkucGRm/16025065119999",
+        description: "Chunk 2 con timestamp esageratamente lungo Generali.pdf",
+        content: buff_list[132].content,
+        headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[132].size,  'Authorization' : 'Bearer ' + token1 }
+    },
 
 ];
 const expected_results = [
@@ -406,6 +413,8 @@ const expected_results = [
     { status: 200},
     { status: 200},
     { status: 200},
+    { status: 400, msg: "stoi"},
+
 ];
 
 console.log("\n");
