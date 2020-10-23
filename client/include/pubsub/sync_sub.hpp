@@ -51,7 +51,7 @@ public:
   json collect_unfinished_transfers();
   void collect_local_changes(std::unordered_map<std::string, json> &changes);
   void collect_remote_changes(std::unordered_map<std::string, json> &changes);
-  void run_corrections(const json &changes);
+  void run_corrections(std::unordered_map<std::string, json> &changes);
   void push(const json &task);
   void restore_files();
 };

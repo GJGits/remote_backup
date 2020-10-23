@@ -37,7 +37,7 @@ void SyncSubscriber::start(const Message &message) {
   // 2. collect local changes
   collect_local_changes(changes);
   // 3. collect remote changes
-  collect_remote_changes(changes);
+  // collect_remote_changes(changes);
   // 4. run corrections
   run_corrections(changes);
 }
@@ -78,9 +78,9 @@ void SyncSubscriber::on_new_folder(const Message &message) {
   std::shared_ptr<Broker> broker = Broker::getInstance();
   json content = message.get_content();
   std::string path = content["path"];
-  for (auto &p :
-       std::filesystem::recursive_directory_iterator(path)) {
+  for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
     if (p.is_regular_file()) {
+      std::clog << "PATH FOLDER: " << p.path().string() << "\n";
       mex["path"] = p.path().string();
       on_new_file(Message{TOPIC::NEW_FILE, mex});
     }
@@ -116,11 +116,24 @@ void SyncSubscriber::collect_local_changes(
       int last_change = sb.st_ctime;
       if (last_change > last_check) {
         json change = {{"path", file_path}, {"last_local_change", last_change}};
-        changes[file_path]["local"] = change;
+        if (changes.find(file_path) == changes.end()) {
+          json entry;
+          entry["local"] = change;
+          changes[file_path] = entry;
+        } else {
+          changes[file_path]["local"] = change;
+        }
       }
     }
   }
 }
+
+/*
+{
+  local: {path: '...', last_local_change: 123456}
+}
+
+*/
 
 void SyncSubscriber::collect_remote_changes(
     std::unordered_map<std::string, json> &changes) {
@@ -137,28 +150,35 @@ void SyncSubscriber::collect_remote_changes(
     for (size_t i = 0; i < list["entries"].size(); i++) {
       std::string file_path =
           macaron::Base64::Decode(list["entries"][i]["path"]);
-      changes[file_path]["remote"] = list["entries"][i];
+      json change = list["entries"][i];
+      if (changes.find(file_path) == changes.end()) {
+        json entry;
+        entry["remote"] = change;
+        changes[file_path] = entry;
+      } else {
+        changes[file_path]["remote"] = change;
+      }
     }
   }
 }
 
-void SyncSubscriber::run_corrections(const json &changes) {
-  for (size_t i = 0; i < changes.size(); i++) {
-    json local = changes["local"];
-    json remote = changes["remote"];
+void SyncSubscriber::run_corrections(std::unordered_map<std::string, json> &changes) {
+  for ( auto const& [key, val] : changes) {
     int local_change = 0;
     int remote_change = 0;
-    if (!local.is_null()) {
-      local_change = local["last_local_change"].get<int>();
+    if (val.find("local") != val.end()) {
+      local_change = val["local"]["last_local_change"].get<int>();
     }
-    if (!remote.is_null()) {
-      remote_change = remote["last_remote_change"].get<int>();
+    if (val.find("remote") != val.end()) {
+      remote_change = val["remote"]["last_remote_change"].get<int>();
     }
     if (local_change > remote_change) {
-      on_new_file(Message(TOPIC::NEW_FILE, local));
+      json mex = val["local"];
+      on_new_file(Message(TOPIC::NEW_FILE, mex));
     }
     if (remote_change > local_change) {
-      push(remote);
+      json task = val["remote"];
+      push(task);
     }
   }
 }

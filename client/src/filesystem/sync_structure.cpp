@@ -21,16 +21,15 @@ void SyncStructure::write_structure() {
   DurationLogger duration{"WRITE_STRUCTURE"};
   if ((*entries).empty()) {
     (*structure)["entries"] = json::array();
-    (*structure)["last_check"] = 0;
   } else {
     std::string entries_dump;
     for (auto it = (*entries).begin(); it != (*entries).end(); it++) {
       (*structure)["entries"].push_back(it->second);
       entries_dump += it->second.dump();
     }
-    last_check = (int)std::time(nullptr);
-    (*structure)["last_check"] = last_check;
   }
+  last_check = (int)std::time(nullptr);
+  (*structure)["last_check"] = last_check;
   std::ofstream o("./config/client-struct.json");
   o << (*structure) << "\n";
   o.close();
@@ -57,7 +56,8 @@ void SyncStructure::add_chunk(const json &chunk) {
   if ((*entries)[chunk["path"]]["transfers"]["chunks"].size() ==
       (size_t)chunk["transfers"]["nchunks"].get<int>()) {
     (*entries)[chunk["path"]].erase("transfers");
-    std::clog << "struct new file: " << (*entries)[chunk["path"]].dump() << "\n";
+    std::clog << "struct new file: " << (*entries)[chunk["path"]].dump()
+              << "\n";
   }
 }
 

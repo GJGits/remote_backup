@@ -19,10 +19,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../common/singleton.hpp"
 #include "../common/base64.hpp"
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
+#include "../common/singleton.hpp"
 #include "../pubsub/broker.hpp"
 
 namespace beast = boost::beast; // from <boost/beast.hpp>
@@ -31,33 +31,33 @@ namespace net = boost::asio;    // from <boost/asio.hpp>
 using tcp = net::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 using json = nlohmann::json;
 
-class HTTPClient: public Singleton<HTTPClient>{
+class HTTPClient : public Singleton<HTTPClient> {
 
 private:
   friend class Singleton;
   const char *host = "remote_backup_nginx-server_1";
   const char *port = "80";
+  std::mutex mu;
   net::io_context ioc;
   tcp::resolver resolver{ioc};
   beast::tcp_stream stream{ioc};
   boost::asio::ip::basic_resolver_results<boost::asio::ip::tcp> results;
 
-  HTTPClient() {
-     this->results = resolver.resolve(host, port);
-  }
+  HTTPClient() { this->results = resolver.resolve(host, port); }
 
 public:
-
   void post(const http::request<http::vector_body<char>> &req) {
-    stream.connect(results);
-    send(stream, req);
-    http::response<http::vector_body<char>> res = read(stream);
+    beast::tcp_stream str_temp{ioc};
+    str_temp.connect(results);
+    send(str_temp, req);
+    http::response<http::vector_body<char>> res = read(str_temp);
   }
 
   void delete_(const http::request<http::vector_body<char>> &req) {
-    stream.connect(results);
-    send(stream, req);
-    http::response<http::vector_body<char>> res = read(stream);
+    beast::tcp_stream str_temp{ioc};
+    str_temp.connect(results);
+    send(str_temp, req);
+    http::response<http::vector_body<char>> res = read(str_temp);
   }
 
   json get_json(const http::request<http::vector_body<char>> &req) {

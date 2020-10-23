@@ -138,19 +138,7 @@ void LinuxWatcher::handle_events() {
           timer = TIMER;
           std::clog << "watch path: " << wd_path_map[event->wd] << "\n";
           std::clog << "MASK: " << event->mask << " NAME" << event->name << "\n";
-
-          //
-          //  TABELLA RIASSUNTIVA CODICI EVENTI:
-
-          //    8          -> EVENTO IN_CLOSE_WRITE
-          //    256        -> FILE WAS CREATED
-          //    1073741952 -> CTRL+Z CARTELLA ?
-          //    1073742080 -> EVENT HANDLE_EXPAND
-          //    1073741888 -> MOVED_FROM FOLDER
-          //    64         -> MOVED_FROM FILE
-          //    128        -> RENAME  (MOVED_TO)
-          //    512        -> IN_DELETE
-
+          /*
           switch (event->mask) {
           case 2: {
             // Un file relativamente grande genera in seguito ad una NEW_FILE
@@ -194,6 +182,7 @@ void LinuxWatcher::handle_events() {
             // broker->publish(TOPIC::CONTENT_MOVED, Message{});
             break;
           case 128: {
+            // 1. caso moved_to con moved_from
             if (cookie_map.find(event->cookie) != cookie_map.end()) {
               std::smatch match1;
               std::smatch match2;
@@ -206,7 +195,7 @@ void LinuxWatcher::handle_events() {
                 cookie_map.erase(event->cookie);
               }
             } else {
-              // nuovo file da fuori
+              // 2. caso moved_to senza moved_from: nuovo file da fuori
               broker->publish(Message{TOPIC::NEW_FILE, message});
             }
           } break;
@@ -220,7 +209,7 @@ void LinuxWatcher::handle_events() {
           default:
             break;
           }
-
+          */
         }
 
         catch (const std::filesystem::filesystem_error &e) {
@@ -233,6 +222,7 @@ void LinuxWatcher::handle_events() {
       new_files.clear();
       cookie_map.clear();
       timer = WAIT;
+      /*
       // check di move verso l'esterno
       std::shared_ptr<Broker> broker = Broker::getInstance();
       std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
@@ -242,7 +232,10 @@ void LinuxWatcher::handle_events() {
           mex["path"] = path;
           broker->publish(Message{TOPIC::FILE_DELETED, mex});
         }
-      }
+      }*/
     }
   }
 }
+
+// moved_from: ./goutpustream, moved_to: file.txt
+// moved_from: file1.txt, moved_to: file1_mod.txt
