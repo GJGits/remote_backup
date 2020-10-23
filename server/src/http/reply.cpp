@@ -216,5 +216,14 @@ reply reply::stock_reply(reply::status_type status) {
   return rep;
 }
 
+reply reply::stock_reply_empty(reply::status_type status) {
+        reply rep;
+        rep.status = status;
+        rep.headers.resize(1);
+        rep.headers[0].name = "Content-Length";
+        rep.headers[0].value = std::to_string(0);
+        return rep;
+    }
+
 } // namespace server
 } // namespace http

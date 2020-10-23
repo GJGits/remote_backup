@@ -12,7 +12,8 @@ FileController::handle(const http::server::request &req) {
       DeleteFileDTO del_file{sub};
       del_file.fill(req);
       delete_file(del_file);
-      return http::server::reply::stock_reply(http::server::reply::ok);
+        return http::server::reply::stock_reply_empty(http::server::reply::ok);
+
     }
   }
   throw WrongRquestFormat();

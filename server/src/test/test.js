@@ -102,7 +102,7 @@ test("Check status", function (res, exp) {
 test("Check response message", function (res, exp) {
 
     // ATTENZIONE CHE VENGONO RESTITUITI 4096 BYTES VUOTI SE NON C'È NULLA
-   if(res.body.length != 4096) {
+   if(res.body.length != 0) {
        const body = JSON.parse(res.body.toString());
        if (body.error === exp.msg)
            return true;

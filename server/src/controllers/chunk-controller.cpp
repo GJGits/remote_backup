@@ -20,7 +20,9 @@ ChunkController::handle(const http::server::request &req) {
       PostChunkDTO post_chunk{sub};
       post_chunk.fill(req, (*req.body).size());
       post_file_chunk(post_chunk);
-      return http::server::reply::stock_reply(http::server::reply::ok);
+
+      return http::server::reply::stock_reply_empty(http::server::reply::ok);
+
     }
   }  else if (req.method == "GET") {
     std::smatch match;
@@ -52,7 +54,8 @@ ChunkController::handle(const http::server::request &req) {
           PutChunkDTO put_chunk{sub};
           put_chunk.fill(req);
           put_file_chunk(put_chunk);
-          return http::server::reply::stock_reply(http::server::reply::ok);
+          return http::server::reply::stock_reply_empty(http::server::reply::ok);
+
       }
   }
   throw WrongRquestFormat();

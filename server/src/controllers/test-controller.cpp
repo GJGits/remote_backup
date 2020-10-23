@@ -23,14 +23,14 @@ TestController::handle(const http::server::request &req) {
             json list = get_test_filesystem_filename(get_test_filesystem_filename_dto);
             return MakeReply::make_1line_dump_jsonReply<json>(
                     list, http::server::reply::ok);
-            return http::server::reply::stock_reply(http::server::reply::ok);
 
         } else if (std::regex_search(req.uri.begin(), req.uri.end(), match, get_test_filesystem_chunkid)) {
 
         }
     } else if (req.method == "DELETE") {
         delete_them_all();
-        return http::server::reply::stock_reply(http::server::reply::ok);
+        return http::server::reply::stock_reply_empty(http::server::reply::ok);
+
     }
     throw WrongRquestFormat();
 
