@@ -42,4 +42,5 @@ public:
   void rename_entry(const json &entry);
   std::vector<std::string> get_paths();
   int get_last_check();
+  bool has_path(const std::string &path);
 };

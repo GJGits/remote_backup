@@ -37,6 +37,10 @@ void SyncStructure::write_structure() {
 
 int SyncStructure::get_last_check() { return last_check; }
 
+bool SyncStructure::has_path(const std::string &path) {
+  return (*entries).find(path) != (*entries).end();
+}
+
 std::vector<std::string> SyncStructure::get_paths() {
   std::vector<std::string> paths{};
   for (auto it = (*entries).begin(); it != (*entries).end(); ++it) {

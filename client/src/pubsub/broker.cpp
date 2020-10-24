@@ -2,7 +2,6 @@
 
 Broker::Broker():is_running{true} {
   for(ssize_t i = 0; i < 4; i++) {
-
     callers.emplace_back([&](){
       while(is_running) {
         std::function<void(void)> fn;

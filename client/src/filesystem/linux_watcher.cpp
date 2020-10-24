@@ -113,11 +113,11 @@ void LinuxWatcher::handle_events() {
     std::clog << "revent[1]" << std::to_string(fds[1].revents) << "\n";
     if (fds[1].revents & POLLIN) {
       std::clog << "poll da pipe\n";
-      //char sig_buff;
-      //read(fds[1].fd, &sig_buff, 1);
+      // char sig_buff;
+      // read(fds[1].fd, &sig_buff, 1);
       break;
     }
-      
+
     if (poll_num > 0) {
       len = read(inotify_descriptor, buf, sizeof buf);
       // todo: check su read qui...
@@ -135,81 +135,61 @@ void LinuxWatcher::handle_events() {
         message["path"] = path;
 
         try {
+
           timer = TIMER;
           std::clog << "watch path: " << wd_path_map[event->wd] << "\n";
-          std::clog << "MASK: " << event->mask << " NAME" << event->name << "\n";
-          /*
-          switch (event->mask) {
-          case 2: {
-            // Un file relativamente grande genera in seguito ad una NEW_FILE
-            // una serie di FILE_MODIFIED. In questo modo lascio fare tutto
-            // alla NEW_FILE
-            if (new_files.find(path) == new_files.end()) {
-              std::smatch match;
-              std::smatch match2;
-              if (!std::regex_search(path.begin(), path.end(), match,
-                                     temp_rgx) &&
-                  !std::regex_search(path.begin(), path.end(), match2, bin_rgx))
-                broker->publish(Message{TOPIC::FILE_MODIFIED, message});
-            }
+          std::clog << "MASK: " << event->mask << " NAME " << event->name
+                    << "\n";
 
-          } break;
-          case 256: {
-            new_files.insert(path);
-            std::smatch match1;
-            std::smatch match2;
-            if (!std::regex_search(path.begin(), path.end(), match1,
-                                   temp_rgx) &&
-                !std::regex_search(path.begin(), path.end(), match2, bin_rgx))
-              broker->publish(Message{TOPIC::NEW_FILE, message});
-          }
+          // eventi non presenti in inotify:
+          // 1073742080 -> copia incolla cartella da gui da fuori sync (con file
+          // e sotto cartelle) 1073741888 -> eliminazione cartella da gui (con
+          // file e sotto cartelle) 1073742336 -> eliminazione cartella da
+          // command line 1073741952 -> move da linea di comando riguardante una
+          // cartella 1073741888 -> move from cartella da terminale 1073741952
+          // -> move to cartella da terminale
 
-          break;
-          case 1073742080:
-            add_watch(message["path"]);
-            broker->publish(Message{TOPIC::NEW_FOLDER, message});
-            break;
-          case 1073741952:
-            add_watch(message["path"]);
-            broker->publish(Message{TOPIC::NEW_FOLDER, message});
-            break;
-          case 1073741888:
-            remove_watch(message["path"]);
-            // broker->publish(TOPIC::CONTENT_MOVED, Message{});
-            break;
-          case 64:
-            cookie_map[event->cookie] = message["path"];
-            // broker->publish(TOPIC::CONTENT_MOVED, Message{});
-            break;
-          case 128: {
-            // 1. caso moved_to con moved_from
-            if (cookie_map.find(event->cookie) != cookie_map.end()) {
-              std::smatch match1;
-              std::smatch match2;
-              if (!std::regex_search(path.begin(), path.end(), match1,
-                                     temp_rgx) &&
-                  !std::regex_search(path.begin(), path.end(), match2,
-                                     bin_rgx)) {
-                message["old_path"] = cookie_map[event->cookie];
-                broker->publish(Message{TOPIC::FILE_RENAMED, message});
-                cookie_map.erase(event->cookie);
+          std::smatch match;
+
+          if (!std::regex_match(path, match, temp_rgx) &&
+              !std::regex_match(path, match, bin_rgx)) {
+
+            switch (event->mask) {
+
+            case 1073742080:
+            case 1073741952: {
+              add_watch(path);
+              for (auto &p : std::filesystem::directory_iterator(path)) {
+                if (p.is_regular_file()) {
+                  std::string f_path = p.path().string();
+                  LinuxEvent ev{f_path, 0, 256};
+                  events[f_path] = ev;
+                }
               }
-            } else {
-              // 2. caso moved_to senza moved_from: nuovo file da fuori
-              broker->publish(Message{TOPIC::NEW_FILE, message});
+
+            } break;
+
+            case 1073741888:
+            case 1073742336: {
+              std::shared_ptr<SyncStructure> sync =
+                  SyncStructure::getInstance();
+              for (std::string &sync_path : sync->get_paths()) {
+                if (!std::filesystem::exists(sync_path)) {
+                  LinuxEvent ev{sync_path, 0, 512};
+                  events[sync_path] = ev;
+                }
+              }
+
+            } break;
+
+            default: {
+              LinuxEvent ev{path, event->cookie, event->mask};
+              events[path] = ev;
+
+            } break;
             }
-          } break;
-          case 512: {
-            std::smatch match;
-            if (!std::regex_search(path.begin(), path.end(), match, bin_rgx))
-              broker->publish(Message{TOPIC::FILE_DELETED, message});
           }
 
-          break;
-          default:
-            break;
-          }
-          */
         }
 
         catch (const std::filesystem::filesystem_error &e) {
@@ -222,20 +202,64 @@ void LinuxWatcher::handle_events() {
       new_files.clear();
       cookie_map.clear();
       timer = WAIT;
-      /*
-      // check di move verso l'esterno
       std::shared_ptr<Broker> broker = Broker::getInstance();
-      std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-      json mex;
-      for (std::string &path : sync->get_paths()) {
-        if (!std::filesystem::exists(path)) {
-          mex["path"] = path;
+      std::vector<LinuxEvent> eventi{};
+      for (const auto &[key, value] : events) {
+        eventi.push_back(value);
+      }
+
+      std::sort(eventi.begin(), eventi.end(),
+                [&](const LinuxEvent &eve1, const LinuxEvent &eve2) {
+                  if (eve1.get_cookie() != eve2.get_cookie()) {
+                    return eve1.get_cookie() > eve2.get_cookie();
+                  }
+                  return eve1.get_mask() > eve2.get_mask();
+                });
+
+      for (auto it = eventi.begin(); it != eventi.end(); ++it) {
+
+        // moved_to senza from -> new file
+        if (it->get_mask() == 128 && (it + 1) != eventi.end() &&
+            (it + 1)->get_mask() != 64) {
+          json mex = {{"path", it->get_path()}};
+          broker->publish(Message{TOPIC::NEW_FILE, mex});
+          ++it;
+        }
+
+        // moved_to con from -> rename o new_file
+        if (it->get_mask() == 128 && (it + 1) != eventi.end() &&
+            (it + 1)->get_mask() == 64 &&
+            it->get_cookie() == (it + 1)->get_cookie()) {
+          std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+          if (sync->has_path((it + 1)->get_path())) {
+            // rename
+            json mex = {{"old_path", (it + 1)->get_path()},
+                        {"new_path", it->get_path()}};
+            broker->publish(Message{TOPIC::FILE_RENAMED, mex});
+          } else {
+            // new file
+            json mex = {{"path", it->get_path()}};
+            broker->publish(Message{TOPIC::NEW_FILE, mex});
+          }
+          ++it;
+        }
+
+        // file modified or new file
+        if (it->get_mask() == 2 || it->get_mask() == 256) {
+          // new file
+          json mex = {{"path", it->get_path()}};
+          broker->publish(Message{TOPIC::NEW_FILE, mex});
+        }
+
+        // file moved or deleted
+        if (it->get_mask() == 64 || it->get_mask() == 512) {
+          // delete file
+          json mex = {{"path", it->get_path()}};
           broker->publish(Message{TOPIC::FILE_DELETED, mex});
         }
-      }*/
+      }
+
+      events.clear();
     }
   }
 }
-
-// moved_from: ./goutpustream, moved_to: file.txt
-// moved_from: file1.txt, moved_to: file1_mod.txt

@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <unordered_map>
 
+#include "linux_event.hpp"
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"
@@ -46,6 +47,7 @@ private:
   std::unordered_map<std::string, int> path_wd_map;
   std::unordered_map<int, std::string> wd_path_map;
   std::unordered_map<int, std::string> cookie_map;
+  std::unordered_map<std::string, LinuxEvent> events;
   LinuxWatcher(const std::string &root_to_watch, uint32_t mask);
 
 public:
