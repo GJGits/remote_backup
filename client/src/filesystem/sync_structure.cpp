@@ -73,13 +73,9 @@ void SyncStructure::delete_entry(const json &entry) {
 
 void SyncStructure::rename_entry(const json &entry) {
   DurationLogger logger{"RENAME_ENTRY"};
-  json ent = entry;
   std::string old_path = entry["old_path"];
-  std::string new_path = entry["path"];
-  if ((*entries).find(old_path) != (*entries).end()) {
-    ent["path"] = new_path;
-    (*entries).erase(old_path);
-  }
+  std::string new_path = entry["new_path"];
+  (*entries)[old_path]["path"] = new_path;
 }
 
 std::vector<json> SyncStructure::get_incomplete_entries() const {
