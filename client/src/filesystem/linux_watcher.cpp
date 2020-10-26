@@ -219,6 +219,7 @@ void LinuxWatcher::handle_events() {
             broker->publish(Message{TOPIC::NEW_FILE, mex});
           }
           ++it;
+          continue;
         }
 
         if (it->get_mask() == 2 || it->get_mask() == 256 ||

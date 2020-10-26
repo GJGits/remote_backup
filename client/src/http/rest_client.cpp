@@ -70,7 +70,7 @@ void RestClient::rename_file(const std::string &old_path,
                              const std::string &new_path) {
   std::shared_ptr<HTTPClient> http_client = HTTPClient::getInstance();
   http::request<http::vector_body<char>> req{put_prototype};
-  req.target("/chunk/" + old_path + "/" + new_path);
+  req.target("/chunk/" + macaron::Base64::Encode(old_path) + "/" + macaron::Base64::Encode(new_path));
   req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
   http_client->put(req);
 }
