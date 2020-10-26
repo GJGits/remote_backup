@@ -1,4 +1,3 @@
-#include "../include/test/test.hpp"
 #include "unistd.h"
 #include <iostream>
 #include <fstream>
@@ -16,8 +15,6 @@ try {
     std::streambuf * strm_buffer = std::cout.rdbuf();
     // redirect output into file
     std::cout.rdbuf(redirect_file.rdbuf());
-
-    //testAll();
 
     std::size_t num_threads = 16;
     http::server::server s("0.0.0.0", "3500", "/", num_threads);

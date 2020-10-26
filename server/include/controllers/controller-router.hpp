@@ -35,7 +35,6 @@ public:
     // todo: recupera controller qui:
     std::string analysis_stringa(key);
     char *res = std::strtok(const_cast<char *>(analysis_stringa.c_str()), "/");
-    std::clog << key << "\n";
     if (controller_map[res] != nullptr) {
       if (strcmp(res, "auth") == 0)
         return AuthController::getInstance();

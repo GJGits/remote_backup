@@ -26,7 +26,6 @@ const json TestService::getTestDatabaseTable(const GetTestDatabaseDTO &get_test_
 const json TestService::getTestFilesystemFilename(const GetTestFilesystemFilenameDTO &get_test_filesystem_filename) {
 
     std::string prefix{"../../filesystem/"+get_test_filesystem_filename.get_username()+"/"};
-    std::clog << prefix << "\n";
     std::string path;
     json j;
     j["entries"] = json::array();
@@ -35,7 +34,6 @@ const json TestService::getTestFilesystemFilename(const GetTestFilesystemFilenam
     int i = 0;
     while(1){
         path = prefix + get_test_filesystem_filename.get_file_name() + "/" + get_test_filesystem_filename.get_file_name() + "__" + std::to_string(i) + ".chk";
-        std::clog << path << "\n";
 
         if(std::filesystem::exists(path)) {
             i++;
@@ -49,7 +47,6 @@ const json TestService::getTestFilesystemFilename(const GetTestFilesystemFilenam
 
     for(i = get_test_filesystem_filename.getpage_num()*ENTRIES_PAGE ; i < (get_test_filesystem_filename.getpage_num()+1)*ENTRIES_PAGE ; i++){
         path = prefix + get_test_filesystem_filename.get_file_name() + "/" + get_test_filesystem_filename.get_file_name() + "__" + std::to_string(i) + ".chk";
-        std::clog << path << "\n";
         if(std::filesystem::exists(path)) {
             j_single_path["c_id"] = i;
             j_single_path["c_size"] = std::filesystem::file_size(path);

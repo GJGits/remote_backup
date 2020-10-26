@@ -85,7 +85,6 @@ public:
           std::vector<std::string> token_parts = Utility::split(token, '.');
           if (token_parts.size() == 3) {
             json payload = json::parse(macaron::Base64::Decode(token_parts[1]));
-            std::clog << "token payload: " << payload.dump() << "\n";
             Subject sbj{payload["sub"], (size_t)payload["db"].get<int>(),
                         (size_t)payload["device_id"].get<int>()};
             int exp = payload["exp"];
@@ -93,7 +92,6 @@ public:
                 json::parse(macaron::Base64::Decode(token_parts[2]))["sign"];
             std::string sign_calc = json::parse(macaron::Base64::Decode(
                 Utility::split(generateToken(sbj, exp), '.')[2]))["sign"];
-            std::clog << "sign calc: " << sign_calc << "\n";
             if (sign.compare(sign_calc) == 0) {
               JWTCacheEntry ce{sbj, exp};
               // todo: valutare politica di replace per evitare di intasare

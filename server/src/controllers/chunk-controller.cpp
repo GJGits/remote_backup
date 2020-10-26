@@ -16,7 +16,6 @@ ChunkController::handle(const http::server::request &req) {
     std::smatch match;
     if (std::regex_search(req.uri.begin(), req.uri.end(), match,
                           post_chunk_rgx)) {
-        std::clog <<"La size è: "<< (*req.body).size() << "\n";
       PostChunkDTO post_chunk{sub};
       post_chunk.fill(req, (*req.body).size());
       post_file_chunk(post_chunk);
