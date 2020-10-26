@@ -10,7 +10,6 @@ AuthController::handle(const http::server::request &req) {
 
     if (req.uri == "/auth/signin") {
       std::string req_body = std::string{req.body.get()->begin(), req.body.get()->end()};
-      std::clog << "signin body: " << req_body << "\n";
       std::smatch match;
 
       if (std::regex_match(req_body, match, signin_rgx)) {

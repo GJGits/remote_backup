@@ -5,14 +5,12 @@
 #include "../dtos/signin_dto.hpp"
 #include "../dtos/signup_dto.hpp"
 
-#include "../dtos/delete_chunk_dto.hpp"
 #include "../dtos/delete_file_dto.hpp"
 
 #include "../common/constants.hpp"
 #include "../common/jwt.hpp"
 #include "../common/sha256.hpp"
 #include "../exceptions/exceptions.hpp"
-#include "../filesystem/client_struct.hpp"
 #include "../repositories/chunk-repository.hpp"
 #include "../repositories/file-repository.hpp"
 #include "../repositories/user-repository.hpp"

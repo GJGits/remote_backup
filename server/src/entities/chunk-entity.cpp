@@ -12,11 +12,6 @@ ChunkEntity::ChunkEntity(const PostChunkDTO &post_chunk)
 };
 
 
-ChunkEntity::ChunkEntity(const DeleteChunkDTO &del_chunk)
-    : subject{del_chunk.get_subject()}, id_chunk{del_chunk.getchunk_id()},
-      path_file{std::move(del_chunk.getfile_path())},
-      last_mod{del_chunk.gettimestamp_locale()} {};
-
 ChunkEntity::ChunkEntity(const GetChunkDTO &get_chunk)
     : subject{get_chunk.get_subject()}, id_chunk{get_chunk.getchunk_id()},
       path_file{std::move(get_chunk.getfile_path())} {};

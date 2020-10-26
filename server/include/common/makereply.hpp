@@ -55,7 +55,6 @@ public:
     con_type.value = "application/json";
     rep.headers.push_back(con_len);
     rep.headers.push_back(con_type);
-    std::clog << "actual body:\n";
     for (size_t i = 0; i < rep_body.size(); i++) {
      (*rep.content)[i] = rep_body[i];
     }
