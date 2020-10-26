@@ -28,6 +28,7 @@
 #include <vector>
 #include <boost/bind.hpp>
 #include "boost/logic/tribool.hpp"
+#include "../common/duration.hpp"
 
 namespace http {
 namespace server {
