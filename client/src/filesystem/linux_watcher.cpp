@@ -224,7 +224,8 @@ void LinuxWatcher::handle_events() {
 
         if (it->get_mask() == 2 || it->get_mask() == 256 ||
             (it->get_mask() == 128 && (it + 1) != eventi.end() &&
-             (it + 1)->get_mask() != 64)) {
+             (it + 1)->get_mask() != 64) ||
+            (it->get_mask() == 128 && (it + 1) == eventi.end())) {
           json mex = {{"path", it->get_path()}};
           broker->publish(Message{TOPIC::NEW_FILE, mex});
         }
