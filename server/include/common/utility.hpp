@@ -84,6 +84,7 @@ public:
             size--;
         }
         query = query + query_splitted[i];
+        std::clog << "query: " << query << "\n";
         stmt = std::unique_ptr<sql::Statement>{std::move(mysqlConn->createStatement())}; // ricordare al posto di 0, di mettere il vero valore
         stmt->execute(query);
 
