@@ -14,9 +14,6 @@ void SyncSubscriber::init_sub_list() {
   broker->subscribe(TOPIC::NEW_FILE,
                     std::bind(&SyncSubscriber::on_new_file, instance.get(),
                               std::placeholders::_1));
-  broker->subscribe(TOPIC::NEW_FOLDER,
-                    std::bind(&SyncSubscriber::on_new_folder, instance.get(),
-                              std::placeholders::_1));
   broker->subscribe(TOPIC::FILE_RENAMED,
                     std::bind(&SyncSubscriber::on_file_renamed, instance.get(),
                               std::placeholders::_1));
@@ -34,6 +31,7 @@ void SyncSubscriber::start(const Message &message) {
   init_workers();
   std::unordered_map<std::string, json> changes;
   // 1. collect transfers
+  collect_unfinished_transfers(changes);
   // 2. collect local changes
   collect_local_changes(changes);
   // 3. collect remote changes
@@ -65,31 +63,22 @@ void SyncSubscriber::on_new_file(const Message &message) {
   while (fentry.has_chunk()) {
     std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
     json jentry = fentry.get_json_representation();
-    //rest_client->post_chunk(chunk, jentry);
+    // rest_client->post_chunk(chunk, jentry);
     broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
     fentry.clear_chunks();
     i++;
   }
 }
 
-void SyncSubscriber::on_new_folder(const Message &message) {
-  DurationLogger logger{"NEW_FOLDER"};
-  json mex;
-  std::shared_ptr<Broker> broker = Broker::getInstance();
-  json content = message.get_content();
-  std::string path = content["path"];
-  for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
-    if (p.is_regular_file()) {
-      std::clog << "PATH FOLDER: " << p.path().string() << "\n";
-      mex["path"] = p.path().string();
-      on_new_file(Message{TOPIC::NEW_FILE, mex});
-    }
-  }
-}
-
 void SyncSubscriber::on_file_renamed(const Message &message) {
   // todo: inviare richiesta al server
   DurationLogger logger{"FILE_RENAMED"};
+  std::shared_ptr<RestClient> rest = RestClient::getInstance();
+  std::shared_ptr<Broker> broker = Broker::getInstance();
+  json content = message.get_content();
+  // rest->rename_file(content["old_path"].get<std::string>(),
+  // content["new_path"].get<std::string>());
+  broker->publish(Message{TOPIC::ENTRY_RENAMED, content});
 }
 
 void SyncSubscriber::on_file_deleted(const Message &message) {
@@ -98,16 +87,25 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
   json content = message.get_content();
   std::string path = content["path"];
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-  //rest_client->delete_file(path);
+  // rest_client->delete_file(path);
   broker->publish(Message{TOPIC::REMOVE_ENTRY, content});
 }
 
-json SyncSubscriber::collect_unfinished_transfers() { return json::object(); }
+void SyncSubscriber::collect_unfinished_transfers(
+    std::unordered_map<std::string, json> &changes) {
+  std::shared_ptr<SyncStructure> syn = SyncStructure::getInstance();
+  std::vector<json> entries = syn->get_incomplete_entries();
+  for (size_t i = 0; i < entries.size(); i++) {
+    json change = {{"transfers", entries[i]}};
+    changes[entries[i]["path"].get<std::string>()] = change;
+  }
+}
 
 void SyncSubscriber::collect_local_changes(
     std::unordered_map<std::string, json> &changes) {
   std::shared_ptr<SyncStructure> syn = SyncStructure::getInstance();
   int last_check = syn->get_last_check();
+  // colleziono nuovi file aggiunti o modificati offline
   for (auto &p : std::filesystem::recursive_directory_iterator("./sync")) {
     if (p.is_regular_file()) {
       std::string file_path = p.path().string();
@@ -115,25 +113,25 @@ void SyncSubscriber::collect_local_changes(
       stat(file_path.c_str(), &sb);
       int last_change = sb.st_ctime;
       if (last_change > last_check) {
-        json change = {{"path", file_path}, {"last_local_change", last_change}};
-        if (changes.find(file_path) == changes.end()) {
-          json entry;
-          entry["local"] = change;
-          changes[file_path] = entry;
-        } else {
-          changes[file_path]["local"] = change;
-        }
+        json change = {{"local",
+                        {{"path", file_path},
+                         {"last_local_change", last_change},
+                         {"command", "update"}}}};
+        changes[file_path] = change;
       }
     }
   }
+  // colleziono file eliminati offline
+  for (const auto &path : syn->get_paths()) {
+    if (!std::filesystem::exists(path)) {
+      json change = {{"local",
+                      {{"path", path},
+                       {"last_local_change", syn->get_last_local_change(path)},
+                       {"command", "delete"}}}};
+      changes[path] = change;
+    }
+  }
 }
-
-/*
-{
-  local: {path: '...', last_local_change: 123456}
-}
-
-*/
 
 void SyncSubscriber::collect_remote_changes(
     std::unordered_map<std::string, json> &changes) {
@@ -150,33 +148,41 @@ void SyncSubscriber::collect_remote_changes(
     for (size_t i = 0; i < list["entries"].size(); i++) {
       std::string file_path =
           macaron::Base64::Decode(list["entries"][i]["path"]);
-      json change = list["entries"][i];
-      if (changes.find(file_path) == changes.end()) {
-        json entry;
-        entry["remote"] = change;
-        changes[file_path] = entry;
-      } else {
-        changes[file_path]["remote"] = change;
-      }
+      json change = {{"remote", list["entries"][i]}};
+      changes[file_path] = change;
     }
   }
 }
 
-void SyncSubscriber::run_corrections(std::unordered_map<std::string, json> &changes) {
-  for ( auto const& [key, val] : changes) {
+void SyncSubscriber::run_corrections(
+    std::unordered_map<std::string, json> &changes) {
+  for (auto const &[key, val] : changes) {
+    int transfer_timestamp = 0;
     int local_change = 0;
     int remote_change = 0;
+    if (val.find("transfers") != val.end()) {
+      transfer_timestamp = val["transfers"]["last_local_change"].get<int>();
+    }
     if (val.find("local") != val.end()) {
       local_change = val["local"]["last_local_change"].get<int>();
     }
     if (val.find("remote") != val.end()) {
       remote_change = val["remote"]["last_remote_change"].get<int>();
     }
-    if (local_change > remote_change) {
-      json mex = val["local"];
-      on_new_file(Message(TOPIC::NEW_FILE, mex));
+    if (transfer_timestamp > local_change &&
+        transfer_timestamp > remote_change) {
+      // todo: completa trasferimenti
     }
-    if (remote_change > local_change) {
+    if (local_change > remote_change && local_change > transfer_timestamp) {
+      if (val["local"]["command"].get<std::string>().compare("update") == 0) {
+        json mex = val["local"];
+        on_new_file(Message(TOPIC::NEW_FILE, mex));
+      } else {
+        json mex = val["local"];
+        on_file_deleted(Message(TOPIC::FILE_DELETED, mex));
+      }
+    }
+    if (remote_change > local_change && remote_change > transfer_timestamp) {
       json task = val["remote"];
       push(task);
     }

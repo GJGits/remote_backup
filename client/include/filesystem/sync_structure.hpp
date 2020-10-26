@@ -42,5 +42,7 @@ public:
   void rename_entry(const json &entry);
   std::vector<std::string> get_paths();
   int get_last_check();
+  int get_last_local_change(const std::string &path) const;
   bool has_path(const std::string &path);
+  std::vector<json> get_incomplete_entries() const;
 };

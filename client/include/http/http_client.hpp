@@ -53,6 +53,13 @@ public:
     http::response<http::vector_body<char>> res = read(str_temp);
   }
 
+  void put(const http::request<http::vector_body<char>> &req) {
+    beast::tcp_stream str_temp{ioc};
+    str_temp.connect(results);
+    send(str_temp, req);
+    http::response<http::vector_body<char>> res = read(str_temp);
+  }
+
   void delete_(const http::request<http::vector_body<char>> &req) {
     beast::tcp_stream str_temp{ioc};
     str_temp.connect(results);

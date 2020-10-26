@@ -17,6 +17,6 @@ private:
 public:
   void init_sub_list();
   void on_add_chunk(const Message &message);
-  void on_file_modified(const Message &message);
+  void on_file_renamed(const Message &message);
   void on_delete_entry(const Message &message);
 };

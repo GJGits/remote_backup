@@ -45,10 +45,9 @@ public:
   void init_sub_list();
   void init_workers();
   void on_new_file(const Message &message);
-  void on_new_folder(const Message &message);
   void on_file_renamed(const Message &message);
   void on_file_deleted(const Message &message);
-  json collect_unfinished_transfers();
+  void collect_unfinished_transfers(std::unordered_map<std::string, json> &changes);
   void collect_local_changes(std::unordered_map<std::string, json> &changes);
   void collect_remote_changes(std::unordered_map<std::string, json> &changes);
   void run_corrections(std::unordered_map<std::string, json> &changes);

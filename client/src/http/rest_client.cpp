@@ -66,6 +66,15 @@ void RestClient::delete_file(std::string &path) {
   http_client->delete_(req);
 }
 
+void RestClient::rename_file(const std::string &old_path,
+                             const std::string &new_path) {
+  std::shared_ptr<HTTPClient> http_client = HTTPClient::getInstance();
+  http::request<http::vector_body<char>> req{put_prototype};
+  req.target("/chunk/" + old_path + "/" + new_path);
+  req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
+  http_client->put(req);
+}
+
 json RestClient::get_status_list(size_t page) {
   std::shared_ptr<HTTPClient> http_client = HTTPClient::getInstance();
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();

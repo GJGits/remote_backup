@@ -50,5 +50,6 @@ public:
                   json &jentry);
   std::vector<char> get_chunk(const json &chunk_info);
   void delete_file(std::string &path);
+  void rename_file(const std::string &old_path, const std::string &new_path);
   json get_status_list(size_t page);
 };

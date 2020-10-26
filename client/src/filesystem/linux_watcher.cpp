@@ -110,11 +110,7 @@ void LinuxWatcher::handle_events() {
     // poll until an event occurs.Timeout = -1 -> BLOCKING,
     // else timeout expressed in milliseconds
     poll_num = poll(fds, nfds, timer);
-    std::clog << "revent[1]" << std::to_string(fds[1].revents) << "\n";
     if (fds[1].revents & POLLIN) {
-      std::clog << "poll da pipe\n";
-      // char sig_buff;
-      // read(fds[1].fd, &sig_buff, 1);
       break;
     }
 
@@ -134,76 +130,65 @@ void LinuxWatcher::handle_events() {
             wd_path_map[event->wd] + "/" + std::string{event->name};
         message["path"] = path;
 
-        try {
+        timer = TIMER;
+        std::clog << "watch path: " << wd_path_map[event->wd] << "\n";
+        std::clog << "MASK: " << event->mask << " NAME " << event->name << "\n";
 
-          timer = TIMER;
-          std::clog << "watch path: " << wd_path_map[event->wd] << "\n";
-          std::clog << "MASK: " << event->mask << " NAME " << event->name
-                    << "\n";
+        // eventi non presenti in inotify:
+        // 1073742080 -> copia incolla cartella da gui da fuori sync (con file
+        // e sotto cartelle) 1073741888 -> eliminazione cartella da gui (con
+        // file e sotto cartelle) 1073742336 -> eliminazione cartella da
+        // command line 1073741952 -> move da linea di comando riguardante una
+        // cartella 1073741888 -> move from cartella da terminale 1073741952
+        // -> move to cartella da terminale
 
-          // eventi non presenti in inotify:
-          // 1073742080 -> copia incolla cartella da gui da fuori sync (con file
-          // e sotto cartelle) 1073741888 -> eliminazione cartella da gui (con
-          // file e sotto cartelle) 1073742336 -> eliminazione cartella da
-          // command line 1073741952 -> move da linea di comando riguardante una
-          // cartella 1073741888 -> move from cartella da terminale 1073741952
-          // -> move to cartella da terminale
+        std::smatch match;
 
-          std::smatch match;
+        if (!std::regex_match(path, match, temp_rgx) &&
+            !std::regex_match(path, match, bin_rgx)) {
 
-          if (!std::regex_match(path, match, temp_rgx) &&
-              !std::regex_match(path, match, bin_rgx)) {
+          switch (event->mask) {
 
-            switch (event->mask) {
-
-            case 1073742080:
-            case 1073741952: {
-              add_watch(path);
-              for (auto &p : std::filesystem::directory_iterator(path)) {
-                if (p.is_regular_file()) {
-                  std::string f_path = p.path().string();
-                  LinuxEvent ev{f_path, 0, 256};
-                  events[f_path] = ev;
-                }
+          case 1073742080:
+          case 1073741952: {
+            add_watch(path);
+            for (auto &p :
+                 std::filesystem::recursive_directory_iterator(path)) {
+              if (p.is_regular_file()) {
+                std::string f_path = p.path().string();
+                LinuxEvent ev{f_path, 0, 256};
+                events[f_path] = ev;
               }
-
-            } break;
-
-            case 1073741888:
-            case 1073742336: {
-              std::shared_ptr<SyncStructure> sync =
-                  SyncStructure::getInstance();
-              for (std::string &sync_path : sync->get_paths()) {
-                if (!std::filesystem::exists(sync_path)) {
-                  LinuxEvent ev{sync_path, 0, 512};
-                  events[sync_path] = ev;
-                }
-              }
-
-            } break;
-
-            default: {
-              LinuxEvent ev{path, event->cookie, event->mask};
-              events[path] = ev;
-
-            } break;
             }
+
+          } break;
+
+          case 1073741888:
+          case 1073742336: {
+            std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+            for (std::string &sync_path : sync->get_paths()) {
+              if (!std::filesystem::exists(sync_path)) {
+                LinuxEvent ev{sync_path, 0, 512};
+                events[sync_path] = ev;
+              }
+            }
+
+          } break;
+
+          default: {
+            LinuxEvent ev{path, event->cookie, event->mask};
+            events[path] = ev;
+
+          } break;
           }
-
-        }
-
-        catch (const std::filesystem::filesystem_error &e) {
-
-          std::clog << e.what() << "\n";
         }
       }
     }
     if (poll_num == 0) {
-      new_files.clear();
-      cookie_map.clear();
+
       timer = WAIT;
-      std::shared_ptr<Broker> broker = Broker::getInstance();
       std::vector<LinuxEvent> eventi{};
+
       for (const auto &[key, value] : events) {
         eventi.push_back(value);
       }
@@ -217,14 +202,6 @@ void LinuxWatcher::handle_events() {
                 });
 
       for (auto it = eventi.begin(); it != eventi.end(); ++it) {
-
-        // moved_to senza from -> new file
-        if (it->get_mask() == 128 && (it + 1) != eventi.end() &&
-            (it + 1)->get_mask() != 64) {
-          json mex = {{"path", it->get_path()}};
-          broker->publish(Message{TOPIC::NEW_FILE, mex});
-          ++it;
-        }
 
         // moved_to con from -> rename o new_file
         if (it->get_mask() == 128 && (it + 1) != eventi.end() &&
@@ -244,9 +221,9 @@ void LinuxWatcher::handle_events() {
           ++it;
         }
 
-        // file modified or new file
-        if (it->get_mask() == 2 || it->get_mask() == 256) {
-          // new file
+        if (it->get_mask() == 2 || it->get_mask() == 256 ||
+            (it->get_mask() == 128 && (it + 1) != eventi.end() &&
+             (it + 1)->get_mask() != 64)) {
           json mex = {{"path", it->get_path()}};
           broker->publish(Message{TOPIC::NEW_FILE, mex});
         }

@@ -22,11 +22,6 @@ public:
   Sha256 &operator=(Sha256 &&) = delete;
 
   static std::string getSha256(const std::vector<char> &buf) {
-    /*
-    if (instance == nullptr) {
-      instance = new Sha256();
-    }
-    */
     unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
@@ -41,11 +36,6 @@ public:
 
   static std::string getSha256(const std::shared_ptr<char[]> &buf,
                                size_t size) {
-    /*
-    if (instance == nullptr) {
-      instance = new Sha256();
-    }
-    */
     unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
@@ -58,5 +48,3 @@ public:
     return std::move(ss.str());
   }
 };
-
-// Sha256 * Sha256::instance = nullptr;

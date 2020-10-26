@@ -81,3 +81,16 @@ void SyncStructure::rename_entry(const json &entry) {
     (*entries).erase(old_path);
   }
 }
+
+std::vector<json> SyncStructure::get_incomplete_entries() const {
+  std::vector<json> result{};
+  for (const auto &[key, value] : (*entries)) {
+    if (value.find("chunks") != value.end())
+      result.push_back(value);
+  }
+  return result;
+}
+
+int SyncStructure::get_last_local_change(const std::string &path) const {
+  return (*entries)[path]["last_local_change"].get<int>();
+}
