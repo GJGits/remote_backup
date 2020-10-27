@@ -1,3 +1,4 @@
+
 #include "../../include/filesystem/linux_watcher.hpp"
 
 LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)

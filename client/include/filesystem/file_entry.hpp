@@ -14,7 +14,7 @@
 
 using json = nlohmann::json;
 
-#define CHUNK_SIZE 4096
+#define CHUNK_SIZE 65536 // 64KB
 
 class FileEntry {
 private:
@@ -34,3 +34,8 @@ public:
   json get_json_representation();
   size_t get_nchunks();
 };
+
+/*
+    c_path     last_change  
+      fx         123488  
+*/

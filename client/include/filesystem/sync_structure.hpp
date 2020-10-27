@@ -1,42 +1,41 @@
 #pragma once
 
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <regex>
 #include <string.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <ctime>
 
-#include "../common/singleton.hpp"
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
 #include "../common/sha256.hpp"
+#include "../common/singleton.hpp"
 
 using json = nlohmann::json;
 
-class SyncStructure: public Singleton<SyncStructure> {
+class SyncStructure : public Singleton<SyncStructure> {
 
 private:
   friend class Singleton;
   std::unique_ptr<std::unordered_map<std::string, json>> entries;
   int last_check = 0;
-  
-  SyncStructure(){
+
+  SyncStructure() {
     entries = std::make_unique<std::unordered_map<std::string, json>>();
     read_structure();
   }
-  
+
   void read_structure();
   void write_structure();
 
 public:
-  ~SyncStructure() {
-    write_structure();
-  }
-  
+  ~SyncStructure() { write_structure(); }
+
   void add_chunk(const json &chunk);
   void delete_entry(const json &entry);
   void rename_entry(const json &entry);

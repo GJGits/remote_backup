@@ -27,6 +27,7 @@
 #include <utility>
 #include <vector>
 #include <boost/bind.hpp>
+#include "../common/constants.hpp"
 #include "boost/logic/tribool.hpp"
 #include "../common/duration.hpp"
 
@@ -65,7 +66,7 @@ private:
   request_handler &request_handler_;
 
   /// Buffer for incoming data.
-  boost::array<char, 128000> buffer_;
+  boost::array<char, REQ_SIZE> buffer_;
 
   /// The incoming request.
   request request_;

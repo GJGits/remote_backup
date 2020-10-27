@@ -1,3 +1,4 @@
 #pragma once
-#define CHUNK_SIZE 128000
+#define REQ_SIZE   66560 // CHUNK_SIZE + 1KB DI HEADERS
+#define CHUNK_SIZE 65536 // 64 KB
 #define ENTRIES_PAGE 20
