@@ -10,6 +10,5 @@ private:
 
 public:
   bool add_or_update_Chunk(const ChunkEntity &chunk);
-  bool rename_Chunk(const ChunkEntity &chunk);
   static std::shared_ptr<ChunkRepository> getInstance();
 };

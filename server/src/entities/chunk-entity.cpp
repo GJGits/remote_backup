@@ -16,15 +16,11 @@ ChunkEntity::ChunkEntity(const GetChunkDTO &get_chunk)
     : subject{get_chunk.get_subject()}, id_chunk{get_chunk.getchunk_id()},
       path_file{std::move(get_chunk.getfile_path())} {};
 
-ChunkEntity::ChunkEntity(const PutChunkDTO &put_chunk)
-        : subject{put_chunk.get_subject()}, old_path_64{put_chunk.getold_path_64()},
-          new_path_64{put_chunk.getnew_path_64()}{};
+
 
 Subject ChunkEntity::get_subject() const { return subject; };
 int ChunkEntity::getIdChunk() const { return id_chunk; };
 std::string ChunkEntity::getHashChunk() const { return hash_chunk; };
-std::string ChunkEntity::getold_path_64() const { return old_path_64; };
-std::string ChunkEntity::getnew_path_64() const { return new_path_64; };
 std::string ChunkEntity::getPathFile() const { return path_file; };
 std::string ChunkEntity::getFileName() const { return file_name; };
 int ChunkEntity::getLastMod() const { return last_mod; };

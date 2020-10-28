@@ -1,6 +1,5 @@
 #pragma once
 #include "../dtos/post_chunk_dto.hpp"
-#include "../dtos/put_chunk_dto.hpp"
 #include "../dtos/get_chunk_dto.hpp"
 #include "../common/sha256.hpp"
 #include "../repositories/chunk-repository.hpp"
@@ -27,7 +26,6 @@ public:
     static std::shared_ptr<ChunkService> getInstance();
     void file_chunk_add(const PostChunkDTO &post_chunk);
     size_t file_chunk_get(const GetChunkDTO &get_chunk);
-    void file_chunk_put(const PutChunkDTO &put_chunk);
 
     ~ChunkService() {}
 };

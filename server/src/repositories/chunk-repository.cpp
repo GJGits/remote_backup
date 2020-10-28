@@ -24,18 +24,3 @@ bool ChunkRepository::add_or_update_Chunk(const ChunkEntity &chunk) {
 }
 
 
-bool ChunkRepository::rename_Chunk(const ChunkEntity &chunk) {
-
-    std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
-    size_t db_selected = db_repinstance->getDBbyUsername(chunk.get_subject().get_sub());
-
-    std::string query =
-            "UPDATE chunks SET c_path = '?' WHERE c_path = '?' and c_username = '?'";
-
-    std::list<std::string> entries_of_query;
-    entries_of_query.push_back(chunk.getnew_path_64());
-    entries_of_query.push_back(chunk.getold_path_64());
-    entries_of_query.push_back(chunk.get_subject().get_sub());
-
-    return Utility::update_query(query,entries_of_query,db_selected);
-}
