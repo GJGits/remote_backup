@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../exceptions/exceptions.hpp"
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
 #include "../common/sha256.hpp"
@@ -38,7 +39,6 @@ public:
 
   void add_chunk(const json &chunk);
   void delete_entry(const json &entry);
-  void rename_entry(const json &entry);
   std::vector<std::string> get_paths();
   int get_last_check();
   int get_last_local_change(const std::string &path) const;

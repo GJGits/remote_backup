@@ -5,9 +5,6 @@ void StructSubscriber::init_sub_list() {
   broker->subscribe(TOPIC::ADD_CHUNK,
                     std::bind(&StructSubscriber::on_add_chunk, instance.get(),
                               std::placeholders::_1));
-  broker->subscribe(TOPIC::ENTRY_RENAMED,
-                    std::bind(&StructSubscriber::on_file_renamed,
-                              instance.get(), std::placeholders::_1));
   broker->subscribe(TOPIC::REMOVE_ENTRY,
                     std::bind(&StructSubscriber::on_delete_entry,
                               instance.get(), std::placeholders::_1));
@@ -21,12 +18,6 @@ void StructSubscriber::on_add_chunk(const Message &message) {
   std::unique_lock lk{m1};
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   sync->add_chunk(message.get_content());
-}
-
-void StructSubscriber::on_file_renamed(const Message &message) {
-  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-  json content = message.get_content();
-  sync->rename_entry(content);
 }
 
 void StructSubscriber::on_delete_entry(const Message &message) {

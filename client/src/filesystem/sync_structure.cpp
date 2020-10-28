@@ -13,7 +13,8 @@ void SyncStructure::read_structure() {
       (*entries)[path] = entry;
     }
     last_check = (*structure)["last_check"].get<int>();
-  }
+  } else
+    throw FileStructNotValid();
 }
 
 void SyncStructure::write_structure() {
@@ -69,13 +70,6 @@ void SyncStructure::delete_entry(const json &entry) {
   DurationLogger logger{"DELETE_ENTRY"};
   std::string path = entry["path"];
   (*entries).erase(path);
-}
-
-void SyncStructure::rename_entry(const json &entry) {
-  DurationLogger logger{"RENAME_ENTRY"};
-  std::string old_path = entry["old_path"];
-  std::string new_path = entry["new_path"];
-  (*entries)[old_path]["path"] = new_path;
 }
 
 std::vector<json> SyncStructure::get_incomplete_entries() const {

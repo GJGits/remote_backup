@@ -18,6 +18,8 @@ RestClient::RestClient() {
 }
 
 void RestClient::read_info() {
+  if (!std::filesystem::exists("./config/client-conf.json"))
+    throw FileConfigNotValid();
   std::ifstream i("./config/client-conf.json");
   i >> config;
 }
@@ -35,7 +37,8 @@ void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
   std::shared_ptr<char[]> buffer = std::get<0>(chunk);
   http::request<http::vector_body<char>> req{post_prototype};
   size_t size = std::get<1>(chunk);
-  req.target("/chunk/" + std::to_string(jentry["transfers"]["chunks"][0]["id"].get<int>()) +
+  req.target("/chunk/" +
+             std::to_string(jentry["transfers"]["chunks"][0]["id"].get<int>()) +
              "/" + std::string{jentry["transfers"]["chunks"][0]["hash"]} + "/" +
              std::to_string(jentry["transfers"]["nchunks"].get<int>()) + "/" +
              macaron::Base64::Encode(std::string{jentry["path"]}) + "/" +
@@ -70,7 +73,8 @@ void RestClient::rename_file(const std::string &old_path,
                              const std::string &new_path) {
   std::shared_ptr<HTTPClient> http_client = HTTPClient::getInstance();
   http::request<http::vector_body<char>> req{put_prototype};
-  req.target("/chunk/" + macaron::Base64::Encode(old_path) + "/" + macaron::Base64::Encode(new_path));
+  req.target("/chunk/" + macaron::Base64::Encode(old_path) + "/" +
+             macaron::Base64::Encode(new_path));
   req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
   http_client->put(req);
 }

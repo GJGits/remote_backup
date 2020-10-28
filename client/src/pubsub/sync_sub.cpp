@@ -11,11 +11,11 @@ void SyncSubscriber::init_sub_list() {
   broker->subscribe(
       TOPIC::CLOSE,
       std::bind(&SyncSubscriber::stop, instance.get(), std::placeholders::_1));
+  broker->subscribe(TOPIC::RESTART,
+                    std::bind(&SyncSubscriber::restart, instance.get(),
+                              std::placeholders::_1));
   broker->subscribe(TOPIC::NEW_FILE,
                     std::bind(&SyncSubscriber::on_new_file, instance.get(),
-                              std::placeholders::_1));
-  broker->subscribe(TOPIC::FILE_RENAMED,
-                    std::bind(&SyncSubscriber::on_file_renamed, instance.get(),
                               std::placeholders::_1));
   broker->subscribe(TOPIC::FILE_MODIFIED,
                     std::bind(&SyncSubscriber::on_new_file, instance.get(),
@@ -28,7 +28,7 @@ void SyncSubscriber::init_sub_list() {
 void SyncSubscriber::start(const Message &message) {
   std::clog << "sync module started...\n";
   running = true;
-  init_workers();
+  //init_workers();
   std::unordered_map<std::string, json> changes;
   // 1. collect transfers
   collect_unfinished_transfers(changes);
@@ -41,9 +41,14 @@ void SyncSubscriber::start(const Message &message) {
 }
 
 void SyncSubscriber::stop(const Message &message) {
-  std::clog << "sync module closed...\n";
+  std::clog << "sync module stop...\n";
   running = false;
   cv.notify_all();
+}
+
+void SyncSubscriber::restart(const Message &message) {
+  stop(message);
+  start(message);
 }
 
 void SyncSubscriber::push(const json &task) {
@@ -68,17 +73,6 @@ void SyncSubscriber::on_new_file(const Message &message) {
     fentry.clear_chunks();
     i++;
   }
-}
-
-void SyncSubscriber::on_file_renamed(const Message &message) {
-  // todo: inviare richiesta al server
-  DurationLogger logger{"FILE_RENAMED"};
-  std::shared_ptr<RestClient> rest = RestClient::getInstance();
-  std::shared_ptr<Broker> broker = Broker::getInstance();
-  json content = message.get_content();
-  rest->rename_file(content["old_path"].get<std::string>(),
-  content["new_path"].get<std::string>());
-  broker->publish(Message{TOPIC::ENTRY_RENAMED, content});
 }
 
 void SyncSubscriber::on_file_deleted(const Message &message) {
@@ -106,6 +100,8 @@ void SyncSubscriber::collect_local_changes(
   std::shared_ptr<SyncStructure> syn = SyncStructure::getInstance();
   int last_check = syn->get_last_check();
   // colleziono nuovi file aggiunti o modificati offline
+  if (!std::filesystem::exists("./sync"))
+    throw SyncNotValid();
   for (auto &p : std::filesystem::recursive_directory_iterator("./sync")) {
     if (p.is_regular_file()) {
       std::string file_path = p.path().string();
@@ -203,11 +199,61 @@ void SyncSubscriber::init_workers() {
             task = down_tasks.front();
             down_tasks.pop();
           } else {
-            restore_files();
-            cv.wait(lk, [&]() { return !down_tasks.empty() || !running; });
-            continue;
+            try {
+              restore_files();
+              cv.wait(lk, [&]() { return !down_tasks.empty() || !running; });
+              continue;
+            } catch (FileStructNotValid &ex) {
+              std::clog << ex.what() << "\n";
+              std::ofstream o("./config/client-struct.json");
+              json struct_ = {{"entries", json::array()}, {"last_check", 0}};
+              o << struct_ << "\n";
+              std::shared_ptr<Broker> broker = Broker::getInstance();
+              broker->publish(Message{TOPIC::RESTART});
+            }
+
+            catch (FileConfigNotValid &ex) {
+              std::clog << ex.what() << "\n";
+              std::ofstream o("./config/client-conf.json");
+              json struct_ = {{"username", ""}, {"token", ""}};
+              o << struct_ << "\n";
+              std::shared_ptr<Broker> broker = Broker::getInstance();
+              broker->publish(Message{TOPIC::LOGGED_OUT});
+            }
+
+            catch (SyncNotValid &ex) {
+              std::clog << ex.what() << "\n";
+              std::filesystem::create_directory("./sync");
+              std::shared_ptr<Broker> broker = Broker::getInstance();
+              broker->publish(Message{TOPIC::RESTART});
+            }
+
+            catch (TmpNotValid &ex) {
+              std::clog << ex.what() << "\n";
+              std::filesystem::create_directory("./sync/.tmp");
+              std::shared_ptr<Broker> broker = Broker::getInstance();
+              broker->publish(Message{TOPIC::RESTART});
+            }
+
+            catch (BinNotValid &ex) {
+              std::clog << ex.what() << "\n";
+              std::filesystem::create_directory("./sync/.bin");
+              std::shared_ptr<Broker> broker = Broker::getInstance();
+              broker->publish(Message{TOPIC::RESTART});
+            }
+
+            catch (ConnectionNotAvaible &ex) {
+              std::clog << ex.what() << "\n";
+              std::shared_ptr<Broker> broker = Broker::getInstance();
+              broker->publish(Message{TOPIC::LOGGED_OUT});
+            }
+
+            catch (...) {
+              std::clog << "The impossible happened!\n";
+            }
           }
         }
+
         // sezione non critica
         if (std::string{task["command"]}.compare("updated") == 0) {
           for (int j = 0; j < task["num_chunks"].get<int>(); j++) {
@@ -242,6 +288,15 @@ void SyncSubscriber::init_workers() {
 }
 
 void SyncSubscriber::restore_files() {
+  if (!std::filesystem::exists("./sync"))
+    throw SyncNotValid();
+  if (!std::filesystem::exists("./sync/.tmp")) {
+    std::clog << "tmp oddio\n";
+    throw TmpNotValid();
+  }
+
+  if (!std::filesystem::exists("./sync/.bin"))
+    throw BinNotValid();
   for (auto &p : std::filesystem::directory_iterator("./sync/.tmp")) {
     if (p.is_directory()) {
       std::vector<std::string> chunks{};

@@ -15,6 +15,7 @@ void signalHandler(int signum) {
 }
 
 int main() {
+
   sleep(4);
   // register signal SIGINT and signal handler
   signal(SIGTERM, signalHandler);
@@ -26,8 +27,8 @@ int main() {
   sync_sub->init_sub_list();
 
   std::shared_ptr<LinuxWatcher> watcher = LinuxWatcher::getInstance(
-      "./sync", IN_CREATE | IN_ONLYDIR | IN_DELETE |
-                    IN_MODIFY | IN_MOVED_TO | IN_MOVED_FROM | IN_ISDIR | IN_IGNORED);
+      "./sync", IN_CREATE | IN_ONLYDIR | IN_DELETE | IN_MODIFY | IN_MOVED_TO |
+                    IN_MOVED_FROM | IN_ISDIR | IN_IGNORED);
 
   watcher->init_sub_list();
 

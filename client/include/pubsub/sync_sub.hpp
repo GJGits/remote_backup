@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "../exceptions/exceptions.hpp"
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"
 #include "../common/utility.hpp"
@@ -42,10 +43,10 @@ public:
   }
   void start(const Message &message);
   void stop(const Message &message);
+  void restart(const Message &message);
   void init_sub_list();
   void init_workers();
   void on_new_file(const Message &message);
-  void on_file_renamed(const Message &message);
   void on_file_deleted(const Message &message);
   void collect_unfinished_transfers(std::unordered_map<std::string, json> &changes);
   void collect_local_changes(std::unordered_map<std::string, json> &changes);

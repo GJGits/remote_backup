@@ -43,28 +43,79 @@ private:
   beast::tcp_stream stream{ioc};
   boost::asio::ip::basic_resolver_results<boost::asio::ip::tcp> results;
 
-  HTTPClient() { this->results = resolver.resolve(host, port); }
+  HTTPClient() {
+    try {
+      this->results = resolver.resolve(host, port);
+    } catch (const boost::exception &e) {
+      throw ConnectionNotAvaible();
+    }
+  }
 
 public:
   void post(const http::request<http::vector_body<char>> &req) {
     beast::tcp_stream str_temp{ioc};
-    str_temp.connect(results);
-    send(str_temp, req);
-    http::response<http::vector_body<char>> res = read(str_temp);
+    uint8_t retry = 3;
+    while (retry) {
+      try {
+        str_temp.connect(results);
+        send(str_temp, req);
+        http::response<http::vector_body<char>> res = read(str_temp);
+        uint32_t result = res.result_int();
+        if (result == 200)
+          return;
+        if (result == 400) {
+          // todo: gestisci
+        }
+        retry--;
+      } catch (const boost::exception &e) {
+        throw ConnectionNotAvaible();
+      }
+    }
+    throw ConnectionNotAvaible();
   }
 
   void put(const http::request<http::vector_body<char>> &req) {
     beast::tcp_stream str_temp{ioc};
-    str_temp.connect(results);
-    send(str_temp, req);
-    http::response<http::vector_body<char>> res = read(str_temp);
+    uint8_t retry = 3;
+    while (retry) {
+      try {
+        str_temp.connect(results);
+        send(str_temp, req);
+        http::response<http::vector_body<char>> res = read(str_temp);
+        uint32_t result = res.result_int();
+        if (result == 200)
+          return;
+        if (result == 400) {
+          // todo: gestisci
+        }
+        retry--;
+      } catch (const boost::exception &e) {
+        throw ConnectionNotAvaible();
+      }
+    }
+    throw ConnectionNotAvaible();
   }
 
   void delete_(const http::request<http::vector_body<char>> &req) {
     beast::tcp_stream str_temp{ioc};
-    str_temp.connect(results);
-    send(str_temp, req);
-    http::response<http::vector_body<char>> res = read(str_temp);
+    uint8_t retry = 3;
+    while (retry) {
+      try {
+        str_temp.connect(results);
+        send(str_temp, req);
+        http::response<http::vector_body<char>> res = read(str_temp);
+        uint32_t result = res.result_int();
+        if (result == 200)
+          return;
+        if (result == 400) {
+          // todo: gestisci
+        }
+        retry--;
+      } catch (const boost::exception &e) {
+        throw ConnectionNotAvaible();
+      }
+    }
+    throw ConnectionNotAvaible();
   }
 
   json get_json(const http::request<http::vector_body<char>> &req) {

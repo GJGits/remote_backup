@@ -1,9 +1,9 @@
 #include "../../include/pubsub/broker.hpp"
 
-Broker::Broker():is_running{true} {
-  for(ssize_t i = 0; i < 4; i++) {
-    callers.emplace_back([&](){
-      while(is_running) {
+Broker::Broker() : is_running{true} {
+  for (ssize_t i = 0; i < 4; i++) {
+    callers.emplace_back([&]() {
+      while (is_running) {
         std::function<void(void)> fn;
         {
           std::unique_lock lk{nm};
@@ -11,11 +11,60 @@ Broker::Broker():is_running{true} {
             fn = std::move(tasks.front());
             tasks.pop();
           } else {
-            ncv.wait(lk, [&](){return !tasks.empty() || !is_running;});
+            ncv.wait(lk, [&]() { return !tasks.empty() || !is_running; });
             continue;
           }
         }
-        fn();
+        try {
+          fn();
+        } catch (FileStructNotValid &ex) {
+          std::clog << ex.what() << "\n";
+          std::ofstream o("./config/client-struct.json");
+          json struct_ = {{"entries", json::array()}, {"last_check", 0}};
+          o << struct_ << "\n";
+          std::shared_ptr<Broker> broker = Broker::getInstance();
+          broker->publish(Message{TOPIC::RESTART});
+        }
+
+        catch (FileConfigNotValid &ex) {
+          std::clog << ex.what() << "\n";
+          std::ofstream o("./config/client-conf.json");
+          json struct_ = {{"username", ""}, {"token", ""}};
+          o << struct_ << "\n";
+          std::shared_ptr<Broker> broker = Broker::getInstance();
+          broker->publish(Message{TOPIC::LOGGED_OUT});
+        }
+
+        catch (SyncNotValid &ex) {
+          std::clog << ex.what() << "\n";
+          std::filesystem::create_directory("./sync");
+          std::shared_ptr<Broker> broker = Broker::getInstance();
+          broker->publish(Message{TOPIC::RESTART});
+        }
+
+        catch (TmpNotValid &ex) {
+          std::clog << ex.what() << "\n";
+          std::filesystem::create_directory("./sync/.tmp");
+          std::shared_ptr<Broker> broker = Broker::getInstance();
+          broker->publish(Message{TOPIC::RESTART});
+        }
+
+        catch (BinNotValid &ex) {
+          std::clog << ex.what() << "\n";
+          std::filesystem::create_directory("./sync/.bin");
+          std::shared_ptr<Broker> broker = Broker::getInstance();
+          broker->publish(Message{TOPIC::RESTART});
+        }
+
+        catch (ConnectionNotAvaible &ex) {
+          std::clog << ex.what() << "\n";
+          std::shared_ptr<Broker> broker = Broker::getInstance();
+          broker->publish(Message{TOPIC::LOGGED_OUT});
+        }
+
+        catch (...) {
+          std::clog << "The impossible happened!\n";
+        }
       }
     });
   }
@@ -23,7 +72,7 @@ Broker::Broker():is_running{true} {
 
 Broker::~Broker() {
   is_running = false;
-  for(ssize_t i = 0; i < 4; i++) {
+  for (ssize_t i = 0; i < 4; i++) {
     callers[i].join();
   }
 }

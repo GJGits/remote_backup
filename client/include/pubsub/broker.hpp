@@ -11,7 +11,11 @@
 #include <condition_variable>
 #include <queue>
 #include <vector>
+#include <filesystem>
+#include <iostream>
+#include <fstream>
 
+#include "../exceptions/exceptions.hpp"
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"
 #include "message.hpp"

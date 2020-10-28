@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../exceptions/exceptions.hpp"
 #include "../common/singleton.hpp"
 #include "../common/base64.hpp"
 #include "../common/json.hpp"

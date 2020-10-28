@@ -14,11 +14,12 @@
 #include <unistd.h>
 #include <unordered_map>
 
-#include "linux_event.hpp"
+#include "../exceptions/exceptions.hpp"
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"
 #include "../pubsub/broker.hpp"
+#include "linux_event.hpp"
 #include "sync_structure.hpp"
 #include <stdio.h>
 #include <unistd.h>
@@ -88,6 +89,11 @@ public:
    * Esegue chiamate necessarie in fase di stop del modulo.
    */
   void stop(const Message &message);
+
+  /**
+   * Restart a caldo del modulo.
+   */
+  void restart(const Message &message);
 
   ~LinuxWatcher() {
     std::clog << "Linux Watcher destroy...\n";

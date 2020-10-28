@@ -36,6 +36,9 @@ void LinuxWatcher::init_sub_list() {
   broker->subscribe(
       TOPIC::LOGGED_OUT,
       std::bind(&LinuxWatcher::stop, instance.get(), std::placeholders::_1));
+  broker->subscribe(
+      TOPIC::RESTART,
+      std::bind(&LinuxWatcher::restart, instance.get(), std::placeholders::_1));
   broker->subscribe(TOPIC::CLOSE, std::bind(&LinuxWatcher::stop, instance.get(),
                                             std::placeholders::_1));
 }
@@ -43,6 +46,8 @@ void LinuxWatcher::init_sub_list() {
 void LinuxWatcher::start(const Message &message) {
   std::clog << "Linux watcher module start...\n";
   running = true;
+  if (!std::filesystem::exists(root_to_watch))
+    throw SyncNotValid();
   instance->add_watch(root_to_watch);
   instance->handle_events();
 }
@@ -52,7 +57,12 @@ void LinuxWatcher::stop(const Message &message) {
   instance->remove_watch(root_to_watch);
   short poll_sig = 1;
   write(pipe_[1], &poll_sig, 1);
-  std::clog << "Linux watcher module exit...\n";
+  std::clog << "Linux watcher module stop...\n";
+}
+
+void LinuxWatcher::restart(const Message &message) {
+  stop(message);
+  start(message);
 }
 
 bool LinuxWatcher::add_watch(const std::string &path) {
@@ -188,53 +198,14 @@ void LinuxWatcher::handle_events() {
     if (poll_num == 0) {
 
       timer = WAIT;
-      std::vector<LinuxEvent> eventi{};
 
       for (const auto &[key, value] : events) {
-        eventi.push_back(value);
-      }
-
-      std::sort(eventi.begin(), eventi.end(),
-                [&](const LinuxEvent &eve1, const LinuxEvent &eve2) {
-                  if (eve1.get_cookie() != eve2.get_cookie()) {
-                    return eve1.get_cookie() > eve2.get_cookie();
-                  }
-                  return eve1.get_mask() > eve2.get_mask();
-                });
-
-      for (auto it = eventi.begin(); it != eventi.end(); ++it) {
-
-        // moved_to con from -> rename o new_file
-        if (it->get_mask() == 128 && (it + 1) != eventi.end() &&
-            (it + 1)->get_mask() == 64 &&
-            it->get_cookie() == (it + 1)->get_cookie()) {
-          std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-          if (sync->has_path((it + 1)->get_path())) {
-            // rename
-            json mex = {{"old_path", (it + 1)->get_path()},
-                        {"new_path", it->get_path()}};
-            broker->publish(Message{TOPIC::FILE_RENAMED, mex});
-          } else {
-            // new file
-            json mex = {{"path", it->get_path()}};
-            broker->publish(Message{TOPIC::NEW_FILE, mex});
-          }
-          ++it;
-          continue;
-        }
-
-        if (it->get_mask() == 2 || it->get_mask() == 256 ||
-            (it->get_mask() == 128 && (it + 1) != eventi.end() &&
-             (it + 1)->get_mask() != 64) ||
-            (it->get_mask() == 128 && (it + 1) == eventi.end())) {
-          json mex = {{"path", it->get_path()}};
+        json mex = {{"path", key}};
+        uint32_t mask = value.get_mask();
+        if (mask == 2 || mask == 128 || mask == 256) {
           broker->publish(Message{TOPIC::NEW_FILE, mex});
         }
-
-        // file moved or deleted
-        if (it->get_mask() == 64 || it->get_mask() == 512) {
-          // delete file
-          json mex = {{"path", it->get_path()}};
+        if (mask == 64 || mask == 512) {
           broker->publish(Message{TOPIC::FILE_DELETED, mex});
         }
       }

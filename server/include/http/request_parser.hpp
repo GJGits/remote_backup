@@ -77,6 +77,7 @@ public:
       }
 
       if (body_start) {
+        //req.body->emplace_back(begin, end);
         result_type result = consume_body(req, *begin++, content_length);
         if (result == good)
           return std::make_tuple(good, begin);

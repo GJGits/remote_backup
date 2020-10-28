@@ -21,5 +21,6 @@ enum TOPIC {
     LOGGED_OUT,
     CLOSE,
     TIME_OUT,
-    ENTRY_RENAMED
+    ENTRY_RENAMED,
+    RESTART
     };
