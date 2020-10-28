@@ -8,12 +8,10 @@ class ChunkEntity {
 private:
     Subject subject;
     int id_chunk;
-    std::string hash_chunk;
     std::string path_file;
     std::string file_name;
     int last_mod;
     int num_chunks;
-    int size_file;
     std::shared_ptr<std::vector<char>> chunk_body{new std::vector<char>{}};
 
 public:
@@ -23,14 +21,10 @@ public:
 
     Subject get_subject() const;
     int getIdChunk() const;
-    std::string getHashChunk() const;
     std::string getPathFile() const;
     std::string getFileName() const;
     int getLastMod() const;
-    int getSizeFile() const;
     int getNumChunks() const;
-
-    void setSizeFile(int val);
     std::shared_ptr<std::vector<char>> getchunk_body() const;
 
 };

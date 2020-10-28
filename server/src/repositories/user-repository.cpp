@@ -27,7 +27,7 @@ size_t UserRepository::insertUser(const UserEntity &user) {
     entries_of_query.push_back(user.get_device_6_MAC());
     entries_of_query.push_back(user.get_device_7_MAC());
     entries_of_query.push_back(user.get_device_8_MAC());
-    Utility::update_query(query,entries_of_query,db_selected);
+    CommonRepository::update_query(query,entries_of_query,db_selected);
     return db_selected;
 
 }
@@ -40,7 +40,7 @@ bool UserRepository::UserAlreadyPresent(const std::string &username){
     std::list<std::string> entries_of_query;
     entries_of_query.push_back(username);
 
-    res = Utility::select_query(query,entries_of_query,0);
+    res = CommonRepository::select_query(query,entries_of_query,0);
 
     if (res->next()) {
         return true;
@@ -64,7 +64,7 @@ void UserRepository::updateUser(const UserEntity &user) {
     entries_of_query.push_back(user.get_device_7_MAC());
     entries_of_query.push_back(user.get_device_8_MAC());
     entries_of_query.push_back(user.getUsername());
-    Utility::update_query(query,entries_of_query,db_selected);
+    CommonRepository::update_query(query,entries_of_query,db_selected);
     return;
 }
 
@@ -78,7 +78,7 @@ UserEntity UserRepository::getUserByUsername(const std::string &username) {
                         "6_MAC,device_7_MAC,device_8_MAC FROM users WHERE username = '?'";
     std::list<std::string> entries_of_query;
     entries_of_query.push_back(username);
-    res = Utility::select_query(query,entries_of_query,db_selected);
+    res = CommonRepository::select_query(query,entries_of_query,db_selected);
 
   if (res->next()) {
     std::string hashed_password = std::move(res->getString("hashed_password"));
@@ -127,7 +127,7 @@ json UserRepository::get_status_file(const Subject &subject,
     std::list<std::string> entries_of_query;
     entries_of_query.push_back(subject.get_sub());
     entries_of_query.push_back(subject.get_sub());
-    res = Utility::select_query(query,entries_of_query,db_selected);
+    res = CommonRepository::select_query(query,entries_of_query,db_selected);
 
 
     json j;
