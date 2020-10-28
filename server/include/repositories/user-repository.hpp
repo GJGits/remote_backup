@@ -9,6 +9,7 @@
 #include "../entities/db-connect.hpp"
 #include "../entities/user-entity.hpp"
 #include "../exceptions/exceptions.hpp"
+#include "common-repository-function.hpp"
 
 
 using json = nlohmann::json;

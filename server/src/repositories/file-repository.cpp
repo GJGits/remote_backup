@@ -17,6 +17,6 @@ bool FileRepository::deleteFile(const FileEntity &file) {
     entries_of_query.push_back(file.getUsername());
     entries_of_query.push_back(file.getPathFile());
 
-    return Utility::update_query(query,entries_of_query,db_selected);
+    return CommonRepository::update_query(query,entries_of_query,db_selected);
 
 }
