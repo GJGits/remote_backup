@@ -14,10 +14,11 @@
 #include <unistd.h>
 #include <unordered_map>
 
-#include "../exceptions/exceptions.hpp"
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"
+#include "../exceptions/exceptions.hpp"
+#include "../modules/module.hpp"
 #include "../pubsub/broker.hpp"
 #include "linux_event.hpp"
 #include "sync_structure.hpp"
@@ -30,7 +31,8 @@
 using json = nlohmann::json;
 
 class LinuxWatcher
-    : public ParamSingleton<LinuxWatcher, std::string, u_int32_t> {
+    : public ParamSingleton<LinuxWatcher, std::string, u_int32_t>,
+      public Module {
 private:
   friend class ParamSingleton;
   int pipe_[2];
@@ -76,24 +78,22 @@ public:
 
   /**
    * Metodo che permette di chiamare le subscribe ai topic ai quali questo
-   * modulo è interessato.
+   * modulo è interessato. Attualmente questo modulo non prevede ulteriori
+   * sottoscrizioni.
    */
-  void init_sub_list();
+  void init_sub_list() {};
 
   /**
-   * Esegue chiamate necessarie in fase di inizializzazione del modulo.
+   * Overload di Module::start(), necessario per definire la politica di
+   * start del modulo specifico
    */
   void start(const Message &message);
 
   /**
-   * Esegue chiamate necessarie in fase di stop del modulo.
+   * Overload di Module::stop(), necessario per definire la politica di
+   * stop del modulo specifico
    */
   void stop(const Message &message);
-
-  /**
-   * Restart a caldo del modulo.
-   */
-  void restart(const Message &message);
 
   ~LinuxWatcher() {
     std::clog << "Linux Watcher destroy...\n";

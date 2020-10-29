@@ -12,6 +12,7 @@
 #include <tuple>
 #include <unordered_map>
 
+#include "duration.hpp"
 #include "../dtos/subject.hpp"
 #include "jwt_cache_entry.hpp"
 
@@ -66,6 +67,7 @@ public:
   }
 
   static Subject validateToken(const http::server::request &req) {
+    DurationLogger logger{"VALIDATION"};
     for (http::server::header h : req.headers) {
       if (h.name.compare("Authorization") == 0) {
         std::vector<std::string> tokens = Utility::split(h.value, ' ');

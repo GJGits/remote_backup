@@ -1,19 +1,6 @@
 #include "../../include/pubsub/sync_sub.hpp"
 
 void SyncSubscriber::init_sub_list() {
-  std::shared_ptr<Broker> broker = Broker::getInstance();
-  broker->subscribe(
-      TOPIC::LOGGED_IN,
-      std::bind(&SyncSubscriber::start, instance.get(), std::placeholders::_1));
-  broker->subscribe(
-      TOPIC::LOGGED_OUT,
-      std::bind(&SyncSubscriber::stop, instance.get(), std::placeholders::_1));
-  broker->subscribe(
-      TOPIC::CLOSE,
-      std::bind(&SyncSubscriber::stop, instance.get(), std::placeholders::_1));
-  broker->subscribe(TOPIC::RESTART,
-                    std::bind(&SyncSubscriber::restart, instance.get(),
-                              std::placeholders::_1));
   broker->subscribe(TOPIC::NEW_FILE,
                     std::bind(&SyncSubscriber::on_new_file, instance.get(),
                               std::placeholders::_1));
@@ -59,11 +46,7 @@ void SyncSubscriber::push(const json &task) {
 
 void SyncSubscriber::on_new_file(const Message &message) {
   DurationLogger logger{"NEW_FILE"};
-  std::shared_ptr<Broker> broker = Broker::getInstance();
-  std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-  json content = message.get_content();
-  std::string file_path = content["path"];
-  FileEntry fentry{file_path};
+  FileEntry fentry{message.get_content()["path"].get<std::string>()};
   size_t i = 0;
   while (fentry.has_chunk()) {
     std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
@@ -77,10 +60,8 @@ void SyncSubscriber::on_new_file(const Message &message) {
 
 void SyncSubscriber::on_file_deleted(const Message &message) {
   DurationLogger logger{"FILE_DELETED"};
-  std::shared_ptr<Broker> broker = Broker::getInstance();
   json content = message.get_content();
-  std::string path = content["path"];
-  std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
+  std::string path = content["path"].get<std::string>();
   rest_client->delete_file(path);
   broker->publish(Message{TOPIC::REMOVE_ENTRY, content});
 }
@@ -189,7 +170,6 @@ void SyncSubscriber::init_workers() {
   for (size_t i = 0; i < 2; i++) {
     down_workers.emplace_back([&]() {
       std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-      std::shared_ptr<Broker> broker = Broker::getInstance();
       while (running) {
         json task;
         // sezione critica
@@ -208,7 +188,6 @@ void SyncSubscriber::init_workers() {
               std::ofstream o("./config/client-struct.json");
               json struct_ = {{"entries", json::array()}, {"last_check", 0}};
               o << struct_ << "\n";
-              std::shared_ptr<Broker> broker = Broker::getInstance();
               broker->publish(Message{TOPIC::RESTART});
             }
 
@@ -217,34 +196,29 @@ void SyncSubscriber::init_workers() {
               std::ofstream o("./config/client-conf.json");
               json struct_ = {{"username", ""}, {"token", ""}};
               o << struct_ << "\n";
-              std::shared_ptr<Broker> broker = Broker::getInstance();
               broker->publish(Message{TOPIC::LOGGED_OUT});
             }
 
             catch (SyncNotValid &ex) {
               std::clog << ex.what() << "\n";
               std::filesystem::create_directory("./sync");
-              std::shared_ptr<Broker> broker = Broker::getInstance();
               broker->publish(Message{TOPIC::RESTART});
             }
 
             catch (TmpNotValid &ex) {
               std::clog << ex.what() << "\n";
               std::filesystem::create_directory("./sync/.tmp");
-              std::shared_ptr<Broker> broker = Broker::getInstance();
               broker->publish(Message{TOPIC::RESTART});
             }
 
             catch (BinNotValid &ex) {
               std::clog << ex.what() << "\n";
               std::filesystem::create_directory("./sync/.bin");
-              std::shared_ptr<Broker> broker = Broker::getInstance();
               broker->publish(Message{TOPIC::RESTART});
             }
 
             catch (ConnectionNotAvaible &ex) {
               std::clog << ex.what() << "\n";
-              std::shared_ptr<Broker> broker = Broker::getInstance();
               broker->publish(Message{TOPIC::LOGGED_OUT});
             }
 

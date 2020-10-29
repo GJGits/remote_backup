@@ -11,11 +11,11 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../exceptions/exceptions.hpp"
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
 #include "../common/sha256.hpp"
 #include "../common/singleton.hpp"
+#include "../exceptions/exceptions.hpp"
 
 using json = nlohmann::json;
 
@@ -28,15 +28,12 @@ private:
 
   SyncStructure() {
     entries = std::make_unique<std::unordered_map<std::string, json>>();
-    read_structure();
   }
-
-  void read_structure();
-  void write_structure();
 
 public:
   ~SyncStructure() { write_structure(); }
-
+  void read_structure();
+  void write_structure();
   void add_chunk(const json &chunk);
   void delete_entry(const json &entry);
   std::vector<std::string> get_paths();

@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "../common/duration.hpp"
 #include "../common/sha256.hpp"
 #include "../common/json.hpp"
 

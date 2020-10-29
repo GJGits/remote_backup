@@ -5,6 +5,7 @@ Broker::Broker() : is_running{true} {
     callers.emplace_back([&]() {
       while (is_running) {
         std::function<void(void)> fn;
+        // sezione critica
         {
           std::unique_lock lk{nm};
           if (!tasks.empty()) {
@@ -15,6 +16,7 @@ Broker::Broker() : is_running{true} {
             continue;
           }
         }
+        // sezione non critica
         try {
           fn();
         } catch (FileStructNotValid &ex) {

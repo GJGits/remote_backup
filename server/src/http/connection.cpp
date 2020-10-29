@@ -42,6 +42,7 @@ void connection::handle_read(const boost::system::error_code& e,
   if (!e)
   {
     DurationLogger dp{"PARSE REQUEST"};
+    std::clog << "bytes transferred: " << bytes_transferred << "\n";
     boost::tribool result;
     std::tie(result, std::ignore) = request_parser_.parse(
         request_, buffer_.data(), buffer_.data() + bytes_transferred);

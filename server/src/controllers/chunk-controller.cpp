@@ -49,6 +49,7 @@ ChunkController::handle(const http::server::request &req) {
 };
 
 void ChunkController::post_file_chunk(const PostChunkDTO &post_chunk) {
+  DurationLogger logger{"POST_CHUNK"};
   chunk_service->file_chunk_add(post_chunk);
 }
 

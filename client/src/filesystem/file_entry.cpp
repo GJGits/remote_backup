@@ -18,6 +18,7 @@ FileEntry::FileEntry(const std::string &path) : path{path} {
 bool FileEntry::has_chunk() { return read_count < nchunks; }
 
 std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
+  DurationLogger log{"READ_CHUNK"};
   if (!in.is_open()) {
     in = std::move(std::ifstream{path, std::ios::binary});
   }

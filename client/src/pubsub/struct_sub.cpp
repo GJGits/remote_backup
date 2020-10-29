@@ -10,6 +10,18 @@ void StructSubscriber::init_sub_list() {
                               instance.get(), std::placeholders::_1));
 }
 
+void StructSubscriber::start(const Message &message) {
+  std::unique_lock lk{m1};
+  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+  sync->read_structure();
+}
+
+void StructSubscriber::stop(const Message &message) {
+  std::unique_lock lk{m1};
+  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+  sync->write_structure();
+}
+
 void StructSubscriber::on_add_chunk(const Message &message) {
   // Se scrivessi contamporaneamente due chunk potrebbero occupare
   // la medesima posizione, di conseguenza perderei il primo.

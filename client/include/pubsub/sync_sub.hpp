@@ -6,24 +6,25 @@
 #include <memory>
 #include <mutex>
 #include <queue>
-#include <thread>
-#include <vector>
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <thread>
 #include <unistd.h>
+#include <vector>
 
-#include "../exceptions/exceptions.hpp"
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"
 #include "../common/utility.hpp"
+#include "../exceptions/exceptions.hpp"
 #include "../filesystem/file_entry.hpp"
 #include "../filesystem/sync_structure.hpp"
 #include "../http/rest_client.hpp"
+#include "../modules/module.hpp"
 #include "broker.hpp"
 
 using json = nlohmann::json;
 
-class SyncSubscriber : public Singleton<SyncSubscriber> {
+class SyncSubscriber : public Singleton<SyncSubscriber>, public Module {
 private:
   friend class Singleton;
   std::vector<std::thread> down_workers;
@@ -31,7 +32,11 @@ private:
   std::mutex m;
   std::condition_variable cv;
   bool running;
-  SyncSubscriber() : running{false} {std::clog << "Sync module init...\n";}
+  std::shared_ptr<RestClient> rest_client;
+  SyncSubscriber() : running{false} {
+    std::clog << "Sync module init...\n";
+    rest_client = RestClient::getInstance();
+  }
 
 public:
   ~SyncSubscriber() {
@@ -48,7 +53,8 @@ public:
   void init_workers();
   void on_new_file(const Message &message);
   void on_file_deleted(const Message &message);
-  void collect_unfinished_transfers(std::unordered_map<std::string, json> &changes);
+  void
+  collect_unfinished_transfers(std::unordered_map<std::string, json> &changes);
   void collect_local_changes(std::unordered_map<std::string, json> &changes);
   void collect_remote_changes(std::unordered_map<std::string, json> &changes);
   void run_corrections(std::unordered_map<std::string, json> &changes);

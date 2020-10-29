@@ -28,21 +28,6 @@ LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
   bin_rgx = std::move(std::regex{"\\.\\/sync\\/\\.bin\\/.*"});
 }
 
-void LinuxWatcher::init_sub_list() {
-  std::shared_ptr<Broker> broker = Broker::getInstance();
-  broker->subscribe(
-      TOPIC::LOGGED_IN,
-      std::bind(&LinuxWatcher::start, instance.get(), std::placeholders::_1));
-  broker->subscribe(
-      TOPIC::LOGGED_OUT,
-      std::bind(&LinuxWatcher::stop, instance.get(), std::placeholders::_1));
-  broker->subscribe(
-      TOPIC::RESTART,
-      std::bind(&LinuxWatcher::restart, instance.get(), std::placeholders::_1));
-  broker->subscribe(TOPIC::CLOSE, std::bind(&LinuxWatcher::stop, instance.get(),
-                                            std::placeholders::_1));
-}
-
 void LinuxWatcher::start(const Message &message) {
   std::clog << "Linux watcher module start...\n";
   running = true;
@@ -58,11 +43,6 @@ void LinuxWatcher::stop(const Message &message) {
   short poll_sig = 1;
   write(pipe_[1], &poll_sig, 1);
   std::clog << "Linux watcher module stop...\n";
-}
-
-void LinuxWatcher::restart(const Message &message) {
-  stop(message);
-  start(message);
 }
 
 bool LinuxWatcher::add_watch(const std::string &path) {
