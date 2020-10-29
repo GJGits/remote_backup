@@ -22,7 +22,7 @@ std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
   if (!in.is_open()) {
     in = std::move(std::ifstream{path, std::ios::binary});
   }
-  memset(buffer.get(), '\0', CHUNK_SIZE);
+  //memset(buffer.get(), '\0', CHUNK_SIZE);
   size_t to_read = read_count < (nchunks - 1)
                        ? CHUNK_SIZE
                        : (size - ((nchunks - 1) * CHUNK_SIZE));

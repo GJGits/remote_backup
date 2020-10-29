@@ -15,6 +15,7 @@ RestClient::RestClient() {
   fill_headers(put_prototype);
   fill_headers(get_prototype);
   fill_headers(delete_prototype);
+  http_client = HTTPClient::getInstance();
 }
 
 void RestClient::read_info() {
@@ -34,7 +35,6 @@ void RestClient::fill_headers(http::request<http::vector_body<char>> &req,
 void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
                             json &jentry) {
   DurationLogger log{"POST_CHUNK"};
-  std::shared_ptr<HTTPClient> http_client = HTTPClient::getInstance();
   std::shared_ptr<char[]> buffer;
   size_t size = 0;
 
@@ -61,15 +61,14 @@ void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
 
   {
     DurationLogger log{"SET_BODY"};
-    std::move(buffer.get(), buffer.get() + size,
-              std::back_inserter(req.body()));
+    for (size_t i = 0; i < size; i++)
+      req.body().push_back(buffer.get()[i]);
   }
 
   http_client->up_request(req);
 }
 
 std::vector<char> RestClient::get_chunk(const json &chunk_info) {
-  std::shared_ptr<HTTPClient> http_client = HTTPClient::getInstance();
   http::request<http::vector_body<char>> req{get_prototype};
   // chunk + id + file_path_base64
   req.target("/chunk/" + std::to_string(chunk_info["id"].get<int>()) + "/" +
@@ -79,7 +78,6 @@ std::vector<char> RestClient::get_chunk(const json &chunk_info) {
 }
 
 void RestClient::delete_file(std::string &path) {
-  std::shared_ptr<HTTPClient> http_client = HTTPClient::getInstance();
   json jentry;
   jentry["path"] = path;
   http::request<http::vector_body<char>> req{delete_prototype};

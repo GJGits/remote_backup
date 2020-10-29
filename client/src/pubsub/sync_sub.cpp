@@ -47,14 +47,12 @@ void SyncSubscriber::push(const json &task) {
 void SyncSubscriber::on_new_file(const Message &message) {
   DurationLogger logger{"NEW_FILE"};
   FileEntry fentry{message.get_content()["path"].get<std::string>()};
-  size_t i = 0;
   while (fentry.has_chunk()) {
     std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry.next_chunk();
     json jentry = fentry.get_json_representation();
     rest_client->post_chunk(chunk, jentry);
     broker->publish(Message{TOPIC::ADD_CHUNK, jentry});
     fentry.clear_chunks();
-    i++;
   }
 }
 

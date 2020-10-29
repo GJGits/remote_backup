@@ -35,8 +35,3 @@ public:
   json get_json_representation();
   size_t get_nchunks();
 };
-
-/*
-    c_path     last_change  
-      fx         123488  
-*/
