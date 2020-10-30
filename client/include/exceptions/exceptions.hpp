@@ -2,14 +2,6 @@
 #include <exception>
 
 
-struct FileStructNotValid : public std::exception
-{
-	const char * what () const throw ()
-    {
-    	return "File struct not found or invalid";
-    }
-};
-
 struct FileConfigNotValid : public std::exception
 {
 	const char * what () const throw ()

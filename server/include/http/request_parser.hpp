@@ -41,10 +41,8 @@ public:
   std::tuple<result_type, InputIterator>
   parse(request &req, InputIterator begin, InputIterator end) {
 
-    int content_length = 0; // 0 richiesta con no body
-    //bool body_start = false;
     std::string search{"Content-Length"};
-    std::vector<std::byte> body;
+    //std::vector<std::byte> body;
 
     // Ciclo while che consuma la richiesta carattere per carattere
     // l'iteratore itera fino alla fine (comprende body se presente)
@@ -68,9 +66,7 @@ public:
             // se entro esiste Content-Lenght e salvo la dimensione in un
             // campo.
             if (name.compare(search) == 0 && std::stoi(value) > 0) {
-              content_length = std::stoi(value);
-             // body_start = true;
-              req.content_length = content_length;
+              req.content_length = std::stoi(value);
             }
           }
           // se dopo aver letto gli header content_length ha
@@ -84,15 +80,12 @@ public:
         req.content_length--;
         req.body->push_back(*begin++);
         result_type result = req.content_length == 0 ? good : indeterminate;
-        //result_type result = consume_body(req, *begin++, (int *)(req.content_length));
         if (result == good) {
-          std::clog << "content remained(2): " << req.content_length << "\n";
           return std::make_tuple(good, begin);
         }
           
       }
     }
-    std::clog << "content remained(1): " << req.content_length << "\n";
     return std::make_tuple(indeterminate, begin);
   }
 

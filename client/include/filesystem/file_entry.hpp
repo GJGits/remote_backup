@@ -23,7 +23,6 @@ private:
   std::string path;
   uintmax_t size;
   size_t nchunks;
-  std::ifstream in;
   size_t read_count;
   std::shared_ptr<char[]> buffer;
 

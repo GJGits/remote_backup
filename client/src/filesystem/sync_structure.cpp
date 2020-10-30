@@ -2,8 +2,14 @@
 
 void SyncStructure::read_structure() {
   DurationLogger logger{"READ_STRUCTURE"};
-  if (std::filesystem::exists("./config/client-struct.json") &&
-      !std::filesystem::is_empty("./config/client-struct.json")) {
+
+  if (!std::filesystem::exists("./config/client-struct.json") ||
+      std::filesystem::is_empty("./config/client-struct.json")) {
+    json stru = {{"entries", json::array()}, {"last_check", 0}};
+    std::ofstream o("./config/client-struct.json");
+    o << stru << "\n";
+    last_check = 0;
+  } else {
     std::ifstream i("./config/client-struct.json");
     std::unique_ptr<json> structure = std::make_unique<json>();
     i >> (*structure);
@@ -13,8 +19,9 @@ void SyncStructure::read_structure() {
       (*entries)[path] = entry;
     }
     last_check = (*structure)["last_check"].get<int>();
-  } else
-    throw FileStructNotValid();
+  }
+
+  // todo: se struct rovinata gestire.
 }
 
 void SyncStructure::write_structure() {

@@ -8,6 +8,6 @@ WORKDIR /home/server/src
 # mettere -g al posto di O3 per debuggare.
 RUN g++ -O3 -std=c++17 -Wall -Werror -o server -I/usr/include/mysqlcppconn -L/usr/lib/mysqlcppconn -lmysqlcppconn $(find . -type f -iregex ".*\.cpp") -lstdc++fs -lboost_system -lcrypto -lpthread -lboost_thread
 # eseguire con valgrind
-#CMD ["valgrind", "--leak-check=full", "--show-leak-kinds=all", "./server"]
+CMD ["valgrind", "--leak-check=full", "--show-leak-kinds=all", "./server"]
 # eseguire senza valgrind
-CMD [ "./server" ]
+#CMD [ "./server" ]

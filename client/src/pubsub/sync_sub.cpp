@@ -4,9 +4,6 @@ void SyncSubscriber::init_sub_list() {
   broker->subscribe(TOPIC::NEW_FILE,
                     std::bind(&SyncSubscriber::on_new_file, instance.get(),
                               std::placeholders::_1));
-  broker->subscribe(TOPIC::FILE_MODIFIED,
-                    std::bind(&SyncSubscriber::on_new_file, instance.get(),
-                              std::placeholders::_1));
   broker->subscribe(TOPIC::FILE_DELETED,
                     std::bind(&SyncSubscriber::on_file_deleted, instance.get(),
                               std::placeholders::_1));
@@ -177,52 +174,9 @@ void SyncSubscriber::init_workers() {
             task = down_tasks.front();
             down_tasks.pop();
           } else {
-            try {
               restore_files();
               cv.wait(lk, [&]() { return !down_tasks.empty() || !running; });
               continue;
-            } catch (FileStructNotValid &ex) {
-              std::clog << ex.what() << "\n";
-              std::ofstream o("./config/client-struct.json");
-              json struct_ = {{"entries", json::array()}, {"last_check", 0}};
-              o << struct_ << "\n";
-              broker->publish(Message{TOPIC::RESTART});
-            }
-
-            catch (FileConfigNotValid &ex) {
-              std::clog << ex.what() << "\n";
-              std::ofstream o("./config/client-conf.json");
-              json struct_ = {{"username", ""}, {"token", ""}};
-              o << struct_ << "\n";
-              broker->publish(Message{TOPIC::LOGGED_OUT});
-            }
-
-            catch (SyncNotValid &ex) {
-              std::clog << ex.what() << "\n";
-              std::filesystem::create_directory("./sync");
-              broker->publish(Message{TOPIC::RESTART});
-            }
-
-            catch (TmpNotValid &ex) {
-              std::clog << ex.what() << "\n";
-              std::filesystem::create_directory("./sync/.tmp");
-              broker->publish(Message{TOPIC::RESTART});
-            }
-
-            catch (BinNotValid &ex) {
-              std::clog << ex.what() << "\n";
-              std::filesystem::create_directory("./sync/.bin");
-              broker->publish(Message{TOPIC::RESTART});
-            }
-
-            catch (ConnectionNotAvaible &ex) {
-              std::clog << ex.what() << "\n";
-              broker->publish(Message{TOPIC::LOGGED_OUT});
-            }
-
-            catch (...) {
-              std::clog << "The impossible happened!\n";
-            }
           }
         }
 

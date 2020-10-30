@@ -19,10 +19,8 @@ bool FileEntry::has_chunk() { return read_count < nchunks; }
 
 std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
   DurationLogger log{"READ_CHUNK"};
-  if (!in.is_open()) {
-    in = std::move(std::ifstream{path, std::ios::binary});
-  }
-  //memset(buffer.get(), '\0', CHUNK_SIZE);
+  std::ifstream in{path, std::ios::binary};
+  in.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   size_t to_read = read_count < (nchunks - 1)
                        ? CHUNK_SIZE
                        : (size - ((nchunks - 1) * CHUNK_SIZE));

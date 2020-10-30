@@ -42,7 +42,6 @@ void connection::handle_read(const boost::system::error_code& e,
   if (!e)
   {
     DurationLogger dp{"PARSE REQUEST"};
-    std::clog << "bytes transferred: " << bytes_transferred << "\n";
     boost::tribool result;
     std::tie(result, std::ignore) = request_parser_.parse(
         request_, buffer_.data(), buffer_.data() + bytes_transferred);
@@ -58,7 +57,6 @@ void connection::handle_read(const boost::system::error_code& e,
     }
     else if (!result)
     {
-      std::clog << "bad request\n";
       reply_ = reply::stock_reply(reply::bad_request);
       boost::asio::async_write(socket_, reply_.to_buffers(),
           strand_.wrap(
@@ -67,7 +65,6 @@ void connection::handle_read(const boost::system::error_code& e,
     }
     else
     {
-      std::clog << "read some\n";
       socket_.async_read_some(boost::asio::buffer(buffer_),
           strand_.wrap(
             boost::bind(&connection::handle_read, shared_from_this(),

@@ -19,13 +19,6 @@ Broker::Broker() : is_running{true} {
         // sezione non critica
         try {
           fn();
-        } catch (FileStructNotValid &ex) {
-          std::clog << ex.what() << "\n";
-          std::ofstream o("./config/client-struct.json");
-          json struct_ = {{"entries", json::array()}, {"last_check", 0}};
-          o << struct_ << "\n";
-          std::shared_ptr<Broker> broker = Broker::getInstance();
-          broker->publish(Message{TOPIC::RESTART});
         }
 
         catch (FileConfigNotValid &ex) {
@@ -33,35 +26,37 @@ Broker::Broker() : is_running{true} {
           std::ofstream o("./config/client-conf.json");
           json struct_ = {{"username", ""}, {"token", ""}};
           o << struct_ << "\n";
-          std::shared_ptr<Broker> broker = Broker::getInstance();
-          broker->publish(Message{TOPIC::LOGGED_OUT});
+          publish(Message{TOPIC::LOGGED_OUT});
         }
 
         catch (SyncNotValid &ex) {
           std::clog << ex.what() << "\n";
           std::filesystem::create_directory("./sync");
-          std::shared_ptr<Broker> broker = Broker::getInstance();
-          broker->publish(Message{TOPIC::RESTART});
+          std::ofstream o("./config/client-struct.json");
+          json struct_ = {{"entries", json::array()}, {"last_check", 0}};
+          o << struct_ << "\n";
+          publish(Message{TOPIC::RESTART});
         }
 
         catch (TmpNotValid &ex) {
           std::clog << ex.what() << "\n";
           std::filesystem::create_directory("./sync/.tmp");
-          std::shared_ptr<Broker> broker = Broker::getInstance();
-          broker->publish(Message{TOPIC::RESTART});
+          publish(Message{TOPIC::RESTART});
         }
 
         catch (BinNotValid &ex) {
           std::clog << ex.what() << "\n";
           std::filesystem::create_directory("./sync/.bin");
-          std::shared_ptr<Broker> broker = Broker::getInstance();
-          broker->publish(Message{TOPIC::RESTART});
+          publish(Message{TOPIC::RESTART});
         }
 
         catch (ConnectionNotAvaible &ex) {
           std::clog << ex.what() << "\n";
-          std::shared_ptr<Broker> broker = Broker::getInstance();
-          broker->publish(Message{TOPIC::LOGGED_OUT});
+          publish(Message{TOPIC::LOGGED_OUT});
+        }
+
+        catch (std::ifstream::failure &ex) {
+          std::clog << "Exception opening/reading/closing file\n";
         }
 
         catch (...) {
