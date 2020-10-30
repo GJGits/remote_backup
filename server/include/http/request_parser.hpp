@@ -42,20 +42,21 @@ public:
   parse(request &req, InputIterator begin, InputIterator end) {
 
     int content_length = 0; // 0 richiesta con no body
-    bool body_start = false;
+    //bool body_start = false;
     std::string search{"Content-Length"};
     std::vector<std::byte> body;
 
     // Ciclo while che consuma la richiesta carattere per carattere
     // l'iteratore itera fino alla fine (comprende body se presente)
     while (begin != end) {
-
-      if (!body_start) {
+      // Recupero headers
+      if (req.content_length == 0) {
         // Consumo header un carattere ed avanzo iteratore
         result_type result = consume(req, *begin++);
         // se header non buono restituisco bad
-        if (result == bad)
+        if (result == bad) {
           return std::make_tuple(result, begin);
+        }
         // se header ok ho finito di leggere header ma devo controllare se
         // esiste ancora un body da leggere
         if (result == good) {
@@ -68,20 +69,30 @@ public:
             // campo.
             if (name.compare(search) == 0 && std::stoi(value) > 0) {
               content_length = std::stoi(value);
-              body_start = true;
+             // body_start = true;
+              req.content_length = content_length;
             }
           }
-          if (!body_start)
+          // se dopo aver letto gli header content_length ha
+          // valore zero allora non ho body
+          if (req.content_length == 0)
             return std::make_tuple(good, begin);
         }
       }
-
-      if (body_start) {
-        result_type result = consume_body(req, *begin++, content_length);
-        if (result == good)
+      // Recupero body
+      if (req.content_length != 0) {
+        req.content_length--;
+        req.body->push_back(*begin++);
+        result_type result = req.content_length == 0 ? good : indeterminate;
+        //result_type result = consume_body(req, *begin++, (int *)(req.content_length));
+        if (result == good) {
+          std::clog << "content remained(2): " << req.content_length << "\n";
           return std::make_tuple(good, begin);
+        }
+          
       }
     }
+    std::clog << "content remained(1): " << req.content_length << "\n";
     return std::make_tuple(indeterminate, begin);
   }
 
