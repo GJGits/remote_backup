@@ -68,6 +68,7 @@ Broker::Broker() : is_running{true} {
 }
 
 Broker::~Broker() {
+  std::clog << "broker destroy\n";
   is_running = false;
   for (ssize_t i = 0; i < 4; i++) {
     callers[i].join();

@@ -46,7 +46,6 @@ private:
   HTTPClient() {
     try {
       this->results = resolver.resolve(host, port);
-      std::clog << "http 1\n";
     } catch (const boost::exception &e) {
       throw ConnectionNotAvaible();
     }

@@ -1,5 +1,20 @@
 #include "../../include/pubsub/sync_sub.hpp"
 
+SyncSubscriber::SyncSubscriber() : running{false} {
+    std::clog << "Sync module init...\n";
+    syn = SyncStructure::getInstance();
+    rest_client = RestClient::getInstance();
+  }
+
+  SyncSubscriber::~SyncSubscriber() {
+    running = false;
+    for (size_t i = 0; i < down_workers.size(); i++) {
+      down_workers[i].join();
+    }
+    std::clog << "Sync module destroy...\n";
+  }
+
+
 void SyncSubscriber::init_sub_list() {
   broker->subscribe(TOPIC::NEW_FILE,
                     std::bind(&SyncSubscriber::on_new_file, instance.get(),

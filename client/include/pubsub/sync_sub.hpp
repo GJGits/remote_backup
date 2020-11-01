@@ -34,21 +34,11 @@ private:
   bool running;
   std::shared_ptr<RestClient> rest_client;
   std::shared_ptr<SyncStructure> syn;
-  SyncSubscriber() : running{false} {
-    std::clog << "Sync module init...\n";
-    syn = SyncStructure::getInstance();
-    rest_client = RestClient::getInstance();
-    std::clog << "sync services init\n";
-  }
+  
+  SyncSubscriber();
 
 public:
-  ~SyncSubscriber() {
-    running = false;
-    for (size_t i = 0; i < down_workers.size(); i++) {
-      down_workers[i].join();
-    }
-    std::clog << "Sync module destroy...\n";
-  }
+  ~SyncSubscriber();
   void start(const Message &message);
   void stop(const Message &message);
   void init_sub_list();

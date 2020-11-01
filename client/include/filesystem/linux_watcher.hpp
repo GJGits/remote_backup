@@ -15,11 +15,9 @@
 #include <unordered_map>
 
 #include "../common/duration.hpp"
-#include "../common/json.hpp"
 #include "../common/singleton.hpp"
 #include "../exceptions/exceptions.hpp"
 #include "../modules/module.hpp"
-#include "../pubsub/broker.hpp"
 #include "linux_event.hpp"
 #include "sync_structure.hpp"
 #include <stdio.h>
@@ -27,8 +25,6 @@
 
 #define TIMER 5000
 #define WAIT -1
-
-using json = nlohmann::json;
 
 class LinuxWatcher
     : public ParamSingleton<LinuxWatcher, std::string, u_int32_t>,

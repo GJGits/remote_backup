@@ -7,18 +7,13 @@
 #include "../common/singleton.hpp"
 #include "../filesystem/sync_structure.hpp"
 #include "../modules/module.hpp"
-#include "broker.hpp"
 
 class StructSubscriber : public Singleton<StructSubscriber>, public Module {
 private:
   friend class Singleton;
   std::mutex m1;
   std::shared_ptr<SyncStructure> sync;
-  std::shared_ptr<Broker> broker;
-  StructSubscriber() {
-    sync = SyncStructure::getInstance();
-    broker = Broker::getInstance();
-  }
+  StructSubscriber();
 
 public:
   void start(const Message &message);

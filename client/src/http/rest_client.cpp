@@ -15,7 +15,6 @@ RestClient::RestClient() {
   fill_headers(put_prototype);
   fill_headers(get_prototype);
   fill_headers(delete_prototype);
-  std::clog << "rest1\n";
   http_client = HTTPClient::getInstance();
 }
 
