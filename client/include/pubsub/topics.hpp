@@ -22,5 +22,6 @@ enum TOPIC {
     CLOSE,
     TIME_OUT,
     ENTRY_RENAMED,
-    RESTART
+    RESTART,
+    ADD_ENTRY
     };

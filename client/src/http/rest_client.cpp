@@ -15,6 +15,7 @@ RestClient::RestClient() {
   fill_headers(put_prototype);
   fill_headers(get_prototype);
   fill_headers(delete_prototype);
+  std::clog << "rest1\n";
   http_client = HTTPClient::getInstance();
 }
 
@@ -33,37 +34,16 @@ void RestClient::fill_headers(http::request<http::vector_body<char>> &req,
 }
 
 void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
-                            json &jentry) {
+                            const std::string &target) {
   DurationLogger log{"POST_CHUNK"};
-  std::shared_ptr<char[]> buffer;
-  size_t size = 0;
-
-  {
-    DurationLogger log{"COPY_PARAMS"};
-    buffer = std::get<0>(chunk);
-    size = std::get<1>(chunk);
-  }
-
+  std::shared_ptr<char[]> buffer = std::get<0>(chunk);
+  size_t size = std::get<1>(chunk);
   http::request<http::vector_body<char>> req{post_prototype};
-  {
-    DurationLogger log{"SET_HEADERS"};
-    req.target(
-        "/chunk/" +
-        std::to_string(jentry["transfers"]["chunks"][0]["id"].get<int>()) +
-        "/" + std::string{jentry["transfers"]["chunks"][0]["hash"]} + "/" +
-        std::to_string(jentry["transfers"]["nchunks"].get<int>()) + "/" +
-        macaron::Base64::Encode(std::string{jentry["path"]}) + "/" +
-        std::to_string(jentry["last_local_change"].get<int>()));
-    req.set(http::field::content_length, std::to_string(size));
-    req.set(http::field::authorization,
-            "Bearer " + std::string{config["token"]});
-  }
-
-  {
-    DurationLogger log{"SET_BODY"};
-    for (size_t i = 0; i < size; i++)
-      req.body().push_back(buffer.get()[i]);
-  }
+  req.target("/chunk/" + target);
+  req.set(http::field::content_length, std::to_string(size));
+  req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
+  for (size_t i = 0; i < size; i++)
+    req.body().push_back(buffer.get()[i]);
 
   http_client->up_request(req);
 }
@@ -77,9 +57,7 @@ std::vector<char> RestClient::get_chunk(const json &chunk_info) {
   return http_client->get_binary(req);
 }
 
-void RestClient::delete_file(std::string &path) {
-  json jentry;
-  jentry["path"] = path;
+void RestClient::delete_file(const std::string &path) {
   http::request<http::vector_body<char>> req{delete_prototype};
   req.target("/file/" + macaron::Base64::Encode(path));
   req.set(http::field::authorization, "Bearer " + std::string{config["token"]});

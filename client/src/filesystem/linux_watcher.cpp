@@ -179,14 +179,17 @@ void LinuxWatcher::handle_events() {
 
       timer = WAIT;
 
-      for (const auto &[key, value] : events) {
-        json mex = {{"path", key}};
-        uint32_t mask = value.get_mask();
+      for (const auto &[path, event] : events) {
+        uint32_t mask = event.get_mask();
         if (mask == 2 || mask == 128 || mask == 256) {
-          broker->publish(Message{TOPIC::NEW_FILE, mex});
+          std::shared_ptr<FileEntry> content{
+              new FileEntry{path, entry_producer::folder, entry_status::new_}};
+          broker->publish(Message{TOPIC::NEW_FILE, content});
         }
         if (mask == 64 || mask == 512) {
-          broker->publish(Message{TOPIC::FILE_DELETED, mex});
+          std::shared_ptr<FileEntry> content{new FileEntry{
+              path, entry_producer::folder, entry_status::delete_}};
+          broker->publish(Message{TOPIC::FILE_DELETED, content});
         }
       }
 

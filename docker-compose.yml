@@ -12,18 +12,24 @@ services:
         build: ./server
         ports: 
             - "3500-3503:3500"
+        depends_on:
+            - "db"
         volumes:
             - filesystem:/home/filesystem
     nginx-server:
         image: nginx
         ports:
             - "3200:80"
+        depends_on:
+            - "server"
         volumes: 
             - './server/config/nginx.conf:/etc/nginx/nginx.conf'
     client:
         build: ./client
         ports:
             - "2800:2800"
+        depends_on:
+            - "nginx-server"
         volumes:
             - "./client/sync:/home/client/sync"
             - "./client/config:/home/client/config"
