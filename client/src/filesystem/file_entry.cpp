@@ -1,5 +1,18 @@
 #include "../../include/filesystem/file_entry.hpp"
 
+FileEntry::FileEntry() : nchunks{1}, read_count{0}, buffer{nullptr} {}
+
+FileEntry::FileEntry(const std::string &path, entry_producer producer,
+                     entry_status status)
+    : path{path}, producer{producer}, nchunks{1}, status{status},
+      read_count{0}, buffer{nullptr} {}
+
+FileEntry::FileEntry(const std::string &path, entry_producer producer,
+                     size_t nchunks, size_t last_change, entry_status status)
+    : path{path}, producer{producer}, nchunks{nchunks},
+      last_change{last_change}, status{status}, read_count{0}, buffer{nullptr} {
+}
+
 bool FileEntry::has_chunk() { return read_count < nchunks; }
 
 std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
@@ -8,6 +21,7 @@ std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
   in.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   // lazy init of infos
   if (buffer.get() == nullptr) {
+    size = std::filesystem::file_size(path);
     struct stat sb;
     stat(path.c_str(), &sb);
     last_change = (size_t)sb.st_ctime;

@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unordered_map>
+#include <regex>
 
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"
@@ -18,6 +19,8 @@ class SyncStructure : public Singleton<SyncStructure> {
 
 private:
   friend class Singleton;
+  std::regex tmp_rgx;
+  std::regex bin_rgx;
   std::unordered_map<std::string, std::shared_ptr<FileEntry>> structure;
   size_t last_check;
 

@@ -3,7 +3,6 @@
 #include <bits/stdc++.h>
 #include <errno.h>
 #include <iostream>
-#include <memory>
 #include <poll.h>
 #include <regex>
 #include <stdio.h>
@@ -16,7 +15,6 @@
 
 #include "../common/duration.hpp"
 #include "../common/singleton.hpp"
-#include "../exceptions/exceptions.hpp"
 #include "../modules/module.hpp"
 #include "linux_event.hpp"
 #include "sync_structure.hpp"
@@ -91,11 +89,5 @@ public:
    */
   void stop(const Message &message);
 
-  ~LinuxWatcher() {
-    std::clog << "Linux Watcher destroy...\n";
-    // Quando l'oggetto viene distrutto rilascio il file descriptor
-    // in questo modo il kernel ha la possibilità di riassegnarlo ad
-    // un altro processo.
-    close(inotify_descriptor);
-  }
+  ~LinuxWatcher();
 };

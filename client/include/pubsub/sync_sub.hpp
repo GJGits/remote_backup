@@ -3,8 +3,6 @@
 #include <condition_variable>
 #include <filesystem>
 #include <iostream>
-#include <memory>
-#include <mutex>
 #include <queue>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -15,7 +13,6 @@
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"
 #include "../common/utility.hpp"
-#include "../exceptions/exceptions.hpp"
 #include "../filesystem/file_entry.hpp"
 #include "../filesystem/sync_structure.hpp"
 #include "../http/rest_client.hpp"

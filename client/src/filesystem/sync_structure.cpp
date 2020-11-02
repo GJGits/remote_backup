@@ -1,10 +1,14 @@
 #include "../../include/filesystem/sync_structure.hpp"
 
-SyncStructure::SyncStructure() : last_check{0} {}
+SyncStructure::SyncStructure() : last_check{0} {
+  tmp_rgx = std::move(std::regex{"\\.\\/sync\\/\\.tmp\\/.*"});
+  bin_rgx = std::move(std::regex{"\\.\\/sync\\/\\.bin\\/.*"});
+}
 
 void SyncStructure::store() {
   std::ofstream o{"./config/client-struct.json"};
-  json jstru = {{"entries", json::array()}, {"last_check", (int)std::time(nullptr)}};
+  json jstru = {{"entries", json::array()},
+                {"last_check", (int)std::time(nullptr)}};
   for (const auto &[path, fentry] : structure) {
     json entry = {{"path", path},
                   {"last_change", fentry->get_last_change()},
@@ -22,12 +26,15 @@ void SyncStructure::restore() {
   i >> j;
   last_check = j["last_check"].get<int>();
   for (size_t x = 0; x < j["entries"].size(); x++) {
-    std::string path = j["entries"]["path"].get<std::string>();
+    std::string path = j["entries"][x]["path"].get<std::string>();
     entry_producer producer =
-        (entry_producer)j["entries"]["producer"].get<int>();
-    size_t last_change = j["entries"]["last_change"].get<int>();
-    entry_status status = (entry_status)j["entries"]["status"].get<int>();
-    size_t nchunks = (size_t)j["entries"]["nchunks"].get<int>();
+        (entry_producer)j["entries"][x]["producer"].get<int>();
+    size_t last_change = j["entries"][x]["last_change"].get<int>();
+    entry_status status =
+        std::filesystem::exists(path)
+            ? (entry_status)j["entries"][x]["status"].get<int>()
+            : entry_status::delete_;
+    size_t nchunks = (size_t)j["entries"][x]["nchunks"].get<int>();
     std::shared_ptr<FileEntry> entry{
         new FileEntry{path, producer, nchunks, last_change, status}};
     add_entry(entry);
@@ -37,9 +44,11 @@ void SyncStructure::restore() {
 void SyncStructure::update_from_fs() {
   for (const auto &p :
        std::filesystem::recursive_directory_iterator("./sync")) {
-    if (p.is_regular_file()) {
-      std::string path = p.path().string();
-      entry_producer producer = entry_producer::folder;
+    std::string path = p.path().string();
+    std::smatch match;
+    if (!std::regex_match(path, match, tmp_rgx) &&
+        !std::regex_match(path, match, bin_rgx) && p.is_regular_file()) {
+      entry_producer producer = entry_producer::local;
       struct stat sb;
       stat(path.c_str(), &sb);
       size_t last_change = (size_t)sb.st_ctime;
@@ -75,6 +84,9 @@ void SyncStructure::add_entry(const std::shared_ptr<FileEntry> &entry) {
   std::string path = entry->get_path();
   if (structure.find(path) == structure.end()) {
     structure[path] = entry;
+  } else {
+    if (entry->get_last_change() > structure[path]->get_last_change())
+      structure[path] = entry;
   }
 }
 

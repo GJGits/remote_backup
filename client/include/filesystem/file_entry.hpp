@@ -16,7 +16,7 @@
 #define CHUNK_SIZE 65536 // 64KB
 
 enum entry_status { synced, new_, delete_ };
-enum entry_producer { folder, server };
+enum entry_producer { local, server };
 
 class FileEntry {
 private:
@@ -34,22 +34,19 @@ public:
   /**
    * Costruttore vuoto per dichiarazioni e compatibilita con alcune strutture
    **/
-  FileEntry() {}
+  FileEntry();
 
   /**
    * Costruttore per nuova entry
    **/
   FileEntry(const std::string &path, entry_producer producer,
-            entry_status status)
-      : path{path}, producer{producer}, status{status} {}
+            entry_status status);
 
   /**
    * Costruttore per entry gia esistente
    **/
   FileEntry(const std::string &path, entry_producer producer, size_t nchunks,
-            size_t last_change, entry_status status)
-      : path{path}, producer{producer}, nchunks{nchunks},
-        last_change{last_change}, status{status} {}
+            size_t last_change, entry_status status);
 
   bool has_chunk();
   void set_status(entry_status status) { this->status = status; }

@@ -1,8 +1,6 @@
 #pragma once
 
 #include <iostream>
-#include <memory>
-#include <mutex>
 
 #include "../common/singleton.hpp"
 #include "../filesystem/sync_structure.hpp"

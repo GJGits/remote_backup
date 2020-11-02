@@ -1,6 +1,8 @@
 #include "../../include/pubsub/struct_sub.hpp"
 
-StructSubscriber::StructSubscriber() { sync = SyncStructure::getInstance(); }
+StructSubscriber::StructSubscriber() { 
+  std::clog << "Struct module init...\n";
+  sync = SyncStructure::getInstance(); }
 
 void StructSubscriber::init_sub_list() {
   broker->subscribe(TOPIC::ADD_ENTRY,
@@ -12,6 +14,7 @@ void StructSubscriber::init_sub_list() {
 }
 
 void StructSubscriber::start(const Message &message) {
+  std::clog << "Struct module start...\n";
   sync->restore();
   sync->update_from_fs();
   // sync->update_from_remote();

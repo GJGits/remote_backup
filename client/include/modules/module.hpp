@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../exceptions/exceptions.hpp"
 #include "../pubsub/broker.hpp"
 
 class Module {

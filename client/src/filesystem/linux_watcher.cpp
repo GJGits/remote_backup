@@ -28,6 +28,14 @@ LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
   bin_rgx = std::move(std::regex{"\\.\\/sync\\/\\.bin\\/.*"});
 }
 
+LinuxWatcher::~LinuxWatcher() {
+    std::clog << "Linux Watcher destroy...\n";
+    // Quando l'oggetto viene distrutto rilascio il file descriptor
+    // in questo modo il kernel ha la possibilità di riassegnarlo ad
+    // un altro processo.
+    close(inotify_descriptor);
+  }
+
 void LinuxWatcher::start(const Message &message) {
   std::clog << "Linux watcher module start...\n";
   running = true;
@@ -73,7 +81,6 @@ bool LinuxWatcher::remove_watch(const std::string &path) {
 void LinuxWatcher::handle_events() {
 
   std::clog << "Start monitoring...\n";
-  std::shared_ptr<Broker> broker = Broker::getInstance();
   while (running) {
     std::clog << "Wating for an event...\n";
     // Some systems cannot read integer variables if they are not
@@ -183,12 +190,12 @@ void LinuxWatcher::handle_events() {
         uint32_t mask = event.get_mask();
         if (mask == 2 || mask == 128 || mask == 256) {
           std::shared_ptr<FileEntry> content{
-              new FileEntry{path, entry_producer::folder, entry_status::new_}};
+              new FileEntry{path, entry_producer::local, entry_status::new_}};
           broker->publish(Message{TOPIC::NEW_FILE, content});
         }
         if (mask == 64 || mask == 512) {
           std::shared_ptr<FileEntry> content{new FileEntry{
-              path, entry_producer::folder, entry_status::delete_}};
+              path, entry_producer::local, entry_status::delete_}};
           broker->publish(Message{TOPIC::FILE_DELETED, content});
         }
       }
