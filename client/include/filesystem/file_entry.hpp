@@ -12,6 +12,7 @@
 #include "../common/base64.hpp"
 #include "../common/duration.hpp"
 #include "../common/sha256.hpp"
+#include "../http/rest_client.hpp"
 
 #define CHUNK_SIZE 65536 // 64KB
 
@@ -61,5 +62,6 @@ public:
            std::get<1>(last_move) + "/" + std::to_string(nchunks) + "/" +
            macaron::Base64::Encode(path) + "/" + std::to_string(last_change);
   }
+  void retrieve_chunk();
   void update_read_count() { read_count++; }
 };

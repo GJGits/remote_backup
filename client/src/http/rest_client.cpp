@@ -1,6 +1,7 @@
 #include "../../include/http/rest_client.hpp"
 
 RestClient::RestClient() {
+  std::clog << "rest_client init\n";
   config = json::object();
   post_prototype = http::request<http::vector_body<char>>{http::verb::post,
                                                           "/some_target", 10};
@@ -47,11 +48,10 @@ void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
   http_client->up_request(req);
 }
 
-std::vector<char> RestClient::get_chunk(const json &chunk_info) {
+std::vector<char> RestClient::get_chunk(const std::string &target) {
   http::request<http::vector_body<char>> req{get_prototype};
   // chunk + id + file_path_base64
-  req.target("/chunk/" + std::to_string(chunk_info["id"].get<int>()) + "/" +
-             std::string{chunk_info["path"]});
+  req.target("/chunk/" + target);
   req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
   return http_client->get_binary(req);
 }
@@ -63,12 +63,11 @@ void RestClient::delete_file(const std::string &path) {
   http_client->up_request(req);
 }
 
-json RestClient::get_status_list(size_t page) {
+json RestClient::get_status_list(size_t page, size_t last_check) {
   std::shared_ptr<HTTPClient> http_client = HTTPClient::getInstance();
-  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   http::request<http::vector_body<char>> req{get_prototype};
   req.target("/status/list/" + std::to_string(page) + "/" +
-             std::to_string(sync->get_last_check()));
+             std::to_string(last_check));
   req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
   return http_client->get_json(req);
 }

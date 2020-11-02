@@ -39,6 +39,7 @@ private:
   std::regex bin_rgx;
   std::unordered_map<std::string, int> path_wd_map;
   std::unordered_map<int, std::string> wd_path_map;
+  std::vector<int> cookies;
   std::unordered_map<std::string, LinuxEvent> events;
   LinuxWatcher(const std::string &root_to_watch, uint32_t mask);
 

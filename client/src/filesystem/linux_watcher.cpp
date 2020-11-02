@@ -29,12 +29,12 @@ LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
 }
 
 LinuxWatcher::~LinuxWatcher() {
-    std::clog << "Linux Watcher destroy...\n";
-    // Quando l'oggetto viene distrutto rilascio il file descriptor
-    // in questo modo il kernel ha la possibilità di riassegnarlo ad
-    // un altro processo.
-    close(inotify_descriptor);
-  }
+  std::clog << "Linux Watcher destroy...\n";
+  // Quando l'oggetto viene distrutto rilascio il file descriptor
+  // in questo modo il kernel ha la possibilità di riassegnarlo ad
+  // un altro processo.
+  close(inotify_descriptor);
+}
 
 void LinuxWatcher::start(const Message &message) {
   std::clog << "Linux watcher module start...\n";
@@ -129,8 +129,9 @@ void LinuxWatcher::handle_events() {
         message["path"] = path;
 
         timer = TIMER;
-        std::clog << "watch path: " << wd_path_map[event->wd] << "\n";
-        std::clog << "MASK: " << event->mask << " NAME " << event->name << "\n";
+        // std::clog << "watch path: " << wd_path_map[event->wd] << "\n";
+        // std::clog << "MASK: " << event->mask << " NAME " << event->name <<
+        // "\n";
 
         // eventi non presenti in inotify:
         // 1073742080 -> copia incolla cartella da gui da fuori sync (con file
@@ -142,43 +143,54 @@ void LinuxWatcher::handle_events() {
 
         std::smatch match;
 
-        if (!std::regex_match(path, match, temp_rgx) &&
-            !std::regex_match(path, match, bin_rgx)) {
+        switch (event->mask) {
 
-          switch (event->mask) {
-
-          case 1073742080:
-          case 1073741952: {
-            add_watch(path);
-            for (auto &p :
-                 std::filesystem::recursive_directory_iterator(path)) {
-              if (p.is_regular_file()) {
-                std::string f_path = p.path().string();
-                LinuxEvent ev{f_path, 0, 256};
-                events[f_path] = ev;
-              }
+        case 1073742080:
+        case 1073741952: {
+          add_watch(path);
+          for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
+            if (p.is_regular_file()) {
+              std::string f_path = p.path().string();
+              LinuxEvent ev{f_path, 0, 256};
+              events[f_path] = ev;
             }
-
-          } break;
-
-          case 1073741888:
-          case 1073742336: {
-            std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-            for (std::string &sync_path : sync->get_paths()) {
-              if (!std::filesystem::exists(sync_path)) {
-                LinuxEvent ev{sync_path, 0, 512};
-                events[sync_path] = ev;
-              }
-            }
-
-          } break;
-
-          default: {
-            LinuxEvent ev{path, event->cookie, event->mask};
-            events[path] = ev;
-
-          } break;
           }
+
+        } break;
+
+        case 1073741888:
+        case 1073742336: {
+          std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+          for (std::string &sync_path : sync->get_paths()) {
+            if (!std::filesystem::exists(sync_path)) {
+              LinuxEvent ev{sync_path, 0, 512};
+              events[sync_path] = ev;
+            }
+          }
+
+        } break;
+
+          // to tmp -> non loggare
+          // from tmp -> non loggare, ma conserva cookie
+          // to sync -> loggo se from non da tmp
+
+        default: {
+          std::smatch match;
+          if (std::regex_match(path, match, temp_rgx) && event->mask == 64) {
+            cookies.push_back(event->cookie);
+          } else {
+            // moved to che non ha from tmp e non ha to tmp
+            if ((event->mask == 128 &&
+                 std::find(cookies.begin(), cookies.end(), event->cookie) ==
+                     cookies.end() &&
+                 !std::regex_match(path, match, temp_rgx)) ||
+                event->mask != 128) {
+              LinuxEvent ev{path, event->cookie, event->mask};
+              events[path] = ev;
+            }
+          }
+
+        } break;
         }
       }
     }

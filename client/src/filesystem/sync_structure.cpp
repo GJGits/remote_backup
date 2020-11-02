@@ -1,6 +1,7 @@
 #include "../../include/filesystem/sync_structure.hpp"
 
 SyncStructure::SyncStructure() : last_check{0} {
+  std::clog << "sync_struct init\n";
   tmp_rgx = std::move(std::regex{"\\.\\/sync\\/\\.tmp\\/.*"});
   bin_rgx = std::move(std::regex{"\\.\\/sync\\/\\.bin\\/.*"});
 }
@@ -30,10 +31,15 @@ void SyncStructure::restore() {
     entry_producer producer =
         (entry_producer)j["entries"][x]["producer"].get<int>();
     size_t last_change = j["entries"][x]["last_change"].get<int>();
+
     entry_status status =
-        std::filesystem::exists(path)
+        (std::filesystem::exists(path)) ||
+         (!std::filesystem::exists(path) &&
+             (entry_status)j["entries"][x]["status"].get<int>() ==
+                 entry_status::synced)
             ? (entry_status)j["entries"][x]["status"].get<int>()
             : entry_status::delete_;
+
     size_t nchunks = (size_t)j["entries"][x]["nchunks"].get<int>();
     std::shared_ptr<FileEntry> entry{
         new FileEntry{path, producer, nchunks, last_change, status}};
@@ -64,19 +70,26 @@ void SyncStructure::update_from_fs() {
 }
 
 void SyncStructure::update_from_remote() {
-  // aggiornamenti fake da server (risultato get_list)
-  json list{{"entries", json::array()}};
-  for (size_t y = 0; y < list["entries"].size(); y++) {
-    std::string path = list["entries"][y]["path"];
-    size_t last_change = list["entries"][y]["last_remote_change"].get<int>();
-    entry_status status =
-        list["entries"][y]["command"].get<std::string>().compare("updated") == 0
-            ? entry_status::new_
-            : entry_status::delete_;
-    size_t nchunks = (size_t)list["entries"]["nchunks"].get<int>();
-    std::shared_ptr<FileEntry> entry{new FileEntry{
-        path, entry_producer::server, nchunks, last_change, status}};
-    add_entry(entry);
+  int current_page = 0;
+  int last_page = 1;
+  std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
+  while (current_page < last_page) {
+    json list = rest_client->get_status_list(current_page, last_check);
+    last_page = list["last_page"].get<int>();
+    for (size_t y = 0; y < list["entries"].size(); y++) {
+      std::string path = macaron::Base64::Decode(list["entries"][y]["path"].get<std::string>());
+      size_t last_change = list["entries"][y]["last_remote_change"].get<int>();
+      entry_status status =
+          list["entries"][y]["command"].get<std::string>().compare("updated") ==
+                  0
+              ? entry_status::new_
+              : entry_status::delete_;
+      size_t nchunks = (size_t)list["entries"][y]["num_chunks"].get<int>();
+      std::shared_ptr<FileEntry> entry{new FileEntry{
+          path, entry_producer::server, nchunks, last_change, status}};
+      add_entry(entry);
+    }
+    current_page++;
   }
 }
 

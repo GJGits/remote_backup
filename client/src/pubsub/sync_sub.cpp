@@ -1,19 +1,16 @@
 #include "../../include/pubsub/sync_sub.hpp"
 
 SyncSubscriber::SyncSubscriber() : running{false} {
-    std::clog << "Sync module init...\n";
-    syn = SyncStructure::getInstance();
-    rest_client = RestClient::getInstance();
-  }
+  std::clog << "Sync module init...\n";
+}
 
-  SyncSubscriber::~SyncSubscriber() {
-    running = false;
-    for (size_t i = 0; i < down_workers.size(); i++) {
-      down_workers[i].join();
-    }
-    std::clog << "Sync module destroy...\n";
+SyncSubscriber::~SyncSubscriber() {
+  running = false;
+  for (size_t i = 0; i < down_workers.size(); i++) {
+    down_workers[i].join();
   }
-
+  std::clog << "Sync module destroy...\n";
+}
 
 void SyncSubscriber::init_sub_list() {
   broker->subscribe(TOPIC::NEW_FILE,
@@ -27,7 +24,7 @@ void SyncSubscriber::init_sub_list() {
 void SyncSubscriber::start(const Message &message) {
   std::clog << "sync module started...\n";
   running = true;
-  // init_workers();
+  init_workers();
 }
 
 void SyncSubscriber::stop(const Message &message) {
@@ -36,7 +33,7 @@ void SyncSubscriber::stop(const Message &message) {
   cv.notify_all();
 }
 
-void SyncSubscriber::push(const json &task) {
+void SyncSubscriber::push(const std::shared_ptr<FileEntry> &task) {
   std::unique_lock lk{m};
   down_tasks.push(task);
   cv.notify_one();
@@ -45,6 +42,7 @@ void SyncSubscriber::push(const json &task) {
 void SyncSubscriber::on_new_file(const Message &message) {
   DurationLogger logger{"NEW_FILE"};
   std::shared_ptr<FileEntry> fentry = message.get_content();
+  std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   if (fentry->get_producer() == entry_producer::local) {
     broker->publish(Message{TOPIC::ADD_ENTRY, fentry});
     while (fentry->has_chunk()) {
@@ -55,13 +53,14 @@ void SyncSubscriber::on_new_file(const Message &message) {
     fentry->set_status(entry_status::synced);
   }
   if (fentry->get_producer() == entry_producer::server) {
-    // todo: gestire
+    push(fentry);
   }
 }
 
 void SyncSubscriber::on_file_deleted(const Message &message) {
   DurationLogger logger{"FILE_DELETED"};
   std::shared_ptr<FileEntry> fentry = message.get_content();
+  std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   if (fentry->get_producer() == entry_producer::local) {
     rest_client->delete_file(fentry->get_path());
     broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
@@ -75,7 +74,7 @@ void SyncSubscriber::init_workers() {
   for (size_t i = 0; i < 2; i++) {
     down_workers.emplace_back([&]() {
       while (running) {
-        json task;
+        std::shared_ptr<FileEntry> task;
         // sezione critica
         {
           std::unique_lock lk{m};
@@ -88,14 +87,22 @@ void SyncSubscriber::init_workers() {
             continue;
           }
         }
+        // sezione non critica
+        for (size_t i = 0; i < task->get_nchunks(); i++) {
+          task->retrieve_chunk();
+          task->update_read_count();
+        }
+        task->set_status(entry_status::synced);
       }
     });
   }
 }
 
 void SyncSubscriber::restore_files() {
+
   if (!std::filesystem::exists("./sync"))
     throw SyncNotValid();
+
   if (!std::filesystem::exists("./sync/.tmp")) {
     std::clog << "tmp oddio\n";
     throw TmpNotValid();
@@ -103,6 +110,7 @@ void SyncSubscriber::restore_files() {
 
   if (!std::filesystem::exists("./sync/.bin"))
     throw BinNotValid();
+
   for (auto &p : std::filesystem::directory_iterator("./sync/.tmp")) {
     if (p.is_directory()) {
       std::vector<std::string> chunks{};
@@ -111,16 +119,13 @@ void SyncSubscriber::restore_files() {
           chunks.push_back(entry.path().string());
         }
       }
+
       std::sort(
-          chunks.begin(), chunks.end(), [&](std::string &s1, std::string &s2) {
-            std::vector<std::string> tok11 = Utility::split(s1, '_');
-            std::vector<std::string> tok12 = Utility::split(s2, '_');
-            std::vector<std::string> tok21 = Utility::split(tok11[1], '.');
-            std::vector<std::string> tok22 = Utility::split(tok21[1], '.');
-            return std::stoi(tok21[0]) < std::stoi(tok22[0]);
-          });
+          chunks.begin(), chunks.end(),
+          [&](std::string &s1, std::string &s2) { return s1.compare(s2); });
+
       std::string new_path =
-          macaron::Base64::Decode(p.path().filename().string());
+           macaron::Base64::Decode(p.path().filename().string());
       std::clog << "new path: " << new_path << "\n";
       std::string temp_path = p.path().string() + ".out";
       std::ofstream out{temp_path, std::ios::binary};
@@ -133,6 +138,7 @@ void SyncSubscriber::restore_files() {
         out.write(buff, fsize);
       }
       std::filesystem::rename(temp_path, new_path);
+      std::filesystem::remove_all(p);
     }
   }
 }
