@@ -25,13 +25,10 @@ private:
   friend class Singleton;
   std::unordered_map<std::string, json> changes;
   std::vector<std::thread> down_workers;
-  std::queue<json> down_tasks;
+  std::queue<std::shared_ptr<FileEntry>> down_tasks;
   std::mutex m;
   std::condition_variable cv;
   bool running;
-  std::shared_ptr<RestClient> rest_client;
-  std::shared_ptr<SyncStructure> syn;
-  
   SyncSubscriber();
 
 public:
@@ -42,6 +39,6 @@ public:
   void init_workers();
   void on_new_file(const Message &message);
   void on_file_deleted(const Message &message);
-  void push(const json &task);
+  void push(const std::shared_ptr<FileEntry> &task);
   void restore_files();
 };

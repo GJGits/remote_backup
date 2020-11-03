@@ -10,7 +10,6 @@ class StructSubscriber : public Singleton<StructSubscriber>, public Module {
 private:
   friend class Singleton;
   std::mutex m1;
-  std::shared_ptr<SyncStructure> sync;
   StructSubscriber();
 
 public:

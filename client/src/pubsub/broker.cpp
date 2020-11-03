@@ -55,6 +55,10 @@ Broker::Broker() : is_running{true} {
           publish(Message{TOPIC::LOGGED_OUT});
         }
 
+        catch (std::filesystem::__cxx11::filesystem_error &ex) {
+          std::clog << ex.what() << "\n";
+        }
+
         catch (std::ifstream::failure &ex) {
           std::clog << "Exception opening/reading/closing file\n";
         }

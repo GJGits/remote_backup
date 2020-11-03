@@ -23,7 +23,6 @@
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"
-#include "../pubsub/broker.hpp"
 
 namespace beast = boost::beast; // from <boost/beast.hpp>
 namespace http = beast::http;   // from <boost/beast/http.hpp>

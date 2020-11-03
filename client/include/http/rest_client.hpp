@@ -7,6 +7,7 @@
 #include <boost/beast/version.hpp>
 #include <condition_variable>
 #include <fstream>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <mutex>
@@ -22,9 +23,7 @@
 #include "../common/singleton.hpp"
 #include "../common/base64.hpp"
 #include "../common/json.hpp"
-#include "../filesystem/file_entry.hpp"
 #include "../http/http_client.hpp"
-#include "../filesystem/sync_structure.hpp"
 
 namespace beast = boost::beast; // from <boost/beast.hpp>
 namespace http = beast::http;   // from <boost/beast/http.hpp>
@@ -50,7 +49,7 @@ private:
 public:
   void post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
                   const std::string &target);
-  std::vector<char> get_chunk(const json &chunk_info);
+  std::vector<char> get_chunk(const std::string &target);
   void delete_file(const std::string &path);
-  json get_status_list(size_t page);
+  json get_status_list(size_t page, size_t last_check);
 };

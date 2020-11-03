@@ -77,7 +77,7 @@ file_list.forEach(fname => {
                     hash: hash.digest("hex"),
                     fname: fname_base64,
                     size: to_read,
-                    last_mod: Math.floor(new Date().getTime() / 1000)
+                    last_mod: stats.ctimeMs
                 });
         //}
 
