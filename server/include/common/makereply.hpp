@@ -45,19 +45,4 @@ public:
     return rep;
   }
 
-  static void makedumpjsonreply(http::server::reply &rep,
-                                const std::string &rep_body) {
-    struct http::server::header con_len;
-    con_len.name = "Content-Length";
-    con_len.value = std::to_string(rep_body.size());
-    struct http::server::header con_type;
-    con_type.name = "Content-Type";
-    con_type.value = "application/json";
-    rep.headers.push_back(con_len);
-    rep.headers.push_back(con_type);
-    for (size_t i = 0; i < rep_body.size(); i++) {
-     (*rep.content)[i] = rep_body[i];
-    }
-    return;
-  } // static member function
 };

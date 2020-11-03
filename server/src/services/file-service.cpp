@@ -10,9 +10,7 @@ std::shared_ptr<FileService> FileService::getInstance() {
 }
 
 const json FileService::getStatusFile(const GetStatusDTO &get_status_dto) {
-  UserEntity user_entity = user_repository->getUserByUsername(get_status_dto.get_subject().get_sub());
-  json status_file = user_repository->get_status_file(get_status_dto.get_subject() , get_status_dto.getpage_num(), get_status_dto.get_last_check());
-  return status_file;
+  return user_repository->get_status_file(get_status_dto.get_subject() , get_status_dto.getpage_num(), get_status_dto.get_last_check());
 }
 
 void FileService::delete_file_service(const DeleteFileDTO &del_file) {
