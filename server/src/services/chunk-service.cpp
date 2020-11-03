@@ -37,8 +37,7 @@ void ChunkService::file_chunk_add(const PostChunkDTO &post_chunk) {
 }
 
 size_t ChunkService::file_chunk_get(const GetChunkDTO &get_chunk) {
-  std::string fname{"../../filesystem/" + get_chunk.get_subject().get_sub() +
-                    "/" + get_chunk.getfile_name() + "/" +
+  std::string fname{get_chunk.getfile_path() + "/" +
                     get_chunk.getfile_name() + "__" +
                     std::to_string(get_chunk.getchunk_id()) + ".chk"};
   std::ifstream ifile{fname};

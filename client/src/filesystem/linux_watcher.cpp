@@ -147,9 +147,14 @@ void LinuxWatcher::handle_events() {
           add_watch(path);
           for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
             if (p.is_regular_file()) {
-              std::string f_path = p.path().string();
-              LinuxEvent ev{f_path, 0, 256};
-              events[f_path] = ev;
+              std::clog << "path: " << path << ", event: " << event->mask
+                        << "\n";
+              std::smatch match;
+              if (!std::regex_match(path, match, temp_rgx)) {
+                std::string f_path = p.path().string();
+                LinuxEvent ev{f_path, 0, 256};
+                events[f_path] = ev;
+              }
             }
           }
 
@@ -178,16 +183,13 @@ void LinuxWatcher::handle_events() {
             if (event->mask == 64)
               cookies.push_back(event->cookie);
           } else {
-
             if (!(event->mask == 128 &&
-                  std::regex_match(path, match, temp_rgx)) &&
-                !(event->mask == 512 &&
-                  std::regex_match(path, match, temp_rgx)) &&
-                !(event->mask == 128 &&
                   std::find(cookies.begin(), cookies.end(), event->cookie) !=
                       cookies.end()) &&
                 (event->mask == 2 || event->mask == 128 || event->mask == 256 ||
                  event->mask == 64 || event->mask == 512)) {
+              std::clog << "path: " << path << ", event: " << event->mask
+                        << "\n";
               LinuxEvent ev{path, event->cookie, event->mask};
               events[path] = ev;
             }

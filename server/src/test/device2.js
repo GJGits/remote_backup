@@ -7,7 +7,7 @@ const chunk_size = 65536;
 const base_url = "http://0.0.0.0:3200/chunk/";
 
 // 1. genero chunks da file
-file_list = ["c#.pdf"];
+file_list = ["thread.pdf"];
 buff_list = []; // lista dalla quale attingere buffer da inviare
 file_list.forEach(fname => {
     let loc_fname = "./input/" + fname;
