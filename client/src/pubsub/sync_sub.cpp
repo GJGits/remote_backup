@@ -66,7 +66,8 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
     broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
   }
   if (fentry->get_producer() == entry_producer::server) {
-    // todo: gestire
+    std::filesystem::rename(fentry->get_path(), "./sync/bin/a");
+    broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
   }
 }
 

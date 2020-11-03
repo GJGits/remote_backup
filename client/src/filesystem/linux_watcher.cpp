@@ -176,6 +176,7 @@ void LinuxWatcher::handle_events() {
           // from tmp -> non loggare, ma conserva cookie ok
           // to sync -> loggo se from non da tmp
           // rm tmp -> non loggare ok
+          // from sync -> loggo se to non bin
 
         default: {
           std::smatch match;

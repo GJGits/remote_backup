@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ctime>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
