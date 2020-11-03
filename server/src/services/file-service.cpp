@@ -15,7 +15,7 @@ const json FileService::getStatusFile(const GetStatusDTO &get_status_dto) {
 
 void FileService::delete_file_service(const DeleteFileDTO &del_file) {
   FileEntity file_ent{del_file.get_subject().get_sub(),
-                      del_file.getfile_path()};
+                      del_file.getfile_path(), del_file.gettimestamp_locale()};
   std::filesystem::remove_all("../../filesystem/"+del_file.get_subject().get_sub()+"/"+del_file.getfile_path());
   file_repository->deleteFile(file_ent);
 }
