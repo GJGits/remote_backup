@@ -32,13 +32,18 @@ void SyncStructure::restore() {
         (entry_producer)j["entries"][x]["producer"].get<int>();
     size_t last_change = j["entries"][x]["last_change"].get<int>();
 
-    entry_status status =
-        (std::filesystem::exists(path)) ||
-         (!std::filesystem::exists(path) &&
-             (entry_status)j["entries"][x]["status"].get<int>() ==
-                 entry_status::synced)
-            ? (entry_status)j["entries"][x]["status"].get<int>()
-            : entry_status::delete_;
+    entry_status status = entry_status::synced;
+
+    if (std::filesystem::exists(path) ||
+        (!std::filesystem::exists(path) &&
+         (entry_status)j["entries"][x]["status"].get<int>() ==
+             entry_status::new_)) {
+      status = (entry_status)j["entries"][x]["status"].get<int>();
+    } else if (!std::filesystem::exists(path) &&
+               (entry_status)j["entries"][x]["status"].get<int>() ==
+                   entry_status::synced) {
+      status = entry_status::delete_;
+    }
 
     size_t nchunks = (size_t)j["entries"][x]["nchunks"].get<int>();
     std::shared_ptr<FileEntry> entry{
@@ -63,7 +68,10 @@ void SyncStructure::update_from_fs() {
           ceil((double)std::filesystem::file_size(path) / CHUNK_SIZE);
       std::shared_ptr<FileEntry> entry{
           new FileEntry{path, producer, nchunks, last_change, status}};
-      if (last_change > last_check)
+      // secondo caso possibile solo per rename di cartella che
+      // va a modificare esclusivamente il change_time dell'inode
+      // riferito alla cartella, gli inode dei file rimangono invariati.
+      if (last_change > last_check || structure.find(path) == structure.end())
         add_entry(entry);
     }
   }
@@ -77,7 +85,8 @@ void SyncStructure::update_from_remote() {
     json list = rest_client->get_status_list(current_page, last_check);
     last_page = list["last_page"].get<int>();
     for (size_t y = 0; y < list["entries"].size(); y++) {
-      std::string path = macaron::Base64::Decode(list["entries"][y]["path"].get<std::string>());
+      std::string path = macaron::Base64::Decode(
+          list["entries"][y]["path"].get<std::string>());
       size_t last_change = list["entries"][y]["last_remote_change"].get<int>();
       entry_status status =
           list["entries"][y]["command"].get<std::string>().compare("updated") ==

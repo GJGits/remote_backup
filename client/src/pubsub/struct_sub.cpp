@@ -1,8 +1,6 @@
 #include "../../include/pubsub/struct_sub.hpp"
 
-StructSubscriber::StructSubscriber() {
-  std::clog << "Struct module init...\n";
-}
+StructSubscriber::StructSubscriber() { std::clog << "Struct module init...\n"; }
 
 void StructSubscriber::init_sub_list() {
   broker->subscribe(TOPIC::ADD_ENTRY,
@@ -19,19 +17,13 @@ void StructSubscriber::start(const Message &message) {
   sync->restore();
   sync->update_from_fs();
   sync->update_from_remote();
-  for (const auto &entry : sync->get_entries()) {
-    if (entry->get_status() == entry_status::new_) {
-      broker->publish(Message{TOPIC::NEW_FILE, entry});
-    }
-    if (entry->get_status() == entry_status::delete_) {
-      broker->publish(Message{TOPIC::FILE_DELETED, entry});
-    }
-  }
+  notify_news();
 }
 
-void StructSubscriber::stop(const Message &message) { 
+void StructSubscriber::stop(const Message &message) {
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-  sync->store(); }
+  sync->store();
+}
 
 void StructSubscriber::on_add_entry(const Message &message) {
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
@@ -42,4 +34,16 @@ void StructSubscriber::on_add_entry(const Message &message) {
 void StructSubscriber::on_delete_entry(const Message &message) {
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   sync->remove_entry(message.get_content());
+}
+
+void StructSubscriber::notify_news() {
+  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+  for (const auto &entry : sync->get_entries()) {
+    if (entry->get_status() == entry_status::new_) {
+      broker->publish(Message{TOPIC::NEW_FILE, entry});
+    }
+    if (entry->get_status() == entry_status::delete_) {
+      broker->publish(Message{TOPIC::FILE_DELETED, entry});
+    }
+  }
 }
