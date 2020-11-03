@@ -129,9 +129,6 @@ void LinuxWatcher::handle_events() {
         message["path"] = path;
 
         timer = TIMER;
-        // std::clog << "watch path: " << wd_path_map[event->wd] << "\n";
-        // std::clog << "MASK: " << event->mask << " NAME " << event->name <<
-        // "\n";
 
         // eventi non presenti in inotify:
         // 1073742080 -> copia incolla cartella da gui da fuori sync (con file
@@ -170,21 +167,27 @@ void LinuxWatcher::handle_events() {
 
         } break;
 
-          // to tmp -> non loggare
-          // from tmp -> non loggare, ma conserva cookie
+          // to tmp -> non loggare ok
+          // from tmp -> non loggare, ma conserva cookie ok
           // to sync -> loggo se from non da tmp
+          // rm tmp -> non loggare ok
 
         default: {
           std::smatch match;
-          if (std::regex_match(path, match, temp_rgx) && event->mask == 64) {
-            cookies.push_back(event->cookie);
+          if (std::regex_match(path, match, temp_rgx)) {
+            if (event->mask == 64)
+              cookies.push_back(event->cookie);
           } else {
-            // moved to che non ha from tmp e non ha to tmp
-            if ((event->mask == 128 &&
-                 std::find(cookies.begin(), cookies.end(), event->cookie) ==
-                     cookies.end() &&
-                 !std::regex_match(path, match, temp_rgx)) ||
-                event->mask != 128) {
+
+            if (!(event->mask == 128 &&
+                  std::regex_match(path, match, temp_rgx)) &&
+                !(event->mask == 512 &&
+                  std::regex_match(path, match, temp_rgx)) &&
+                !(event->mask == 128 &&
+                  std::find(cookies.begin(), cookies.end(), event->cookie) !=
+                      cookies.end()) &&
+                (event->mask == 2 || event->mask == 128 || event->mask == 256 ||
+                 event->mask == 64 || event->mask == 512)) {
               LinuxEvent ev{path, event->cookie, event->mask};
               events[path] = ev;
             }
