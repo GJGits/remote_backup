@@ -17,7 +17,7 @@ file_list.forEach(fname => {
     let num_of_chunks = Math.ceil(fileSizeInBytes / chunk_size);
     let fd_in = fs.openSync(loc_fname, 'r');
     for (let i = 0; i < num_of_chunks; i++) {
-        let to_read = i < (num_of_chunks - 1) ? chunk_size : ((chunk_size * num_of_chunks) - fileSizeInBytes);
+        let to_read = i < (num_of_chunks - 1) ? chunk_size : (fileSizeInBytes - (chunk_size * (num_of_chunks - 1)));
         let buf = Buffer.alloc(to_read);
         fs.readSync(fd_in, buf, 0, to_read, (i * chunk_size));
         let fname_base64 = new Buffer(serv_fname);
