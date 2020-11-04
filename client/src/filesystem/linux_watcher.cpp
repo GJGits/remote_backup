@@ -226,8 +226,7 @@ void LinuxWatcher::handle_events() {
              (mask == 128 && (it + 1) != eves.end() &&
               (it + 1)->get_mask() == 64 &&
               (it + 1)->get_path().rfind(tmp_path, 0) == 0)) ||
-            (mask == 128 && (it + 1) != eves.end() &&
-             path.rfind(bin_path, 0) == 0)) {
+            (mask == 128 && path.rfind(bin_path, 0) == 0)) {
           it++;
           continue;
         }

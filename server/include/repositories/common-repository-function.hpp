@@ -7,6 +7,7 @@ public:
 
     static bool update_query(std::string &query,std::list<std::string> &entries_of_query, size_t db_selected){
         std::unique_ptr<sql::Statement> stmt;
+        std::clog << "db selected: " << db_selected << "\n";
         std::shared_ptr<sql::mysql::MySQL_Connection> mysqlConn = DBConnect::getConnection(db_selected);
         int i,size = entries_of_query.size();
 
@@ -25,6 +26,7 @@ public:
             size--;
         }
         query = query + query_splitted[i];
+        std::clog << "query: " << query << "\n";
         stmt = std::unique_ptr<sql::Statement>{std::move(mysqlConn->createStatement())}; // ricordare al posto di 0, di mettere il vero valore
         stmt->execute(query);
 

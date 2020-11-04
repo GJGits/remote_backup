@@ -52,6 +52,7 @@ if (action === "delete") {
         const content = { headers: { 'Authorization': 'Bearer ' + token } };
         const res = request("DELETE", uri, content);
         console.log(res.statusCode);
+        console.log(res);
     });
 }
 
