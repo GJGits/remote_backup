@@ -78,7 +78,7 @@ void SyncStructure::update_from_remote() {
   int last_page = 1;
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   while (current_page < last_page) {
-    json list = rest_client->get_status_list(current_page, last_check);
+    json list = rest_client->get_status_list(current_page, last_check)["list"];
     last_page = list["last_page"].get<int>();
     for (size_t y = 0; y < list["entries"].size(); y++) {
       std::string path = macaron::Base64::Decode(

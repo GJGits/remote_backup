@@ -37,12 +37,13 @@ public:
     return;
   } // static member function
 
-  template <typename V>
-  static http::server::reply
-  make_1line_dump_jsonReply(V value, http::server::reply::status_type status) {
-    http::server::reply rep = http::server::reply::stock_reply(status);
-    MakeReply::makejsonreply(rep, value);
-    return rep;
-  }
-
+  /*
+    template <typename V>
+    static http::server::reply
+    make_1line_dump_jsonReply(V value, http::server::reply::status_type status)
+    { http::server::reply rep = http::server::reply::stock_reply(status);
+      MakeReply::makejsonreply(rep, value);
+      return rep;
+    }
+  */
 };

@@ -1,11 +1,16 @@
 #include "../../include/filesystem/file_entry.hpp"
 
-FileEntry::FileEntry() : nchunks{1}, read_count{0}, buffer{nullptr} {}
+FileEntry::FileEntry() : nchunks{0}, read_count{0}, buffer{nullptr} {}
 
 FileEntry::FileEntry(const std::string &path, entry_producer producer,
                      entry_status status)
-    : path{path}, producer{producer}, nchunks{1}, status{status},
-      read_count{0}, buffer{nullptr} {}
+    : path{path}, producer{producer}, status{status},
+      read_count{0}, buffer{nullptr} {
+  if (std::filesystem::exists(path)) {
+    size = std::filesystem::file_size(path);
+    nchunks = ceil((double)size / CHUNK_SIZE);
+  }
+}
 
 FileEntry::FileEntry(const std::string &path, entry_producer producer,
                      size_t nchunks, size_t last_change, entry_status status)
@@ -20,8 +25,9 @@ entry_producer FileEntry::get_producer() const { return producer; }
 void FileEntry::set_status(entry_status status) { this->status = status; }
 entry_status FileEntry::get_status() const { return status; }
 size_t FileEntry::get_last_change() const { return last_change; }
-std::tuple<size_t, std::string> FileEntry::get_last_move() const {return last_move; }
-
+std::tuple<size_t, std::string> FileEntry::get_last_move() const {
+  return last_move;
+}
 
 std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
   DurationLogger log{"READ_CHUNK"};
@@ -29,12 +35,10 @@ std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
   in.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   // lazy init of infos
   if (buffer.get() == nullptr) {
-    size = std::filesystem::file_size(path);
     struct stat sb;
     stat(path.c_str(), &sb);
     last_change = (size_t)sb.st_ctime;
     buffer = std::shared_ptr<char[]>{new char[CHUNK_SIZE]};
-    nchunks = ceil((double)std::filesystem::file_size(path) / CHUNK_SIZE);
     memset(buffer.get(), '\0', CHUNK_SIZE);
   }
   size_t to_read = read_count < (nchunks - 1)
@@ -68,7 +72,6 @@ void FileEntry::retrieve_chunk() {
   size_t to_write = response.size();
   out.write(buffer.get(), to_write);
 }
-
 
 json FileEntry::to_json() {
   json entry = {{"path", path},

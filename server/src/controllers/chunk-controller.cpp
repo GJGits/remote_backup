@@ -1,10 +1,6 @@
 #include "../../include/controllers/chunk-controller.hpp"
 
-inline static std::regex post_chunk_rgx{
-    "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+\\/[\\w]+$"};
-
-inline static std::regex get_chunk_rgx{
-    "^\\/chunk\\/[\\w]+\\/[\\w=+]+$"};
+inline static std::regex get_chunk_rgx{"^\\/chunk\\/[\\w]+\\/[\\w=+]+$"};
 
 inline static std::regex put_chunk_rgx{"^\\/chunk\\/[\\w=+]+\\/[\\w=+]+$"};
 
@@ -19,11 +15,9 @@ ChunkController::handle(const http::server::request &req) {
       PostChunkDTO post_chunk{sub};
       post_chunk.fill(req, (*req.body).size());
       post_file_chunk(post_chunk);
-
       return http::server::reply::stock_reply_empty(http::server::reply::ok);
-
     }
-  }  else if (req.method == "GET") {
+  } else if (req.method == "GET") {
     std::smatch match;
     if (std::regex_search(req.uri.begin(), req.uri.end(), match,
                           get_chunk_rgx)) {
@@ -50,14 +44,11 @@ ChunkController::handle(const http::server::request &req) {
 
 void ChunkController::post_file_chunk(const PostChunkDTO &post_chunk) {
   DurationLogger logger{"POST_CHUNK"};
-  std::clog << "qui si\n";
   std::shared_ptr<ChunkService> chunk_service = ChunkService::getInstance();
   chunk_service->file_chunk_add(post_chunk);
 }
-
 
 size_t ChunkController::get_file_chunk(const GetChunkDTO &get_chunk) {
   std::shared_ptr<ChunkService> chunk_service = ChunkService::getInstance();
   return chunk_service->file_chunk_get(get_chunk);
 }
-

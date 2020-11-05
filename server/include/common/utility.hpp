@@ -3,7 +3,6 @@
 #include <vector>
 #include <list>
 #include <memory>
-#include "../entities/db-connect.hpp"
 
 class Utility {
 

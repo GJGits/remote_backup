@@ -1,6 +1,7 @@
 #include "../../include/modules/gui_module.hpp"
 
-void GuiModule::init_sub_list() {}
+void GuiModule::init_sub_list() {
+}
 
 void GuiModule::add_module(const std::shared_ptr<Module> &module) {
   modules.push_back(module);

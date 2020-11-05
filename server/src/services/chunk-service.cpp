@@ -2,8 +2,6 @@
 
 
 void ChunkService::file_chunk_add(const PostChunkDTO &post_chunk) {
-    std::clog << "qui spero\n";
-
   if (Sha256::getSha256(*post_chunk.getchunk_body())
           .compare(post_chunk.getchunk_hash()) == 0) {
     DurationLogger logger{"WRITE FILE_SYSTEM"};        

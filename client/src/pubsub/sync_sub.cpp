@@ -43,7 +43,7 @@ void SyncSubscriber::on_new_file(const Message &message) {
   DurationLogger logger{"NEW_FILE"};
   std::shared_ptr<FileEntry> fentry = message.get_content();
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-  if (fentry->get_producer() == entry_producer::local) {
+  if (fentry->get_producer() == entry_producer::local && fentry->has_chunk()) {
     broker->publish(Message{TOPIC::ADD_ENTRY, fentry});
     while (fentry->has_chunk()) {
       std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry->next_chunk();
@@ -61,7 +61,7 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
   DurationLogger logger{"FILE_DELETED"};
   std::shared_ptr<FileEntry> fentry = message.get_content();
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-  if (fentry->get_producer() == entry_producer::local) {
+  if (fentry->get_producer() == entry_producer::local && fentry->has_chunk()) {
     rest_client->delete_file(fentry->get_path());
     broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
   }
