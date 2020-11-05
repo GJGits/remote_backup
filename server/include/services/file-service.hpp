@@ -6,7 +6,7 @@
 #include "../dtos/signup_dto.hpp"
 
 #include "../dtos/delete_file_dto.hpp"
-
+#include "../common/singleton.hpp"
 #include "../common/constants.hpp"
 #include "../common/jwt.hpp"
 #include "../common/sha256.hpp"
@@ -20,15 +20,13 @@
 #include <fstream>
 #include <iostream>
 
-class FileService {
+class FileService: public Singleton<FileService>  {
 private:
-  static inline std::shared_ptr<FileService> instance{nullptr};
-  std::shared_ptr<FileRepository> file_repository;
-  std::shared_ptr<UserRepository> user_repository;
+    friend class Singleton;
+    FileService(){}
 
 public:
   std::mutex mtx;
-  static std::shared_ptr<FileService> getInstance();
 
   const json getStatusFile(const GetStatusDTO &get_status_dto);
   void delete_file_service(const DeleteFileDTO &del_file);

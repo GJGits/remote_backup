@@ -20,5 +20,6 @@ FileController::handle(const http::server::request &req) {
 };
 
 void FileController::delete_file(const DeleteFileDTO &del_file) {
-  file_service->delete_file_service(del_file);
+    std::shared_ptr<FileService> file_service = FileService::getInstance();
+    file_service->delete_file_service(del_file);
 }

@@ -31,11 +31,11 @@ AuthController::handle(const http::server::request &req) {
 }
 
 const std::string AuthController::post_signin(const SigninDTO &user) {
-
-    std::shared_ptr<UserService> user_service = UserService::getInstance();
+  std::shared_ptr<UserService> user_service = UserService::getInstance();
   return user_service->login(user);
 }
 
 const std::string AuthController::post_signup(const SignupDTO &user) {
-  return user_service->signup(user);
+    std::shared_ptr<UserService> user_service = UserService::getInstance();
+    return user_service->signup(user);
 }

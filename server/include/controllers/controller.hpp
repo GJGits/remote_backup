@@ -10,10 +10,7 @@
 #include <sstream>
 
 
-
-class Controller {
-
+class Controller{
 public:
-	virtual const http::server::reply handle(const http::server::request &req) = 0;
-
+    virtual const http::server::reply handle(const http::server::request &req) = 0;
 };

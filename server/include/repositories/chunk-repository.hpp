@@ -4,12 +4,12 @@
 #include "../entities/db-connect.hpp"
 #include "../exceptions/exceptions.hpp"
 #include "common-repository-function.hpp"
+#include "../common/singleton.hpp"
 
-class ChunkRepository {
+class ChunkRepository: public Singleton<ChunkRepository>{
 private:
-  static inline std::shared_ptr<ChunkRepository> instance{nullptr};
+    friend class Singleton;
 
 public:
   bool add_or_update_Chunk(const ChunkEntity &chunk);
-  static std::shared_ptr<ChunkRepository> getInstance();
 };

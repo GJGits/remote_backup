@@ -10,12 +10,11 @@
 
 
 
-class AuthController : public Controller, public Singleton<AuthController> {
+class AuthController : public Controller, public Singleton<AuthController>{
 
 private:
     friend class Singleton;
-    std::shared_ptr<UserService> user_service;
-    AuthController(){    this->user_service = UserService::getInstance();}
+    AuthController(){}
 public:
 
   virtual const http::server::reply handle(const http::server::request &req);

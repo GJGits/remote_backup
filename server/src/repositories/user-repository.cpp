@@ -1,14 +1,8 @@
 #include "../../include/repositories/user-repository.hpp"
 
-std::shared_ptr<UserRepository> UserRepository::getInstance() {
-  if (instance.get() == nullptr) {
-    instance = std::shared_ptr<UserRepository>{};
-  }
-  return instance;
-}
+
 
 size_t UserRepository::insertUser(const UserEntity &user) {
-
 
     std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
     size_t db_selected = db_repinstance->insertUsernameInDB(user.getUsername());

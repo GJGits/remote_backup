@@ -7,12 +7,12 @@
 #include "../exceptions/exceptions.hpp"
 #include "../common/utility.hpp"
 #include "common-repository-function.hpp"
+#include "../common/singleton.hpp"
 
-class FileRepository {
+class FileRepository: public Singleton<FileRepository> {
 private:
-  static inline std::shared_ptr<FileRepository> instance{nullptr};
+    friend class Singleton;
 
 public:
   bool deleteFile(const FileEntity &chunk);
-  static std::shared_ptr<FileRepository> getInstance();
 };
