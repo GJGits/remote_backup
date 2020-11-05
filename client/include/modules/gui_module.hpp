@@ -4,12 +4,12 @@
 #include <boost/asio.hpp>
 #include <iostream>
 
+#include "../modules/module.hpp"
 #include "../common/singleton.hpp"
-#include "../pubsub/broker.hpp"
 
 using boost::asio::ip::udp;
 
-class GuiModule : public Singleton<GuiModule> {
+class GuiModule : public Singleton<GuiModule>, public ModuleManager {
 
 private:
   friend class Singleton;
@@ -25,10 +25,11 @@ private:
   }
 
 public:
-  ~GuiModule() { std::clog << "gui module destroy...\n"; }
+  ~GuiModule() { std::clog << "gui module destroyx...\n"; }
   void init_sub_list();
+  void add_module(const std::shared_ptr<Module> &module);
   void start();
-  void stop(const Message &message);
+  void close();
   void start_receive();
   void handle_gui_message();
   void send_message(const Message &message);

@@ -49,7 +49,7 @@ private:
 
 public:
   void post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
-                  const std::string &target);
+                            const std::string &target);
   std::vector<char> get_chunk(const std::string &target);
   void delete_file(const std::string &path);
   json get_status_list(size_t page, size_t last_check);

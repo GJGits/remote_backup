@@ -4,7 +4,6 @@
 #include <errno.h>
 #include <iostream>
 #include <poll.h>
-#include <regex>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,22 +24,20 @@
 #define WAIT -1
 
 class LinuxWatcher
-    : public ParamSingleton<LinuxWatcher, std::string, u_int32_t>,
+    : public Singleton<LinuxWatcher>,
       public Module {
 private:
-  friend class ParamSingleton;
+  friend class Singleton;
   int pipe_[2];
   int timer;
   int inotify_descriptor;
   std::string root_to_watch;
   uint32_t watcher_mask;
   bool running;
-  std::regex temp_rgx;
-  std::regex bin_rgx;
   std::unordered_map<std::string, int> path_wd_map;
   std::unordered_map<int, std::string> wd_path_map;
   std::unordered_map<std::string, LinuxEvent> events;
-  LinuxWatcher(const std::string &root_to_watch, uint32_t mask);
+  LinuxWatcher();
 
 public:
   /**
@@ -75,19 +72,19 @@ public:
    * modulo è interessato. Attualmente questo modulo non prevede ulteriori
    * sottoscrizioni.
    */
-  void init_sub_list() {};
+  void init_sub_list(){};
 
   /**
    * Overload di Module::start(), necessario per definire la politica di
    * start del modulo specifico
    */
-  void start(const Message &message);
+  void start();
 
   /**
    * Overload di Module::stop(), necessario per definire la politica di
    * stop del modulo specifico
    */
-  void stop(const Message &message);
+  void stop();
 
   ~LinuxWatcher();
 };

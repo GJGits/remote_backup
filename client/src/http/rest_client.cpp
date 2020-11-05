@@ -58,8 +58,8 @@ std::vector<char> RestClient::get_chunk(const std::string &target) {
 
 void RestClient::delete_file(const std::string &path) {
   http::request<http::vector_body<char>> req{delete_prototype};
-
-  req.target("/file/" + macaron::Base64::Encode(path) + "/" + std::to_string((int)std::time(nullptr)));
+  req.target("/file/" + macaron::Base64::Encode(path) + "/" +
+             std::to_string((int)std::time(nullptr)));
   req.set(http::field::authorization, "Bearer " + std::string{config["token"]});
   http_client->up_request(req);
 }

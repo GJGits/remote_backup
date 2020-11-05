@@ -1,13 +1,11 @@
 #include "../../include/filesystem/file_entry.hpp"
 
-FileEntry::FileEntry() : nchunks{1}, read_count{0}, buffer{nullptr} {
-}
+FileEntry::FileEntry() : nchunks{1}, read_count{0}, buffer{nullptr} {}
 
 FileEntry::FileEntry(const std::string &path, entry_producer producer,
                      entry_status status)
     : path{path}, producer{producer}, nchunks{1}, status{status},
-      read_count{0}, buffer{nullptr} {
-}
+      read_count{0}, buffer{nullptr} {}
 
 FileEntry::FileEntry(const std::string &path, entry_producer producer,
                      size_t nchunks, size_t last_change, entry_status status)
@@ -15,7 +13,15 @@ FileEntry::FileEntry(const std::string &path, entry_producer producer,
       last_change{last_change}, status{status}, read_count{0}, buffer{nullptr} {
 }
 
+std::string FileEntry::get_path() const { return path; }
 bool FileEntry::has_chunk() { return read_count < nchunks; }
+size_t FileEntry::get_nchunks() const { return nchunks; }
+entry_producer FileEntry::get_producer() const { return producer; }
+void FileEntry::set_status(entry_status status) { this->status = status; }
+entry_status FileEntry::get_status() const { return status; }
+size_t FileEntry::get_last_change() const { return last_change; }
+std::tuple<size_t, std::string> FileEntry::get_last_move() const {return last_move; }
+
 
 std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
   DurationLogger log{"READ_CHUNK"};
@@ -63,4 +69,12 @@ void FileEntry::retrieve_chunk() {
   out.write(buffer.get(), to_write);
 }
 
-size_t FileEntry::get_nchunks() const { return nchunks; }
+
+json FileEntry::to_json() {
+  json entry = {{"path", path},
+                {"last_change", last_change},
+                {"status", status},
+                {"producer", producer},
+                {"nchunks", nchunks}};
+  return entry;
+}

@@ -23,6 +23,7 @@
 #include "../common/duration.hpp"
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"
+#include "../exceptions/exceptions.hpp"
 
 namespace beast = boost::beast; // from <boost/beast.hpp>
 namespace http = beast::http;   // from <boost/beast/http.hpp>
@@ -42,71 +43,18 @@ private:
   beast::tcp_stream stream{ioc};
   boost::asio::ip::basic_resolver_results<boost::asio::ip::tcp> results;
 
-  HTTPClient() {
-    try {
-      this->results = resolver.resolve(host, port);
-    } catch (const boost::exception &e) {
-      throw ConnectionNotAvaible();
-    }
-  }
-
-public:
-
-  void up_request(const http::request<http::vector_body<char>> &req) {
-    beast::tcp_stream str_temp{ioc};
-    uint8_t retry = 3;
-    while (retry) {
-      try {
-        DurationLogger logger{"COMPLETE REQUEST"};
-        str_temp.connect(results);
-        usleep(10000);
-        send(str_temp, req);
-        http::response<http::vector_body<char>> res = read(str_temp);
-        uint32_t result = res.result_int();
-        if (result == 200)
-          return;
-        if (result == 400) {
-          // todo: gestisci
-        }
-        retry--;
-      } catch (const boost::exception &e) {
-        throw ConnectionNotAvaible();
-      }
-    }
-    throw ConnectionNotAvaible();
-  }
-
-
-  json get_json(const http::request<http::vector_body<char>> &req) {
-    stream.connect(results);
-    send(stream, req);
-    http::response<http::vector_body<char>> res = read(stream);
-    std::string dump{res.body().begin(), res.body().end()};
-    return json::parse(dump);
-  }
-
-  std::vector<char>
-  get_binary(const http::request<http::vector_body<char>> &req) {
-    stream.connect(results);
-    send(stream, req);
-    http::response<http::vector_body<char>> res = read(stream);
-    return res.body();
-  }
+  HTTPClient();
 
   void send(beast::tcp_stream &stream,
-            const http::request<http::vector_body<char>> &request) {
-    DurationLogger{"SEND"};
-    http::write(stream, request);
-  }
+            const http::request<http::vector_body<char>> &request);
 
-  http::response<http::vector_body<char>> read(beast::tcp_stream &stream) {
-    DurationLogger{"READ"};
-    // This buffer is used for reading and must be persisted
-    beast::flat_buffer buffer;
-    // Declare a container to hold the response
-    http::response<http::vector_body<char>> res;
-    // Receive the HTTP response
-    http::read(stream, buffer, res);
-    return res;
-  }
+  http::response<http::vector_body<char>> read(beast::tcp_stream &stream);
+
+public:
+  void up_request(const http::request<http::vector_body<char>> &req);
+
+  json get_json(const http::request<http::vector_body<char>> &req);
+
+  std::vector<char>
+  get_binary(const http::request<http::vector_body<char>> &req);
 };

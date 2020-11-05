@@ -11,11 +11,7 @@ void SyncStructure::store() {
   json jstru = {{"entries", json::array()},
                 {"last_check", (int)std::time(nullptr)}};
   for (const auto &[path, fentry] : structure) {
-    json entry = {{"path", path},
-                  {"last_change", fentry->get_last_change()},
-                  {"status", fentry->get_status()},
-                  {"producer", fentry->get_producer()},
-                  {"nchunks", fentry->get_nchunks()}};
+    json entry = fentry->to_json();
     jstru["entries"].push_back(entry);
   }
   o << jstru << "\n";

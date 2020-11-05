@@ -11,10 +11,13 @@
 
 #include "../common/base64.hpp"
 #include "../common/duration.hpp"
+#include "../common/json.hpp"
 #include "../common/sha256.hpp"
 #include "../http/rest_client.hpp"
 
 #define CHUNK_SIZE 65536 // 64KB
+
+using json = nlohmann::json;
 
 enum entry_status { synced, new_, delete_ };
 enum entry_producer { local, server };
@@ -50,13 +53,14 @@ public:
             size_t last_change, entry_status status);
 
   bool has_chunk();
-  void set_status(entry_status status) { this->status = status; }
+  void set_status(entry_status status);
   std::tuple<std::shared_ptr<char[]>, size_t> next_chunk();
   size_t get_nchunks() const;
-  size_t get_last_change() const { return last_change; }
-  entry_status get_status() const { return status; }
-  std::string get_path() const { return path; }
-  entry_producer get_producer() const { return producer; }
+  size_t get_last_change() const;
+  entry_status get_status() const;
+  std::string get_path() const;
+  entry_producer get_producer() const;
+  std::tuple<size_t, std::string> get_last_move() const;
   std::string to_string() {
     return std::to_string(std::get<0>(last_move)) + "/" +
            std::get<1>(last_move) + "/" + std::to_string(nchunks) + "/" +
@@ -64,4 +68,5 @@ public:
   }
   void retrieve_chunk();
   void update_read_count() { read_count++; }
+  json to_json();
 };

@@ -11,7 +11,7 @@ void StructSubscriber::init_sub_list() {
                               instance.get(), std::placeholders::_1));
 }
 
-void StructSubscriber::start(const Message &message) {
+void StructSubscriber::start() {
   std::clog << "Struct module start...\n";
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   sync->restore();
@@ -20,7 +20,7 @@ void StructSubscriber::start(const Message &message) {
   notify_news();
 }
 
-void StructSubscriber::stop(const Message &message) {
+void StructSubscriber::stop() {
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   sync->store();
 }

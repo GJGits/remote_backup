@@ -21,13 +21,13 @@ void SyncSubscriber::init_sub_list() {
                               std::placeholders::_1));
 }
 
-void SyncSubscriber::start(const Message &message) {
+void SyncSubscriber::start() {
   std::clog << "sync module started...\n";
   running = true;
   init_workers();
 }
 
-void SyncSubscriber::stop(const Message &message) {
+void SyncSubscriber::stop() {
   std::clog << "sync module stop...\n";
   running = false;
   cv.notify_all();
@@ -127,7 +127,7 @@ void SyncSubscriber::restore_files() {
           [&](std::string &s1, std::string &s2) { return s1.compare(s2); });
 
       std::string new_path =
-           macaron::Base64::Decode(p.path().filename().string());
+          macaron::Base64::Decode(p.path().filename().string());
       std::clog << "new path: " << new_path << "\n";
       std::string temp_path = p.path().string() + ".out";
       std::ofstream out{temp_path, std::ios::binary};

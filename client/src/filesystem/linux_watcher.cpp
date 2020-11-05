@@ -1,8 +1,12 @@
 
 #include "../../include/filesystem/linux_watcher.hpp"
 
-LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
-    : root_to_watch{root_to_watch}, watcher_mask{mask}, running{false} {
+LinuxWatcher::LinuxWatcher()
+    : root_to_watch{"./sync"}, watcher_mask{IN_CREATE | IN_ONLYDIR | IN_DELETE |
+                                            IN_MODIFY | IN_MOVED_TO |
+                                            IN_MOVED_FROM | IN_ISDIR |
+                                            IN_IGNORED},
+      running{false} {
   std::clog << "Linux watcher module init...\n";
   // pipe per segnale exit al poll.
   //  - watcher scrive su 1
@@ -20,12 +24,6 @@ LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
     perror("inotify_init1");
     exit(-1);
   }
-  // regex che serve per evitare eventi su e da cartella .tmp
-  // cartella utilizzata per poggiare i download
-  temp_rgx = std::move(std::regex{"\\.\\/sync\\/\\.tmp\\/.*"});
-  // regex che serve per evitare eventi su e da cartella .bin
-  // cartella utilizzata per poggiare i file da eliminare
-  bin_rgx = std::move(std::regex{"\\.\\/sync\\/\\.bin\\/.*"});
 }
 
 LinuxWatcher::~LinuxWatcher() {
@@ -36,7 +34,7 @@ LinuxWatcher::~LinuxWatcher() {
   close(inotify_descriptor);
 }
 
-void LinuxWatcher::start(const Message &message) {
+void LinuxWatcher::start() {
   std::clog << "Linux watcher module start...\n";
   running = true;
   if (!std::filesystem::exists(root_to_watch))
@@ -45,7 +43,7 @@ void LinuxWatcher::start(const Message &message) {
   instance->handle_events();
 }
 
-void LinuxWatcher::stop(const Message &message) {
+void LinuxWatcher::stop() {
   running = false;
   instance->remove_watch(root_to_watch);
   short poll_sig = 1;
@@ -81,6 +79,8 @@ bool LinuxWatcher::remove_watch(const std::string &path) {
 void LinuxWatcher::handle_events() {
 
   std::clog << "Start monitoring...\n";
+  std::string tmp_path{"./sync/.tmp"};
+  std::string bin_path{"./sync/.bin"};
   while (running) {
     std::clog << "Wating for an event...\n";
     // Some systems cannot read integer variables if they are not
@@ -123,10 +123,13 @@ void LinuxWatcher::handle_events() {
 
         event = (const struct inotify_event *)ptr;
 
-        json message;
         const std::string path =
             wd_path_map[event->wd] + "/" + std::string{event->name};
-        message["path"] = path;
+        
+        //struct inotify_event evento{0, 256, 0, 0};
+        //strcpy(evento.name, path.c_str());
+        //std::clog << "evento nome: " << evento.name << "\n";
+        
 
         timer = TIMER;
 
@@ -138,8 +141,6 @@ void LinuxWatcher::handle_events() {
         // cartella 1073741888 -> move from cartella da terminale 1073741952
         // -> move to cartella da terminale
 
-        std::smatch match;
-
         switch (event->mask) {
 
         case 1073742080:
@@ -147,10 +148,7 @@ void LinuxWatcher::handle_events() {
           add_watch(path);
           for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
             if (p.is_regular_file()) {
-              std::clog << "path: " << path << ", event: " << event->mask
-                        << "\n";
-              std::smatch match;
-              if (!std::regex_match(path, match, temp_rgx)) {
+              if (!(path.rfind(tmp_path, 0) == 0)) {
                 std::string f_path = p.path().string();
                 LinuxEvent ev{f_path, 0, 256};
                 events[f_path] = ev;
@@ -181,14 +179,12 @@ void LinuxWatcher::handle_events() {
         default: {
 
           uint32_t mask = event->mask;
-          std::smatch match;
-          if ((std::regex_match(path, match, temp_rgx) && mask == 64) ||
-              (std::regex_match(path, match, bin_rgx) && mask == 128) ||
-              (!std::regex_match(path, match, temp_rgx) &&
-               !std::regex_match(path, match, bin_rgx) &&
+          if (((path.rfind(tmp_path, 0) == 0) && mask == 64) ||
+              ((path.rfind(bin_path, 0) == 0) && mask == 128) ||
+              (!(path.rfind(tmp_path, 0) == 0) &&
+               !(path.rfind(bin_path, 0) == 0) &&
                (mask == 2 || mask == 64 || mask == 128 || mask == 256 ||
                 mask == 512))) {
-            std::clog << "path: " << path << ", event: " << event->mask << "\n";
             LinuxEvent ev{path, event->cookie, event->mask};
             events[path] = ev;
           }
@@ -213,9 +209,6 @@ void LinuxWatcher::handle_events() {
                     return ev1.get_cookie() > ev2.get_cookie();
                   return ev1.get_mask() > ev2.get_mask();
                 });
-
-      std::string tmp_path{"./sync/.tmp"};
-      std::string bin_path{"./sync/.bin"};
 
       for (auto it = eves.begin(); it != eves.end(); it++) {
         std::string path = it->get_path();

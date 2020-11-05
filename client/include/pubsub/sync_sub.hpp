@@ -15,7 +15,6 @@
 #include "../common/utility.hpp"
 #include "../filesystem/file_entry.hpp"
 #include "../filesystem/sync_structure.hpp"
-#include "../http/rest_client.hpp"
 #include "../modules/module.hpp"
 
 using json = nlohmann::json;
@@ -33,8 +32,8 @@ private:
 
 public:
   ~SyncSubscriber();
-  void start(const Message &message);
-  void stop(const Message &message);
+  void start();
+  void stop();
   void init_sub_list();
   void init_workers();
   void on_new_file(const Message &message);

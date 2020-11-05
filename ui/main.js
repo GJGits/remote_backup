@@ -16,9 +16,10 @@ app.on('ready', () => {
   // tenere i codici in questa mappa in sync con la
   // mappa dei topics in utente.
   var topics = new Map();
-  topics.set("LOGGED_IN", 16);
-  topics.set("LOGGED_OUT", 17);
-  topics.set("CLOSE", 18);
+  topics.set("STOP", 0);
+  topics.set("START", 1);
+  topics.set("RESTART", 2);
+  topics.set("EXIT", 3);
 
   function on_open(menutItem, browserWindow, event) {
     mb.showWindow();
@@ -26,7 +27,7 @@ app.on('ready', () => {
 
   function on_close(menutItem, browserWindow, event) {
     console.log("click close");
-    client.send(Buffer.from([topics.get("CLOSE")]), 2800, client_ip, (err) => { console.log(err) });
+    client.send(Buffer.from([topics.get("EXIT")]), 2800, client_ip, (err) => { console.log(err) });
     mb.app.quit();
   }
 
@@ -57,13 +58,13 @@ app.on('ready', () => {
     ipcMain.on('config', (event, data) => {
       let conf = new ClientConf();
       conf.set(data);
-      client.send(Buffer.from([topics.get("LOGGED_IN")]), 2800, client_ip, (err) => { console.log(err) });
+      client.send(Buffer.from([topics.get("START")]), 2800, client_ip, (err) => { console.log(err) });
     });
 
     ipcMain.on('reset-config', (event, data) => {
       let conf = new ClientConf();
       conf.reset();
-      client.send(Buffer.from([topics.get("LOGGED_OUT")]), 2800, client_ip, (err) => { console.log(err) });
+      client.send(Buffer.from([topics.get("STOP")]), 2800, client_ip, (err) => { console.log(err) });
     });
 
     // UDP INSTANCE DEFINITION
@@ -94,12 +95,12 @@ app.on('ready', () => {
     let conf = new ClientConf();
     if (conf.isValid()) {
       mb.window.webContents.send('status-changed', "logged");
-      client.send(Buffer.from([topics.get("LOGGED_IN")]), 2800, client_ip, (err) => { console.log(err) });
+      client.send(Buffer.from([topics.get("START")]), 2800, client_ip, (err) => { console.log(err) });
     }
 
     else {
       mb.window.webContents.send('status-changed', "login");
-      client.send(Buffer.from([topics.get("LOGGED_OUT")]), 2800, client_ip, (err) => { console.log(err) });
+      client.send(Buffer.from([topics.get("STOP")]), 2800, client_ip, (err) => { console.log(err) });
     }
 
     mb.window.webContents.send('sync', "synced");

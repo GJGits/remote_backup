@@ -13,8 +13,8 @@ private:
   StructSubscriber();
 
 public:
-  void start(const Message &message);
-  void stop(const Message &message);
+  void start();
+  void stop();
   void init_sub_list();
   void on_add_entry(const Message &message);
   void on_delete_entry(const Message &message);
