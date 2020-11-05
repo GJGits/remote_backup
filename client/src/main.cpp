@@ -1,5 +1,6 @@
 #include <csignal>
 #include <iostream>
+#include <thread> // per debugging
 
 #include "../include/filesystem/linux_watcher.hpp"
 #include "../include/modules/gui_module.hpp"
@@ -15,6 +16,8 @@ void signalHandler(int signum) {
 }
 
 int main() {
+
+  std::clog << "app started [thread " << std::this_thread::get_id() << "]\n";
 
   // register signal SIGINT and signal handler
   signal(SIGTERM, signalHandler);

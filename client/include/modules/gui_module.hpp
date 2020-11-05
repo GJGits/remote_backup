@@ -3,7 +3,7 @@
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 #include <iostream>
-
+#include <thread> // per debugging su thread
 #include "../modules/module.hpp"
 #include "../common/singleton.hpp"
 

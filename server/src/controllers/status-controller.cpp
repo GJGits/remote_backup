@@ -12,8 +12,8 @@ StatusController::handle(const http::server::request &req) {
       GetStatusDTO get_status_dto{sub};
       get_status_dto.fill(req.uri);
       json list = get_status_file(get_status_dto);
-      return MakeReply::make_1line_jsonReply<std::string>(
-          "list", list.dump(), http::server::reply::ok);
+      return MakeReply::make_1line_jsonReply<json>(
+          "list", list, http::server::reply::ok);
     }
   }
   throw WrongRquestFormat();

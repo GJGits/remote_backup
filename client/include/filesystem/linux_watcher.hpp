@@ -11,6 +11,7 @@
 #include <sys/inotify.h>
 #include <unistd.h>
 #include <unordered_map>
+#include <thread>
 
 #include "../common/duration.hpp"
 #include "../common/singleton.hpp"
@@ -28,6 +29,7 @@ class LinuxWatcher
       public Module {
 private:
   friend class Singleton;
+  std::thread watcher;
   int pipe_[2];
   int timer;
   int inotify_descriptor;

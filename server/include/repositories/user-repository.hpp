@@ -11,6 +11,7 @@
 #include "../exceptions/exceptions.hpp"
 #include "common-repository-function.hpp"
 #include "../common/singleton.hpp"
+#include "db-repository.hpp"
 
 
 using json = nlohmann::json;

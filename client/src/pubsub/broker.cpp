@@ -18,6 +18,7 @@ Broker::Broker() : is_running{true} {
         }
         // sezione non critica
         try {
+          std::clog << "called fn() [thread " << std::this_thread::get_id() << "]\n";
           fn();
         }
 

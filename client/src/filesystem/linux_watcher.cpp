@@ -48,6 +48,7 @@ void LinuxWatcher::stop() {
   instance->remove_watch(root_to_watch);
   short poll_sig = 1;
   write(pipe_[1], &poll_sig, 1);
+  watcher.join();
   std::clog << "Linux watcher module stop...\n";
 }
 
@@ -78,165 +79,169 @@ bool LinuxWatcher::remove_watch(const std::string &path) {
 
 void LinuxWatcher::handle_events() {
 
-  std::clog << "Start monitoring...\n";
-  std::string tmp_path{"./sync/.tmp"};
-  std::string bin_path{"./sync/.bin"};
-  while (running) {
-    std::clog << "Wating for an event...\n";
-    // Some systems cannot read integer variables if they are not
-    // properly aligned. On other systems, incorrect alignment may
-    // decrease performance. Hence, the buffer used for reading from
-    // the inotify file descriptor should have the same alignment as
-    // struct inotify_event.
+  watcher = std::move(std::thread{[&]() {
+    std::clog << "Start monitoring... [thread " << std::this_thread::get_id()
+              << "]\n";
+    std::string tmp_path{"./sync/.tmp"};
+    std::string bin_path{"./sync/.bin"};
+    while (running) {
+      std::clog << "Wating for an event...\n";
+      // Some systems cannot read integer variables if they are not
+      // properly aligned. On other systems, incorrect alignment may
+      // decrease performance. Hence, the buffer used for reading from
+      // the inotify file descriptor should have the same alignment as
+      // struct inotify_event.
 
-    char buf[4096] __attribute__((aligned(__alignof__(struct inotify_event))));
-    memset(buf, '\0', 4096);
-    const struct inotify_event *event;
-    ssize_t len;
-    char *ptr; // ptr per consumare il buffer
+      char buf[4096]
+          __attribute__((aligned(__alignof__(struct inotify_event))));
+      memset(buf, '\0', 4096);
+      const struct inotify_event *event;
+      ssize_t len;
+      char *ptr; // ptr per consumare il buffer
 
-    // Puo' questo blocco essere spostato fuori dal for per singola
-    // inizializzazione?
-    int poll_num;
-    nfds_t nfds = 2;
-    struct pollfd fds[2];
-    fds[0].fd = inotify_descriptor;
-    fds[0].events = POLLIN; // maschera generale per eventi su fd?
-    fds[1].fd = pipe_[0];
-    fds[1].events = POLLIN;
+      // Puo' questo blocco essere spostato fuori dal for per singola
+      // inizializzazione?
+      int poll_num;
+      nfds_t nfds = 2;
+      struct pollfd fds[2];
+      fds[0].fd = inotify_descriptor;
+      fds[0].events = POLLIN; // maschera generale per eventi su fd?
+      fds[1].fd = pipe_[0];
+      fds[1].events = POLLIN;
 
-    // poll until an event occurs.Timeout = -1 -> BLOCKING,
-    // else timeout expressed in milliseconds
-    poll_num = poll(fds, nfds, timer);
-    if (fds[1].revents & POLLIN) {
-      break;
-    }
+      // poll until an event occurs.Timeout = -1 -> BLOCKING,
+      // else timeout expressed in milliseconds
+      poll_num = poll(fds, nfds, timer);
+      if (fds[1].revents & POLLIN) {
+        break;
+      }
 
-    if (poll_num > 0) {
-      len = read(inotify_descriptor, buf, sizeof buf);
-      // todo: check su read qui...
+      if (poll_num > 0) {
+        len = read(inotify_descriptor, buf, sizeof buf);
+        // todo: check su read qui...
 
-      for (ptr = buf; ptr < buf + len;
-           ptr += sizeof(struct inotify_event) + event->len) {
+        for (ptr = buf; ptr < buf + len;
+             ptr += sizeof(struct inotify_event) + event->len) {
 
-        DurationLogger duration{"HANDLING_EVENT"};
+          DurationLogger duration{"HANDLING_EVENT"};
 
-        event = (const struct inotify_event *)ptr;
+          event = (const struct inotify_event *)ptr;
 
-        const std::string path =
-            wd_path_map[event->wd] + "/" + std::string{event->name};
-        
-        //struct inotify_event evento{0, 256, 0, 0};
-        //strcpy(evento.name, path.c_str());
-        //std::clog << "evento nome: " << evento.name << "\n";
-        
+          const std::string path =
+              wd_path_map[event->wd] + "/" + std::string{event->name};
 
-        timer = TIMER;
+          // struct inotify_event evento{0, 256, 0, 0};
+          // strcpy(evento.name, path.c_str());
+          // std::clog << "evento nome: " << evento.name << "\n";
 
-        // eventi non presenti in inotify:
-        // 1073742080 -> copia incolla cartella da gui da fuori sync (con file
-        // e sotto cartelle) 1073741888 -> eliminazione cartella da gui (con
-        // file e sotto cartelle) 1073742336 -> eliminazione cartella da
-        // command line 1073741952 -> move da linea di comando riguardante una
-        // cartella 1073741888 -> move from cartella da terminale 1073741952
-        // -> move to cartella da terminale
+          timer = TIMER;
 
-        switch (event->mask) {
+          // eventi non presenti in inotify:
+          // 1073742080 -> copia incolla cartella da gui da fuori sync (con file
+          // e sotto cartelle) 1073741888 -> eliminazione cartella da gui (con
+          // file e sotto cartelle) 1073742336 -> eliminazione cartella da
+          // command line 1073741952 -> move da linea di comando riguardante una
+          // cartella 1073741888 -> move from cartella da terminale 1073741952
+          // -> move to cartella da terminale
 
-        case 1073742080:
-        case 1073741952: {
-          add_watch(path);
-          for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
-            if (p.is_regular_file()) {
-              if (!(path.rfind(tmp_path, 0) == 0)) {
-                std::string f_path = p.path().string();
-                LinuxEvent ev{f_path, 0, 256};
-                events[f_path] = ev;
+          switch (event->mask) {
+
+          case 1073742080:
+          case 1073741952: {
+            add_watch(path);
+            for (auto &p :
+                 std::filesystem::recursive_directory_iterator(path)) {
+              if (p.is_regular_file()) {
+                if (!(path.rfind(tmp_path, 0) == 0)) {
+                  std::string f_path = p.path().string();
+                  LinuxEvent ev{f_path, 0, 256};
+                  events[f_path] = ev;
+                }
               }
             }
-          }
 
-        } break;
+          } break;
 
-        case 1073741888:
-        case 1073742336: {
-          std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-          for (std::string &sync_path : sync->get_paths()) {
-            if (!std::filesystem::exists(sync_path)) {
-              LinuxEvent ev{sync_path, 0, 512};
-              events[sync_path] = ev;
+          case 1073741888:
+          case 1073742336: {
+            std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+            for (std::string &sync_path : sync->get_paths()) {
+              if (!std::filesystem::exists(sync_path)) {
+                LinuxEvent ev{sync_path, 0, 512};
+                events[sync_path] = ev;
+              }
             }
+
+          } break;
+
+            // to tmp -> non loggare ok
+            // from tmp -> non loggare, ma conserva cookie ok
+            // to sync -> loggo se from non da tmp
+            // rm tmp -> non loggare ok
+            // from sync -> loggo se to non bin
+
+          default: {
+
+            uint32_t mask = event->mask;
+            if (((path.rfind(tmp_path, 0) == 0) && mask == 64) ||
+                ((path.rfind(bin_path, 0) == 0) && mask == 128) ||
+                (!(path.rfind(tmp_path, 0) == 0) &&
+                 !(path.rfind(bin_path, 0) == 0) &&
+                 (mask == 2 || mask == 64 || mask == 128 || mask == 256 ||
+                  mask == 512))) {
+              LinuxEvent ev{path, event->cookie, event->mask};
+              events[path] = ev;
+            }
+
+          } break;
           }
+        }
+      }
+      if (poll_num == 0) {
 
-        } break;
+        timer = WAIT;
 
-          // to tmp -> non loggare ok
-          // from tmp -> non loggare, ma conserva cookie ok
-          // to sync -> loggo se from non da tmp
-          // rm tmp -> non loggare ok
-          // from sync -> loggo se to non bin
+        std::vector<LinuxEvent> eves{};
+        for (const auto &[path, event] : events) {
+          eves.push_back(event);
+        }
 
-        default: {
+        // ordine descrescente (cookie, mask)
+        std::sort(eves.begin(), eves.end(),
+                  [&](const LinuxEvent &ev1, const LinuxEvent &ev2) {
+                    if (ev1.get_cookie() != ev2.get_cookie())
+                      return ev1.get_cookie() > ev2.get_cookie();
+                    return ev1.get_mask() > ev2.get_mask();
+                  });
 
-          uint32_t mask = event->mask;
-          if (((path.rfind(tmp_path, 0) == 0) && mask == 64) ||
-              ((path.rfind(bin_path, 0) == 0) && mask == 128) ||
-              (!(path.rfind(tmp_path, 0) == 0) &&
+        for (auto it = eves.begin(); it != eves.end(); it++) {
+          std::string path = it->get_path();
+          uint32_t mask = it->get_mask();
+          // 1. se to sync e from tmp or to bin from sync -> skippo
+          if ((!(path.rfind(tmp_path, 0) == 0) &&
                !(path.rfind(bin_path, 0) == 0) &&
-               (mask == 2 || mask == 64 || mask == 128 || mask == 256 ||
-                mask == 512))) {
-            LinuxEvent ev{path, event->cookie, event->mask};
-            events[path] = ev;
+               (mask == 128 && (it + 1) != eves.end() &&
+                (it + 1)->get_mask() == 64 &&
+                (it + 1)->get_path().rfind(tmp_path, 0) == 0)) ||
+              (mask == 128 && path.rfind(bin_path, 0) == 0)) {
+            it++;
+            continue;
           }
-
-        } break;
+          // 2. altro -> invio messaggio
+          if (mask == 2 || mask == 128 || mask == 256) {
+            std::shared_ptr<FileEntry> content{
+                new FileEntry{path, entry_producer::local, entry_status::new_}};
+            broker->publish(Message{TOPIC::NEW_FILE, content});
+          }
+          if (mask == 64 || mask == 512) {
+            std::shared_ptr<FileEntry> content{new FileEntry{
+                path, entry_producer::local, entry_status::delete_}};
+            broker->publish(Message{TOPIC::FILE_DELETED, content});
+          }
         }
+
+        events.clear();
       }
     }
-    if (poll_num == 0) {
-
-      timer = WAIT;
-
-      std::vector<LinuxEvent> eves{};
-      for (const auto &[path, event] : events) {
-        eves.push_back(event);
-      }
-
-      // ordine descrescente (cookie, mask)
-      std::sort(eves.begin(), eves.end(),
-                [&](const LinuxEvent &ev1, const LinuxEvent &ev2) {
-                  if (ev1.get_cookie() != ev2.get_cookie())
-                    return ev1.get_cookie() > ev2.get_cookie();
-                  return ev1.get_mask() > ev2.get_mask();
-                });
-
-      for (auto it = eves.begin(); it != eves.end(); it++) {
-        std::string path = it->get_path();
-        uint32_t mask = it->get_mask();
-        // 1. se to sync e from tmp or to bin from sync -> skippo
-        if ((!(path.rfind(tmp_path, 0) == 0) &&
-             !(path.rfind(bin_path, 0) == 0) &&
-             (mask == 128 && (it + 1) != eves.end() &&
-              (it + 1)->get_mask() == 64 &&
-              (it + 1)->get_path().rfind(tmp_path, 0) == 0)) ||
-            (mask == 128 && path.rfind(bin_path, 0) == 0)) {
-          it++;
-          continue;
-        }
-        // 2. altro -> invio messaggio
-        if (mask == 2 || mask == 128 || mask == 256) {
-          std::shared_ptr<FileEntry> content{
-              new FileEntry{path, entry_producer::local, entry_status::new_}};
-          broker->publish(Message{TOPIC::NEW_FILE, content});
-        }
-        if (mask == 64 || mask == 512) {
-          std::shared_ptr<FileEntry> content{new FileEntry{
-              path, entry_producer::local, entry_status::delete_}};
-          broker->publish(Message{TOPIC::FILE_DELETED, content});
-        }
-      }
-
-      events.clear();
-    }
-  }
+  }});
 }

@@ -32,6 +32,7 @@ void GuiModule::start_receive() {
 
 void GuiModule::handle_gui_message() {
   int message = (int)recv_buffer_[0];
+  std::clog << "handle gui message: " << message << " [thread " <<  std::this_thread::get_id() << "]" <<"\n";
   switch (message) {
   case 0: // message stop da gui
     for (size_t i = 0; i < modules.size(); i++)
