@@ -1,14 +1,8 @@
 #include "../../include/services/chunk-service.hpp"
 
-std::shared_ptr<ChunkService> ChunkService::getInstance() {
-  if (instance.get() == nullptr) {
-    instance = std::shared_ptr<ChunkService>(new ChunkService{});
-    instance->chunk_repository = ChunkRepository::getInstance();
-  }
-  return instance;
-}
 
 void ChunkService::file_chunk_add(const PostChunkDTO &post_chunk) {
+    std::clog << "qui spero\n";
 
   if (Sha256::getSha256(*post_chunk.getchunk_body())
           .compare(post_chunk.getchunk_hash()) == 0) {
@@ -25,7 +19,8 @@ void ChunkService::file_chunk_add(const PostChunkDTO &post_chunk) {
           post_chunk.getchunk_size());
       {
         DurationLogger logger{"ADD_OR_UPDATE_DB"};
-        chunk_repository->add_or_update_Chunk(chunk_ent);
+          std::shared_ptr<ChunkRepository> chunk_repository = ChunkRepository::getInstance();
+          chunk_repository->add_or_update_Chunk(chunk_ent);
       }
 
       return;

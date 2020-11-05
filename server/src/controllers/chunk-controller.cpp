@@ -50,11 +50,14 @@ ChunkController::handle(const http::server::request &req) {
 
 void ChunkController::post_file_chunk(const PostChunkDTO &post_chunk) {
   DurationLogger logger{"POST_CHUNK"};
+  std::clog << "qui si\n";
+  std::shared_ptr<ChunkService> chunk_service = ChunkService::getInstance();
   chunk_service->file_chunk_add(post_chunk);
 }
 
 
 size_t ChunkController::get_file_chunk(const GetChunkDTO &get_chunk) {
+  std::shared_ptr<ChunkService> chunk_service = ChunkService::getInstance();
   return chunk_service->file_chunk_get(get_chunk);
 }
 

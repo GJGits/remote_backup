@@ -19,24 +19,26 @@ public:
 
 
   static std::shared_ptr<Controller> getController(const std::string &key) {
-    // se mappa non inizializzata
     if (instance.get() == nullptr) {
+        std::clog << "ho inizializzato\n";
+
         instance = std::shared_ptr<ControllerRouter>(new ControllerRouter{});
       controller_map["auth"] = AuthController::getInstance();
       controller_map["status"] = StatusController::getInstance();
       controller_map["chunk"] = ChunkController::getInstance();
       controller_map["file"] = FileController::getInstance();
       controller_map["test"] = TestController::getInstance();
-
-
-        // todo: inizializza
     }
-    // qui map ok, recupero controller
-    // todo: recupera controller qui:
+
+
     std::string analysis_stringa(key);
     char *res = std::strtok(const_cast<char *>(analysis_stringa.c_str()), "/");
-    if (controller_map[res] != nullptr) {
-      if (strcmp(res, "auth") == 0)
+      std::clog << "sono fuori\n";
+
+      if (controller_map[res] != nullptr) {
+        std::clog << "sono dentro\n";
+
+        if (strcmp(res, "auth") == 0)
         return AuthController::getInstance();
       else if (strcmp(res, "status") == 0)
         return StatusController::getInstance();

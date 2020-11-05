@@ -19,16 +19,12 @@
 #include "../common/constants.hpp"
 
 
-class UserService {
+class UserService: public Singleton<UserService> {
     private:
-    static inline std::shared_ptr<UserService> instance{nullptr};
-    std::shared_ptr<UserRepository> user_repository;
+    friend class Singleton;
+    UserService(){}
+
 public:
-
-
-    static std::shared_ptr<UserService> getInstance();
-
-
     std::string login(const SigninDTO &user);
     std::string signup(const SignupDTO &user);
     ~UserService() {}

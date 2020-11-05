@@ -17,13 +17,13 @@
 #include "../repositories/chunk-repository.hpp"
 
 
-class ChunkService {
+class ChunkService: public Singleton<ChunkService> {
 private:
-    static inline std::shared_ptr<ChunkService> instance{nullptr};
-    std::shared_ptr<ChunkRepository> chunk_repository;
+    friend class Singleton;
+    ChunkService(){}
+
 public:
     std::mutex mtx;
-    static std::shared_ptr<ChunkService> getInstance();
     void file_chunk_add(const PostChunkDTO &post_chunk);
     size_t file_chunk_get(const GetChunkDTO &get_chunk);
 

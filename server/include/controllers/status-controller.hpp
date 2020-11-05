@@ -16,8 +16,7 @@
 class StatusController : public Controller, public Singleton<StatusController> {
 private:
     friend class Singleton;
-    std::shared_ptr<FileService> file_service;
-    StatusController(){    this->file_service = FileService::getInstance();}
+    StatusController(){}
 
 public:
 

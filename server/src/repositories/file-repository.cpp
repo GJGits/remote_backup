@@ -1,11 +1,6 @@
 #include "../../include/repositories/file-repository.hpp"
 
-std::shared_ptr<FileRepository> FileRepository::getInstance() {
-  if (instance.get() == nullptr) {
-    instance = std::shared_ptr<FileRepository>{};
-  }
-  return instance;
-}
+
 
 bool FileRepository::deleteFile(const FileEntity &file) {
 

@@ -1,11 +1,5 @@
 #include "../../include/repositories/db-repository.hpp"
 
-std::shared_ptr<DBRepository> DBRepository::getInstance() {
-  if (instance.get() == nullptr) {
-    instance = std::shared_ptr<DBRepository>(new DBRepository{});
-  }
-  return instance;
-}
 
 int DBRepository::getDBbyUsername(const std::string &username) {
 

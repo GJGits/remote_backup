@@ -17,8 +17,7 @@ class ChunkController : public Controller, public Singleton<ChunkController> {
 
 private:
     friend class Singleton;
-    std::shared_ptr<ChunkService> chunk_service;
-    ChunkController(){    this->chunk_service = ChunkService::getInstance();}
+    ChunkController(){ }
 
 public:
     virtual const http::server::reply handle(const http::server::request &req);
