@@ -2,10 +2,10 @@
 #include "../entities/db-connect.hpp"
 #include "../exceptions/exceptions.hpp"
 #include "../common/singleton.hpp"
-#include "common-repository-function.hpp"
+#include "repository.hpp"
 
 
-class DBRepository : public Singleton<DBRepository>{
+class DBRepository : public Singleton<DBRepository>, public Repository{
 private:
     friend class Singleton;
 

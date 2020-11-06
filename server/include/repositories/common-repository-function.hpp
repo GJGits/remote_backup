@@ -47,7 +47,6 @@ public:
   select_query(std::string &query, std::list<std::string> &entries_of_query,
                size_t db_selected) {
 
-  return std::unique_ptr<sql::ResultSet>{
-      std::move(common_preparation_query(query, entries_of_query, db_selected)->executeQuery(query))};
+    return nullptr;
   }
 };

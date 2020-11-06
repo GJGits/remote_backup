@@ -17,6 +17,6 @@ bool ChunkRepository::add_or_update_Chunk(const ChunkEntity &chunk) {
   entries_of_query.push_back(chunk.get_subject().get_sub());
   entries_of_query.push_back(chunk.getFileName());
 
-  return CommonRepository::update_query(query, entries_of_query,
+  return update_query(query, entries_of_query,
                                         chunk.get_subject().get_db_id());
 }

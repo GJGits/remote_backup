@@ -9,14 +9,13 @@
 #include "../entities/db-connect.hpp"
 #include "../entities/user-entity.hpp"
 #include "../exceptions/exceptions.hpp"
-#include "common-repository-function.hpp"
 #include "../common/singleton.hpp"
 #include "db-repository.hpp"
-
+#include "repository.hpp"
 
 using json = nlohmann::json;
 
-class UserRepository : public Singleton<UserRepository>{
+class UserRepository : public Singleton<UserRepository>, public Repository{
 private:
     friend class Singleton;
 

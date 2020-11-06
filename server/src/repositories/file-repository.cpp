@@ -9,6 +9,6 @@ bool FileRepository::deleteFile(const FileEntity &file) {
     entries_of_query.push_back(file.get_subject().get_sub());
     entries_of_query.push_back(file.getPathFile());
 
-    return CommonRepository::update_query(query,entries_of_query,file.get_subject().get_db_id());
+    return update_query(query,entries_of_query,file.get_subject().get_db_id());
 
 }
