@@ -1,14 +1,8 @@
 #include "../../include/services/test-service.hpp"
 
-std::shared_ptr<TestService> TestService::getInstance() {
-    if (instance.get() == nullptr) {
-        instance = std::shared_ptr<TestService>(new TestService{});
-        instance->test_repository = TestRepository::getInstance();
-    }
-    return instance;
-}
 
 const json TestService::getTestDatabaseTable(const GetTestDatabaseDTO &get_test_database) {
+    std::shared_ptr<TestRepository> test_repository = TestRepository::getInstance();
     if(get_test_database.get_table_name().compare("chunks")==0)
         return test_repository->getTestDatabaseTableChunks(get_test_database);
     else if (get_test_database.get_table_name().compare("users")==0)
@@ -60,5 +54,6 @@ const json TestService::getTestFilesystemFilename(const GetTestFilesystemFilenam
 }
 
 void TestService::cleanDB() {
+    std::shared_ptr<TestRepository> test_repository = TestRepository::getInstance();
     test_repository->reset_db();
 }
