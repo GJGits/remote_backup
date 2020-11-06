@@ -14,11 +14,7 @@ Subject UserEntity::get_subject() const { return subject; }
 std::string UserEntity::getUsername() const { return username; }
 std::string UserEntity::getHashedPassword() const { return hashed_password; }
 uint32_t UserEntity::getSalt() const { return salt; }
-
 int UserEntity::getpage_num() const { return page_num;};
-
-
-
 
 void UserEntity::set_device_1_MAC(const std::string &mac){device_1_MAC = mac;};
 std::string UserEntity::get_device_1_MAC() const { return device_1_MAC;};

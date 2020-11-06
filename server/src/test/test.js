@@ -60,7 +60,7 @@ file_list.forEach(fname => {
     let num_of_chunks = Math.ceil(fileSizeInBytes / chunk_size);
     let fd_in = fs.openSync(fname, 'r');
     for (let i = 0; i < num_of_chunks; i++) {
-        let to_read = i < (num_of_chunks - 1) ? chunk_size : ((chunk_size * num_of_chunks) - fileSizeInBytes);
+        let to_read = i < (num_of_chunks - 1) ? chunk_size : (fileSizeInBytes - (chunk_size * (num_of_chunks-1)));
         let buf = Buffer.alloc(to_read);
         fs.readSync(fd_in, buf, 0, to_read, (i * chunk_size));
         let fname_base64 = new Buffer(fname);
@@ -77,7 +77,7 @@ file_list.forEach(fname => {
                     hash: hash.digest("hex"),
                     fname: fname_base64,
                     size: to_read,
-                    last_mod: stats.ctimeMs
+                    last_mod: Math.ceil(stats.ctime.getTime() / 1000)
                 });
         //}
 
@@ -117,7 +117,7 @@ test("Check response message", function (res, exp) {
 const combinations = [
     {
         method: "POST",
-        url: base_url + "0/abc/1/abd/12345",
+        url: base_url + "0/"+buff_list[0].hash+"/1/abd/12345",
         description: "richiesta senza token",
         content: Buffer.alloc(0),
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': 0}
@@ -131,7 +131,7 @@ const combinations = [
     },
     {
         method: "POST",
-        url: base_url + "abcd/7/dGhyZWFkLnBkZg==/1602506513",
+        url: base_url + ""+buff_list[0].hash+"/7/dGhyZWFkLnBkZg==/1602506513",
         description: "Non fornisco il chunk id",
         content: buff_list[0].content,
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[0].size,  'Authorization' : 'Bearer ' + token1 }
@@ -145,21 +145,21 @@ const combinations = [
     },
     {
         method: "POST",
-        url: base_url + "0/abcd/dGhyZWFkLnBkZg==/1602506513",
+        url: base_url + "0/"+buff_list[0].hash+"/dGhyZWFkLnBkZg==/1602506513",
         description: "Non fornisco il num chunks",
         content: buff_list[0].content,
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[0].size,  'Authorization' : 'Bearer ' + token1 }
     },
     {
         method: "POST",
-        url: base_url + "0/7/abcd/1602506513",
+        url: base_url + "0/7/"+buff_list[0].hash+"/1602506513",
         description: "Non fornisco il nome del file",
         content: buff_list[0].content,
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[0].size,  'Authorization' : 'Bearer ' + token1 }
     },
     {
         method: "POST",
-        url: base_url + "0/7/abcd/dGhyZWFkLnBkZg==",
+        url: base_url + "0/7/"+buff_list[0].hash+"/dGhyZWFkLnBkZg==",
         description: "Non fornisco il timestamp",
         content: buff_list[0].content,
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[0].size,  'Authorization' : 'Bearer ' + token1 }
@@ -173,70 +173,70 @@ const combinations = [
     },
     {
         method: "POST",
-        url: base_url + "0/e38a6ac491749f0c9de66384e732d3f1cb17cd045827525cf04d3e6dd17d8224/7/dGhyZWFkLnBkZg==/1602506513",
+        url: base_url + "0/"+buff_list[0].hash+"/7/dGhyZWFkLnBkZg==/1234",
         description: "Chunk 0 Esatto e giusto Thread.pdf",
         content: buff_list[0].content,
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[0].size,  'Authorization' : 'Bearer ' + token1 }
     },
     {
         method: "POST",
-        url: base_url + "2/80c3f7c017045bfe2a77aa7486a12631b0ae7f60750a6c3c0f6abd7b2e00c22e/7/dGhyZWFkLnBkZg==/1602506513",
+        url: base_url + "2/"+buff_list[2].hash+"/7/dGhyZWFkLnBkZg==/1234",
         description: "Chunk 2 Esatto e giusto Thread.pdf",
         content: buff_list[2].content,
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[2].size,  'Authorization' : 'Bearer ' + token1 }
     },
     {
         method: "POST",
-        url: base_url + "1/fb29b54398627437ca82ece684ea2feb1b771882e1d45a5acb338bfa158a2327/7/dGhyZWFkLnBkZg==/1602506513",
+        url: base_url + "1/"+buff_list[1].hash+"/7/dGhyZWFkLnBkZg==/1234",
         description: "Chunk 1 Esatto e giusto Thread.pdf",
         content: buff_list[1].content,
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[1].size,  'Authorization' : 'Bearer ' + token1 }
     },
     {
         method: "POST",
-        url: base_url + "3/25832f8a8120e0f4b6d57d9ef0372a8fb08fed55460604fefb9d289acf97b8d9/7/dGhyZWFkLnBkZg==/1602506513",
+        url: base_url + "3/"+buff_list[3].hash+"/7/dGhyZWFkLnBkZg==/1234",
         description: "Chunk 3 Esatto e giusto Thread.pdf",
         content: buff_list[3].content,
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[3].size,  'Authorization' : 'Bearer ' + token1 }
     },
     {
         method: "POST",
-        url: base_url + "4/c921ed2e4f80a4fbe91bceba64c9b84c3bace5f202386f8ba7e55b3468b1037a/7/dGhyZWFkLnBkZg==/1602506513",
+        url: base_url + "4/"+buff_list[4].hash+"/7/dGhyZWFkLnBkZg==/1234",
         description: "Chunk 4 Esatto e giusto Thread.pdf",
         content: buff_list[4].content,
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[4].size,  'Authorization' : 'Bearer ' + token1 }
     },
     {
         method: "POST",
-        url: base_url + "5/2676d091260928595d7d97fb3fbb8677ed6410a4826da8b3b31325341bca550f/7/dGhyZWFkLnBkZg==/1602506513",
+        url: base_url + "5/"+buff_list[5].hash+"/7/dGhyZWFkLnBkZg==/1234",
         description: "Chunk 5 Esatto e giusto Thread.pdf",
         content: buff_list[5].content,
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[5].size,  'Authorization' : 'Bearer ' + token1 }
     },
     {
         method: "POST",
-        url: base_url + "6/09c347df11c9518f8408f56992acf090bc48485497f0dc649c7b22bafc301cd8/7/dGhyZWFkLnBkZg==/1602506513",
+        url: base_url + "6/"+buff_list[6].hash+"/7/dGhyZWFkLnBkZg==/1234",
         description: "Chunk 6 Esatto e giusto Thread.pdf",
         content: buff_list[6].content,
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[6].size,  'Authorization' : 'Bearer ' + token1 }
     },
     {
         method: "POST",
-        url: base_url + "0/2e03b87fae9a2104bdc40bc1f5a4db4007566f8666c196e113abfb5d4e63226f/9/Z2VuZXJhbGkucGRm/1602506511",
+        url: base_url + "0/"+buff_list[7].hash+"/9/Z2VuZXJhbGkucGRm/1234",
         description: "Chunk 0 Esatto e giusto Generali.pdf",
         content: buff_list[7].content,
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[7].size,  'Authorization' : 'Bearer ' + token1 }
     },
     {
         method: "POST",
-        url: base_url + "1/0ba53c61e57398843c6fafff1ab46495254d4e13a6341c5cb4531a73866fa514/9/Z2VuZXJhbGkucGRm/1602506511",
+        url: base_url + "1/"+buff_list[8].hash+"/9/Z2VuZXJhbGkucGRm/1234",
         description: "Chunk 1 Esatto e giusto Generali.pdf",
         content: buff_list[8].content,
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[8].size,  'Authorization' : 'Bearer ' + token1 }
     },
     {
         method: "POST",
-        url: base_url + "1/7d96cd8fc8a94ea2c04eac39a4ab22e7a8e0e017778846cf21ffc1c9161a7fed/9/Z2VuZXJhbGkucGRm/16025065119999",
+        url: base_url + "1/"+buff_list[8].hash+"/9/Z2VuZXJhbGkucGRm/9999999999999999999",
         description: "Chunk 2 con timestamp esageratamente lungo Generali.pdf",
         content: buff_list[8].content,
         headers: { 'Content-Type': 'octect/stream', 'Content-Length': buff_list[8].size,  'Authorization' : 'Bearer ' + token1 }
