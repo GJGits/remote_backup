@@ -24,7 +24,6 @@ public:
   UserEntity(const std::string &username, const std::string &hashed_password,
              unsigned int salt);
 
-  UserEntity(const std::string &username, int page_num);
 
   Subject get_subject() const;
   std::string getUsername() const;

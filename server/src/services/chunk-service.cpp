@@ -36,5 +36,6 @@ size_t ChunkService::file_chunk_get(const GetChunkDTO &get_chunk) {
   std::ifstream ifile{fname};
   size_t size = std::filesystem::file_size(fname);
   ifile.read(get_chunk.get_content_buffer()->data(), size);
+
   return size;
 }

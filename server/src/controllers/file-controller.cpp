@@ -1,14 +1,13 @@
 #include "../../include/controllers/file-controller.hpp"
 
-inline static std::regex delete_rgx{"^\\/file\\/[\\w=+]+\\/\\d+$"};
-
+const std::regex FileController::get_delete_rgx(){return delete_rgx;};
 
 const http::server::reply
 FileController::handle(const http::server::request &req) {
   Subject sub = JWT::validateToken(req);
   if (req.method == "DELETE") {
     std::smatch match;
-    if (std::regex_search(req.uri.begin(), req.uri.end(), match, delete_rgx)) {
+    if (std::regex_search(req.uri.begin(), req.uri.end(), match, get_delete_rgx())) {
       DeleteFileDTO del_file{sub};
       del_file.fill(req);
       delete_file(del_file);

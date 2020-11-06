@@ -8,8 +8,7 @@ UserEntity::UserEntity(const std::string &username,
           device_4_MAC{""},device_5_MAC{""},device_6_MAC{""},
           device_7_MAC{""},device_8_MAC{""}{}
 
-UserEntity::UserEntity(const std::string &username, int page_num)
-        : username{username}, page_num{page_num} {}
+
 
 Subject UserEntity::get_subject() const { return subject; }
 std::string UserEntity::getUsername() const { return username; }
