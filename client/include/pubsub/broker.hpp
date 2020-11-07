@@ -15,6 +15,7 @@
 #include <iostream>
 #include <fstream>
 
+#include "../filesystem/resource_guard.hpp"
 #include "../exceptions/exceptions.hpp"
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"

@@ -6,9 +6,6 @@ SyncSubscriber::SyncSubscriber() : running{false} {
 
 SyncSubscriber::~SyncSubscriber() {
   running = false;
-  for (size_t i = 0; i < down_workers.size(); i++) {
-    down_workers[i].join();
-  }
   std::clog << "Sync module destroy...\n";
 }
 
@@ -24,20 +21,13 @@ void SyncSubscriber::init_sub_list() {
 void SyncSubscriber::start() {
   std::clog << "sync module started...\n";
   running = true;
-  init_workers();
 }
 
 void SyncSubscriber::stop() {
   std::clog << "sync module stop...\n";
   running = false;
-  cv.notify_all();
 }
 
-void SyncSubscriber::push(const std::shared_ptr<FileEntry> &task) {
-  std::unique_lock lk{m};
-  down_tasks.push(task);
-  cv.notify_one();
-}
 
 void SyncSubscriber::on_new_file(const Message &message) {
   DurationLogger logger{"NEW_FILE"};
@@ -50,11 +40,16 @@ void SyncSubscriber::on_new_file(const Message &message) {
       rest_client->post_chunk(chunk, fentry->to_string());
       fentry->update_read_count();
     }
-    fentry->set_status(entry_status::synced);
   }
   if (fentry->get_producer() == entry_producer::server) {
-    push(fentry);
+    for (size_t i = 0; i < fentry->get_nchunks(); i++) {
+      fentry->retrieve_chunk();
+      fentry->update_read_count();
+    }
+    restore_files();
   }
+  fentry->set_status(entry_status::synced);
+  broker->publish(Message{TOPIC::TRANSFER_COMPLETE, fentry});
 }
 
 void SyncSubscriber::on_file_deleted(const Message &message) {
@@ -63,55 +58,16 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   if (fentry->get_producer() == entry_producer::local && fentry->has_chunk()) {
     rest_client->delete_file(fentry->get_path());
-    broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
   }
   if (fentry->get_producer() == entry_producer::server) {
     std::filesystem::rename(fentry->get_path(), "./sync/.bin/a");
     std::remove("./sync/.bin/a");
-    broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
   }
-}
-
-void SyncSubscriber::init_workers() {
-  for (size_t i = 0; i < 2; i++) {
-    down_workers.emplace_back([&]() {
-      while (running) {
-        std::shared_ptr<FileEntry> task;
-        // sezione critica
-        {
-          std::unique_lock lk{m};
-          if (!down_tasks.empty()) {
-            task = down_tasks.front();
-            down_tasks.pop();
-          } else {
-            restore_files();
-            cv.wait(lk, [&]() { return !down_tasks.empty() || !running; });
-            continue;
-          }
-        }
-        // sezione non critica
-        for (size_t i = 0; i < task->get_nchunks(); i++) {
-          task->retrieve_chunk();
-          task->update_read_count();
-        }
-        task->set_status(entry_status::synced);
-      }
-    });
-  }
+  broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
+  broker->publish(Message{TOPIC::TRANSFER_COMPLETE, fentry});
 }
 
 void SyncSubscriber::restore_files() {
-
-  if (!std::filesystem::exists("./sync"))
-    throw SyncNotValid();
-
-  if (!std::filesystem::exists("./sync/.tmp")) {
-    std::clog << "tmp oddio\n";
-    throw TmpNotValid();
-  }
-
-  if (!std::filesystem::exists("./sync/.bin"))
-    throw BinNotValid();
 
   for (auto &p : std::filesystem::directory_iterator("./sync/.tmp")) {
     if (p.is_directory()) {

@@ -15,16 +15,38 @@ var change_status = (status) => {
     $(".alert.alert-danger.error").hide();
 }
 
+var update_usage = () => {
+    let size_prom = du('../client/sync/');
+    size_prom.then((size) => {
+        let percentage = ((size / (2 * 1024 * 1024 * 1024)) * 100) > 100 ? 100 : ((size / (2 * 1024 * 1024 * 1024)) * 100).toFixed(2);
+        $("#usage").text("Total space usage: " + percentage + "%");
+        $("#us_prog").removeClass();
+        $("#us_prog").addClass("progress-bar");
+        $("#us_prog").css("width", "" + parseInt(percentage) + "%");
+        $("#us_prog").attr("aria-valuenow", parseInt(percentage));
+    });
+}
+
 /* MESSAGES HANDLERS */
 
-ipcRenderer.on('asynchronous-message', (event, arg) => {
-    console.log("render receiced:", arg);
-    //event.reply('asynchronous-reply', 'pong')
+ipcRenderer.on('transfer', (event, arg) => {
+    if (arg.status === 0) {
+        $("#loading").hide();
+        $("#synced").show();
+        $("#noconn").hide();
+        update_usage();
+    } else {
+        $("#loading").show();
+        $("#synced").hide();
+        $("#noconn").hide();
+    }
 });
 
-ipcRenderer.on('synchronous-message', (event, arg) => {
+ipcRenderer.on('background-message', (event, arg) => {
     console.log("render receiced:", arg);
-    //event.returnValue = 'pong'
+    $("#loading").hide();
+    $("#synced").hide();
+    $("#noconn").show();
 });
 
 ipcRenderer.on('status-changed', (event, arg) => {
@@ -37,19 +59,12 @@ ipcRenderer.on('sync', (event, arg) => {
     if (arg === 'start-sync') {
         $("#loading").show();
         $("#synced").hide();
+        $("#noconn").hide();
     } else {
         $("#loading").hide();
         $("#synced").show();
-        let size_prom = du('../client/sync/');
-        size_prom.then((size) => {
-            let percentage = ((size / (2 * 1024 * 1024 * 1024)) * 100) > 100 ? 100 : ((size / (2 * 1024 * 1024 * 1024)) * 100).toFixed(2);
-            $("#usage").text("Total space usage: " + percentage + "%");
-            $("#us_prog").removeClass();
-            $("#us_prog").addClass("progress-bar");
-            $("#us_prog").css("width", "" + parseInt(percentage) + "%");
-            $("#us_prog").attr("aria-valuenow", parseInt(percentage));
-        });
-
+        $("#noconn").hide();
+        update_usage();
     }
 });
 
@@ -110,7 +125,7 @@ $(document).ready(function () {
         if (password !== ripPassword) {
             $("#rip-password")[0].setCustomValidity('Le due password non coincidono');
             $("#rip-password").attr('title', 'Le due password non coincidono');
-            $("#rip-password")[0].reportValidity(); 
+            $("#rip-password")[0].reportValidity();
         } else {
             if (supf.valid()) {
                 $.ajax({

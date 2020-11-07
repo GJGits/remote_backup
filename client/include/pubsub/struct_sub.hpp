@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "../filesystem/resource_guard.hpp"
 #include "../common/singleton.hpp"
 #include "../filesystem/sync_structure.hpp"
 #include "../modules/module.hpp"

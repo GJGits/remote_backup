@@ -36,7 +36,6 @@ class RestClient : public Singleton<RestClient>{
 
 private:
   friend class Singleton;
-  std::shared_ptr<HTTPClient> http_client;
   json config;
   http::request<http::vector_body<char>> post_prototype;
   http::request<http::vector_body<char>> put_prototype;

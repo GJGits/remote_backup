@@ -18,50 +18,35 @@ Broker::Broker() : is_running{true} {
         }
         // sezione non critica
         try {
-          std::clog << "called fn() [thread " << std::this_thread::get_id() << "]\n";
+          resource_guard guard{};
+          std::clog << "called fn() [thread " << std::this_thread::get_id()
+                    << "]\n";
           fn();
         }
 
-        catch (FileConfigNotValid &ex) {
+        catch (AuthFailed &ex) {
           std::clog << ex.what() << "\n";
-          std::ofstream o("./config/client-conf.json");
-          json struct_ = {{"username", ""}, {"token", ""}};
-          o << struct_ << "\n";
-          publish(Message{TOPIC::LOGGED_OUT});
-        }
-
-        catch (SyncNotValid &ex) {
-          std::clog << ex.what() << "\n";
-          std::filesystem::create_directory("./sync");
-          std::ofstream o("./config/client-struct.json");
-          json struct_ = {{"entries", json::array()}, {"last_check", 0}};
-          o << struct_ << "\n";
-          publish(Message{TOPIC::RESTART});
-        }
-
-        catch (TmpNotValid &ex) {
-          std::clog << ex.what() << "\n";
-          std::filesystem::create_directory("./sync/.tmp");
-          publish(Message{TOPIC::RESTART});
-        }
-
-        catch (BinNotValid &ex) {
-          std::clog << ex.what() << "\n";
-          std::filesystem::create_directory("./sync/.bin");
-          publish(Message{TOPIC::RESTART});
+          publish(Message{TOPIC::AUTH_FAILED});
         }
 
         catch (ConnectionNotAvaible &ex) {
           std::clog << ex.what() << "\n";
-          publish(Message{TOPIC::LOGGED_OUT});
+          publish(Message{TOPIC::CONNECTION_LOST});
         }
 
         catch (std::ifstream::failure &ex) {
-          std::clog << "Exception opening/reading/closing file\n";
+          std::clog << ex.what() << "\n";
+          publish(Message{TOPIC::EASY_EXCEPTION});
+        }
+
+        catch (std::filesystem::filesystem_error &ex) {
+          std::clog << ex.what() << "\n";
+          publish(Message{TOPIC::EASY_EXCEPTION});
         }
 
         catch (...) {
           std::clog << "The impossible happened!\n";
+          publish(Message{TOPIC::EASY_EXCEPTION});
         }
       }
     });

@@ -37,25 +37,29 @@ LinuxWatcher::~LinuxWatcher() {
 void LinuxWatcher::start() {
   std::clog << "Linux watcher module start...\n";
   running = true;
-  if (!std::filesystem::exists(root_to_watch))
-    throw SyncNotValid();
   instance->add_watch(root_to_watch);
   instance->handle_events();
 }
 
 void LinuxWatcher::stop() {
-  running = false;
-  instance->remove_watch(root_to_watch);
-  short poll_sig = 1;
-  write(pipe_[1], &poll_sig, 1);
-  watcher.join();
-  std::clog << "Linux watcher module stop...\n";
+  if (running) {
+    running = false;
+    instance->remove_watch(root_to_watch);
+    short poll_sig = 1;
+    write(pipe_[1], &poll_sig, 1);
+    watcher.join();
+    std::clog << "Linux watcher module stop...\n";
+  }
 }
 
-bool LinuxWatcher::add_watch(const std::string &path) {
+void LinuxWatcher::add_watch(const std::string &path) {
+  // add_watch su root_to_watch richiede che la cartella sync sia presente
+  // altrimenti il watch principale fallirebbe.
   int wd = inotify_add_watch(inotify_descriptor, path.c_str(), watcher_mask);
   if (wd == -1) {
-    return false;
+    throw std::filesystem::filesystem_error("directory: " + path +
+                                                " not found or not accessible!",
+                                            std::error_code{});
   }
   path_wd_map[path] = wd;
   wd_path_map[wd] = path;
@@ -64,7 +68,6 @@ bool LinuxWatcher::add_watch(const std::string &path) {
       add_watch(p.path().string());
     }
   }
-  return true;
 }
 
 bool LinuxWatcher::remove_watch(const std::string &path) {
@@ -91,28 +94,29 @@ void LinuxWatcher::handle_events() {
       // decrease performance. Hence, the buffer used for reading from
       // the inotify file descriptor should have the same alignment as
       // struct inotify_event.
-
       char buf[4096]
           __attribute__((aligned(__alignof__(struct inotify_event))));
       memset(buf, '\0', 4096);
       const struct inotify_event *event;
       ssize_t len;
       char *ptr; // ptr per consumare il buffer
-
-      // Puo' questo blocco essere spostato fuori dal for per singola
-      // inizializzazione?
       int poll_num;
       nfds_t nfds = 2;
       struct pollfd fds[2];
       fds[0].fd = inotify_descriptor;
-      fds[0].events = POLLIN; // maschera generale per eventi su fd?
+      fds[0].events = POLLIN;
       fds[1].fd = pipe_[0];
       fds[1].events = POLLIN;
 
       // poll until an event occurs.Timeout = -1 -> BLOCKING,
       // else timeout expressed in milliseconds
       poll_num = poll(fds, nfds, timer);
+      
       if (fds[1].revents & POLLIN) {
+        // consume signal altrimenti il byte rimane sul canale
+        // impedendo riavvio watcher in seguito ad uno stop.
+        char c;
+        read(fds[1].fd, &c, 1);
         break;
       }
 

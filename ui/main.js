@@ -43,6 +43,8 @@ app.on('ready', () => {
       icon: "remote-icon.png",
       tooltip: "show",
       browserWindow: {
+        width: 450,
+        height: 400,
         webPreferences: { nodeIntegration: true }
       }
     });
@@ -74,12 +76,19 @@ app.on('ready', () => {
     });
 
     server.on('message', (msg, rinfo) => {
-      console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+      //console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
       msg = new TextDecoder("utf-8").decode(msg);
-      if (msg === "login" || msg === "logged")
-        mb.window.webContents.send('status-changed', msg);
-      if (msg === "start-sync" || msg == "end-sync")
-        mb.window.webContents.send('sync', msg);
+      let obj = JSON.parse( msg );
+      if (obj.code === "transfer") {
+        mb.window.webContents.send('transfer', obj.message);
+      }
+      if (obj.code === "connection-lost") {
+        mb.window.webContents.send('background-message', msg);
+      }
+      if (obj.code === "auth-failed") {
+        mb.window.webContents.send('status-changed', "login");
+      }
+
     });
 
     server.on('listening', () => {
@@ -104,7 +113,7 @@ app.on('ready', () => {
     }
 
     mb.window.webContents.send('sync', "synced");
-    mb.window.openDevTools();
+    //mb.window.openDevTools();
   });
 
 

@@ -4,9 +4,12 @@ FileEntry::FileEntry() : nchunks{0}, read_count{0}, buffer{nullptr} {}
 
 FileEntry::FileEntry(const std::string &path, entry_producer producer,
                      entry_status status)
-    : path{path}, producer{producer}, status{status},
+    : path{path}, producer{producer}, nchunks{0}, status{status},
       read_count{0}, buffer{nullptr} {
   if (std::filesystem::exists(path)) {
+    struct stat sb;
+    stat(path.c_str(), &sb);
+    last_change = (size_t)sb.st_ctime;
     size = std::filesystem::file_size(path);
     nchunks = ceil((double)size / CHUNK_SIZE);
   }
@@ -35,9 +38,6 @@ std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
   in.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   // lazy init of infos
   if (buffer.get() == nullptr) {
-    struct stat sb;
-    stat(path.c_str(), &sb);
-    last_change = (size_t)sb.st_ctime;
     buffer = std::shared_ptr<char[]>{new char[CHUNK_SIZE]};
     memset(buffer.get(), '\0', CHUNK_SIZE);
   }

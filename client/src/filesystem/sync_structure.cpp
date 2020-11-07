@@ -2,8 +2,6 @@
 
 SyncStructure::SyncStructure() : last_check{0} {
   std::clog << "sync_struct init\n";
-  tmp_rgx = std::move(std::regex{"\\.\\/sync\\/\\.tmp\\/.*"});
-  bin_rgx = std::move(std::regex{"\\.\\/sync\\/\\.bin\\/.*"});
 }
 
 void SyncStructure::store() {
@@ -19,6 +17,7 @@ void SyncStructure::store() {
 
 void SyncStructure::restore() {
   std::ifstream i{"./config/client-struct.json"};
+  i.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   json j;
   i >> j;
   last_check = j["last_check"].get<int>();
@@ -52,22 +51,15 @@ void SyncStructure::update_from_fs() {
   for (const auto &p :
        std::filesystem::recursive_directory_iterator("./sync")) {
     std::string path = p.path().string();
-    std::smatch match;
-    if (!std::regex_match(path, match, tmp_rgx) &&
-        !std::regex_match(path, match, bin_rgx) && p.is_regular_file()) {
-      entry_producer producer = entry_producer::local;
-      struct stat sb;
-      stat(path.c_str(), &sb);
-      size_t last_change = (size_t)sb.st_ctime;
-      entry_status status = entry_status::new_;
-      size_t nchunks =
-          ceil((double)std::filesystem::file_size(path) / CHUNK_SIZE);
+    if (!(path.rfind("./sync/.tmp", 0) == 0) &&
+        !(path.rfind("./sync/.bin", 0) == 0) && p.is_regular_file()) {
       std::shared_ptr<FileEntry> entry{
-          new FileEntry{path, producer, nchunks, last_change, status}};
+          new FileEntry{path, entry_producer::local, entry_status::new_}};
       // secondo caso possibile solo per rename di cartella che
       // va a modificare esclusivamente il change_time dell'inode
       // riferito alla cartella, gli inode dei file rimangono invariati.
-      if (last_change > last_check || structure.find(path) == structure.end())
+      if (entry->get_last_change() > last_check ||
+          structure.find(path) == structure.end())
         add_entry(entry);
     }
   }

@@ -22,10 +22,11 @@ public:
 
 class ModuleManager {
 protected:
+  std::shared_ptr<Broker> broker;
   std::vector<std::shared_ptr<Module>> modules;
 
 public:
-  ModuleManager() {}
+  ModuleManager() { broker = Broker::getInstance(); }
   virtual void add_module(const std::shared_ptr<Module> &module) = 0;
   virtual void start() = 0;
   virtual void close() = 0;

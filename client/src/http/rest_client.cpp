@@ -5,23 +5,17 @@ RestClient::RestClient() {
   config = json::object();
   post_prototype = http::request<http::vector_body<char>>{http::verb::post,
                                                           "/some_target", 10};
-  put_prototype = http::request<http::vector_body<char>>{http::verb::put,
-                                                         "/some_target", 10};
   get_prototype = http::request<http::vector_body<char>>{http::verb::get,
                                                          "/some_target", 10};
   delete_prototype = http::request<http::vector_body<char>>{http::verb::delete_,
                                                             "/some_target", 10};
   read_info();
   fill_headers(post_prototype);
-  fill_headers(put_prototype);
   fill_headers(get_prototype);
   fill_headers(delete_prototype);
-  http_client = HTTPClient::getInstance();
 }
 
 void RestClient::read_info() {
-  if (!std::filesystem::exists("./config/client-conf.json"))
-    throw FileConfigNotValid();
   std::ifstream i("./config/client-conf.json");
   i >> config;
 }
@@ -36,6 +30,7 @@ void RestClient::fill_headers(http::request<http::vector_body<char>> &req,
 void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
                             const std::string &target) {
   DurationLogger log{"POST_CHUNK"};
+  std::shared_ptr<HTTPClient> http_client = HTTPClient::getInstance();
   std::shared_ptr<char[]> buffer = std::get<0>(chunk);
   size_t size = std::get<1>(chunk);
   http::request<http::vector_body<char>> req{post_prototype};
@@ -49,6 +44,7 @@ void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
 }
 
 std::vector<char> RestClient::get_chunk(const std::string &target) {
+  std::shared_ptr<HTTPClient> http_client = HTTPClient::getInstance();
   http::request<http::vector_body<char>> req{get_prototype};
   // chunk + id + file_path_base64
   req.target("/chunk/" + target);
@@ -57,6 +53,7 @@ std::vector<char> RestClient::get_chunk(const std::string &target) {
 }
 
 void RestClient::delete_file(const std::string &path) {
+  std::shared_ptr<HTTPClient> http_client = HTTPClient::getInstance();
   http::request<http::vector_body<char>> req{delete_prototype};
   req.target("/file/" + macaron::Base64::Encode(path) + "/" +
              std::to_string((int)std::time(nullptr)));

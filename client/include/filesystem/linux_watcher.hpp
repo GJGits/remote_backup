@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <thread>
 
+#include "../filesystem/resource_guard.hpp"
 #include "../common/duration.hpp"
 #include "../common/singleton.hpp"
 #include "../modules/module.hpp"
@@ -46,12 +47,10 @@ public:
    * Permette di aggiungere o modificare un watch all'inotify descriptor.
    *
    * @path: path relativo alla cartella o al file da monitorare.
-   * @mask: 4 byte per descrivere il codice di evento da monitorare
    *
-   * @return: true se l'evento e' stato aggiunto alla lista del monitoring,
-   *          false altrimenti.
+   * @throw: filesystem_error se root non presente
    */
-  bool add_watch(const std::string &path);
+  void add_watch(const std::string &path);
 
   /**
    * Dato il path di un file o di una cartella permette di rimuovere il
