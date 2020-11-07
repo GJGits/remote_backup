@@ -15,7 +15,7 @@ class TestController : public Controller, public Singleton<TestController> {
 private:
     friend class Singleton;
     std::shared_ptr<TestService> test_service;
-    TestController(){    this->test_service = TestService::getInstance();}
+    TestController(){}
 
 public:
     void delete_them_all();

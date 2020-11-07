@@ -1,7 +1,8 @@
 #include "../../include/controllers/auth-controller.hpp"
 
-inline static std::regex signin_rgx{"^\\{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\",\\s?\"mac_address\":\\s?\"[0-9a-f:]{17}\"\\}$"};
-inline static std::regex signup_rgx{"^\\{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\",\\s?\"password_confirm\":\\s?\"\\w+\",\\s?\"mac_address\":\\s?\"[0-9a-f:]{17}\"\\}$"};
+
+const std::regex AuthController::get_signin_rgx(){return signin_rgx;}
+const std::regex AuthController::get_signup_rgx(){return signup_rgx;}
 
 const http::server::reply
 AuthController::handle(const http::server::request &req) {

@@ -2,14 +2,14 @@ var request = require('sync-request');
 const fs = require("fs");
 const crypto = require('crypto');
 
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYiI6MiwiZGV2aWNlX2lkIjo0LCJleHAiOjE2MDQ2NTQ1MjQsInN1YiI6InJlbmF0byJ9.eyJzaWduIjoibW45Rk5CQ3R1WHh1ZjZNWklWclkxSDJIcThkSnhmQ2VCSVU3YXZwVVJWUT0ifQ==";
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYiI6MSwiZGV2aWNlX2lkIjoxLCJleHAiOjE2MDQ4MjU4MDAsInN1YiI6InJlbmF0byJ9.eyJzaWduIjoiV3pyTnp1YS8rc3RZNVovSjFLK0pDbDA2a2laRWN5MWJBNkl2V0xEbXl1TT0ifQ==";
 const chunk_size = 65536;
 const base_url = "http://0.0.0.0:3200/";
 
 // 1. genero chunks da file
-file_list = ["c#.pdf"];
+file_list = ["administrator_view_selected_class.php"];
 buff_list = []; // lista dalla quale attingere buffer da inviare
-action = "delete";
+action = "post";
 
 if (action === "post") {
     file_list.forEach(fname => {

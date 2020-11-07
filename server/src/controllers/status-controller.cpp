@@ -1,6 +1,8 @@
 #include "../../include/controllers/status-controller.hpp"
 
-inline static std::regex user_rgx_file{"^\\/status\\/list\\/[\\d]+\\/[\\d]+$"};
+
+const std::regex StatusController::get_user_rgx_file(){return user_rgx_file;}
+
 
 const http::server::reply
 StatusController::handle(const http::server::request &req) {

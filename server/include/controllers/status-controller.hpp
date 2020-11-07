@@ -16,10 +16,12 @@
 class StatusController : public Controller, public Singleton<StatusController> {
 private:
     friend class Singleton;
-    StatusController(){}
+    std::regex user_rgx_file;
+    StatusController(): user_rgx_file{std::move(std::regex{"^\\/status\\/list\\/[\\d]+\\/[\\d]+$"})}{}
 
 public:
 
     virtual const http::server::reply handle(const http::server::request &req);
   const json get_status_file(const GetStatusDTO &get_status_dto);
+  const std::regex get_user_rgx_file();
 };

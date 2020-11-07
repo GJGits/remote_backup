@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string.h>
 #include <vector>
+#include "../dtos/get_chunk_dto.hpp"
 
 using json = nlohmann::json;
 
@@ -37,13 +38,17 @@ public:
     return;
   } // static member function
 
-  /*
-    template <typename V>
-    static http::server::reply
-    make_1line_dump_jsonReply(V value, http::server::reply::status_type status)
-    { http::server::reply rep = http::server::reply::stock_reply(status);
-      MakeReply::makejsonreply(rep, value);
-      return rep;
+
+  static void makebinaryreply(http::server::reply &rep, size_t size) {
+      struct http::server::header con_len;
+      con_len.name = "Content-Length";
+      con_len.value = std::to_string(size);
+      struct http::server::header con_type;
+      con_type.name = "Content-Type";
+      con_type.value = "application/stream";
+      rep.headers.push_back(con_len);
+      rep.headers.push_back(con_type);
+      return;
     }
-  */
+
 };

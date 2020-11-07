@@ -2,6 +2,7 @@
 
 
 void ChunkService::file_chunk_add(const PostChunkDTO &post_chunk) {
+    std::clog << Sha256::getSha256(*post_chunk.getchunk_body()) << "\n";
   if (Sha256::getSha256(*post_chunk.getchunk_body())
           .compare(post_chunk.getchunk_hash()) == 0) {
     DurationLogger logger{"WRITE FILE_SYSTEM"};        
@@ -20,7 +21,6 @@ void ChunkService::file_chunk_add(const PostChunkDTO &post_chunk) {
           std::shared_ptr<ChunkRepository> chunk_repository = ChunkRepository::getInstance();
           chunk_repository->add_or_update_Chunk(chunk_ent);
       }
-
       return;
     }
 
@@ -36,5 +36,6 @@ size_t ChunkService::file_chunk_get(const GetChunkDTO &get_chunk) {
   std::ifstream ifile{fname};
   size_t size = std::filesystem::file_size(fname);
   ifile.read(get_chunk.get_content_buffer()->data(), size);
+
   return size;
 }

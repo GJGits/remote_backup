@@ -20,20 +20,19 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
-//#include "../repositories/db-repository.hpp"
+#include "../common/singleton.hpp"
 
 /**
  * TODO: questa classe deve essere un singleton
  */
 
-class DBConnect {
+class DBConnect : public Singleton<DBConnect>{
 
 private:
-
+    friend class Singleton;
     std::unordered_map<int, std::array<std::shared_ptr<sql::mysql::MySQL_Connection>, 4>> connections_map;
   
   std::array<int,4> indexes;
-  static inline std::shared_ptr<DBConnect>instance{nullptr};
   DBConnect()  {
      // ogni posizione in questo array indica l'utilizzo di una connessione per un determinato db
       indexes = {0, 0, 0, 0};

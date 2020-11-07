@@ -10,14 +10,12 @@
 #include "../common/constants.hpp"
 #include "../common/json.hpp"
 
-class TestService {
+class TestService: public Singleton<TestService> {
 private:
-    static inline std::shared_ptr<TestService> instance{nullptr};
-    std::shared_ptr<TestRepository> test_repository;
+    friend class Singleton;
+    TestService(){}
 public:
 
-
-    static std::shared_ptr<TestService> getInstance();
 
     void cleanDB();
     const json getTestDatabaseTable(const GetTestDatabaseDTO &get_test_database);

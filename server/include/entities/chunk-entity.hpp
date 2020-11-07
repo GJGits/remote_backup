@@ -12,12 +12,9 @@ private:
     std::string file_name;
     int last_mod;
     int num_chunks;
-    std::shared_ptr<std::vector<char>> chunk_body{new std::vector<char>{}};
 
 public:
     ChunkEntity(const PostChunkDTO &post_chunk);
-
-    ChunkEntity(const GetChunkDTO &get_chunk);
 
     Subject get_subject() const;
     int getIdChunk() const;
@@ -25,6 +22,5 @@ public:
     std::string getFileName() const;
     int getLastMod() const;
     int getNumChunks() const;
-    std::shared_ptr<std::vector<char>> getchunk_body() const;
 
 };
