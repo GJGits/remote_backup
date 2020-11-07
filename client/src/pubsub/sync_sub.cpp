@@ -34,6 +34,7 @@ void SyncSubscriber::on_new_file(const Message &message) {
   std::shared_ptr<FileEntry> fentry = message.get_content();
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   if (fentry->get_producer() == entry_producer::local && fentry->has_chunk()) {
+    std::clog << "file non vuoto: " << fentry->get_nchunks();
     broker->publish(Message{TOPIC::ADD_ENTRY, fentry});
     while (fentry->has_chunk()) {
       std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry->next_chunk();
@@ -56,13 +57,14 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
   DurationLogger logger{"FILE_DELETED"};
   std::shared_ptr<FileEntry> fentry = message.get_content();
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-  if (fentry->get_producer() == entry_producer::local && fentry->has_chunk()) {
+  if (fentry->get_producer() == entry_producer::local) {
     rest_client->delete_file(fentry->get_path());
   }
   if (fentry->get_producer() == entry_producer::server) {
     std::filesystem::rename(fentry->get_path(), "./sync/.bin/a");
     std::remove("./sync/.bin/a");
   }
+  fentry->set_status(entry_status::synced);
   broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
   broker->publish(Message{TOPIC::TRANSFER_COMPLETE, fentry});
 }

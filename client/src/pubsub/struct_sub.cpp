@@ -2,6 +2,10 @@
 
 StructSubscriber::StructSubscriber() { std::clog << "Struct module init...\n"; }
 
+StructSubscriber::~StructSubscriber() {
+  std::clog << "Struct module destroy...\n";
+}
+
 void StructSubscriber::init_sub_list() {
   broker->subscribe(TOPIC::ADD_ENTRY,
                     std::bind(&StructSubscriber::on_add_entry, instance.get(),
@@ -27,12 +31,14 @@ void StructSubscriber::stop() {
 }
 
 void StructSubscriber::on_add_entry(const Message &message) {
+  std::unique_lock lock{m1};
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   std::shared_ptr<FileEntry> entry = message.get_content();
   sync->add_entry(entry);
 }
 
 void StructSubscriber::on_delete_entry(const Message &message) {
+  std::unique_lock lock{m1};
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   sync->remove_entry(message.get_content());
 }

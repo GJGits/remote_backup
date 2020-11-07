@@ -4,8 +4,8 @@ FileEntry::FileEntry() : nchunks{0}, read_count{0}, buffer{nullptr} {}
 
 FileEntry::FileEntry(const std::string &path, entry_producer producer,
                      entry_status status)
-    : path{path}, producer{producer}, nchunks{0}, status{status},
-      read_count{0}, buffer{nullptr} {
+    : path{path}, producer{producer}, nchunks{0},
+      last_change{0}, status{status}, read_count{0}, buffer{nullptr} {
   if (std::filesystem::exists(path)) {
     struct stat sb;
     stat(path.c_str(), &sb);
@@ -21,6 +21,9 @@ FileEntry::FileEntry(const std::string &path, entry_producer producer,
       last_change{last_change}, status{status}, read_count{0}, buffer{nullptr} {
 }
 
+void FileEntry::set_producer(entry_producer producer) {
+  this->producer = producer;
+}
 std::string FileEntry::get_path() const { return path; }
 bool FileEntry::has_chunk() { return read_count < nchunks; }
 size_t FileEntry::get_nchunks() const { return nchunks; }

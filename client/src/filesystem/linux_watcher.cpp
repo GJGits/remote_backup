@@ -27,11 +27,13 @@ LinuxWatcher::LinuxWatcher()
 }
 
 LinuxWatcher::~LinuxWatcher() {
-  std::clog << "Linux Watcher destroy...\n";
   // Quando l'oggetto viene distrutto rilascio il file descriptor
   // in questo modo il kernel ha la possibilità di riassegnarlo ad
   // un altro processo.
   close(inotify_descriptor);
+  if (watcher.joinable())
+    watcher.join();
+  std::clog << "Linux Watcher destroy...\n";
 }
 
 void LinuxWatcher::start() {
@@ -111,13 +113,14 @@ void LinuxWatcher::handle_events() {
       // poll until an event occurs.Timeout = -1 -> BLOCKING,
       // else timeout expressed in milliseconds
       poll_num = poll(fds, nfds, timer);
-      
+
       if (fds[1].revents & POLLIN) {
         // consume signal altrimenti il byte rimane sul canale
         // impedendo riavvio watcher in seguito ad uno stop.
+        std::clog << "ricevuto segnale di chiusura da poll\n";
         char c;
         read(fds[1].fd, &c, 1);
-        break;
+        continue;
       }
 
       if (poll_num > 0) {
@@ -238,9 +241,16 @@ void LinuxWatcher::handle_events() {
             broker->publish(Message{TOPIC::NEW_FILE, content});
           }
           if (mask == 64 || mask == 512) {
-            std::shared_ptr<FileEntry> content{new FileEntry{
-                path, entry_producer::local, entry_status::delete_}};
-            broker->publish(Message{TOPIC::FILE_DELETED, content});
+            std::shared_ptr<SyncStructure> sync_structure =
+                SyncStructure::getInstance();
+            std::optional<std::shared_ptr<FileEntry>> fentry =
+                sync_structure->get_entry(path);
+            if (fentry.has_value()) {
+              std::shared_ptr<FileEntry> content = fentry.value();
+              content->set_status(entry_status::delete_);
+              content->set_producer(entry_producer::local);
+              broker->publish(Message{TOPIC::FILE_DELETED, content});
+            }
           }
         }
 

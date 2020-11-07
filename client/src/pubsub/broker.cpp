@@ -54,11 +54,12 @@ Broker::Broker() : is_running{true} {
 }
 
 Broker::~Broker() {
-  std::clog << "broker destroy\n";
   is_running = false;
+  ncv.notify_all();
   for (ssize_t i = 0; i < 4; i++) {
     callers[i].join();
   }
+  std::clog << "broker destroy\n";
 }
 
 void Broker::subscribe(const TOPIC &topic,

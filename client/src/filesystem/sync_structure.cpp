@@ -4,6 +4,10 @@ SyncStructure::SyncStructure() : last_check{0} {
   std::clog << "sync_struct init\n";
 }
 
+SyncStructure::~SyncStructure() {
+  std::clog << "sync_struct destroy...\n";
+}
+
 void SyncStructure::store() {
   std::ofstream o{"./config/client-struct.json"};
   json jstru = {{"entries", json::array()},
@@ -58,8 +62,10 @@ void SyncStructure::update_from_fs() {
       // secondo caso possibile solo per rename di cartella che
       // va a modificare esclusivamente il change_time dell'inode
       // riferito alla cartella, gli inode dei file rimangono invariati.
-      if (entry->get_last_change() > last_check ||
-          structure.find(path) == structure.end())
+      if ((entry->get_last_change() > last_check &&
+           std::filesystem::file_size(path) > 0) ||
+          (structure.find(path) == structure.end() &&
+           std::filesystem::file_size(path) > 0))
         add_entry(entry);
     }
   }
@@ -102,6 +108,13 @@ void SyncStructure::add_entry(const std::shared_ptr<FileEntry> &entry) {
 
 void SyncStructure::remove_entry(const std::shared_ptr<FileEntry> &entry) {
   structure.erase(entry->get_path());
+}
+
+std::optional<std::shared_ptr<FileEntry>>
+SyncStructure::get_entry(const std::string &path) {
+  return structure.find(path) != structure.end()
+             ? std::optional<std::shared_ptr<FileEntry>>{structure[path]}
+             : std::nullopt;
 }
 
 std::vector<std::string> SyncStructure::get_paths() {

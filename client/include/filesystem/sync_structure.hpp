@@ -5,10 +5,12 @@
 #include <fstream>
 #include <iostream>
 #include <unordered_map>
+#include <optional>
 
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"
 #include "file_entry.hpp"
+
 
 using json = nlohmann::json;
 
@@ -22,6 +24,7 @@ private:
   SyncStructure();
 
 public:
+  ~SyncStructure();
   /**
    * Aggiorna il file client-struct.json
    **/
@@ -52,6 +55,11 @@ public:
    * Rimuove entry dalla struttura
    * */
   void remove_entry(const std::shared_ptr<FileEntry> &entry);
+
+  /**
+   * Data un path recupera l'entry associata.
+   **/
+  std::optional<std::shared_ptr<FileEntry>> get_entry(const std::string &path);
 
   /**
    * Restituisce lista path contenuti in structure
