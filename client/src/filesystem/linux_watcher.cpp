@@ -49,7 +49,8 @@ void LinuxWatcher::stop() {
     instance->remove_watch(root_to_watch);
     short poll_sig = 1;
     write(pipe_[1], &poll_sig, 1);
-    watcher.join();
+    if (watcher.joinable())
+      watcher.join();
     std::clog << "Linux watcher module stop...\n";
   }
 }

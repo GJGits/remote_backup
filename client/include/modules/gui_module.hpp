@@ -5,6 +5,9 @@
 #include <boost/asio.hpp>
 #include <iostream>
 #include <thread> // per debugging su thread
+#include "../filesystem/linux_watcher.hpp"
+#include "../pubsub/struct_sub.hpp"
+#include "../pubsub/sync_sub.hpp"
 #include "../common/json.hpp"
 #include "../modules/module.hpp"
 #include "../common/singleton.hpp"

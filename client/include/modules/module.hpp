@@ -15,8 +15,8 @@ public:
   virtual void stop() = 0;
   virtual void init_sub_list() = 0;
   void restart() {
-    start();
     stop();
+    start();
   }
 };
 

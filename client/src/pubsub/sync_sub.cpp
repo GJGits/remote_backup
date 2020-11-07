@@ -28,7 +28,6 @@ void SyncSubscriber::stop() {
   running = false;
 }
 
-
 void SyncSubscriber::on_new_file(const Message &message) {
   DurationLogger logger{"NEW_FILE"};
   std::shared_ptr<FileEntry> fentry = message.get_content();
@@ -38,8 +37,15 @@ void SyncSubscriber::on_new_file(const Message &message) {
     broker->publish(Message{TOPIC::ADD_ENTRY, fentry});
     while (fentry->has_chunk()) {
       std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry->next_chunk();
-      rest_client->post_chunk(chunk, fentry->to_string());
-      fentry->update_read_count();
+      // se il file viene eliminato nel mezzo di un invio
+      size_t read = std::get<1>(chunk);
+      if (read > 0) {
+        rest_client->post_chunk(chunk, fentry->to_string());
+        fentry->update_read_count();
+      } else {
+        // todo: valutare azioni di ripristino
+        return;
+      }
     }
   }
   if (fentry->get_producer() == entry_producer::server) {
@@ -61,8 +67,10 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
     rest_client->delete_file(fentry->get_path());
   }
   if (fentry->get_producer() == entry_producer::server) {
-    std::filesystem::rename(fentry->get_path(), "./sync/.bin/a");
-    std::remove("./sync/.bin/a");
+    if (std::filesystem::exists(fentry->get_path())) {
+      std::filesystem::rename(fentry->get_path(), "./sync/.bin/a");
+      std::remove("./sync/.bin/a");
+    }
   }
   fentry->set_status(entry_status::synced);
   broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});

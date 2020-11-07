@@ -44,13 +44,16 @@ std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
     buffer = std::shared_ptr<char[]>{new char[CHUNK_SIZE]};
     memset(buffer.get(), '\0', CHUNK_SIZE);
   }
-  size_t to_read = read_count < (nchunks - 1)
-                       ? CHUNK_SIZE
-                       : (size - ((nchunks - 1) * CHUNK_SIZE));
-  in.seekg(read_count * CHUNK_SIZE);
-  in.read(buffer.get(), to_read);
-  last_move = std::tuple{read_count, Sha256::getSha256(buffer, to_read)};
-  return std::tuple(buffer, to_read);
+  if (std::filesystem::exists(path)) {
+    size_t to_read = read_count < (nchunks - 1)
+                         ? CHUNK_SIZE
+                         : (size - ((nchunks - 1) * CHUNK_SIZE));
+    in.seekg(read_count * CHUNK_SIZE);
+    in.read(buffer.get(), to_read);
+    last_move = std::tuple{read_count, Sha256::getSha256(buffer, to_read)};
+    return std::tuple(buffer, to_read);
+  }
+  return std::tuple(buffer, 0);
 }
 
 void FileEntry::retrieve_chunk() {

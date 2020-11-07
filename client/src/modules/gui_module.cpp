@@ -106,6 +106,26 @@ void GuiModule::handle_gui_message() {
 }
 
 void GuiModule::on_easy_exception(const Message &message) {
+/*
+  for (size_t i = 0; i < modules.size(); i++)
+    modules[i].reset();
+  modules.clear();
+
+  std::shared_ptr<StructSubscriber> struct_sub =
+      StructSubscriber::getInstance();
+  struct_sub->init_sub_list();
+
+  std::shared_ptr<SyncSubscriber> sync_sub = SyncSubscriber::getInstance();
+  sync_sub->init_sub_list();
+
+  std::shared_ptr<LinuxWatcher> watcher = LinuxWatcher::getInstance();
+  watcher->init_sub_list();
+
+  // registro moduli
+  add_module(struct_sub);
+  add_module(sync_sub);
+  add_module(watcher);
+*/
   for (size_t i = 0; i < modules.size(); i++)
     modules[i]->restart();
 }

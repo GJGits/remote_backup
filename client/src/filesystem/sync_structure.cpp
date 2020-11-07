@@ -4,19 +4,19 @@ SyncStructure::SyncStructure() : last_check{0} {
   std::clog << "sync_struct init\n";
 }
 
-SyncStructure::~SyncStructure() {
-  std::clog << "sync_struct destroy...\n";
-}
+SyncStructure::~SyncStructure() { std::clog << "sync_struct destroy...\n"; }
 
 void SyncStructure::store() {
-  std::ofstream o{"./config/client-struct.json"};
-  json jstru = {{"entries", json::array()},
-                {"last_check", (int)std::time(nullptr)}};
-  for (const auto &[path, fentry] : structure) {
-    json entry = fentry->to_json();
-    jstru["entries"].push_back(entry);
+  if (!structure.empty()) {
+    std::ofstream o{"./config/client-struct.json"};
+    json jstru = {{"entries", json::array()},
+                  {"last_check", (int)std::time(nullptr)}};
+    for (const auto &[path, fentry] : structure) {
+      json entry = fentry->to_json();
+      jstru["entries"].push_back(entry);
+    }
+    o << jstru << "\n";
   }
-  o << jstru << "\n";
 }
 
 void SyncStructure::restore() {

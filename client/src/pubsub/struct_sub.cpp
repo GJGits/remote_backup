@@ -26,6 +26,7 @@ void StructSubscriber::start() {
 
 void StructSubscriber::stop() {
   std::clog << "Struct module stop...\n";
+  std::unique_lock lock{m1};
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   sync->store();
 }
