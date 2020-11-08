@@ -1,5 +1,7 @@
 const fs = require('fs');
 
+const CONFIG_ROOT = "../client/config/"
+
 module.exports = class ClientConf {
 
     constructor() {

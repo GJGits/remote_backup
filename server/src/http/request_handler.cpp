@@ -114,7 +114,7 @@ void request_handler::handle_request(const request &req, reply &rep) {
 
   catch (InvalidJWT &e) {
     rep = MakeReply::make_1line_jsonReply<std::string>(
-        "error", e.what(), http::server::reply::bad_request);
+        "error", e.what(), http::server::reply::unauthorized);
     return;
   }
 
