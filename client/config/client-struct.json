@@ -1,1 +1,19 @@
-{"entries":[{"last_change":1604847221,"nchunks":7,"path":"./sync/c++ - thread.pdf","producer":0,"status":0}],"last_check":1604849321}
+{
+    "entries": [
+        {
+            "last_change": 1604847221,
+            "nchunks": 7,
+            "path": "./sync/c++ - thread.pdf",
+            "producer": 0,
+            "status": 0
+        },
+        {
+            "last_change": 1604853311,
+            "nchunks": 109,
+            "path": "./sync/test_7mega.tar.gz",
+            "producer": 0,
+            "status": 0
+        }
+    ],
+    "last_check": 1604855954
+}
