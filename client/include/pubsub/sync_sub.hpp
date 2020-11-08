@@ -12,7 +12,7 @@
 #include "../filesystem/resource_guard.hpp"
 #include "../common/singleton.hpp"
 #include "../common/utility.hpp"
-#include "../filesystem/file_entry.hpp"
+#include "../filesystem/entry_guard.hpp"
 #include "../filesystem/sync_structure.hpp"
 #include "../modules/module.hpp"
 

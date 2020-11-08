@@ -56,7 +56,9 @@ public:
   bool has_chunk();
   void set_producer(entry_producer producer);
   void set_status(entry_status status);
-  std::optional<std::tuple<std::shared_ptr<char[]>, size_t>> next_chunk();
+  std::tuple<std::shared_ptr<char[]>, size_t> next_chunk();
+  void set_read_count(size_t read_count) const;
+  void set_nchunks(size_t nchunks) const;
   size_t get_nchunks() const;
   size_t get_last_change() const;
   entry_status get_status() const;

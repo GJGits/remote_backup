@@ -1,78 +1,82 @@
 #include "../../include/repositories/user-repository.hpp"
 
-
-
 size_t UserRepository::insertUser(const UserEntity &user) {
 
-    std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
-    size_t db_selected = db_repinstance->insertUsernameInDB(user.getUsername());
+  std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
+  size_t db_selected = db_repinstance->insertUsernameInDB(user.getUsername());
 
-    std::string query ="INSERT INTO users(username, hashed_password, salt, "
-                       "device_1_MAC,device_2_MAC,device_3_MAC,device_4_MAC,device_5_MAC,"
-                       "device_6_MAC,device_7_MAC,device_8_MAC) VALUES('?', '?', "+std::to_string(user.getSalt())+", '?', '?', '?', '?', '?', '?', '?', '?')";
-    std::list<std::string> entries_of_query;
-    entries_of_query.push_back(user.getUsername());
-    entries_of_query.push_back(user.getHashedPassword());
-    entries_of_query.push_back(user.get_device_1_MAC());
-    entries_of_query.push_back(user.get_device_2_MAC());
-    entries_of_query.push_back(user.get_device_3_MAC());
-    entries_of_query.push_back(user.get_device_4_MAC());
-    entries_of_query.push_back(user.get_device_5_MAC());
-    entries_of_query.push_back(user.get_device_6_MAC());
-    entries_of_query.push_back(user.get_device_7_MAC());
-    entries_of_query.push_back(user.get_device_8_MAC());
-    update_query(query,entries_of_query,db_selected);
-    return db_selected;
-
+  std::string query =
+      "INSERT INTO users(username, hashed_password, salt, "
+      "device_1_MAC,device_2_MAC,device_3_MAC,device_4_MAC,device_5_MAC,"
+      "device_6_MAC,device_7_MAC,device_8_MAC) VALUES('?', '?', " +
+      std::to_string(user.getSalt()) +
+      ", '?', '?', '?', '?', '?', '?', '?', '?')";
+  std::list<std::string> entries_of_query;
+  entries_of_query.push_back(user.getUsername());
+  entries_of_query.push_back(user.getHashedPassword());
+  entries_of_query.push_back(user.get_device_1_MAC());
+  entries_of_query.push_back(user.get_device_2_MAC());
+  entries_of_query.push_back(user.get_device_3_MAC());
+  entries_of_query.push_back(user.get_device_4_MAC());
+  entries_of_query.push_back(user.get_device_5_MAC());
+  entries_of_query.push_back(user.get_device_6_MAC());
+  entries_of_query.push_back(user.get_device_7_MAC());
+  entries_of_query.push_back(user.get_device_8_MAC());
+  update_query(query, entries_of_query, db_selected);
+  return db_selected;
 }
 
-bool UserRepository::UserAlreadyPresent(const std::string &username){
+bool UserRepository::UserAlreadyPresent(const std::string &username) {
 
-    std::unique_ptr<sql::ResultSet> res;
+  std::unique_ptr<sql::ResultSet> res;
 
-    std::string query = "Select username from UsersDB where username = '?';";
-    std::list<std::string> entries_of_query;
-    entries_of_query.push_back(username);
+  std::string query = "Select username from UsersDB where username = '?';";
+  std::list<std::string> entries_of_query;
+  entries_of_query.push_back(username);
 
-    res = select_query(query,entries_of_query,0);
+  res = select_query(query, entries_of_query, 0);
 
-    if (res->next()) {
-        return true;
-    }
-    return false;
+  if (res->next()) {
+    return true;
+  }
+  return false;
 }
 
 void UserRepository::updateUser(const UserEntity &user) {
 
-    std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
-    size_t db_selected = db_repinstance->getDBbyUsername(user.getUsername());
+  std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
+  size_t db_selected = db_repinstance->getDBbyUsername(user.getUsername());
 
-    std::string query = "update users set device_1_MAC = '?', device_2_MAC = '?', device_3_MAC = '?', device_4_MAC = '?', device_5_MAC = '?', device_6_MAC = '?',device_7_MAC = '?', device_8_MAC = '?' where username = '?'";
-    std::list<std::string> entries_of_query;
-    entries_of_query.push_back(user.get_device_1_MAC());
-    entries_of_query.push_back(user.get_device_2_MAC());
-    entries_of_query.push_back(user.get_device_3_MAC());
-    entries_of_query.push_back(user.get_device_4_MAC());
-    entries_of_query.push_back(user.get_device_5_MAC());
-    entries_of_query.push_back(user.get_device_6_MAC());
-    entries_of_query.push_back(user.get_device_7_MAC());
-    entries_of_query.push_back(user.get_device_8_MAC());
-    entries_of_query.push_back(user.getUsername());
-    update_query(query,entries_of_query,db_selected);
-    return;
+  std::string query =
+      "update users set device_1_MAC = '?', device_2_MAC = '?', device_3_MAC = "
+      "'?', device_4_MAC = '?', device_5_MAC = '?', device_6_MAC = "
+      "'?',device_7_MAC = '?', device_8_MAC = '?' where username = '?'";
+  std::list<std::string> entries_of_query;
+  entries_of_query.push_back(user.get_device_1_MAC());
+  entries_of_query.push_back(user.get_device_2_MAC());
+  entries_of_query.push_back(user.get_device_3_MAC());
+  entries_of_query.push_back(user.get_device_4_MAC());
+  entries_of_query.push_back(user.get_device_5_MAC());
+  entries_of_query.push_back(user.get_device_6_MAC());
+  entries_of_query.push_back(user.get_device_7_MAC());
+  entries_of_query.push_back(user.get_device_8_MAC());
+  entries_of_query.push_back(user.getUsername());
+  update_query(query, entries_of_query, db_selected);
+  return;
 }
 
 UserEntity UserRepository::getUserByUsername(const std::string &username) {
 
-    std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
-    size_t db_selected = db_repinstance->getDBbyUsername(username);
-    std::unique_ptr<sql::ResultSet> res;
-    std::string query = "SELECT username,hashed_password, salt, "
-                        "device_1_MAC,device_2_MAC,device_3_MAC,device_4_MAC,device_5_MAC,device_"
-                        "6_MAC,device_7_MAC,device_8_MAC FROM users WHERE username = '?'";
-    std::list<std::string> entries_of_query;
-    entries_of_query.push_back(username);
-    res = select_query(query,entries_of_query,db_selected);
+  std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
+  size_t db_selected = db_repinstance->getDBbyUsername(username);
+  std::unique_ptr<sql::ResultSet> res;
+  std::string query =
+      "SELECT username,hashed_password, salt, "
+      "device_1_MAC,device_2_MAC,device_3_MAC,device_4_MAC,device_5_MAC,device_"
+      "6_MAC,device_7_MAC,device_8_MAC FROM users WHERE username = '?'";
+  std::list<std::string> entries_of_query;
+  entries_of_query.push_back(username);
+  res = select_query(query, entries_of_query, db_selected);
 
   if (res->next()) {
     std::string hashed_password = std::move(res->getString("hashed_password"));
@@ -100,34 +104,40 @@ UserEntity UserRepository::getUserByUsername(const std::string &username) {
   throw UsernameNotExists();
 }
 
+json UserRepository::get_status_file(const Subject &subject, int page_num,
+                                     int last_check) {
 
+  size_t db_selected = subject.get_db_id();
+  std::unique_ptr<sql::ResultSet> res;
+  std::string query =
+      "select t1.c_path, t1.num_chunks, t1.c_lastmod, t2.last_page, case when "
+      "t1.check1 = 0  then 'deleted' else 'updated' end as command from "
+      "(select distinct c_path, num_chunks, c_lastmod, device_id as check1 "
+      "from chunks where c_username = '?' AND (device_id != " +
+      std::to_string(subject.get_device_id()) + ") AND c_lastmod > " +
+      std::to_string(last_check) +
+      " "
+      "limit " +
+      std::to_string(page_num * ENTRIES_PAGE) + ", " +
+      std::to_string((page_num + 1) * ENTRIES_PAGE) +
+      ") as t1, (select(ceil((count(distinct c_path) / " +
+      std::to_string(ENTRIES_PAGE) +
+      "))) -1 as "
+      "last_page from chunks where c_username = '?' AND (device_id != " +
+      std::to_string(subject.get_device_id()) +
+      ") AND "
+      "c_lastmod > " +
+      std::to_string(last_check) + ") as t2;";
 
+  std::list<std::string> entries_of_query;
+  entries_of_query.push_back(subject.get_sub());
+  entries_of_query.push_back(subject.get_sub());
+  res = select_query(query, entries_of_query, db_selected);
 
-
-json UserRepository::get_status_file(const Subject &subject,
-                                     int page_num, int last_check) {
-
-    size_t db_selected = subject.get_db_id();
-    std::unique_ptr<sql::ResultSet> res;
-    std::string query =
-            "select t1.c_path, t1.num_chunks, t1.c_lastmod, t2.last_page, case when "
-            "t1.check1 = "+std::to_string(subject.get_device_id())+" then 'deleted' else 'updated' end as command from (select "
-            "distinct c_path, num_chunks, c_lastmod, device_id ^ "+std::to_string(subject.get_device_id())+" as check1 from "
-            "chunks where c_username = '?' AND(device_id ^ "+std::to_string(subject.get_device_id())+") != 0 AND c_lastmod > "+std::to_string(last_check)+" "
-            "limit "+std::to_string(page_num * ENTRIES_PAGE)+", "+std::to_string((page_num + 1) * ENTRIES_PAGE)+") as t1, (select(ceil((count(distinct c_path) / "+std::to_string(ENTRIES_PAGE)+"))) -1 as "
-            "last_page from chunks where c_username = '?' AND(device_id ^ "+std::to_string(subject.get_device_id())+") != 0 AND "
-             "c_lastmod > "+std::to_string(last_check)+") as t2;";
-
-    std::list<std::string> entries_of_query;
-    entries_of_query.push_back(subject.get_sub());
-    entries_of_query.push_back(subject.get_sub());
-    res = select_query(query,entries_of_query,db_selected);
-
-
-    json j;
-    j["entries"] = json::array();
-    j["current_page"] = page_num;
-    json j_single_path = {};
+  json j;
+  j["entries"] = json::array();
+  j["current_page"] = page_num;
+  json j_single_path = {};
 
   if (res->rowsCount() > 0) {
     for (int i = 0; i < ENTRIES_PAGE; i++) {

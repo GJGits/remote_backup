@@ -1,13 +1,13 @@
 #include "../../include/filesystem/sync_structure.hpp"
 
-SyncStructure::SyncStructure() : last_check{0} {
+SyncStructure::SyncStructure() : server_ack{false}, last_check{0} {
   std::clog << "sync_struct init\n";
 }
 
 SyncStructure::~SyncStructure() { std::clog << "sync_struct destroy...\n"; }
 
 void SyncStructure::store() {
-  if (!structure.empty()) {
+  if (!structure.empty() && server_ack) {
     std::ofstream o{"./config/client-struct.json"};
     json jstru = {{"entries", json::array()},
                   {"last_check", (int)std::time(nullptr)}};
@@ -94,6 +94,7 @@ void SyncStructure::update_from_remote() {
     }
     current_page++;
   }
+  server_ack = true;
 }
 
 void SyncStructure::add_entry(const std::shared_ptr<FileEntry> &entry) {

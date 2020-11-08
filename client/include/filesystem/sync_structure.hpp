@@ -18,6 +18,7 @@ class SyncStructure : public Singleton<SyncStructure> {
 
 private:
   friend class Singleton;
+  bool server_ack;
   std::unordered_map<std::string, std::shared_ptr<FileEntry>> structure;
   size_t last_check;
 

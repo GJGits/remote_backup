@@ -17,6 +17,7 @@ void StructSubscriber::init_sub_list() {
 
 void StructSubscriber::start() {
   if (!running) {
+    running = true;
     std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
     sync->restore();
     sync->update_from_fs();
@@ -28,6 +29,7 @@ void StructSubscriber::start() {
 
 void StructSubscriber::stop() {
   if (running) {
+    running = false;
     std::unique_lock lock{m1};
     std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
     sync->store();
