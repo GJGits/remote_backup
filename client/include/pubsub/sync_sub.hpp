@@ -19,7 +19,6 @@
 class SyncSubscriber : public Singleton<SyncSubscriber>, public Module {
 private:
   friend class Singleton;
-  bool running;
   SyncSubscriber();
 
 public:

@@ -1,8 +1,6 @@
 #include "../../include/pubsub/sync_sub.hpp"
 
-SyncSubscriber::SyncSubscriber() : running{false} {
-  std::clog << "Sync module init...\n";
-}
+SyncSubscriber::SyncSubscriber() { std::clog << "Sync module init...\n"; }
 
 SyncSubscriber::~SyncSubscriber() {
   running = false;
@@ -33,17 +31,15 @@ void SyncSubscriber::on_new_file(const Message &message) {
   std::shared_ptr<FileEntry> fentry = message.get_content();
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   if (fentry->get_producer() == entry_producer::local && fentry->has_chunk()) {
-    std::clog << "file non vuoto: " << fentry->get_nchunks();
     broker->publish(Message{TOPIC::ADD_ENTRY, fentry});
     while (fentry->has_chunk()) {
-      std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry->next_chunk();
-      // se il file viene eliminato nel mezzo di un invio
-      size_t read = std::get<1>(chunk);
-      if (read > 0) {
+      std::optional<std::tuple<std::shared_ptr<char[]>, size_t>> val =
+          fentry->next_chunk();
+      if (val.has_value()) {
+        std::tuple<std::shared_ptr<char[]>, size_t> chunk = val.value();
         rest_client->post_chunk(chunk, fentry->to_string());
         fentry->update_read_count();
       } else {
-        // todo: valutare azioni di ripristino
         return;
       }
     }

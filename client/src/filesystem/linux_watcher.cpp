@@ -5,8 +5,7 @@ LinuxWatcher::LinuxWatcher()
     : root_to_watch{"./sync"}, watcher_mask{IN_CREATE | IN_ONLYDIR | IN_DELETE |
                                             IN_MODIFY | IN_MOVED_TO |
                                             IN_MOVED_FROM | IN_ISDIR |
-                                            IN_IGNORED},
-      running{false} {
+                                            IN_IGNORED} {
   std::clog << "Linux watcher module init...\n";
   // pipe per segnale exit al poll.
   //  - watcher scrive su 1
@@ -31,16 +30,21 @@ LinuxWatcher::~LinuxWatcher() {
   // in questo modo il kernel ha la possibilità di riassegnarlo ad
   // un altro processo.
   close(inotify_descriptor);
-  if (watcher.joinable())
-    watcher.join();
+  if (running) {
+    running = false;
+    if (watcher.joinable())
+      watcher.join();
+  }
   std::clog << "Linux Watcher destroy...\n";
 }
 
 void LinuxWatcher::start() {
-  std::clog << "Linux watcher module start...\n";
-  running = true;
-  instance->add_watch(root_to_watch);
-  instance->handle_events();
+  if (!running) {
+    running = true;
+    instance->add_watch(root_to_watch);
+    instance->handle_events();
+    std::clog << "Linux watcher module start...\n";
+  }
 }
 
 void LinuxWatcher::stop() {

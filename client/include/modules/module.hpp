@@ -3,14 +3,16 @@
 #include "../pubsub/broker.hpp"
 #include <memory>
 #include <vector>
+#include <mutex>
 
 class Module {
 
 protected:
+  bool running;
   std::shared_ptr<Broker> broker;
 
 public:
-  Module() { broker = Broker::getInstance(); }
+  Module(): running{false} { broker = Broker::getInstance(); }
   virtual void start() = 0;
   virtual void stop() = 0;
   virtual void init_sub_list() = 0;
@@ -22,6 +24,7 @@ public:
 
 class ModuleManager {
 protected:
+  std::mutex mu;
   std::shared_ptr<Broker> broker;
   std::vector<std::shared_ptr<Module>> modules;
 

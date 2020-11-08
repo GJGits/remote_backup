@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <tuple>
 #include <unistd.h>
+#include <optional>
 
 #include "../common/base64.hpp"
 #include "../common/duration.hpp"
@@ -55,7 +56,7 @@ public:
   bool has_chunk();
   void set_producer(entry_producer producer);
   void set_status(entry_status status);
-  std::tuple<std::shared_ptr<char[]>, size_t> next_chunk();
+  std::optional<std::tuple<std::shared_ptr<char[]>, size_t>> next_chunk();
   size_t get_nchunks() const;
   size_t get_last_change() const;
   entry_status get_status() const;

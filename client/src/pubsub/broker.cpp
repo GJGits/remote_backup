@@ -17,14 +17,13 @@ Broker::Broker() : is_running{true} {
           }
         }
         // sezione non critica
+
         try {
           resource_guard guard{};
           std::clog << "called fn() [thread " << std::this_thread::get_id()
                     << "]\n";
           fn();
-        }
-
-        catch (AuthFailed &ex) {
+        } catch (AuthFailed &ex) {
           std::clog << ex.what() << "\n";
           publish(Message{TOPIC::AUTH_FAILED});
         }

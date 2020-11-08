@@ -35,25 +35,26 @@ std::tuple<size_t, std::string> FileEntry::get_last_move() const {
   return last_move;
 }
 
-std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
+std::optional<std::tuple<std::shared_ptr<char[]>, size_t>>
+FileEntry::next_chunk() {
   DurationLogger log{"READ_CHUNK"};
-  std::ifstream in{path, std::ios::binary};
-  in.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-  // lazy init of infos
-  if (buffer.get() == nullptr) {
-    buffer = std::shared_ptr<char[]>{new char[CHUNK_SIZE]};
-    memset(buffer.get(), '\0', CHUNK_SIZE);
-  }
   if (std::filesystem::exists(path)) {
+    std::ifstream in{path, std::ios::binary};
+    in.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    // lazy init of infos
+    if (buffer.get() == nullptr) {
+      buffer = std::shared_ptr<char[]>{new char[CHUNK_SIZE]};
+      memset(buffer.get(), '\0', CHUNK_SIZE);
+    }
     size_t to_read = read_count < (nchunks - 1)
                          ? CHUNK_SIZE
                          : (size - ((nchunks - 1) * CHUNK_SIZE));
     in.seekg(read_count * CHUNK_SIZE);
     in.read(buffer.get(), to_read);
     last_move = std::tuple{read_count, Sha256::getSha256(buffer, to_read)};
-    return std::tuple(buffer, to_read);
+    return std::optional{std::tuple(buffer, to_read)};
   }
-  return std::tuple(buffer, 0);
+  return std::nullopt;
 }
 
 void FileEntry::retrieve_chunk() {

@@ -16,19 +16,23 @@ void StructSubscriber::init_sub_list() {
 }
 
 void StructSubscriber::start() {
-  std::clog << "Struct module start...\n";
-  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-  sync->restore();
-  sync->update_from_fs();
-  sync->update_from_remote();
-  notify_news();
+  if (!running) {
+    std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+    sync->restore();
+    sync->update_from_fs();
+    sync->update_from_remote();
+    notify_news();
+    std::clog << "Struct module start...\n";
+  }
 }
 
 void StructSubscriber::stop() {
-  std::clog << "Struct module stop...\n";
-  std::unique_lock lock{m1};
-  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-  sync->store();
+  if (running) {
+    std::unique_lock lock{m1};
+    std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+    sync->store();
+    std::clog << "Struct module stop...\n";
+  }
 }
 
 void StructSubscriber::on_add_entry(const Message &message) {
