@@ -39,9 +39,8 @@ void SyncSubscriber::on_new_file(const Message &message) {
     }
   }
   if (fentry->get_producer() == entry_producer::server) {
-    for (size_t i = 0; i < fentry->get_nchunks(); i++) {
+    while (fentry->has_chunk()) {
       fentry->retrieve_chunk();
-      fentry->update_read_count();
     }
     restore_files();
   }

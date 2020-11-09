@@ -20,8 +20,6 @@ Broker::Broker() : is_running{true} {
 
         try {
           resource_guard guard{};
-          std::clog << "called fn() [thread " << std::this_thread::get_id()
-                    << "]\n";
           fn();
         } catch (AuthFailed &ex) {
           std::clog << ex.what() << "\n";

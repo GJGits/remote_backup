@@ -1,17 +1,5 @@
 #pragma once
-#include "../common/base64.hpp"
-#include "../common/makereply.hpp"
-#include "../common/sha256.hpp"
-#include "../common/singleton.hpp"
-#include "../common/utility.hpp"
-#include "../dtos/get_chunk_dto.hpp"
-#include "../dtos/post_chunk_dto.hpp"
-#include "../dtos/signin_dto.hpp"
-#include "../dtos/signup_dto.hpp"
-#include "../services/chunk-service.hpp"
-#include "../services/user-service.hpp"
 #include "controller.hpp"
-#include <regex>
 
 class ChunkController : public Controller, public Singleton<ChunkController> {
 
