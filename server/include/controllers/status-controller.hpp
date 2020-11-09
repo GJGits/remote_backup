@@ -4,14 +4,6 @@
 #include "../dtos/signin_dto.hpp"
 #include "../dtos/get_status_dto.hpp"
 #include "../services/file-service.hpp"
-#include "../dtos/subject.hpp"
-#include "../http/header.hpp"
-#include <regex>
-#include "../common/makereply.hpp"
-#include "../common/singleton.hpp"
-
-
-
 
 class StatusController : public Controller, public Singleton<StatusController> {
 private:

@@ -13,6 +13,7 @@
 #include <unordered_map>
 
 #include "duration.hpp"
+#include "../http/request.hpp"
 #include "../dtos/subject.hpp"
 #include "jwt_cache_entry.hpp"
 
