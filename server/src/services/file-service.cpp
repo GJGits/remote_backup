@@ -8,13 +8,8 @@ const json FileService::getStatusFile(const GetStatusDTO &get_status_dto) {
 }
 
 void FileService::delete_file_service(const DeleteFileDTO &del_file) {
-    std::clog << "entro nella delete_file_service\n";
   FileEntity file_ent{del_file};
   std::filesystem::remove_all("../../filesystem/"+del_file.get_subject().get_sub()+"/"+del_file.getfile_path());
-    std::clog << "ho rimosso: ../../filesystem/"+del_file.get_subject().get_sub()+"/"+del_file.getfile_path()<< "\n";
-
     std::shared_ptr<FileRepository> file_repository = FileRepository::getInstance();
     file_repository->deleteFile(file_ent);
-    std::clog << "Sono dopo la cancellazione \n";
-
 }

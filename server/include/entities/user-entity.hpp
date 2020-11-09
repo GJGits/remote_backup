@@ -1,5 +1,4 @@
 #pragma once
-#include "../common/logger.hpp"
 #include "../dtos/subject.hpp"
 #include "../exceptions/exceptions.hpp"
 #include <string>
@@ -55,48 +54,5 @@ public:
   void set_device_8_MAC(const std::string &mac);
   std::string get_device_8_MAC() const;
 
-  int check_validity_id(const std::string &mac) {
-    if (get_device_1_MAC().compare(mac) == 0)
-      return 1;
-    else if (get_device_1_MAC().empty()) {
-      set_device_1_MAC(mac);
-      return -1;
-    } else if (get_device_2_MAC().compare(mac) == 0) {
-      return 2;
-    } else if (get_device_2_MAC().empty()) {
-      set_device_2_MAC(mac);
-      return -2;
-    } else if (get_device_3_MAC().compare(mac) == 0) {
-      return 4;
-    } else if (get_device_3_MAC().empty()) {
-      set_device_3_MAC(mac);
-      return -4;
-    } else if (get_device_4_MAC().compare(mac) == 0) {
-      return 8;
-    } else if (get_device_4_MAC().empty()) {
-      set_device_4_MAC(mac);
-      return -8;
-    } else if (get_device_5_MAC().compare(mac) == 0) {
-      return 16;
-    } else if (get_device_5_MAC().empty()) {
-      set_device_5_MAC(mac);
-      return -16;
-    } else if (get_device_6_MAC().compare(mac) == 0) {
-      return 32;
-    } else if (get_device_6_MAC().empty()) {
-      set_device_6_MAC(mac);
-      return -32;
-    } else if (get_device_7_MAC().compare(mac) == 0) {
-      return 64;
-    } else if (get_device_7_MAC().empty()) {
-      set_device_7_MAC(mac);
-      return -64;
-    } else if (get_device_8_MAC().compare(mac) == 0) {
-      return 128;
-    } else if (get_device_8_MAC().empty()) {
-      set_device_8_MAC(mac);
-      return -128;
-    }
-    throw ExceededNumberOfDevices();
-  }
+  int check_validity_id(const std::string &mac);
 };

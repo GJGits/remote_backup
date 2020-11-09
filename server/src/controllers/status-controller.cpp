@@ -21,10 +21,6 @@ StatusController::handle(const http::server::request &req) {
   throw WrongRquestFormat();
 }
 
-// {"list": {}}
-
-// {"error": {}}
-
 const json
 StatusController::get_status_file(const GetStatusDTO &get_status_dto) {
   std::shared_ptr<FileService> file_service = FileService::getInstance();

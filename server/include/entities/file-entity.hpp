@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include "../common/logger.hpp"
 #include "../dtos/delete_file_dto.hpp"
 
 class FileEntity {

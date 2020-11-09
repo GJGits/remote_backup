@@ -1,7 +1,6 @@
 #pragma once
-
-#include "../http/reply.hpp"
-#include "../http/request.hpp"
+#include "../../include/http/reply.hpp"
+#include "../../include/http/request.hpp"
 #include "json.hpp"
 #include <iostream>
 #include <string.h>

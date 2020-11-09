@@ -1,22 +1,29 @@
 #pragma once
 #include "controller.hpp"
+#include "../dtos/signup_dto.hpp"
+#include "../dtos/signin_dto.hpp"
+#include "../services/user-service.hpp"
+#include <regex>
+#include "../common/singleton.hpp"
+#include "../common/makereply.hpp"
 
-class AuthController : public Controller, public Singleton<AuthController> {
+
+
+
+class AuthController : public Controller, public Singleton<AuthController>{
 
 private:
-  friend class Singleton;
-  std::regex signin_rgx;
-  std::regex signup_rgx;
-  AuthController()
-      : signin_rgx{std::move(std::regex{
-            "^\\{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\",\\s?"
-            "\"mac_address\":\\s?\"[0-9a-f:]{17}\"\\}$"})},
-        signup_rgx{std::move(
-            std::regex{"^\\{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?"
-                       "\"\\w+\",\\s?\"password_confirm\":\\s?\"\\w+\",\\s?"
-                       "\"mac_address\":\\s?\"[0-9a-f:]{17}\"\\}$"})} {}
+    friend class Singleton;
+    std::regex signin_rgx;
+    std::regex signup_rgx;
+    AuthController():
+    signin_rgx{std::move(std::regex{"^\\{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\",\\s?\"mac_address\":\\s?\"[0-9a-f:]{17}\"\\}$"})},
+    signup_rgx{std::move(std::regex{"^\\{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\",\\s?\"password_confirm\":\\s?\"\\w+\",\\s?\"mac_address\":\\s?\"[0-9a-f:]{17}\"\\}$"})}
+    {}
+
 
 public:
+
   virtual const http::server::reply handle(const http::server::request &req);
   const std::string post_signin(const SigninDTO &req);
   const std::string post_signup(const SignupDTO &req);

@@ -1,5 +1,10 @@
 #pragma once
+#include "../services/file-service.hpp"
+#include "../common/singleton.hpp"
+#include "../common/jwt.hpp"
 #include "controller.hpp"
+#include <regex>
+
 
 class FileController : public Controller, public Singleton<FileController> {
 

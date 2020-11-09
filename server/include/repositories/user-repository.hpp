@@ -1,12 +1,7 @@
 #pragma once
 #include <memory>
-#include <optional>
-#include <cmath>
 #include "../common/json.hpp"
 #include "../common/constants.hpp"
-#include "../common/sha256.hpp"
-#include "../common/utility.hpp"
-#include "../entities/db-connect.hpp"
 #include "../entities/user-entity.hpp"
 #include "../exceptions/exceptions.hpp"
 #include "../common/singleton.hpp"

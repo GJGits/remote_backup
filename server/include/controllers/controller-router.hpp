@@ -5,7 +5,6 @@
 #include "chunk-controller.hpp"
 #include "file-controller.hpp"
 #include "test-controller.hpp"
-
 #include "../exceptions/exceptions.hpp"
 
 
@@ -20,7 +19,6 @@ public:
 
   static std::shared_ptr<Controller> getController(const std::string &key) {
     if (instance.get() == nullptr) {
-        std::clog << "ho inizializzato\n";
 
         instance = std::shared_ptr<ControllerRouter>(new ControllerRouter{});
       controller_map["auth"] = AuthController::getInstance();
@@ -30,14 +28,10 @@ public:
       controller_map["test"] = TestController::getInstance();
     }
 
-
     std::string analysis_stringa(key);
     char *res = std::strtok(const_cast<char *>(analysis_stringa.c_str()), "/");
-      std::clog << "sono fuori\n";
 
       if (controller_map[res] != nullptr) {
-        std::clog << "sono dentro\n";
-
         if (strcmp(res, "auth") == 0)
         return AuthController::getInstance();
       else if (strcmp(res, "status") == 0)

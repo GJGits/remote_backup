@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include "../common/logger.hpp"
 #include "../dtos/post_chunk_dto.hpp"
 #include "../dtos/get_chunk_dto.hpp"
 

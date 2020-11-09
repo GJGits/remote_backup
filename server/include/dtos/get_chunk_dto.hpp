@@ -1,9 +1,8 @@
 #pragma once
-#include "../common/base64.hpp"
 #include "../common/utility.hpp"
-#include "json-serializable.hpp"
 #include "subject.hpp"
-
+#include "../common/constants.hpp"
+#include <memory>
 class GetChunkDTO {
 private:
   Subject subject;

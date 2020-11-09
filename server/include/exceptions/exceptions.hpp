@@ -1,7 +1,5 @@
 #pragma once
 #include "../common/logger.hpp"
-#include "../http/reply.hpp"
-#include "../http/request.hpp"
 #include <exception>
 
 struct UsernameAlreadyExists : public std::exception {

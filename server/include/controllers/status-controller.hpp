@@ -1,9 +1,11 @@
 #pragma once
-#include "controller.hpp"
-#include "../dtos/signup_dto.hpp"
-#include "../dtos/signin_dto.hpp"
 #include "../dtos/get_status_dto.hpp"
 #include "../services/file-service.hpp"
+#include "../common/jwt.hpp"
+#include "../common/makereply.hpp"
+#include "../common/singleton.hpp"
+#include "controller.hpp"
+#include <regex>
 
 class StatusController : public Controller, public Singleton<StatusController> {
 private:

@@ -2,11 +2,8 @@
 #include "controller.hpp"
 #include "../dtos/get_test_database_dto.hpp"
 #include "../dtos/get_test_filesystem_filename_dto.hpp"
-
 #include "../services/test-service.hpp"
 #include "../common/singleton.hpp"
-#include "../dtos/subject.hpp"
-#include "../http/header.hpp"
 #include <regex>
 #include "../common/makereply.hpp"
 

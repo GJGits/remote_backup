@@ -1,5 +1,12 @@
 #pragma once
+#include "../common/makereply.hpp"
+#include "../common/singleton.hpp"
+#include "../dtos/get_chunk_dto.hpp"
+#include "../dtos/post_chunk_dto.hpp"
+#include "../services/chunk-service.hpp"
+#include "../common/jwt.hpp"
 #include "controller.hpp"
+#include <regex>
 
 class ChunkController : public Controller, public Singleton<ChunkController> {
 
