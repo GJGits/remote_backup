@@ -1,6 +1,14 @@
 #include "../../include/modules/gui_module.hpp"
 
+GuiModule::GuiModule()
+    : running{false}, socket_(io_context, udp::endpoint(udp::v4(), 2800)) {
+  std::clog << "gui module init...\n";
+}
+
+GuiModule::~GuiModule() { std::clog << "gui module destroy...\n"; }
+
 void GuiModule::init_sub_list() {
+  broker = Broker::getInstance();
   broker->subscribe(TOPIC::REMOVE_ENTRY,
                     std::bind(&GuiModule::on_transfer, instance.get(),
                               std::placeholders::_1));

@@ -62,7 +62,7 @@ public:
    * modulo è interessato. Attualmente questo modulo non prevede ulteriori
    * sottoscrizioni.
    */
-  void init_sub_list(){};
+  void init_sub_list();
 
   /**
    * Overload di Module::start(), necessario per definire la politica di

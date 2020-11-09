@@ -38,6 +38,10 @@ LinuxWatcher::~LinuxWatcher() {
   std::clog << "Linux Watcher destroy...\n";
 }
 
+void LinuxWatcher::init_sub_list(){
+  broker = Broker::getInstance();
+}
+
 void LinuxWatcher::start() {
   if (!running) {
     running = true;

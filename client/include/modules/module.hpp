@@ -18,7 +18,7 @@ protected:
   std::shared_ptr<Broker> broker;
 
 public:
-  Module(): running{false} { broker = Broker::getInstance(); }
+  Module(): running{false} {}
   virtual void start() = 0;
   virtual void stop() = 0;
   virtual void init_sub_list() = 0;
@@ -31,11 +31,10 @@ public:
 class ModuleManager {
 protected:
   std::mutex mu;
-  std::shared_ptr<Broker> broker;
   std::vector<std::shared_ptr<Module>> modules;
-
+  std::shared_ptr<Broker> broker;
 public:
-  ModuleManager() { broker = Broker::getInstance(); }
+  ModuleManager() {}
   virtual void add_module(const std::shared_ptr<Module> &module) = 0;
   virtual void start() = 0;
   virtual void close() = 0;

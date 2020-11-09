@@ -8,6 +8,7 @@ SyncSubscriber::~SyncSubscriber() {
 }
 
 void SyncSubscriber::init_sub_list() {
+  broker = Broker::getInstance();
   broker->subscribe(TOPIC::NEW_FILE,
                     std::bind(&SyncSubscriber::on_new_file, instance.get(),
                               std::placeholders::_1));

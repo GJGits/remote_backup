@@ -7,6 +7,7 @@ StructSubscriber::~StructSubscriber() {
 }
 
 void StructSubscriber::init_sub_list() {
+  broker = Broker::getInstance();
   broker->subscribe(TOPIC::ADD_ENTRY,
                     std::bind(&StructSubscriber::on_add_entry, instance.get(),
                               std::placeholders::_1));

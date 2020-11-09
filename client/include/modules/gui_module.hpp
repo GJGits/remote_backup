@@ -20,13 +20,10 @@ private:
   udp::endpoint remote_endpoint_;
   boost::array<char, 1024> recv_buffer_;
 
-  GuiModule()
-      : running{false}, socket_(io_context, udp::endpoint(udp::v4(), 2800)) {
-    std::clog << "gui module init...\n";
-  }
+  GuiModule();
 
 public:
-  ~GuiModule() { std::clog << "gui module destroy...\n"; }
+  ~GuiModule();
   void init_sub_list();
   void on_transfer(const Message &message);
   void on_easy_exception(const Message &message);
