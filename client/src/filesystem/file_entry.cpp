@@ -86,6 +86,7 @@ void FileEntry::retrieve_chunk() {
   }
   size_t to_write = response.size();
   out.write(buffer.get(), to_write);
+  read_count++;
 }
 
 json FileEntry::to_json() {
