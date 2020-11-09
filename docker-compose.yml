@@ -31,8 +31,8 @@ services:
         depends_on:
             - "nginx-server"
         volumes:
-            - "./client/sync:/home/client/sync"
-            - "./client/config:/home/client/config"
+            - "./client/sync2:/home/client/sync"
+            - "./client/config2:/home/client/config"
 volumes: 
     filesystem:
 

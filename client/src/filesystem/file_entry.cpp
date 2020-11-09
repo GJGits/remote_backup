@@ -68,7 +68,7 @@ std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
 void FileEntry::retrieve_chunk() {
   DurationLogger log{"READ_CHUNK_FROM_SERVER"};
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-  std::string tmp_path{"./sync/.tmp/" + macaron::Base64::Encode(path)};
+  std::string tmp_path{TMP_PATH + std::string{"/"} + macaron::Base64::Encode(path)};
   std::filesystem::create_directories(tmp_path);
   std::ofstream out{tmp_path + "/" + macaron::Base64::Encode(path) + "__" +
                         std::to_string(read_count) + ".chk",
