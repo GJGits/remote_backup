@@ -11,9 +11,10 @@ HTTPClient::HTTPClient() {
 }
 
 void HTTPClient::up_request(const http::request<http::vector_body<char>> &req) {
-  beast::tcp_stream str_temp{ioc};
+
   try {
     DurationLogger logger{"COMPLETE REQUEST"};
+    beast::tcp_stream str_temp{ioc};
     str_temp.connect(results);
     usleep(10000);
     send(str_temp, req);
@@ -35,19 +36,56 @@ void HTTPClient::up_request(const http::request<http::vector_body<char>> &req) {
 }
 
 json HTTPClient::get_json(const http::request<http::vector_body<char>> &req) {
-  stream.connect(results);
-  send(stream, req);
-  http::response<http::vector_body<char>> res = read(stream);
-  std::string dump{res.body().begin(), res.body().end()};
-  return json::parse(dump);
+
+  try {
+    beast::tcp_stream str_temp{ioc};
+    str_temp.connect(results);
+    send(str_temp, req);
+    http::response<http::vector_body<char>> res = read(str_temp);
+    uint32_t result = res.result_int();
+    if (result == 200) {
+      std::string dump{res.body().begin(), res.body().end()};
+      return json::parse(dump);
+    }
+    if (result == 401) {
+      // autenticazione fallita
+      throw AuthFailed();
+    }
+    if (result == 502 || result == 503 || result == 504) {
+      // server non raggiungibile
+      throw ConnectionNotAvaible();
+    }
+  } catch (const boost::exception &e) {
+    throw ConnectionNotAvaible();
+  }
+  return {};
 }
 
 std::vector<char>
 HTTPClient::get_binary(const http::request<http::vector_body<char>> &req) {
-  stream.connect(results);
-  send(stream, req);
-  http::response<http::vector_body<char>> res = read(stream);
-  return res.body();
+
+  try {
+    beast::tcp_stream str_temp{ioc};
+    str_temp.connect(results);
+    send(str_temp, req);
+    http::response<http::vector_body<char>> res = read(str_temp);
+    uint32_t result = res.result_int();
+    if (result == 200) {
+      return res.body();
+    }
+    if (result == 401) {
+      // autenticazione fallita
+      throw AuthFailed();
+    }
+    if (result == 502 || result == 503 || result == 504) {
+      // server non raggiungibile
+      throw ConnectionNotAvaible();
+    }
+
+  } catch (const boost::exception &e) {
+    throw ConnectionNotAvaible();
+  }
+  return {};
 }
 
 void HTTPClient::send(beast::tcp_stream &stream,

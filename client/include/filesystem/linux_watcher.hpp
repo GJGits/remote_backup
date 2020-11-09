@@ -2,27 +2,15 @@
 
 #include <bits/stdc++.h>
 #include <errno.h>
-#include <iostream>
 #include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <string>
 #include <sys/inotify.h>
-#include <unistd.h>
 #include <unordered_map>
-#include <thread>
 
-#include "../common/constants.hpp"
-#include "../filesystem/sync_structure.hpp"
-#include "../filesystem/resource_guard.hpp"
-#include "../common/duration.hpp"
-#include "../common/singleton.hpp"
 #include "../modules/module.hpp"
 #include "linux_event.hpp"
-#include "sync_structure.hpp"
-#include <stdio.h>
-#include <unistd.h>
 
 #define TIMER 5000
 #define WAIT -1

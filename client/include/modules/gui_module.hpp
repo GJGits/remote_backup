@@ -1,19 +1,14 @@
 #pragma once
 
-#include <filesystem>
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
-#include <iostream>
 #include <thread> // per debugging su thread
 #include "../filesystem/linux_watcher.hpp"
 #include "../pubsub/struct_sub.hpp"
 #include "../pubsub/sync_sub.hpp"
-#include "../common/json.hpp"
 #include "../modules/module.hpp"
-#include "../common/singleton.hpp"
 
 using boost::asio::ip::udp;
-using json = nlohmann::json;
 
 class GuiModule : public Singleton<GuiModule>, public ModuleManager {
 

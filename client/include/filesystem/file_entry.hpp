@@ -8,7 +8,6 @@
 #include <sys/types.h>
 #include <tuple>
 #include <unistd.h>
-#include <optional>
 
 #include "../common/base64.hpp"
 #include "../common/duration.hpp"

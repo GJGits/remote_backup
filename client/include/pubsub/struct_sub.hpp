@@ -1,10 +1,6 @@
 #pragma once
 
-#include "../common/singleton.hpp"
-#include "../filesystem/resource_guard.hpp"
-#include "../filesystem/sync_structure.hpp"
 #include "../modules/module.hpp"
-#include <iostream>
 
 class StructSubscriber : public Singleton<StructSubscriber>, public Module {
 private:

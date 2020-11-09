@@ -1,9 +1,15 @@
 #pragma once
+
 #include "../exceptions/exceptions.hpp"
+#include "../common/constants.hpp"
+#include "../common/singleton.hpp"
+#include "../common/utility.hpp"
+#include "../common/duration.hpp"
 #include "../pubsub/broker.hpp"
-#include <memory>
-#include <vector>
-#include <mutex>
+#include "../filesystem/resource_guard.hpp"
+#include "../filesystem/entry_guard.hpp"
+#include "../filesystem/sync_structure.hpp"
+#include "../filesystem/file_entry.hpp"
 
 class Module {
 
