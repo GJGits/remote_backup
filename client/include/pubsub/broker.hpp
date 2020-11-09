@@ -1,28 +1,16 @@
 #pragma once
 
 #include <functional>
-#include <future>
 #include <list>
-#include <memory>
 #include <tuple>
 #include <unordered_map>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
 #include <queue>
 #include <vector>
-#include <filesystem>
-#include <iostream>
-#include <fstream>
 
 #include "../filesystem/resource_guard.hpp"
 #include "../exceptions/exceptions.hpp"
-#include "../common/json.hpp"
 #include "../common/singleton.hpp"
 #include "message.hpp"
-#include "topics.hpp"
-
-using json = nlohmann::json;
 
 class Broker : public Singleton<Broker> {
 private:
