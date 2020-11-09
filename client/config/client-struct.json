@@ -1,1 +1,1 @@
-{"entries":[{"last_change":1604944249,"nchunks":109,"path":"./sync/test_7mega.tar.gz","producer":0,"status":0},{"last_change":1604942356,"nchunks":8,"path":"./sync/c#.pdf","producer":0,"status":0}],"last_check":1604944282}
+{"entries":[{"last_change":1604958590,"nchunks":8,"path":"./sync/c#.pdf","producer":1,"status":0},{"last_change":1604958221,"nchunks":109,"path":"./sync/test_7mega.tar.gz","producer":0,"status":0}],"last_check":1604958737}

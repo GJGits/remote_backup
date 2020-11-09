@@ -78,9 +78,11 @@ void SyncSubscriber::restore_files() {
         }
       }
 
-      std::sort(
-          chunks.begin(), chunks.end(),
-          [&](std::string &s1, std::string &s2) { return s1.compare(s2); });
+      std::sort(chunks.begin(), chunks.end(),
+                [&](const std::string &c1, const std::string &c2) {
+                  return (c1.size() != c2.size()) ? c1.size() < c2.size()
+                                                  : c1.compare(c2) < 0;
+                });
 
       std::string new_path =
           macaron::Base64::Decode(p.path().filename().string());
