@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <thread>
 
+#include "../common/constants.hpp"
 #include "../filesystem/sync_structure.hpp"
 #include "../filesystem/resource_guard.hpp"
 #include "../common/duration.hpp"

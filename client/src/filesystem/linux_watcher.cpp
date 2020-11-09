@@ -2,7 +2,7 @@
 #include "../../include/filesystem/linux_watcher.hpp"
 
 LinuxWatcher::LinuxWatcher()
-    : root_to_watch{"./sync"}, watcher_mask{IN_CREATE | IN_ONLYDIR | IN_DELETE |
+    : root_to_watch{SYNC_ROOT}, watcher_mask{IN_CREATE | IN_ONLYDIR | IN_DELETE |
                                             IN_MODIFY | IN_MOVED_TO |
                                             IN_MOVED_FROM | IN_ISDIR |
                                             IN_IGNORED} {
@@ -92,8 +92,8 @@ void LinuxWatcher::handle_events() {
   watcher = std::move(std::thread{[&]() {
     std::clog << "Start monitoring... [thread " << std::this_thread::get_id()
               << "]\n";
-    std::string tmp_path{"./sync/.tmp"};
-    std::string bin_path{"./sync/.bin"};
+    std::string tmp_path{TMP_PATH};
+    std::string bin_path{BIN_PATH};
     while (running) {
       std::clog << "Wating for an event...\n";
       // Some systems cannot read integer variables if they are not

@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <vector>
 
+#include "../common/constants.hpp"
 #include "../filesystem/resource_guard.hpp"
 #include "../common/singleton.hpp"
 #include "../common/utility.hpp"

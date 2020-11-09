@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const CONFIG_ROOT = "../client/config/"
+const CONFIG_ROOT = "../client/config/client-conf.json"
 
 module.exports = class ClientConf {
 
@@ -12,11 +12,11 @@ module.exports = class ClientConf {
     }
 
     read() {
-        this.content = JSON.parse(fs.readFileSync('../client/config/client-conf.json', 'utf8'));
+        this.content = JSON.parse(fs.readFileSync(CONFIG_ROOT, 'utf8'));
     }
 
     write() {
-        fs.writeFile('../client/config/client-conf.json', JSON.stringify(this.content), (err) => {
+        fs.writeFile(CONFIG_ROOT, JSON.stringify(this.content), (err) => {
             if (err) {
                 console.log("File read failed:", err)
             }

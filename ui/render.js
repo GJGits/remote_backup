@@ -2,6 +2,10 @@ const { ipcRenderer } = require('electron');
 const du = require('du');
 const getMAC = require('getmac').default
 
+const CONFIG_SYNC = "../client/sync/"
+const mac = getMAC();
+//const mac = "aa:bb:cc:dd:ee:ff"
+
 var change_status = (status) => {
     let stats = ["login", "signup", "logged"];
     let index = stats.findIndex((el) => { return el === status; });
@@ -16,7 +20,7 @@ var change_status = (status) => {
 }
 
 var update_usage = () => {
-    let size_prom = du('../client/sync/');
+    let size_prom = du(CONFIG_SYNC);
     size_prom.then((size) => {
         let percentage = ((size / (2 * 1024 * 1024 * 1024)) * 100) > 100 ? 100 : ((size / (2 * 1024 * 1024 * 1024)) * 100).toFixed(2);
         $("#usage").text("Total space usage: " + percentage + "%");
@@ -87,8 +91,6 @@ $(document).ready(function () {
         console.log("login clicked");
         username = $("#username").val();
         password = $("#password").val();
-        mac = getMAC();
-        //mac = "aa:bb:cc:dd:ee:ff";
         console.log("mac:", mac);
         $.ajax({
             url: "http://0.0.0.0:3200/auth/signin",
@@ -118,8 +120,6 @@ $(document).ready(function () {
         username = $("#username2").val();
         password = $("#password2").val();
         ripPassword = $("#rip-password").val();
-        mac = getMAC();
-        //mac = "aa:bb:cc:dd:ee:ff";
         const supf = $("#supf");
         supf.validate();
         if (password !== ripPassword) {

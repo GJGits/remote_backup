@@ -56,13 +56,11 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
   if (fentry->get_producer() == entry_producer::local) {
     rest_client->delete_file(fentry->get_path());
   }
-  if (fentry->get_producer() == entry_producer::server) {
-    if (std::filesystem::exists(fentry->get_path())) {
-      std::filesystem::rename(fentry->get_path(), "./sync/.bin/a");
-      std::remove("./sync/.bin/a");
-    } else {
-      return;
-    }
+  if (fentry->get_producer() == entry_producer::server &&
+      std::filesystem::exists(fentry->get_path())) {
+    std::string new_path{BIN_PATH + std::string{"/a"}};
+    std::filesystem::rename(fentry->get_path(), new_path);
+    std::remove(new_path.c_str());
   }
   fentry->set_status(entry_status::synced);
   broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
@@ -71,7 +69,7 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
 
 void SyncSubscriber::restore_files() {
 
-  for (auto &p : std::filesystem::directory_iterator("./sync/.tmp")) {
+  for (auto &p : std::filesystem::directory_iterator(TMP_PATH)) {
     if (p.is_directory()) {
       std::vector<std::string> chunks{};
       for (const auto &entry : std::filesystem::directory_iterator(p.path())) {
@@ -86,7 +84,6 @@ void SyncSubscriber::restore_files() {
 
       std::string new_path =
           macaron::Base64::Decode(p.path().filename().string());
-      std::clog << "new path: " << new_path << "\n";
       std::string temp_path = p.path().string() + ".out";
       std::ofstream out{temp_path, std::ios::binary};
       for (size_t i = 0; i < chunks.size(); i++) {

@@ -8,7 +8,7 @@ SyncStructure::~SyncStructure() { std::clog << "sync_struct destroy...\n"; }
 
 void SyncStructure::store() {
   if (!structure.empty() && server_ack) {
-    std::ofstream o{"./config/client-struct.json"};
+    std::ofstream o{CLIENT_STRUCT};
     json jstru = {{"entries", json::array()},
                   {"last_check", (int)std::time(nullptr)}};
     for (const auto &[path, fentry] : structure) {
@@ -20,7 +20,7 @@ void SyncStructure::store() {
 }
 
 void SyncStructure::restore() {
-  std::ifstream i{"./config/client-struct.json"};
+  std::ifstream i{CLIENT_STRUCT};
   i.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   json j;
   i >> j;
@@ -53,10 +53,10 @@ void SyncStructure::restore() {
 
 void SyncStructure::update_from_fs() {
   for (const auto &p :
-       std::filesystem::recursive_directory_iterator("./sync")) {
+       std::filesystem::recursive_directory_iterator(SYNC_ROOT)) {
     std::string path = p.path().string();
-    if (!(path.rfind("./sync/.tmp", 0) == 0) &&
-        !(path.rfind("./sync/.bin", 0) == 0) && p.is_regular_file()) {
+    if (!(path.rfind(TMP_PATH, 0) == 0) && !(path.rfind(BIN_PATH, 0) == 0) &&
+        p.is_regular_file()) {
       std::shared_ptr<FileEntry> entry{
           new FileEntry{path, entry_producer::local, entry_status::new_}};
       // secondo caso possibile solo per rename di cartella che

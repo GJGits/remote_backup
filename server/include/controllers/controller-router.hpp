@@ -49,6 +49,6 @@ public:
       else if (strcmp(res, "test") == 0)
           return TestController::getInstance();
     }
-    throw ControllerNotRetrievable();
+    throw WrongRquestFormat();
   }
 };

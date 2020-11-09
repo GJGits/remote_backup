@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <optional>
 
+#include "../common/constants.hpp"
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"
 #include "file_entry.hpp"

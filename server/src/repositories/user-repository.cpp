@@ -101,7 +101,7 @@ UserEntity UserRepository::getUserByUsername(const std::string &username) {
 
     return entity;
   }
-  throw UsernameNotExists();
+  throw CredentialsNotValidException();
 }
 
 json UserRepository::get_status_file(const Subject &subject, int page_num,

@@ -13,7 +13,7 @@ const json TestService::getTestDatabaseTable(const GetTestDatabaseDTO &get_test_
         return test_repository->getTestDatabaseTableUsersDB(get_test_database);
 
 
-    throw UknownError();
+    throw WrongRquestFormat();
 }
 
 

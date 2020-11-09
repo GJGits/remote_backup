@@ -16,7 +16,7 @@ RestClient::RestClient() {
 }
 
 void RestClient::read_info() {
-  std::ifstream i("./config/client-conf.json");
+  std::ifstream i(CLIENT_CONF);
   i >> config;
 }
 

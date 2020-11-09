@@ -5,12 +5,27 @@ FileEntry::FileEntry() : nchunks{0}, read_count{0}, buffer{nullptr} {}
 FileEntry::FileEntry(const std::string &path, entry_producer producer,
                      entry_status status)
     : path{path}, producer{producer}, nchunks{0},
-      last_change{0}, status{status}, read_count{0}, buffer{nullptr} {}
+      last_change{0}, status{status}, read_count{0}, buffer{nullptr} {
+  if (std::filesystem::exists(path)) {
+    struct stat sb;
+    stat(path.c_str(), &sb);
+    last_change = (size_t)sb.st_ctime;
+    size = std::filesystem::file_size(path);
+    nchunks = ceil((double)size / CHUNK_SIZE);
+  }
+}
 
 FileEntry::FileEntry(const std::string &path, entry_producer producer,
                      size_t nchunks, size_t last_change, entry_status status)
     : path{path}, producer{producer}, nchunks{nchunks},
       last_change{last_change}, status{status}, read_count{0}, buffer{nullptr} {
+  if (std::filesystem::exists(path)) {
+    struct stat sb;
+    stat(path.c_str(), &sb);
+    last_change = (size_t)sb.st_ctime;
+    size = std::filesystem::file_size(path);
+    nchunks = ceil((double)size / CHUNK_SIZE);
+  }
 }
 
 void FileEntry::set_producer(entry_producer producer) {
@@ -37,11 +52,6 @@ std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
   in.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   // lazy init of infos
   if (buffer.get() == nullptr) {
-    struct stat sb;
-    stat(path.c_str(), &sb);
-    last_change = (size_t)sb.st_ctime;
-    size = std::filesystem::file_size(path);
-    nchunks = ceil((double)size / CHUNK_SIZE);
     buffer = std::shared_ptr<char[]>{new char[CHUNK_SIZE]};
     memset(buffer.get(), '\0', CHUNK_SIZE);
   }
