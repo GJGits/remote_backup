@@ -14,7 +14,6 @@ ChunkController::handle(const http::server::request &req) {
       PostChunkDTO post_chunk{sub};
       post_chunk.fill(req, (*req.body).size());
       post_file_chunk(post_chunk);
-      std::clog << "me ne torno\n";
       return http::server::reply::stock_reply_empty(http::server::reply::ok);
     }
   } else if (req.method == "GET") {
