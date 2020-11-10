@@ -5,7 +5,14 @@ GuiModule::GuiModule()
   std::clog << "gui module init...\n";
 }
 
-GuiModule::~GuiModule() { std::clog << "gui module destroy...\n"; }
+GuiModule::~GuiModule() {
+  if (running) {
+    for (size_t i = 0; i < modules.size(); i++)
+      modules[i]->stop();
+  }
+
+  std::clog << "gui module destroy...\n";
+}
 
 void GuiModule::init_sub_list() {
   broker = Broker::getInstance();
@@ -62,6 +69,7 @@ void GuiModule::handle_gui_message() {
             << std::this_thread::get_id() << "]"
             << "\n";
   try {
+    std::unique_lock lock{mu};
     resource_guard guard{};
     switch (message) {
     case 0: // message stop da gui
