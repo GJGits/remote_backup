@@ -98,6 +98,8 @@ std::string p {std::string{TMP_PATH} + std::string{"/"} + macaron::Base64::Encod
         out.write(buff, fsize);
       }
       out.close();
+      std::filesystem::path folders{fentry->get_path()};
+      std::filesystem::create_directories(folders.parent_path().string());
       std::filesystem::rename(temp_path, fentry->get_path());
       std::filesystem::remove_all(p);
 

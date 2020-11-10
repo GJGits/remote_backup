@@ -2,9 +2,9 @@ const { ipcRenderer } = require('electron');
 const du = require('du');
 const getMAC = require('getmac').default
 
-const CONFIG_SYNC = "../client/sync/"
-const mac = getMAC();
-//const mac = "aa:bb:cc:dd:ee:ff"
+const CONFIG_SYNC = "../client/sync2/"
+//const mac = getMAC();
+const mac = "aa:bb:cc:dd:ee:ff"
 
 var change_status = (status) => {
     let stats = ["login", "signup", "logged"];
