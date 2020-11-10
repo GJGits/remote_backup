@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const CONFIG_ROOT = "../client/config2/client-conf.json"
+const CONFIG_ROOT = "../client/config/client-conf.json"
 
 module.exports = class ClientConf {
 
