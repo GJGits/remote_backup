@@ -68,7 +68,7 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
 }
 
 void SyncSubscriber::restore_files() {
-
+// TMP_PATH + "/" + encode_64(fentry->get_path())
   for (auto &p : std::filesystem::directory_iterator(TMP_PATH)) {
     if (p.is_directory()) {
       std::vector<std::string> chunks{};
@@ -96,6 +96,8 @@ void SyncSubscriber::restore_files() {
         in.read(buff, fsize);
         out.write(buff, fsize);
       }
+
+      std::filesystem::path pa{"fentry->get_path()"};
       std::filesystem::rename(temp_path, new_path);
       std::filesystem::remove_all(p);
     }

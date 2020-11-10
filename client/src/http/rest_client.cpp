@@ -17,6 +17,7 @@ RestClient::RestClient() {
 
 void RestClient::read_info() {
   std::ifstream i(CLIENT_CONF);
+  i.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   i >> config;
 }
 
