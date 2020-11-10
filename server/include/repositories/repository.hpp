@@ -38,9 +38,7 @@ protected:
                     std::list<std::string> &entries_of_query,
                     size_t db_selected) {
       std::unique_ptr<sql::Statement> stmt = common_preparation_query(query, entries_of_query, db_selected);
-      std::clog << query << "\n";
       stmt->execute(query);
-      std::clog << "ciaoooo\n";
       return true;
   }
 
@@ -48,7 +46,6 @@ protected:
   select_query(std::string &query, std::list<std::string> &entries_of_query,
                size_t db_selected) {
       std::unique_ptr<sql::Statement> stmt = common_preparation_query(query, entries_of_query, db_selected);
-      std::clog << query << "\n";
       return std::unique_ptr<sql::ResultSet>{
               std::move(stmt->executeQuery(query))};
   }

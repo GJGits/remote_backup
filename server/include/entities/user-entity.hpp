@@ -18,6 +18,7 @@ private:
   std::string device_6_MAC;
   std::string device_7_MAC;
   std::string device_8_MAC;
+  size_t db_selected;
 
 public:
   UserEntity(const std::string &username, const std::string &hashed_password,
@@ -53,6 +54,9 @@ public:
 
   void set_device_8_MAC(const std::string &mac);
   std::string get_device_8_MAC() const;
+
+  void set_db_selected(const size_t db);
+  size_t get_db_selected() const;
 
   int check_validity_id(const std::string &mac);
 };

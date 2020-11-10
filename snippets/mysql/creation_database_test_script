@@ -20,7 +20,7 @@ Creazione tabella users (db_2, db_3, db_4)
 
 Creazione Tabella Chunks (db_2, db_3, db_4)
 
-create table chunks(c_username varchar(100) NOT NULL, c_id integer NOT NULL, c_path varchar(512) NOT NULL, c_lastmod integer NOT NULL,num_chunks integer,device_id integer, primary key (c_username, c_path, c_id, device_id));
+create table chunks(c_username varchar(100) NOT NULL, c_id integer NOT NULL, c_path varchar(512) NOT NULL, c_lastmod integer NOT NULL,num_chunks integer,device_id integer, primary key (c_username, c_path, c_id));
 
 
 

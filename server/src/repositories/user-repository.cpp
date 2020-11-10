@@ -98,7 +98,7 @@ UserEntity UserRepository::getUserByUsername(const std::string &username) {
     entity.set_device_6_MAC(mac_6);
     entity.set_device_7_MAC(mac_7);
     entity.set_device_8_MAC(mac_8);
-
+    entity.set_db_selected(db_selected);
     return entity;
   }
   throw CredentialsNotValidException();

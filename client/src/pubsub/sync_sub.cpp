@@ -43,7 +43,7 @@ void SyncSubscriber::on_new_file(const Message &message) {
     while (fentry->has_chunk()) {
       fentry->retrieve_chunk();
     }
-    restore_files();
+    restore_files(fentry);
   }
   fentry->set_status(entry_status::synced);
   broker->publish(Message{TOPIC::TRANSFER_COMPLETE, fentry});
@@ -67,12 +67,12 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
   broker->publish(Message{TOPIC::TRANSFER_COMPLETE, fentry});
 }
 
-void SyncSubscriber::restore_files() {
-// TMP_PATH + "/" + encode_64(fentry->get_path())
-  for (auto &p : std::filesystem::directory_iterator(TMP_PATH)) {
-    if (p.is_directory()) {
+void SyncSubscriber::restore_files(const std::shared_ptr<FileEntry> &fentry) {
+std::string p {std::string{TMP_PATH} + std::string{"/"} + macaron::Base64::Encode(fentry->get_path())};
+    std::clog << p << "\n";
+
       std::vector<std::string> chunks{};
-      for (const auto &entry : std::filesystem::directory_iterator(p.path())) {
+      for (const auto &entry : std::filesystem::directory_iterator(p)) {
         if (entry.is_regular_file()) {
           chunks.push_back(entry.path().string());
         }
@@ -83,10 +83,11 @@ void SyncSubscriber::restore_files() {
                   return (c1.size() != c2.size()) ? c1.size() < c2.size()
                                                   : c1.compare(c2) < 0;
                 });
+      for(size_t i=0 ; i < chunks.size() ; i++){
+          std::clog << chunks[i] << "\n";
+      }
 
-      std::string new_path =
-          macaron::Base64::Decode(p.path().filename().string());
-      std::string temp_path = p.path().string() + ".out";
+      std::string temp_path = p + ".out";
       std::ofstream out{temp_path, std::ios::binary};
       for (size_t i = 0; i < chunks.size(); i++) {
         std::ifstream in{chunks[i], std::ios::binary};
@@ -96,10 +97,10 @@ void SyncSubscriber::restore_files() {
         in.read(buff, fsize);
         out.write(buff, fsize);
       }
-
-      std::filesystem::path pa{"fentry->get_path()"};
-      std::filesystem::rename(temp_path, new_path);
+      out.close();
+      std::filesystem::path folders{fentry->get_path()};
+      std::filesystem::create_directories(folders.parent_path().string());
+      std::filesystem::rename(temp_path, fentry->get_path());
       std::filesystem::remove_all(p);
-    }
-  }
+
 }

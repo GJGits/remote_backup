@@ -40,6 +40,9 @@ std::string UserEntity::get_device_7_MAC() const { return device_7_MAC;};
 void UserEntity::set_device_8_MAC(const std::string &mac) { device_8_MAC = mac; };
 std::string UserEntity::get_device_8_MAC() const { return device_8_MAC;};
 
+void UserEntity::set_db_selected(const size_t db) { db_selected = db; };
+size_t UserEntity::get_db_selected() const { return db_selected;};
+
 int UserEntity::check_validity_id(const std::string &mac) {
     if (get_device_1_MAC().compare(mac) == 0)
         return 1;

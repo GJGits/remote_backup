@@ -12,7 +12,7 @@ bool ChunkRepository::add_or_update_Chunk(const ChunkEntity &chunk) {
       "ON DUPLICATE KEY "
       "UPDATE c_lastmod = " +
       std::to_string(chunk.getLastMod()) + ", device_id = " +
-      std::to_string((int)chunk.get_subject().get_device_id()) + " ;";
+      std::to_string((int)chunk.get_subject().get_device_id()) + ", num_chunks = "+std::to_string(chunk.getNumChunks()) + ";";
   std::list<std::string> entries_of_query;
   entries_of_query.push_back(chunk.get_subject().get_sub());
   entries_of_query.push_back(chunk.getFileName());

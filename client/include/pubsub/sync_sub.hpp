@@ -14,5 +14,5 @@ public:
   void init_sub_list();
   void on_new_file(const Message &message);
   void on_file_deleted(const Message &message);
-  void restore_files();
+  void restore_files(const std::shared_ptr<FileEntry> &fentry);
 };
