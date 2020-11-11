@@ -68,11 +68,8 @@ std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
 void FileEntry::retrieve_chunk() {
   DurationLogger log{"READ_CHUNK_FROM_SERVER"};
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-  std::string tmp_path{TMP_PATH + std::string{"/"} + macaron::Base64::Encode(path)};
-  std::filesystem::create_directories(tmp_path);
-  std::ofstream out{tmp_path + "/" + macaron::Base64::Encode(path) + "__" +
-                        std::to_string(read_count) + ".chk",
-                    std::ios::binary};
+  std::string tmp_path{TMP_PATH + std::string{"/"} + macaron::Base64::Encode(path) + std::string{".out"}};
+  std::ofstream out{tmp_path , std::ios::app | std::ios::binary};
   out.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   if (buffer.get() == nullptr) {
     buffer = std::shared_ptr<char[]>{new char[CHUNK_SIZE]};
@@ -81,11 +78,7 @@ void FileEntry::retrieve_chunk() {
   std::string target{std::to_string(read_count) + "/" +
                      macaron::Base64::Encode(path)};
   std::vector<char> response = rest_client->get_chunk(target);
-  for (size_t i = 0; i < response.size(); i++) {
-    buffer[i] = response[i];
-  }
-  size_t to_write = response.size();
-  out.write(buffer.get(), to_write);
+  out.write(response.data(), response.size());
   read_count++;
 }
 
