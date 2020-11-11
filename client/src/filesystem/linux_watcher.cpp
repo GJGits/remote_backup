@@ -2,10 +2,10 @@
 #include "../../include/filesystem/linux_watcher.hpp"
 
 LinuxWatcher::LinuxWatcher()
-    : root_to_watch{SYNC_ROOT}, watcher_mask{IN_CREATE | IN_ONLYDIR | IN_DELETE |
-                                            IN_MODIFY | IN_MOVED_TO |
-                                            IN_MOVED_FROM | IN_ISDIR |
-                                            IN_IGNORED} {
+    : root_to_watch{SYNC_ROOT}, watcher_mask{IN_CREATE | IN_ONLYDIR |
+                                             IN_DELETE | IN_MODIFY |
+                                             IN_MOVED_TO | IN_MOVED_FROM |
+                                             IN_ISDIR | IN_IGNORED} {
   std::clog << "Linux watcher module init...\n";
   // pipe per segnale exit al poll.
   //  - watcher scrive su 1
@@ -38,9 +38,7 @@ LinuxWatcher::~LinuxWatcher() {
   std::clog << "Linux Watcher destroy...\n";
 }
 
-void LinuxWatcher::init_sub_list(){
-  broker = Broker::getInstance();
-}
+void LinuxWatcher::init_sub_list() { broker = Broker::getInstance(); }
 
 void LinuxWatcher::start() {
   if (!running) {
@@ -164,14 +162,16 @@ void LinuxWatcher::handle_events() {
 
           case 1073742080:
           case 1073741952: {
+            std::clog << "moved to cartella:\n";
             add_watch(path);
             for (auto &p :
                  std::filesystem::recursive_directory_iterator(path)) {
               if (p.is_regular_file()) {
                 if (!(path.rfind(tmp_path, 0) == 0)) {
                   std::string f_path = p.path().string();
-                  LinuxEvent ev{f_path, 0, 256};
+                  LinuxEvent ev{f_path, 0, 128};
                   events[f_path] = ev;
+                  std::clog << " - richiesta aggiunta " << f_path << "\n";
                 }
               }
             }
@@ -180,11 +180,13 @@ void LinuxWatcher::handle_events() {
 
           case 1073741888:
           case 1073742336: {
+            std::clog << "moved from cartella:\n";
             std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
             for (std::string &sync_path : sync->get_paths()) {
               if (!std::filesystem::exists(sync_path)) {
-                LinuxEvent ev{sync_path, 0, 512};
+                LinuxEvent ev{sync_path, 0, 64};
                 events[sync_path] = ev;
+                std::clog << " - richiesta eliminazione " << sync_path << "\n";
               }
             }
 
@@ -207,6 +209,7 @@ void LinuxWatcher::handle_events() {
                   mask == 512))) {
               LinuxEvent ev{path, event->cookie, event->mask};
               events[path] = ev;
+              std::clog << " - richiesta evento su file " << path << "\n";
             }
 
           } break;
@@ -241,15 +244,18 @@ void LinuxWatcher::handle_events() {
                 (it + 1)->get_path().rfind(tmp_path, 0) == 0)) ||
               (mask == 128 && path.rfind(bin_path, 0) == 0)) {
             it++;
+            std::clog << "skip " << path << "\n";
             continue;
           }
           // 2. altro -> invio messaggio
           if (mask == 2 || mask == 128 || mask == 256) {
+            std::clog << "new_file " << path << "\n";
             std::shared_ptr<FileEntry> content{
                 new FileEntry{path, entry_producer::local, entry_status::new_}};
             broker->publish(Message{TOPIC::NEW_FILE, content});
           }
           if (mask == 64 || mask == 512) {
+            std::clog << "remove_file " << path << "\n";
             std::shared_ptr<SyncStructure> sync_structure =
                 SyncStructure::getInstance();
             std::optional<std::shared_ptr<FileEntry>> fentry =
