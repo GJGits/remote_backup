@@ -167,6 +167,9 @@ void LinuxWatcher::handle_events() {
           case 1073741952: {
             std::clog << "moved to cartella:\n";
             add_watch(path);
+            LinuxEvent ev{path, 0, 1073741952};
+            events[path] = ev;
+            /*
             for (auto &p :
                  std::filesystem::recursive_directory_iterator(path)) {
               if (p.is_regular_file()) {
@@ -177,7 +180,7 @@ void LinuxWatcher::handle_events() {
                   std::clog << " - richiesta aggiunta " << f_path << "\n";
                 }
               }
-            }
+            }*/
 
           } break;
 
@@ -225,7 +228,21 @@ void LinuxWatcher::handle_events() {
 
         std::vector<LinuxEvent> eves{};
         for (const auto &[path, event] : events) {
-          eves.push_back(event);
+          if (event.get_mask() != 1073741952)
+            eves.push_back(event);
+          else {
+            for (auto &p :
+                 std::filesystem::recursive_directory_iterator(path)) {
+              if (p.is_regular_file()) {
+                if (!(path.rfind(tmp_path, 0) == 0)) {
+                  std::string f_path = p.path().string();
+                  LinuxEvent ev{f_path, 0, 128};
+                  eves.push_back(ev);
+                  std::clog << " - richiesta aggiunta " << f_path << "\n";
+                }
+              }
+            }
+          }
         }
 
         // ordine descrescente (cookie, mask)
