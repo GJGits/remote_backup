@@ -1,1 +1,19 @@
-{"entries":[{"last_change":1605095155,"nchunks":19,"path":"./sync/pacchetto 2/02 - il modello di esecuzione.ppt","producer":0,"status":0},{"last_change":1605095155,"nchunks":44,"path":"./sync/pacchetto 2/02 - il modello di esecuzione.pdf","producer":0,"status":0},{"last_change":1605095155,"nchunks":1,"path":"./sync/pacchetto 2/Esercizio_print_nostdlib/out","producer":0,"status":0},{"last_change":1605095155,"nchunks":1,"path":"./sync/pacchetto 2/Esercizio_print_nostdlib/main.c","producer":0,"status":0},{"last_change":1605095155,"nchunks":5,"path":"./sync/pacchetto 2/Esercizio_print_nostdlib/lista_systemcall_linux.pdf","producer":0,"status":0}],"last_check":1605095199}
+{
+    "entries": [
+        {
+            "last_change": 1605199401,
+            "nchunks": 21,
+            "path": "./sync/testo.txt",
+            "producer": 1,
+            "status": 0
+        },
+        {
+            "last_change": 1605199110,
+            "nchunks": 109,
+            "path": "./sync/test_7mega.tar.gz",
+            "producer": 0,
+            "status": 0
+        }
+    ],
+    "last_check": 1605199988
+}

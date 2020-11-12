@@ -160,7 +160,10 @@ void LinuxWatcher::handle_events() {
 
           switch (event->mask) {
 
-          case 1073742080:
+          case 1073742080: {
+            add_watch(path);
+          } break;
+
           case 1073741952: {
             std::clog << "moved to cartella:\n";
             add_watch(path);

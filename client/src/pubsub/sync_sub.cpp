@@ -67,9 +67,13 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
     std::string new_path{BIN_PATH + std::string{"/a"}};
     std::filesystem::rename(fentry->get_path(), new_path);
     std::remove(new_path.c_str());
+    std::filesystem::path parent_path =
+        std::filesystem::path(fentry->get_path()).parent_path();
+    if (std::filesystem::is_empty(parent_path)) {
+      std::filesystem::remove_all(parent_path);
+    }
   }
   fentry->set_status(entry_status::synced);
   broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
   broker->publish(Message{TOPIC::TRANSFER_COMPLETE, fentry});
 }
-
