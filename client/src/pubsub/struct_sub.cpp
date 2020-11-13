@@ -41,7 +41,9 @@ void StructSubscriber::stop() {
 void StructSubscriber::on_add_entry(const Message &message) {
   std::unique_lock lock{m1};
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+  std::clog << "accedo a mex\n";
   std::shared_ptr<FileEntry> entry = message.get_content();
+  std::clog << "accesso a mex\n";
   sync->add_entry(entry);
 }
 
@@ -56,9 +58,11 @@ void StructSubscriber::notify_news() {
   for (const auto &entry : sync->get_entries()) {
     if (entry->get_status() == entry_status::new_) {
       broker->publish(Message{TOPIC::NEW_FILE, entry});
+      std::clog << "- chiedo nuovo file: " << entry->get_path() << "\n";
     }
     if (entry->get_status() == entry_status::delete_) {
       broker->publish(Message{TOPIC::FILE_DELETED, entry});
+      std::clog << "- chiedo delete file: " << entry->get_path() << "\n";
     }
   }
 }

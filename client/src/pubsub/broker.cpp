@@ -83,3 +83,13 @@ void Broker::push(const std::function<void(void)> &pack) {
   tasks.push(std::move(pack));
   ncv.notify_one();
 }
+
+
+
+/*
+
+  watcher  [t1]: create message 0x0001
+  broker   [t1]: riceve, bind fn con message (0x0001)
+  trhead x [tx]: chiama on_new_file(0x0001)
+  trhead x [tx]: chiama 0x0001.get_content()
+*/

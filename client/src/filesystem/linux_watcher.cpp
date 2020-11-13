@@ -165,7 +165,6 @@ void LinuxWatcher::handle_events() {
           } break;
 
           case 1073741952: {
-            std::clog << "moved to cartella:\n";
             add_watch(path);
             LinuxEvent ev{path, 0, 1073741952};
             events[path] = ev;
@@ -192,7 +191,6 @@ void LinuxWatcher::handle_events() {
               if (!std::filesystem::exists(sync_path)) {
                 LinuxEvent ev{sync_path, 0, 64};
                 events[sync_path] = ev;
-                std::clog << " - richiesta eliminazione " << sync_path << "\n";
               }
             }
 
@@ -215,7 +213,6 @@ void LinuxWatcher::handle_events() {
                   mask == 512))) {
               LinuxEvent ev{path, event->cookie, event->mask};
               events[path] = ev;
-              std::clog << " - richiesta evento su file " << path << "\n";
             }
 
           } break;
@@ -238,7 +235,6 @@ void LinuxWatcher::handle_events() {
                   std::string f_path = p.path().string();
                   LinuxEvent ev{f_path, 0, 128};
                   eves.push_back(ev);
-                  std::clog << " - richiesta aggiunta " << f_path << "\n";
                 }
               }
             }
@@ -264,18 +260,15 @@ void LinuxWatcher::handle_events() {
                 (it + 1)->get_path().rfind(tmp_path, 0) == 0)) ||
               (mask == 128 && path.rfind(bin_path, 0) == 0)) {
             it++;
-            std::clog << "skip " << path << "\n";
             continue;
           }
           // 2. altro -> invio messaggio
           if (mask == 2 || mask == 128 || mask == 256) {
-            std::clog << "new_file " << path << "\n";
             std::shared_ptr<FileEntry> content{
                 new FileEntry{path, entry_producer::local, entry_status::new_}};
             broker->publish(Message{TOPIC::NEW_FILE, content});
           }
           if (mask == 64 || mask == 512) {
-            std::clog << "remove_file " << path << "\n";
             std::shared_ptr<SyncStructure> sync_structure =
                 SyncStructure::getInstance();
             std::optional<std::shared_ptr<FileEntry>> fentry =

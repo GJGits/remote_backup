@@ -16,7 +16,7 @@ void HTTPClient::up_request(const http::request<http::vector_body<char>> &req) {
     DurationLogger logger{"COMPLETE REQUEST"};
     beast::tcp_stream str_temp{ioc};
     str_temp.connect(results);
-    usleep(10000);
+    //usleep(10000);
     send(str_temp, req);
     http::response<http::vector_body<char>> res = read(str_temp);
     uint32_t result = res.result_int();
