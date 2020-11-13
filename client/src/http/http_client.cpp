@@ -16,8 +16,8 @@ void HTTPClient::up_request(const http::request<http::vector_body<char>> &req) {
     DurationLogger logger{"COMPLETE REQUEST"};
     beast::tcp_stream str_temp{ioc};
     str_temp.connect(results);
-    //usleep(10000);
     send(str_temp, req);
+    usleep(10000);
     http::response<http::vector_body<char>> res = read(str_temp);
     uint32_t result = res.result_int();
     if (result == 200)
@@ -26,7 +26,7 @@ void HTTPClient::up_request(const http::request<http::vector_body<char>> &req) {
       // autenticazione fallita
       throw AuthFailed();
     }
-    if (result == 502 || result == 503 || result == 504) {
+    if (result == 500 || result == 502 || result == 503 || result == 504) {
       // server non raggiungibile
       throw ConnectionNotAvaible();
     }

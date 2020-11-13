@@ -1,7 +1,7 @@
 #include "../../include/pubsub/broker.hpp"
 
 Broker::Broker() : is_running{true} {
-  for (ssize_t i = 0; i < 4; i++) {
+  for (ssize_t i = 0; i < 6; i++) {
     callers.emplace_back([&]() {
       while (is_running) {
         std::function<void(void)> fn;
@@ -53,7 +53,7 @@ Broker::Broker() : is_running{true} {
 Broker::~Broker() {
   is_running = false;
   ncv.notify_all();
-  for (ssize_t i = 0; i < 4; i++) {
+  for (ssize_t i = 0; i < 6; i++) {
     callers[i].join();
   }
   std::clog << "broker destroy\n";
