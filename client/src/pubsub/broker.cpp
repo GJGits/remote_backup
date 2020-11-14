@@ -24,26 +24,36 @@ Broker::Broker() : is_running{true} {
         } catch (AuthFailed &ex) {
           std::clog << ex.what() << "\n";
           publish(Message{TOPIC::AUTH_FAILED});
+          clear();
+          return;
         }
 
         catch (ConnectionNotAvaible &ex) {
           std::clog << ex.what() << "\n";
           publish(Message{TOPIC::CONNECTION_LOST});
+          clear();
+          return;
         }
 
         catch (std::ifstream::failure &ex) {
           std::clog << ex.what() << "\n";
           publish(Message{TOPIC::EASY_EXCEPTION});
+          clear();
+          return;
         }
 
         catch (std::filesystem::filesystem_error &ex) {
           std::clog << ex.what() << "\n";
           publish(Message{TOPIC::EASY_EXCEPTION});
+          clear();
+          return;
         }
 
         catch (...) {
           std::clog << "The impossible happened (Broker)!\n";
           publish(Message{TOPIC::EASY_EXCEPTION});
+          clear();
+          return;
         }
       }
     });
@@ -84,12 +94,9 @@ void Broker::push(const std::function<void(void)> &pack) {
   ncv.notify_one();
 }
 
-
-
-/*
-
-  watcher  [t1]: create message 0x0001
-  broker   [t1]: riceve, bind fn con message (0x0001)
-  trhead x [tx]: chiama on_new_file(0x0001)
-  trhead x [tx]: chiama 0x0001.get_content()
-*/
+void Broker::clear() {
+  std::unique_lock{nm};
+  while (!tasks.empty()) {
+    tasks.pop();
+  }
+}

@@ -31,7 +31,7 @@ void HTTPClient::up_request(const http::request<http::vector_body<char>> &req) {
       // autenticazione fallita
       throw AuthFailed();
     }
-    if (result == 500 || result == 502 || result == 503 || result == 504) {
+    if (result == 400 || result == 500 || result == 502 || result == 503 || result == 504) {
       // server non raggiungibile
       throw ConnectionNotAvaible();
     }

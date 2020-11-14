@@ -29,4 +29,5 @@ public:
                  const std::function<void(const Message &)> &callback);
   void publish(const Message &message);
   void push(const std::function<void(void)> &pack);
+  void clear();
 };

@@ -33,11 +33,11 @@ void SyncSubscriber::on_new_file(const Message &message) {
   entry_guard eguard{fentry};
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   if (fentry->get_producer() == entry_producer::local && fentry->has_chunk()) {
-    broker->publish(Message{TOPIC::ADD_ENTRY, fentry});
     while (fentry->has_chunk()) {
       std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry->next_chunk();
       rest_client->post_chunk(chunk, fentry->to_string());
     }
+    broker->publish(Message{TOPIC::ADD_ENTRY, fentry});
   }
   if (fentry->get_producer() == entry_producer::server) {
     while (fentry->has_chunk()) {
@@ -52,7 +52,7 @@ void SyncSubscriber::on_new_file(const Message &message) {
     std::filesystem::remove(tmp_path);
   }
   fentry->set_status(entry_status::synced);
-  broker->publish(Message{TOPIC::TRANSFER_COMPLETE, fentry});
+  // broker->publish(Message{TOPIC::TRANSFER_COMPLETE, fentry});
 }
 
 void SyncSubscriber::on_file_deleted(const Message &message) {
