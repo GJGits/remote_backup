@@ -10,6 +10,10 @@ HTTPClient::HTTPClient() {
   }
 }
 
+HTTPClient::~HTTPClient() {
+  std::clog << "http_client destroy...\n";
+}
+
 void HTTPClient::up_request(const http::request<http::vector_body<char>> &req) {
 
   try {

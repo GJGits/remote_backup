@@ -15,6 +15,10 @@ RestClient::RestClient() {
   fill_headers(delete_prototype);
 }
 
+RestClient::~RestClient() {
+  std::clog << "rest_client destroy...\n";
+}
+
 void RestClient::read_info() {
   std::ifstream i(CLIENT_CONF);
   i.exceptions(std::ifstream::failbit | std::ifstream::badbit);
