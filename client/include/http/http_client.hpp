@@ -38,7 +38,6 @@ private:
   boost::asio::ip::basic_resolver_results<boost::asio::ip::tcp> results;
 
   HTTPClient();
-  ~HTTPClient();
 
   void send(beast::tcp_stream &stream,
             const http::request<http::vector_body<char>> &request);
@@ -46,6 +45,7 @@ private:
   http::response<http::vector_body<char>> read(beast::tcp_stream &stream);
 
 public:
+ ~HTTPClient();
   void up_request(const http::request<http::vector_body<char>> &req);
 
   json get_json(const http::request<http::vector_body<char>> &req);

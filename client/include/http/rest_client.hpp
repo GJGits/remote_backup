@@ -37,9 +37,9 @@ private:
   void fill_headers(http::request<http::vector_body<char>> &req,
                     size_t size = 0);
   RestClient();
-  ~RestClient();
 
 public:
+  ~RestClient();
   void post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
                             const std::string &target);
   std::vector<char> get_chunk(const std::string &target);

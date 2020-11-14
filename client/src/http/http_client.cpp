@@ -5,6 +5,7 @@ HTTPClient::HTTPClient() {
     // se non riesco a risolvere nome DNS ho problemi di connessione
     // o il server non e' raggiungibile
     this->results = resolver.resolve(host, port);
+    std::clog << "http_client init\n";
   } catch (const boost::exception &e) {
     throw ConnectionNotAvaible();
   }

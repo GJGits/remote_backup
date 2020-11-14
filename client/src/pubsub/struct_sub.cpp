@@ -58,11 +58,9 @@ void StructSubscriber::notify_news() {
   for (const auto &entry : sync->get_entries()) {
     if (entry->get_status() == entry_status::new_) {
       broker->publish(Message{TOPIC::NEW_FILE, entry});
-      std::clog << "- chiedo nuovo file: " << entry->get_path() << "\n";
     }
     if (entry->get_status() == entry_status::delete_) {
       broker->publish(Message{TOPIC::FILE_DELETED, entry});
-      std::clog << "- chiedo delete file: " << entry->get_path() << "\n";
     }
   }
 }

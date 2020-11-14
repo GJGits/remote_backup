@@ -103,9 +103,9 @@ void LinuxWatcher::handle_events() {
       // decrease performance. Hence, the buffer used for reading from
       // the inotify file descriptor should have the same alignment as
       // struct inotify_event.
-      char buf[4096]
+      char buf[8192]
           __attribute__((aligned(__alignof__(struct inotify_event))));
-      memset(buf, '\0', 4096);
+      memset(buf, '\0', 8192);
       const struct inotify_event *event;
       ssize_t len;
       char *ptr; // ptr per consumare il buffer
@@ -116,7 +116,7 @@ void LinuxWatcher::handle_events() {
       fds[0].events = POLLIN;
       fds[1].fd = pipe_[0];
       fds[1].events = POLLIN;
-
+      
       // poll until an event occurs.Timeout = -1 -> BLOCKING,
       // else timeout expressed in milliseconds
       poll_num = poll(fds, nfds, timer);
@@ -126,13 +126,18 @@ void LinuxWatcher::handle_events() {
         // impedendo riavvio watcher in seguito ad uno stop.
         std::clog << "ricevuto segnale di chiusura da poll\n";
         char c;
-        read(fds[1].fd, &c, 1);
+        ssize_t r = read(fds[1].fd, &c, 1);
+        if (r <= 0) {
+          std::clog << "panic on read pipe signal!\n";
+        }
         continue;
       }
 
       if (poll_num > 0) {
         len = read(inotify_descriptor, buf, sizeof buf);
-        // todo: check su read qui...
+        if (len <= 0) {
+          std::clog << "panic on read event!\n";
+        }
 
         for (ptr = buf; ptr < buf + len;
              ptr += sizeof(struct inotify_event) + event->len) {
@@ -172,7 +177,6 @@ void LinuxWatcher::handle_events() {
 
           case 1073741888:
           case 1073742336: {
-            std::clog << "moved from cartella:\n";
             std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
             for (std::string &sync_path : sync->get_paths()) {
               if (!std::filesystem::exists(sync_path)) {
@@ -209,6 +213,7 @@ void LinuxWatcher::handle_events() {
       if (poll_num == 0) {
 
         timer = WAIT;
+        std::clog << "loggati " << std::to_string(events.size()) << " eventi!\n";
 
         std::vector<LinuxEvent> eves{};
         for (const auto &[path, event] : events) {
