@@ -22,6 +22,8 @@ int main() {
   // register signal SIGINT and signal handler
   signal(SIGTERM, signalHandler);
 
+  std::shared_ptr<Broker> broker = Broker::getInstance();
+
   std::shared_ptr<StructSubscriber> struct_sub =
       StructSubscriber::getInstance();
   struct_sub->init_sub_list();
