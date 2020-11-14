@@ -168,19 +168,6 @@ void LinuxWatcher::handle_events() {
             add_watch(path);
             LinuxEvent ev{path, 0, 1073741952};
             events[path] = ev;
-            /*
-            for (auto &p :
-                 std::filesystem::recursive_directory_iterator(path)) {
-              if (p.is_regular_file()) {
-                if (!(path.rfind(tmp_path, 0) == 0)) {
-                  std::string f_path = p.path().string();
-                  LinuxEvent ev{f_path, 0, 128};
-                  events[f_path] = ev;
-                  std::clog << " - richiesta aggiunta " << f_path << "\n";
-                }
-              }
-            }*/
-
           } break;
 
           case 1073741888:

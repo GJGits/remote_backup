@@ -116,7 +116,7 @@ void GuiModule::handle_gui_message() {
   }
 
   catch (...) {
-    std::clog << "The impossible happened!\n";
+    std::clog << "The impossible happened! (GuiModule)\n";
     on_easy_exception(Message{TOPIC::EASY_EXCEPTION});
   }
 }

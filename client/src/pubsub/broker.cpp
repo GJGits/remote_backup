@@ -42,7 +42,7 @@ Broker::Broker() : is_running{true} {
         }
 
         catch (...) {
-          std::clog << "The impossible happened!\n";
+          std::clog << "The impossible happened (Broker)!\n";
           publish(Message{TOPIC::EASY_EXCEPTION});
         }
       }
