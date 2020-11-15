@@ -17,11 +17,7 @@ request_handler::request_handler(const std::string &doc_root)
     : doc_root_(doc_root) {}
 
 void request_handler::handle_request(const request &req, reply &rep) {
-  // Decode url to path.
-  std::string request_path;
-
   try {
-
     std::shared_ptr<Controller> c = ControllerRouter::getController(req.uri);
     rep = c->handle(req);
     return;

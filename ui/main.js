@@ -12,6 +12,7 @@ const ClientConf = require('./modules/client-conf.js');
 app.on('ready', () => {
   var command = "./find_client_ip";
   const client_ip = execSync(command).toString().replace(/(\r\n|\n|\r)/gm, "");
+  //const client_ip = "127.0.0.1";
   console.log("client ip: ", client_ip);
   // tenere i codici in questa mappa in sync con la
   // mappa dei topics in utente.

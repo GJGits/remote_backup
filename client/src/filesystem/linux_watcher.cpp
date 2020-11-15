@@ -208,6 +208,7 @@ void LinuxWatcher::handle_events() {
 
           } break;
           }
+        
         }
       }
       if (poll_num == 0) {

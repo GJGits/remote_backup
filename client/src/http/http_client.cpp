@@ -11,9 +11,7 @@ HTTPClient::HTTPClient() {
   }
 }
 
-HTTPClient::~HTTPClient() {
-  std::clog << "http_client destroy...\n";
-}
+HTTPClient::~HTTPClient() { std::clog << "http_client destroy...\n"; }
 
 void HTTPClient::up_request(const http::request<http::vector_body<char>> &req) {
 
@@ -22,7 +20,7 @@ void HTTPClient::up_request(const http::request<http::vector_body<char>> &req) {
     beast::tcp_stream str_temp{ioc};
     str_temp.connect(results);
     send(str_temp, req);
-    usleep(10000);
+    usleep(20000);
     http::response<http::vector_body<char>> res = read(str_temp);
     uint32_t result = res.result_int();
     if (result == 200)
@@ -31,8 +29,11 @@ void HTTPClient::up_request(const http::request<http::vector_body<char>> &req) {
       // autenticazione fallita
       throw AuthFailed();
     }
-    if (result == 400 || result == 500 || result == 502 || result == 503 || result == 504) {
+    if (result == 400 || result == 500 || result == 502 || result == 503 ||
+        result == 504) {
       // server non raggiungibile
+      std::string dump{res.body().begin(), res.body().end()};
+      std::clog << "error: " << dump << "\n";
       throw ConnectionNotAvaible();
     }
   } catch (const boost::exception &e) {
@@ -46,6 +47,7 @@ json HTTPClient::get_json(const http::request<http::vector_body<char>> &req) {
     beast::tcp_stream str_temp{ioc};
     str_temp.connect(results);
     send(str_temp, req);
+    usleep(20000);
     http::response<http::vector_body<char>> res = read(str_temp);
     uint32_t result = res.result_int();
     if (result == 200) {
@@ -73,6 +75,7 @@ HTTPClient::get_binary(const http::request<http::vector_body<char>> &req) {
     beast::tcp_stream str_temp{ioc};
     str_temp.connect(results);
     send(str_temp, req);
+    usleep(20000);
     http::response<http::vector_body<char>> res = read(str_temp);
     uint32_t result = res.result_int();
     if (result == 200) {

@@ -146,9 +146,11 @@ void GuiModule::on_connection_lost(const Message &message) {
 }
 
 void GuiModule::on_transfer(const Message &message) {
+  /*
   json transfer = message.get_content()->to_json();
   json mex = {{"code", "transfer"}, {"message", transfer}};
   send_message(mex);
+  */
 }
 
 void GuiModule::send_message(const json &message) {

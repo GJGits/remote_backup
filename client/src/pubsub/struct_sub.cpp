@@ -8,7 +8,7 @@ StructSubscriber::~StructSubscriber() {
 
 void StructSubscriber::init_sub_list() {
   broker = Broker::getInstance();
-  broker->subscribe(TOPIC::ADD_ENTRY,
+  broker->subscribe(TOPIC::NEW_FILE,
                     std::bind(&StructSubscriber::on_add_entry, instance.get(),
                               std::placeholders::_1));
   broker->subscribe(TOPIC::REMOVE_ENTRY,
@@ -41,9 +41,7 @@ void StructSubscriber::stop() {
 void StructSubscriber::on_add_entry(const Message &message) {
   std::unique_lock lock{m1};
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-  std::clog << "accedo a mex\n";
   std::shared_ptr<FileEntry> entry = message.get_content();
-  std::clog << "accesso a mex\n";
   sync->add_entry(entry);
 }
 

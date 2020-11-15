@@ -12,6 +12,7 @@ Broker::Broker() : is_running{true} {
             fn = std::move(tasks.front());
             tasks.pop();
           } else {
+            //publish(Message{TOPIC::TRANSFER_COMPLETE});
             ncv.wait(lk, [&]() { return !tasks.empty() || !is_running; });
             continue;
           }

@@ -12,7 +12,7 @@
 #include "../modules/module.hpp"
 #include "linux_event.hpp"
 
-#define TIMER 5000
+#define TIMER 10000
 #define WAIT -1
 
 class LinuxWatcher
