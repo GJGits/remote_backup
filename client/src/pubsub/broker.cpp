@@ -40,14 +40,14 @@ Broker::Broker() : is_running{true} {
           std::clog << ex.what() << "\n";
           clear();
           publish(Message{TOPIC::EASY_EXCEPTION});
-          return;
+          //return;
         }
 
         catch (std::filesystem::filesystem_error &ex) {
           std::clog << ex.what() << "\n";
           clear();
           publish(Message{TOPIC::EASY_EXCEPTION});
-          return;
+          //return;
         }
 
         catch (...) {
