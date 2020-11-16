@@ -3,6 +3,7 @@
 #include "file_entry.hpp"
 #include "../common/constants.hpp"
 
+
 class entry_guard {
 private:
   std::shared_ptr<FileEntry> entry;
