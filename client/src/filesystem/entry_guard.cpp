@@ -7,6 +7,6 @@ entry_guard::~entry_guard() {
   if (!std::filesystem::exists(entry->get_path())) {
     entry->set_nchunks(0);
     entry->set_read_count(0);
-    entry->set_status(entry_status::delete_);
+    std::filesystem::remove_all(TMP_PATH + std::string{"/"});
   }
 }

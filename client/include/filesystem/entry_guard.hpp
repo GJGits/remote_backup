@@ -1,6 +1,7 @@
 #pragma once
 
 #include "file_entry.hpp"
+#include "../common/constants.hpp"
 
 class entry_guard {
 private:
