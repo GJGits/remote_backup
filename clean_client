@@ -1,0 +1,6 @@
+#!/bin/bash
+
+sudo rm -r ./client/sync/*
+sudo rm -r ./client/sync2/*
+echo '{"entries":[],"last_check":0}' > ./client/config/client-struct.json
+echo '{"entries":[],"last_check":0}' > ./client/config2/client-struct.json

@@ -17,7 +17,7 @@ const set_network_limit = () => {
     // set upload limit rate
     //execSync("sudo tc qdisc add dev " + dock_cli_iface + " handle 10: root tbf rate 0.5mbit \ burst 5kb latency 70ms peakrate 1mbit \ minburst 1540");
     //execSync("sudo tc qdisc add dev " + dock_cli_iface + " root netem delay 20ms");
-    execSync("sudo tc qdisc add dev " + dock_cli_iface + " root tbf rate 50mbit burst 1mbit latency 400ms");
+    execSync("sudo tc qdisc add dev " + dock_cli_iface + " root tbf rate 30mbit burst 1mbit latency 400ms");
     // set download limit rate
     //execSync("sudo tc qdisc add dev " + dock_cli_iface + " parent 10:1 handle 100: sfq");
   }
