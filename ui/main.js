@@ -8,8 +8,25 @@ const client = dgram.createSocket('udp4');
 const { ipcMain, app, Menu, Tray } = require('electron');
 const ClientConf = require('./modules/client-conf.js');
 
+const set_network_limit = () => {
+  const id = execSync("docker exec remote_backup_client_1 cat /sys/class/net/eth0/iflink").toString().replace(/(\r\n|\n|\r)/gm, "");
+  const grep_res = execSync("ip ad | grep " + id).toString().replace(/(\r\n|\n|\r)/gm, "");
+  const iface_rgx = /\d{1,2}\:\s(veth\w+)@/g;
+  const dock_cli_iface = iface_rgx.exec(grep_res)[1];
+  if (dock_cli_iface) {
+    // set upload limit rate
+    //execSync("sudo tc qdisc add dev " + dock_cli_iface + " handle 10: root tbf rate 0.5mbit \ burst 5kb latency 70ms peakrate 1mbit \ minburst 1540");
+    //execSync("sudo tc qdisc add dev " + dock_cli_iface + " root netem delay 20ms");
+    execSync("sudo tc qdisc add dev " + dock_cli_iface + " root tbf rate 50mbit burst 1mbit latency 400ms");
+    // set download limit rate
+    //execSync("sudo tc qdisc add dev " + dock_cli_iface + " parent 10:1 handle 100: sfq");
+  }
+  console.log("docker iface: ", dock_cli_iface);
+}
+
 // CONSTANTS
 app.on('ready', () => {
+  set_network_limit();
   var command = "./find_client_ip";
   const client_ip = execSync(command).toString().replace(/(\r\n|\n|\r)/gm, "");
   //const client_ip = "127.0.0.1";
@@ -79,7 +96,7 @@ app.on('ready', () => {
     server.on('message', (msg, rinfo) => {
       //console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
       msg = new TextDecoder("utf-8").decode(msg);
-      let obj = JSON.parse( msg );
+      let obj = JSON.parse(msg);
       if (obj.code === "transfer") {
         mb.window.webContents.send('transfer', obj.message);
       }
