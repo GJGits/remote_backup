@@ -11,3 +11,7 @@ node_modules/
 *.c
 *.zip
 *.chk
+*.php
+*.out
+*.mp4
+*.jpg

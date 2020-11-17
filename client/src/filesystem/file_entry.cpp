@@ -68,9 +68,10 @@ std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
 void FileEntry::retrieve_chunk() {
   DurationLogger log{"READ_CHUNK_FROM_SERVER"};
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-  std::string tmp_path{TMP_PATH + std::string{"/"} + macaron::Base64::Encode(path) + std::string{".out"}};
-  std::ofstream out{tmp_path , std::ios::app | std::ios::binary};
-  out.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+  std::string tmp_path{TMP_PATH + std::string{"/"} +
+                       macaron::Base64::Encode(path) + std::string{".out"}};
+  std::ofstream out{tmp_path, std::ios::app | std::ios::binary};
+  out.exceptions(std::ofstream::failbit | std::ofstream::badbit);
   if (buffer.get() == nullptr) {
     buffer = std::shared_ptr<char[]>{new char[CHUNK_SIZE]};
     memset(buffer.get(), '\0', CHUNK_SIZE);
@@ -80,6 +81,12 @@ void FileEntry::retrieve_chunk() {
   std::vector<char> response = rest_client->get_chunk(target);
   out.write(response.data(), response.size());
   read_count++;
+  if (read_count == nchunks) {
+    // non aspettiamo di flushare il contenuto di out, questo perche'
+    // il file deve essere mosso poco dopo e con tanto carico
+    // di rischia di perdere dati altrimenti
+    out.flush();
+  }
 }
 
 json FileEntry::to_json() {

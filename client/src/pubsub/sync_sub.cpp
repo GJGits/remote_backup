@@ -48,7 +48,9 @@ void SyncSubscriber::on_new_file(const Message &message) {
                                    std::string{".out"}};
     std::filesystem::create_directories(new_path.parent_path().string());
     std::filesystem::rename(tmp_path, new_path);
-    std::filesystem::remove(tmp_path);
+    // non dovrebbe servire, una rename e' una moved_to quindi il file inizial
+    // dovrebbe sparire
+    //std::filesystem::remove(tmp_path);
   }
   fentry->set_status(entry_status::synced);
 }

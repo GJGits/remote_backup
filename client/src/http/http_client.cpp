@@ -1,6 +1,7 @@
 #include "../../include/http/http_client.hpp"
 
 HTTPClient::HTTPClient() {
+  /*
   try {
     // se non riesco a risolvere nome DNS ho problemi di connessione
     // o il server non e' raggiungibile
@@ -9,6 +10,7 @@ HTTPClient::HTTPClient() {
   } catch (const boost::exception &e) {
     throw ConnectionNotAvaible();
   }
+  */
 }
 
 HTTPClient::~HTTPClient() { std::clog << "http_client destroy...\n"; }
@@ -17,6 +19,10 @@ void HTTPClient::up_request(const http::request<http::vector_body<char>> &req) {
 
   try {
     DurationLogger logger{"COMPLETE REQUEST"};
+    net::io_context ioc;
+    tcp::resolver resolver{ioc};
+    boost::asio::ip::basic_resolver_results<boost::asio::ip::tcp> results =
+        resolver.resolve(host, port);
     beast::tcp_stream str_temp{ioc};
     str_temp.connect(results);
     send(str_temp, req);
@@ -43,7 +49,12 @@ void HTTPClient::up_request(const http::request<http::vector_body<char>> &req) {
 json HTTPClient::get_json(const http::request<http::vector_body<char>> &req) {
 
   try {
+    net::io_context ioc;
+    tcp::resolver resolver{ioc};
+    boost::asio::ip::basic_resolver_results<boost::asio::ip::tcp> results =
+        resolver.resolve(host, port);
     beast::tcp_stream str_temp{ioc};
+
     str_temp.connect(results);
     send(str_temp, req);
     http::response<http::vector_body<char>> res = read(str_temp);
@@ -70,6 +81,10 @@ std::vector<char>
 HTTPClient::get_binary(const http::request<http::vector_body<char>> &req) {
 
   try {
+    net::io_context ioc;
+    tcp::resolver resolver{ioc};
+    boost::asio::ip::basic_resolver_results<boost::asio::ip::tcp> results =
+        resolver.resolve(host, port);
     beast::tcp_stream str_temp{ioc};
     str_temp.connect(results);
     send(str_temp, req);

@@ -9,7 +9,8 @@ resource_guard::~resource_guard() {
   }
   std::filesystem::create_directory(TMP_PATH);
   std::filesystem::create_directory(BIN_PATH);
-  if (!std::filesystem::exists(CLIENT_STRUCT)) {
+  if (!std::filesystem::exists(CLIENT_STRUCT) ||
+      std::filesystem::is_empty(CLIENT_STRUCT)) {
     reset_struct();
   }
 }

@@ -18,7 +18,8 @@ request_handler::request_handler(const std::string &doc_root)
 
 void request_handler::handle_request(const request &req, reply &rep) {
   try {
-    std::shared_ptr<Controller> c = ControllerRouter::getController(req.uri);
+    std::shared_ptr<ControllerRouter> router = ControllerRouter::getInstance();
+    std::shared_ptr<Controller> c = router->getController(req.uri);
     rep = c->handle(req);
     return;
 
