@@ -73,9 +73,9 @@ void SyncStructure::update_from_fs() {
 
 void SyncStructure::update_from_remote() {
   int current_page = 0;
-  int last_page = 1;
+  int last_page = 0;
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-  while (current_page < last_page) {
+  while (current_page <= last_page) {
     json list = rest_client->get_status_list(current_page, last_check)["list"];
     last_page = list["last_page"].get<int>();
     for (size_t y = 0; y < list["entries"].size(); y++) {
@@ -108,6 +108,7 @@ void SyncStructure::add_entry(const std::shared_ptr<FileEntry> &entry) {
 }
 
 void SyncStructure::remove_entry(const std::shared_ptr<FileEntry> &entry) {
+  std::unique_lock lk{m};
   structure.erase(entry->get_path());
 }
 

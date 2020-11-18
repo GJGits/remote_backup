@@ -41,14 +41,14 @@ void connection::handle_read(const boost::system::error_code& e,
 {
   if (!e)
   {
-    DurationLogger dp{"PARSE REQUEST"};
+    //DurationLogger dp{"PARSE REQUEST"};
     boost::tribool result;
     std::tie(result, std::ignore) = request_parser_.parse(
         request_, buffer_.data(), buffer_.data() + bytes_transferred);
 
     if (result == request_parser::good)
     {
-      DurationLogger dh{"HANDLE REQUEST"};
+      //DurationLogger dh{"HANDLE REQUEST"};
       request_handler_.handle_request(request_, reply_);
       boost::asio::async_write(socket_, reply_.to_buffers(),
           strand_.wrap(

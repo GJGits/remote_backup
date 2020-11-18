@@ -46,9 +46,7 @@ void StructSubscriber::on_add_entry(const Message &message) {
 }
 
 void StructSubscriber::on_delete_entry(const Message &message) {
-  std::unique_lock lock{m1};
-  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-  sync->remove_entry(message.get_content());
+	return;
 }
 
 void StructSubscriber::notify_news() {

@@ -67,7 +67,7 @@ public:
   }
 
   static Subject validateToken(const http::server::request &req) {
-    DurationLogger logger{"VALIDATION"};
+    //DurationLogger logger{"VALIDATION"};
     for (http::server::header h : req.headers) {
       if (h.name.compare("Authorization") == 0) {
         std::vector<std::string> tokens = Utility::split(h.value, ' ');

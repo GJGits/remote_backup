@@ -18,7 +18,7 @@ HTTPClient::~HTTPClient() { std::clog << "http_client destroy...\n"; }
 void HTTPClient::up_request(const http::request<http::vector_body<char>> &req) {
 
   try {
-    DurationLogger logger{"COMPLETE REQUEST"};
+    //DurationLogger logger{"COMPLETE REQUEST"};
     net::io_context ioc;
     tcp::resolver resolver{ioc};
     boost::asio::ip::basic_resolver_results<boost::asio::ip::tcp> results =
@@ -38,7 +38,7 @@ void HTTPClient::up_request(const http::request<http::vector_body<char>> &req) {
         result == 504) {
       // server non raggiungibile
       std::string dump{res.body().begin(), res.body().end()};
-      std::clog << "error: " << dump << "\n";
+      //std::clog << "error: " << dump << "\n";
       throw ConnectionNotAvaible();
     }
   } catch (const boost::exception &e) {
@@ -110,13 +110,13 @@ HTTPClient::get_binary(const http::request<http::vector_body<char>> &req) {
 
 void HTTPClient::send(beast::tcp_stream &stream,
                       const http::request<http::vector_body<char>> &request) {
-  DurationLogger{"SEND"};
+  //DurationLogger{"SEND"};
   http::write(stream, request);
 }
 
 http::response<http::vector_body<char>>
 HTTPClient::read(beast::tcp_stream &stream) {
-  DurationLogger{"READ"};
+  //DurationLogger{"READ"};
   // This buffer is used for reading and must be persisted
   beast::flat_buffer buffer;
   // Declare a container to hold the response

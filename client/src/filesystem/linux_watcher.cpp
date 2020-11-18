@@ -270,7 +270,8 @@ void LinuxWatcher::handle_events() {
               std::shared_ptr<FileEntry> content = fentry.value();
               content->set_status(entry_status::delete_);
               content->set_producer(entry_producer::local);
-              broker->publish(Message{TOPIC::FILE_DELETED, content});
+              Message m{TOPIC::FILE_DELETED, content};
+              broker->publish(m);
             }
           }
         }

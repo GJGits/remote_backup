@@ -28,7 +28,7 @@ void SyncSubscriber::stop() {
 }
 
 void SyncSubscriber::on_new_file(const Message &message) {
-  DurationLogger logger{"NEW_FILE"};
+  //DurationLogger logger{"NEW_FILE"};
   std::shared_ptr<FileEntry> fentry = message.get_content();
   entry_guard eguard{fentry};
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
@@ -48,15 +48,13 @@ void SyncSubscriber::on_new_file(const Message &message) {
                                    std::string{".out"}};
     std::filesystem::create_directories(new_path.parent_path().string());
     std::filesystem::rename(tmp_path, new_path);
-    // non dovrebbe servire, una rename e' una moved_to quindi il file inizial
-    // dovrebbe sparire
-    //std::filesystem::remove(tmp_path);
+
   }
   fentry->set_status(entry_status::synced);
 }
 
 void SyncSubscriber::on_file_deleted(const Message &message) {
-  DurationLogger logger{"FILE_DELETED"};
+  //DurationLogger logger{"FILE_DELETED"};
   std::shared_ptr<FileEntry> fentry = message.get_content();
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   if (fentry->get_producer() == entry_producer::local) {
@@ -74,6 +72,7 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
     }
   }
   fentry->set_status(entry_status::synced);
-  broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
-  //broker->publish(Message{TOPIC::TRANSFER_COMPLETE, fentry});
+  std::shared_ptr<SyncStructure> sync_struct = SyncStructure::getInstance();
+  sync_struct->remove_entry(fentry);
+
 }
