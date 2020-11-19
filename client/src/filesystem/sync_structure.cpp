@@ -7,7 +7,6 @@ SyncStructure::SyncStructure() : server_ack{false}, last_check{0} {
 SyncStructure::~SyncStructure() { std::clog << "sync_struct destroy...\n"; }
 
 void SyncStructure::store() {
-  std::unique_lock lk{mx};
   if (!structure.empty() && server_ack) {
     std::ofstream o{CLIENT_STRUCT};
     json jstru = {{"entries", json::array()},
@@ -21,7 +20,6 @@ void SyncStructure::store() {
 }
 
 void SyncStructure::restore() {
-  std::unique_lock lk{mx};
   std::ifstream i{CLIENT_STRUCT};
   i.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   json j;
@@ -54,7 +52,6 @@ void SyncStructure::restore() {
 }
 
 void SyncStructure::update_from_fs() {
-  std::unique_lock lk{mx};
   for (const auto &p :
        std::filesystem::recursive_directory_iterator(SYNC_ROOT)) {
     std::string path = p.path().string();
@@ -75,7 +72,6 @@ void SyncStructure::update_from_fs() {
 }
 
 void SyncStructure::update_from_remote() {
-  std::unique_lock lk{mx};
   int current_page = 0;
   int last_page = 0;
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();

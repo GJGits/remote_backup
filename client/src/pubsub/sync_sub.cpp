@@ -39,6 +39,8 @@ void SyncSubscriber::start() {
 void SyncSubscriber::stop() {
   std::clog << "sync module stop...\n";
   running = false;
+  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+  sync->store();
 }
 
 void SyncSubscriber::on_new_file(const Message &message) {
@@ -99,12 +101,14 @@ void SyncSubscriber::delete_from_local(
 
 void SyncSubscriber::delete_from_remote(
     const std::shared_ptr<FileEntry> &fentry) {
-  std::string new_path{BIN_PATH + std::string{"/a"}};
-  std::filesystem::rename(fentry->get_path(), new_path);
-  std::remove(new_path.c_str());
-  std::filesystem::path parent_path =
-      std::filesystem::path(fentry->get_path()).parent_path();
-  if (std::filesystem::is_empty(parent_path)) {
-    std::filesystem::remove_all(parent_path);
+  if (std::filesystem::exists(fentry->get_path())) {
+    std::string new_path{BIN_PATH + std::string{"/a"}};
+    std::filesystem::rename(fentry->get_path(), new_path);
+    std::remove(new_path.c_str());
+    std::filesystem::path parent_path =
+        std::filesystem::path(fentry->get_path()).parent_path();
+    if (std::filesystem::is_empty(parent_path)) {
+      std::filesystem::remove_all(parent_path);
+    }
   }
 }
