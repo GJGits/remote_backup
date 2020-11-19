@@ -12,15 +12,17 @@ std::shared_ptr<std::vector<char>> PostChunkDTO::getchunk_body() const {
   return chunk_body;
 }
 
-const void PostChunkDTO::fill(const http::server::request &req) {
+const void PostChunkDTO::fill(const http::server::request &req, size_t ck_size) {
   std::vector<std::string> uri_elements = Utility::split(req.uri, '/');
   chunk_id = std::stoi(uri_elements[2]);
-  chunk_size = std::stoi(uri_elements[3]);
-  chunk_hash = std::move(uri_elements[4]);
-  num_chunks = std::stoi(uri_elements[5]);
-  file_name = std::move(uri_elements[6]);
+  chunk_size = (int)ck_size;
+  chunk_hash = std::move(uri_elements[3]);
+  num_chunks = std::stoi(uri_elements[4]);
+  file_name = std::move(uri_elements[5]);
   file_path = "../../filesystem/" + get_subject().get_sub() + "/" + file_name;
-  timestamp_locale = std::stoi(uri_elements[7]);
+  timestamp_locale = std::stoi(uri_elements[6]);
   std::move(req.body.get()->begin(), req.body.get()->end(),
             std::back_inserter(*chunk_body));
 }
+
+

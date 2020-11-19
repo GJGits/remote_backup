@@ -1,27 +1,14 @@
 #include "../../include/repositories/file-repository.hpp"
 
-std::shared_ptr<FileRepository> FileRepository::getInstance() {
-  if (instance.get() == nullptr) {
-    instance = std::shared_ptr<FileRepository>{};
-  }
-  return instance;
-}
+
 
 bool FileRepository::deleteFile(const FileEntity &file) {
 
-  std::unique_ptr<sql::PreparedStatement> stmt;
-  std::unique_ptr<sql::ResultSet> res;
-  std::shared_ptr<DBRepository> db_repinstance = DBRepository::getInstance();
-  size_t db_selected = db_repinstance->getDBbyUsername(file.getUsername());
-  std::shared_ptr<sql::Connection> con = DBConnect::getConnection(db_selected);
-    if (con->isValid() && !con->isClosed()) {
-                stmt =
-                        std::unique_ptr<sql::PreparedStatement>{std::move(con->prepareStatement(
-                                "DELETE from chunks WHERE c_username = ? and c_path = ?;"))};
-                stmt->setString(1, sql::SQLString{file.getUsername().c_str()});
-                stmt->setString(2, sql::SQLString{file.getPathFile().c_str()});
-        return stmt->executeUpdate() == 1 ? true : false;
+    std::string query = "UPDATE chunks SET device_id = 0, c_lastmod = "+std::to_string(file.getLastMod())+" WHERE c_username = '?' and c_path = '?';";
+    std::list<std::string> entries_of_query;
+    entries_of_query.push_back(file.get_subject().get_sub());
+    entries_of_query.push_back(file.getPathFile());
 
-  }
-  throw DatabaseInvalidConnection();
+    return update_query(query,entries_of_query,file.get_subject().get_db_id());
+
 }

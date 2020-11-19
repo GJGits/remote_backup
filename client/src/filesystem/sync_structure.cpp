@@ -1,145 +1,138 @@
 #include "../../include/filesystem/sync_structure.hpp"
 
-/* PRIVATE SECTION */
+SyncStructure::SyncStructure() : server_ack{false}, last_check{0} {
+  std::clog << "sync_struct init\n";
+}
 
-void SyncStructure::create_structure() {
-  if (!std::filesystem::exists("./config/client-struct.json") ||
-      std::filesystem::is_empty("./config/client-struct.json")) {
-    json temp;
-    temp["hashed_status"] = "empty_hashed_status";
-    temp["entries"] = json::array();
-    std::ofstream out{"./config/client-struct.json"};
-    out << std::setw(4) << temp << std::endl;
+SyncStructure::~SyncStructure() { std::clog << "sync_struct destroy...\n"; }
+
+void SyncStructure::store() {
+  if (!structure.empty() && server_ack) {
+    std::ofstream o{CLIENT_STRUCT};
+    json jstru = {{"entries", json::array()},
+                  {"last_check", (int)std::time(nullptr)}};
+    for (const auto &[path, fentry] : structure) {
+      json entry = fentry->to_json();
+      jstru["entries"].push_back(entry);
+    }
+    o << jstru << "\n";
   }
 }
 
-void SyncStructure::read_structure() {
+void SyncStructure::restore() {
+  std::ifstream i{CLIENT_STRUCT};
+  i.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+  json j;
+  i >> j;
+  last_check = j["last_check"].get<int>();
+  for (size_t x = 0; x < j["entries"].size(); x++) {
+    std::string path = j["entries"][x]["path"].get<std::string>();
+    entry_producer producer =
+        (entry_producer)j["entries"][x]["producer"].get<int>();
+    size_t last_change = j["entries"][x]["last_change"].get<int>();
+
+    entry_status status = entry_status::synced;
+
+    if (std::filesystem::exists(path) ||
+        (!std::filesystem::exists(path) &&
+         (entry_status)j["entries"][x]["status"].get<int>() ==
+             entry_status::new_)) {
+      status = (entry_status)j["entries"][x]["status"].get<int>();
+    } else if (!std::filesystem::exists(path) &&
+               (entry_status)j["entries"][x]["status"].get<int>() ==
+                   entry_status::synced) {
+      status = entry_status::delete_;
+    }
+
+    size_t nchunks = (size_t)j["entries"][x]["nchunks"].get<int>();
+    std::shared_ptr<FileEntry> entry{
+        new FileEntry{path, producer, nchunks, last_change, status}};
+    add_entry(entry);
+  }
+}
+
+void SyncStructure::update_from_fs() {
+  for (const auto &p :
+       std::filesystem::recursive_directory_iterator(SYNC_ROOT)) {
+    std::string path = p.path().string();
+    if (!(path.rfind(TMP_PATH, 0) == 0) && !(path.rfind(BIN_PATH, 0) == 0) &&
+        p.is_regular_file()) {
+      std::shared_ptr<FileEntry> entry{
+          new FileEntry{path, entry_producer::local, entry_status::new_}};
+      // secondo caso possibile solo per rename di cartella che
+      // va a modificare esclusivamente il change_time dell'inode
+      // riferito alla cartella, gli inode dei file rimangono invariati.
+      if ((entry->get_last_change() > last_check &&
+           std::filesystem::file_size(path) > 0) ||
+          (structure.find(path) == structure.end() &&
+           std::filesystem::file_size(path) > 0))
+        add_entry(entry);
+    }
+  }
+}
+
+void SyncStructure::update_from_remote() {
+  int current_page = 0;
+  int last_page = 0;
+  std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
+  while (current_page <= last_page) {
+    json list = rest_client->get_status_list(current_page, last_check)["list"];
+    last_page = list["last_page"].get<int>();
+    for (size_t y = 0; y < list["entries"].size(); y++) {
+      std::string path = macaron::Base64::Decode(
+          list["entries"][y]["path"].get<std::string>());
+      size_t last_change = list["entries"][y]["last_remote_change"].get<int>();
+      entry_status status =
+          list["entries"][y]["command"].get<std::string>().compare("updated") ==
+                  0
+              ? entry_status::new_
+              : entry_status::delete_;
+      size_t nchunks = (size_t)list["entries"][y]["num_chunks"].get<int>();
+      std::shared_ptr<FileEntry> entry{new FileEntry{
+          path, entry_producer::server, nchunks, last_change, status}};
+      add_entry(entry);
+    }
+    current_page++;
+  }
+  server_ack = true;
+}
+
+void SyncStructure::add_entry(const std::shared_ptr<FileEntry> &entry) {
+  std::string path = entry->get_path();
+  if (structure.find(path) == structure.end()) {
+    structure[path] = entry;
+  } else {
+    if (entry->get_last_change() > structure[path]->get_last_change())
+      structure[path] = entry;
+  }
+}
+
+void SyncStructure::remove_entry(const std::shared_ptr<FileEntry> &entry) {
   std::unique_lock lk{m};
-  DurationLogger logger{"READ_STRUCTURE"};
-  if (entries.empty() && !dirty) {
-    std::ifstream i("./config/client-struct.json");
-    std::unique_ptr<json> structure = std::make_unique<json>();
-    i >> (*structure);
-    for (size_t i = 0; i < (*structure)["entries"].size(); i++) {
-      std::string path = (*structure)["entries"][i]["path"];
-      json entry = (*structure)["entries"][i];
-      entries[path] = entry;
-    }
-  }
+  structure.erase(entry->get_path());
 }
 
-/* PUBLIC SECTION */
-
-std::shared_ptr<SyncStructure> SyncStructure::getInstance() {
-  if (instance.get() == nullptr) {
-    instance = std::shared_ptr<SyncStructure>(new SyncStructure{});
-  }
-  instance->create_structure();
-  instance->read_structure();
-  return instance;
-}
-
-void SyncStructure::write_structure() {
-  if (dirty) {
-    std::unique_ptr<json> structure = std::make_unique<json>();
-    DurationLogger duration{"WRITE_STRUCTURE"};
-    if (entries.empty()) {
-      (*structure)["hashed_status"] = std::string{"empty_hashed_status"};
-      (*structure)["entries"] = json::array();
-    } else {
-      std::string entries_dump;
-      for (auto it = entries.begin(); it != entries.end(); it++) {
-        (*structure)["entries"].push_back(it->second);
-        entries_dump += it->second.dump();
-      }
-      char *dump_str = new char[entries_dump.size() + 1];
-      strcpy(dump_str, entries_dump.c_str());
-      std::shared_ptr<char[]> data{dump_str};
-      (*structure)["hashed_status"] =
-          (*structure)["entries"].empty()
-              ? std::string{"empty_hashed_status"}
-              : Sha256::getSha256(data, entries_dump.size());
-    }
-    std::ofstream o("./config/client-struct.json");
-    o << (*structure) << "\n";
-    o.close();
-    (*structure).clear();
-    entries.clear();
-    dirty = false;
-  }
-}
-
-bool SyncStructure::has_entry(const std::string &path) {
-  return entries.find(path) != entries.end();
-}
-
-size_t SyncStructure::get_last_mod(const std::string &path) {
-  return entries[path]["last_mod"];
+std::optional<std::shared_ptr<FileEntry>>
+SyncStructure::get_entry(const std::string &path) {
+  return structure.find(path) != structure.end()
+             ? std::optional<std::shared_ptr<FileEntry>>{structure[path]}
+             : std::nullopt;
 }
 
 std::vector<std::string> SyncStructure::get_paths() {
-  std::vector<std::string> paths{};
-  for (auto it = entries.begin(); it != entries.end(); ++it) {
-    paths.push_back(it->first);
+  std::vector<std::string> paths;
+  for (const auto &[path, entry] : structure) {
+    paths.push_back(path);
   }
   return paths;
 }
 
-std::vector<std::string>
-SyncStructure::get_entry_hashes(const std::string &path) {
-  std::vector<std::string> hashes{};
-  std::sort(entries[path]["chunks"].begin(), entries[path]["chunks"].begin(),
-            [&](json c1, json c2) { return c1["id"] < c2["id"]; });
-  for (size_t i = 0; i < entries[path]["chunks"].size(); i++) {
-    hashes.push_back(entries[path]["chunks"]);
+std::vector<std::shared_ptr<FileEntry>> SyncStructure::get_entries() {
+  std::vector<std::shared_ptr<FileEntry>> entries{};
+  for (const auto &[key, entry] : structure) {
+    entries.push_back(entry);
   }
-  return hashes;
+  return entries;
 }
 
-void SyncStructure::add_chunk(const json &chunk) {
-  DurationLogger logger{"ADD_CHUNK"};
-  json chk = chunk["chunks"][0];
-  if (entries.find(chunk["path"]) == entries.end()) {
-    entries[chunk["path"]] = chunk;
-  } else {
-    entries[chunk["path"]]["chunks"].push_back(chk);
-  }
-  if (entries[chunk["path"]]["chunks"].size() ==
-      (size_t)chunk["nchunks"].get<int>()) {
-    std::string file_hash{""};
-    for (size_t i = 0; i < entries[chunk["path"]]["chunks"].size(); i++) {
-      file_hash += entries[chunk["path"]]["chunks"][i]["hash"];
-      std::shared_ptr<char[]> buff{new char[file_hash.size()]};
-      for (size_t j = 0; j < file_hash.size(); j++) {
-        buff.get()[j] = file_hash[j];
-      }
-      file_hash = Sha256::getSha256(buff, file_hash.size());
-    }
-    entries[chunk["path"]]["hash"] = file_hash;
-    entries[chunk["path"]]["chunks"].clear();
-  }
-  dirty = true;
-}
-
-void SyncStructure::delete_entry(const json &entry) {
-  DurationLogger logger{"DELETE_ENTRY"};
-  std::string path = entry["path"];
-  entries.erase(path);
-  dirty = true;
-}
-
-void SyncStructure::reset_chunks(const std::string &path) {
-  entries[path]["chunks"].clear();
-}
-
-void SyncStructure::rename_entry(const json &entry) {
-  DurationLogger logger{"RENAME_ENTRY"};
-  json ent = entry;
-  std::string old_path = entry["old_path"];
-  std::string new_path = entry["path"];
-  if (entries.find(old_path) != entries.end()) {
-    ent["path"] = new_path;
-    entries.erase(old_path);
-  }
-  dirty = true;
-}
+size_t SyncStructure::get_last_check() const { return last_check; }

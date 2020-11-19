@@ -1,31 +1,19 @@
 #pragma once
 
-#include "../common/json.hpp"
+#include "../filesystem/file_entry.hpp"
 #include "topics.hpp"
 #include <memory>
 
-using json = nlohmann::json;
-
-// interfaccia
 
 class Message {
 private:
   TOPIC topic;
-  json content1;
-  std::shared_ptr<std::vector<char>> content2;
+  std::shared_ptr<FileEntry> content;
 
 public:
   Message() {}
   Message(TOPIC topic) : topic{topic} {}
-  Message(TOPIC topic, json &content) : topic{topic} {
-    this->content1 = content;
-  }
-  Message(TOPIC topic, std::shared_ptr<std::vector<char>> &content)
-      : topic{topic} {
-    this->content2 = content;
-  }
+  Message(TOPIC topic, const std::shared_ptr<FileEntry> &content) : topic{topic}, content{content} {}
   TOPIC get_topic() const { return topic; }
-  json get_content() const { return content1; }
-  std::shared_ptr<std::vector<char>> get_content2() const { return content2; }
-  void set_content(const json &content) {this->content1 = content;}
+  std::shared_ptr<FileEntry> get_content() const { return content; }
 };

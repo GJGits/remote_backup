@@ -1,16 +1,15 @@
 #pragma once
 #include "../entities/db-connect.hpp"
 #include "../exceptions/exceptions.hpp"
+#include "../common/singleton.hpp"
+#include "repository.hpp"
 
-class DBRepository {
+
+class DBRepository : public Singleton<DBRepository>, public Repository{
 private:
-    static inline std::shared_ptr<DBRepository> instance{nullptr};
-
-    std::unordered_map<std::string, int> users_db_map;
-
+    friend class Singleton;
 
 public:
-    static std::shared_ptr<DBRepository> getInstance();
 
     int getDBbyUsername(const std::string &username);
 

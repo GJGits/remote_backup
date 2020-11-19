@@ -1,42 +1,81 @@
 #pragma once
 
-#include <boost/algorithm/string/replace.hpp>
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <memory>
-#include <mutex>
-#include <string.h>
-#include <string>
 #include <unordered_map>
-#include <vector>
+#include <optional>
 
-#include "../common/duration.hpp"
+#include "../common/constants.hpp"
 #include "../common/json.hpp"
-#include "../common/sha256.hpp"
+#include "../common/singleton.hpp"
+#include "file_entry.hpp"
+
 
 using json = nlohmann::json;
 
-class SyncStructure {
+class SyncStructure : public Singleton<SyncStructure> {
 
 private:
-  std::unordered_map<std::string, json> entries;
-  inline static std::shared_ptr<SyncStructure> instance{nullptr};
+  friend class Singleton;
+  bool server_ack;
   std::mutex m;
-  bool dirty;
+  std::unordered_map<std::string, std::shared_ptr<FileEntry>> structure;
+  size_t last_check;
 
-  void create_structure();
-  void read_structure();
+  SyncStructure();
 
 public:
-  static std::shared_ptr<SyncStructure> getInstance();
-  void write_structure();
-  void add_chunk(const json &chunk);
-  bool has_entry(const std::string &path);
-  void reset_chunks(const std::string &path);
-  void delete_entry(const json &entry);
-  void rename_entry(const json &entry);
-  std::vector<std::string> get_entry_hashes(const std::string &path);
+  ~SyncStructure();
+  /**
+   * Aggiorna il file client-struct.json
+   **/
+  void store();
+
+  /**
+   * Effettua restore struttura da file
+   * */
+  void restore();
+
+  /**
+   * Effettua scan su filesystem ed aggiorna la struttura
+   **/
+  void update_from_fs();
+
+  /**
+   * Chiede aggiornamenti al server ed aggiorna la struttura.
+   **/
+  void update_from_remote();
+
+  /**
+   * Aggiunge entry alla struttura e permette di aggiornare
+   * il conto dei chunk trasferiti
+   * */
+  void add_entry(const std::shared_ptr<FileEntry> &entry);
+
+  /**
+   * Rimuove entry dalla struttura
+   * */
+  void remove_entry(const std::shared_ptr<FileEntry> &entry);
+
+  /**
+   * Data un path recupera l'entry associata.
+   **/
+  std::optional<std::shared_ptr<FileEntry>> get_entry(const std::string &path);
+
+  /**
+   * Restituisce lista path contenuti in structure
+   **/
   std::vector<std::string> get_paths();
-  size_t get_last_mod(const std::string &path);
+
+  /**
+   * Restituisce last_check
+   **/
+  size_t get_last_check() const;
+
+  /**
+   * Restituisce lista file_entry contenuti in structure
+   **/
+  std::vector<std::shared_ptr<FileEntry>> get_entries();
 };

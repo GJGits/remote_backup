@@ -1,15 +1,8 @@
 #include "../../include/controllers/auth-controller.hpp"
 
-inline static std::regex signin_rgx{"^\\{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\",\\s?\"mac_address\":\\s?\"[0-9a-f:]+\"\\}$"};
-inline static std::regex signup_rgx{"^\\{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\",\\s?\"password_confirm\":\\s?\"\\w+\",\\s?\"mac_address\":\\s?\"[0-9a-f:]+\"\\}$"};
 
-std::shared_ptr<AuthController> AuthController::getInstance() {
-    if (instance.get() == nullptr) {
-        instance = std::shared_ptr<AuthController>(new AuthController{});
-        instance->user_service = UserService::getInstance();
-    }
-    return instance;
-}
+const std::regex AuthController::get_signin_rgx(){return signin_rgx;}
+const std::regex AuthController::get_signup_rgx(){return signup_rgx;}
 
 const http::server::reply
 AuthController::handle(const http::server::request &req) {
@@ -18,7 +11,6 @@ AuthController::handle(const http::server::request &req) {
 
     if (req.uri == "/auth/signin") {
       std::string req_body = std::string{req.body.get()->begin(), req.body.get()->end()};
-      std::clog << "signin body: " << req_body << "\n";
       std::smatch match;
 
       if (std::regex_match(req_body, match, signin_rgx)) {
@@ -27,7 +19,7 @@ AuthController::handle(const http::server::request &req) {
           return MakeReply::make_1line_jsonReply<std::string>("token", post_signin(user), http::server::reply::ok);
       }
     } else if (req.uri == "/auth/signup") {
-      std::string req_body = std::string{req.body.get()->begin(), req.body.get()->end()};
+      std::string req_body{req.body.get()->begin(), req.body.get()->end()};
       std::smatch match;
       if (std::regex_match(req_body, match, signup_rgx)) {
           SignupDTO user{};
@@ -40,11 +32,11 @@ AuthController::handle(const http::server::request &req) {
 }
 
 const std::string AuthController::post_signin(const SigninDTO &user) {
-
-    std::shared_ptr<UserService> user_service = UserService::getInstance();
+  std::shared_ptr<UserService> user_service = UserService::getInstance();
   return user_service->login(user);
 }
 
 const std::string AuthController::post_signup(const SignupDTO &user) {
-  return user_service->signup(user);
+    std::shared_ptr<UserService> user_service = UserService::getInstance();
+    return user_service->signup(user);
 }

@@ -1,7 +1,16 @@
+
 #include "../../include/filesystem/linux_watcher.hpp"
 
-LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
-    : root_to_watch{root_to_watch}, watcher_mask{mask} {
+LinuxWatcher::LinuxWatcher()
+    : root_to_watch{SYNC_ROOT}, watcher_mask{IN_CREATE | IN_ONLYDIR |
+                                             IN_DELETE | IN_MODIFY |
+                                             IN_MOVED_TO | IN_MOVED_FROM |
+                                             IN_ISDIR | IN_IGNORED} {
+  std::clog << "Linux watcher module init...\n";
+  // pipe per segnale exit al poll.
+  //  - watcher scrive su 1
+  //  - poll scrive su 0
+  pipe(pipe_);
   timer = TIMER;
   // Richiedo un file descriptor al kernel da utilizzare
   // per la watch. L'API fornita prevede, come spesso avviene
@@ -14,25 +23,52 @@ LinuxWatcher::LinuxWatcher(const std::string &root_to_watch, uint32_t mask)
     perror("inotify_init1");
     exit(-1);
   }
-  // regex che serve per evitare eventi su e da cartella .tmp
-  // cartella utilizzata per poggiare i download
-  temp_rgx = std::move(std::regex{"\\.\\/sync\\/\\.tmp\\/.*"});
 }
 
-std::shared_ptr<LinuxWatcher>
-LinuxWatcher::getInstance(const std::string &root_path, uint32_t mask) {
-  if (instance.get() == nullptr) {
-    instance = std::shared_ptr<LinuxWatcher>(new LinuxWatcher{root_path, mask});
-    instance->add_watch(root_path);
-    instance->check_news();
+LinuxWatcher::~LinuxWatcher() {
+  // Quando l'oggetto viene distrutto rilascio il file descriptor
+  // in questo modo il kernel ha la possibilità di riassegnarlo ad
+  // un altro processo.
+  close(inotify_descriptor);
+  if (running) {
+    running = false;
+    if (watcher.joinable())
+      watcher.join();
   }
-  return instance;
+  std::clog << "Linux Watcher destroy...\n";
 }
 
-bool LinuxWatcher::add_watch(const std::string &path) {
+void LinuxWatcher::init_sub_list() { broker = Broker::getInstance(); }
+
+void LinuxWatcher::start() {
+  if (!running) {
+    running = true;
+    instance->add_watch(root_to_watch);
+    instance->handle_events();
+    std::clog << "Linux watcher module start...\n";
+  }
+}
+
+void LinuxWatcher::stop() {
+  if (running) {
+    running = false;
+    instance->remove_watch(root_to_watch);
+    short poll_sig = 1;
+    write(pipe_[1], &poll_sig, 1);
+    if (watcher.joinable())
+      watcher.join();
+    std::clog << "Linux watcher module stop...\n";
+  }
+}
+
+void LinuxWatcher::add_watch(const std::string &path) {
+  // add_watch su root_to_watch richiede che la cartella sync sia presente
+  // altrimenti il watch principale fallirebbe.
   int wd = inotify_add_watch(inotify_descriptor, path.c_str(), watcher_mask);
   if (wd == -1) {
-    return false;
+    throw std::filesystem::filesystem_error("directory: " + path +
+                                                " not found or not accessible!",
+                                            std::error_code{});
   }
   path_wd_map[path] = wd;
   wd_path_map[wd] = path;
@@ -41,7 +77,6 @@ bool LinuxWatcher::add_watch(const std::string &path) {
       add_watch(p.path().string());
     }
   }
-  return true;
 }
 
 bool LinuxWatcher::remove_watch(const std::string &path) {
@@ -54,170 +89,181 @@ bool LinuxWatcher::remove_watch(const std::string &path) {
   return true;
 }
 
-void LinuxWatcher::check_news() {
-  std::shared_ptr<SyncStructure> sync_structure = SyncStructure::getInstance();
-  std::shared_ptr<Broker> broker = Broker::getInstance();
-  json message;
-  for (auto &p : std::filesystem::recursive_directory_iterator(root_to_watch)) {
-    std::string sub_path = p.path().string();
-    if (std::filesystem::is_regular_file(sub_path)) {
-      // size_t last_mod = std::filesystem::last_write_time(sub_path)
-      //                       .time_since_epoch()
-      //                       .count() /
-      //                   1000000000;
-      message["path"] = sub_path;
-      // 1. file non presente in struttura -> aggiunto off-line
-      if (!sync_structure->has_entry(sub_path)) {
-        broker->publish(Message{TOPIC::NEW_FILE, message});
-      }
-      // 2. last_mod non coincide -> modificato off-line
-      // else if (sync_structure->get_last_mod(sub_path) < last_mod) {
-      // broker->publish(Message{TOPIC::FILE_MODIFIED, message});
-      //}
-    }
-  }
-}
-
 void LinuxWatcher::handle_events() {
 
-  std::clog << "Start monitoring...\n";
-  std::shared_ptr<Broker> broker = Broker::getInstance();
-  for (;;) {
-    std::clog << "Wating for an event...\n";
-    // Some systems cannot read integer variables if they are not
-    // properly aligned. On other systems, incorrect alignment may
-    // decrease performance. Hence, the buffer used for reading from
-    // the inotify file descriptor should have the same alignment as
-    // struct inotify_event.
+  watcher = std::move(std::thread{[&]() {
+    std::clog << "Start monitoring... [thread " << std::this_thread::get_id()
+              << "]\n";
+    std::string tmp_path{TMP_PATH};
+    std::string bin_path{BIN_PATH};
+    while (running) {
+      std::clog << "Wating for an event...\n";
+      // Some systems cannot read integer variables if they are not
+      // properly aligned. On other systems, incorrect alignment may
+      // decrease performance. Hence, the buffer used for reading from
+      // the inotify file descriptor should have the same alignment as
+      // struct inotify_event.
+      char buf[8192]
+          __attribute__((aligned(__alignof__(struct inotify_event))));
+      memset(buf, '\0', 8192);
+      const struct inotify_event *event;
+      ssize_t len;
+      char *ptr; // ptr per consumare il buffer
+      int poll_num;
+      nfds_t nfds = 2;
+      struct pollfd fds[2];
+      fds[0].fd = inotify_descriptor;
+      fds[0].events = POLLIN;
+      fds[1].fd = pipe_[0];
+      fds[1].events = POLLIN;
 
-    char buf[4096] __attribute__((aligned(__alignof__(struct inotify_event))));
-    memset(buf, '\0', 4096);
-    const struct inotify_event *event;
-    ssize_t len;
-    char *ptr; // ptr per consumare il buffer
+      // poll until an event occurs.Timeout = -1 -> BLOCKING,
+      // else timeout expressed in milliseconds
+      poll_num = poll(fds, nfds, timer);
 
-    // Puo' questo blocco essere spostato fuori dal for per singola
-    // inizializzazione?
-    int poll_num;
-    nfds_t nfds = 1;
-    struct pollfd fds[1];
-    fds[0].fd = inotify_descriptor;
-    fds[0].events = POLLIN; // maschera generale per eventi su fd?
+      if (fds[1].revents & POLLIN) {
+        // consume signal altrimenti il byte rimane sul canale
+        // impedendo riavvio watcher in seguito ad uno stop.
+        std::clog << "ricevuto segnale di chiusura da poll\n";
+        char c;
+        ssize_t r = read(fds[1].fd, &c, 1);
+        if (r <= 0) {
+          std::clog << "panic on read pipe signal!\n";
+        }
+        continue;
+      }
 
-    // poll until an event occurs.Timeout = -1 -> BLOCKING,
-    // else timeout expressed in milliseconds
-    poll_num = poll(fds, nfds, timer);
-    if (poll_num > 0) {
-      len = read(inotify_descriptor, buf, sizeof buf);
-      // todo: check su read qui...
+      if (poll_num > 0) {
+        len = read(inotify_descriptor, buf, sizeof buf);
+        if (len <= 0) {
+          std::clog << "panic on read event!\n";
+        }
 
-      for (ptr = buf; ptr < buf + len;
-           ptr += sizeof(struct inotify_event) + event->len) {
+        for (ptr = buf; ptr < buf + len;
+             ptr += sizeof(struct inotify_event) + event->len) {
 
-        DurationLogger duration{"HANDLING_EVENT"};
+          DurationLogger duration{"HANDLING_EVENT"};
 
-        event = (const struct inotify_event *)ptr;
+          event = (const struct inotify_event *)ptr;
 
-        json message;
-        const std::string path =
-            wd_path_map[event->wd] + "/" + std::string{event->name};
-        message["path"] = path;
+          const std::string path =
+              wd_path_map[event->wd] + "/" + std::string{event->name};
 
-        try {
+
           timer = TIMER;
-          std::clog << "watch path: " << wd_path_map[event->wd] << "\n";
-          std::clog << "MASK: " << event->mask << "NAME" << event->name << "\n";
 
-          //
-          //  TABELLA RIASSUNTIVA CODICI EVENTI:
-
-          //    8          -> EVENTO IN_CLOSE_WRITE
-          //    256        -> FILE WAS CREATED
-          //    1073741952 -> CTRL+Z CARTELLA ?
-          //    1073742080 -> EVENT HANDLE_EXPAND
-          //    1073741888 -> MOVED_FROM FOLDER
-          //    64         -> MOVED_FROM FILE
-          //    128        -> RENAME  (MOVED_TO)
-          //    512        -> IN_DELETE
+          // eventi non presenti in inotify:
+          // 1073742080 -> copia incolla cartella da gui da fuori sync (con file
+          // e sotto cartelle) 1073741888 -> eliminazione cartella da gui (con
+          // file e sotto cartelle) 1073742336 -> eliminazione cartella da
+          // command line 1073741952 -> move da linea di comando riguardante una
+          // cartella 1073741888 -> move from cartella da terminale 1073741952
+          // -> move to cartella da terminale
 
           switch (event->mask) {
-          case 2: {
-            // Un file relativamente grande genera in seguito ad una NEW_FILE
-            // una serie di FILE_MODIFIED. In questo modo lascio fare tutto
-            // alla NEW_FILE
-            if (new_files.find(path) == new_files.end()) {
-              std::smatch match;
-              if (!std::regex_search(path.begin(), path.end(), match,
-                                     temp_rgx))
-                broker->publish(Message{TOPIC::FILE_MODIFIED, message});
-            }
 
+          case 1073742080: {
+            add_watch(path);
           } break;
-          case 256: {
-            new_files.insert(path);
-            std::smatch match;
-            if (!std::regex_search(path.begin(), path.end(), match,
-                                   temp_rgx))
-              broker->publish(Message{TOPIC::NEW_FILE, message});
-          }
 
-          break;
-          case 1073742080:
-            add_watch(message["path"]);
-            broker->publish(Message{TOPIC::NEW_FOLDER, message});
-            break;
-          case 1073741952:
-            add_watch(message["path"]);
-            broker->publish(Message{TOPIC::NEW_FOLDER, message});
-            break;
+          case 1073741952: {
+            add_watch(path);
+            LinuxEvent ev{path, 0, 1073741952};
+            events[path] = ev;
+          } break;
+
           case 1073741888:
-            remove_watch(message["path"]);
-            // broker->publish(TOPIC::CONTENT_MOVED, Message{});
-            break;
-          case 64:
-            cookie_map[event->cookie] = message["path"];
-            // broker->publish(TOPIC::CONTENT_MOVED, Message{});
-            break;
-          case 128: {
-            if (cookie_map.find(event->cookie) != cookie_map.end()) {
-              std::smatch match;
-              if (!std::regex_search(path.begin(), path.end(), match,
-                                     temp_rgx)) {
-                message["old_path"] = cookie_map[event->cookie];
-                broker->publish(Message{TOPIC::FILE_RENAMED, message});
-                cookie_map.erase(event->cookie);
+          case 1073742336: {
+            std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+            for (std::string &sync_path : sync->get_paths()) {
+              if (!std::filesystem::exists(sync_path)) {
+                LinuxEvent ev{sync_path, 0, 64};
+                events[sync_path] = ev;
               }
             }
+
           } break;
-          case 512:
-            broker->publish(Message{TOPIC::FILE_DELETED, message});
-            break;
-          default:
-            break;
+
+            // to tmp -> non loggare ok
+            // from tmp -> non loggare, ma conserva cookie ok
+            // to sync -> loggo se from non da tmp
+            // rm tmp -> non loggare ok
+            // from sync -> loggo se to non bin
+
+          default: {
+
+            uint32_t mask = event->mask;
+            if (((path.rfind(tmp_path, 0) == 0) && mask == 64) ||
+                ((path.rfind(bin_path, 0) == 0) && mask == 128) ||
+                (!(path.rfind(tmp_path, 0) == 0) &&
+                 !(path.rfind(bin_path, 0) == 0) &&
+                 (mask == 2 || mask == 64 || mask == 128 || mask == 256 ||
+                  mask == 512))) {
+              LinuxEvent ev{path, event->cookie, event->mask};
+              events[path] = ev;
+            }
+
+          } break;
           }
-
-        }
-
-        catch (const std::filesystem::filesystem_error &e) {
-
-          std::clog << e.what() << "\n";
         }
       }
-    }
-    if (poll_num == 0) {
-      new_files.clear();
-      cookie_map.clear();
-      timer = WAIT;
-      // check di move verso l'esterno
-      std::shared_ptr<Broker> broker = Broker::getInstance();
-      std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-      json mex;
-      for (std::string &path : sync->get_paths()) {
-        if (!std::filesystem::exists(path)) {
-          mex["path"] = path;
-          broker->publish(Message{TOPIC::FILE_DELETED, mex});
+      if (poll_num == 0) {
+
+        timer = WAIT;
+        std::vector<LinuxEvent> eves{};
+        for (const auto &[path, event] : events) {
+          if (event.get_mask() != 1073741952)
+            eves.push_back(event);
+          else {
+            for (auto &p :
+                 std::filesystem::recursive_directory_iterator(path)) {
+              if (p.is_regular_file()) {
+                if (!(path.rfind(tmp_path, 0) == 0)) {
+                  std::string f_path = p.path().string();
+                  LinuxEvent ev{f_path, 0, 128};
+                  eves.push_back(ev);
+                }
+              }
+            }
+          }
         }
+
+        // ordine descrescente (cookie, mask)
+        std::sort(eves.begin(), eves.end(),
+                  [&](const LinuxEvent &ev1, const LinuxEvent &ev2) {
+                    if (ev1.get_cookie() != ev2.get_cookie())
+                      return ev1.get_cookie() > ev2.get_cookie();
+                    return ev1.get_mask() > ev2.get_mask();
+                  });
+
+        for (auto it = eves.begin(); it != eves.end(); it++) {
+          std::string path = it->get_path();
+          uint32_t mask = it->get_mask();
+          // 1. se to sync e from tmp or to bin from sync -> skippo
+          if ((!(path.rfind(tmp_path, 0) == 0) &&
+               !(path.rfind(bin_path, 0) == 0) &&
+               (mask == 128 && (it + 1) != eves.end() &&
+                (it + 1)->get_mask() == 64 &&
+                (it + 1)->get_path().rfind(tmp_path, 0) == 0)) ||
+              (mask == 128 && path.rfind(bin_path, 0) == 0)) {
+            it++;
+            continue;
+          }
+          // 2. altro -> invio messaggio
+          if (mask == 2 || mask == 128 || mask == 256) {
+            std::shared_ptr<FileEntry> entry{
+                new FileEntry{path, entry_producer::local, entry_status::new_}};
+            broker->publish(Message{TOPIC::NEW_FILE, entry});
+          }
+          if (mask == 64 || mask == 512) {
+            std::shared_ptr<FileEntry> entry{
+                new FileEntry{path, entry_producer::local, entry_status::delete_}};
+            broker->publish(Message{TOPIC::FILE_DELETED, entry});
+            }
+        }
+
+        events.clear();
       }
     }
-  }
+  }});
 }

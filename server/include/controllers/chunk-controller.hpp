@@ -1,27 +1,30 @@
 #pragma once
-#include "controller.hpp"
 #include "../common/makereply.hpp"
-#include "../common/base64.hpp"
-#include "../common/sha256.hpp"
-#include "../dtos/signup_dto.hpp"
-#include "../dtos/signin_dto.hpp"
+#include "../common/singleton.hpp"
 #include "../dtos/get_chunk_dto.hpp"
 #include "../dtos/post_chunk_dto.hpp"
-#include "../services/user-service.hpp"
 #include "../services/chunk-service.hpp"
+#include "../common/jwt.hpp"
+#include "controller.hpp"
 #include <regex>
-#include "../common/utility.hpp"
 
-class ChunkController : public Controller {
+class ChunkController : public Controller, public Singleton<ChunkController> {
 
 private:
-    static inline std::shared_ptr<ChunkController> instance{nullptr};
-    std::shared_ptr<ChunkService> chunk_service;
+  friend class Singleton;
+  std::regex post_chunk_rgx;
+  std::regex get_chunk_rgx;
+  ChunkController()
+      : post_chunk_rgx{std::move(std::regex{
+            "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+\\/[\\w]+$"})},
+        get_chunk_rgx{std::move(std::regex{"^\\/chunk\\/[\\w]+\\/[\\w=+]+$"})}
+            {}
+
 public:
-    static std::shared_ptr<ChunkController> getInstance();
-    virtual const http::server::reply handle(const http::server::request &req);
-    void post_file_chunk(const PostChunkDTO &post_chunk);
-    void put_file_chunk(const PutChunkDTO &put_chunk);
-    size_t get_file_chunk(const GetChunkDTO &get_chunk);
+  virtual const http::server::reply handle(const http::server::request &req);
+  void post_file_chunk(const PostChunkDTO &post_chunk);
+  size_t get_file_chunk(const GetChunkDTO &get_chunk);
+  const std::regex get_post_chunk_rgx();
+  const std::regex get_get_chunk_rgx();
 
 };

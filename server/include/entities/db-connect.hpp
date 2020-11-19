@@ -2,14 +2,6 @@
 #include <cstdio>
 #include <iostream>
 #include <stdlib.h>
-/*
-  Include directly the different
-  headers from cppconn/ and mysql_driver.h + mysql_util.h
-  (and mysql_connection.h). This will reduce your build time!
-*/
-#include "../common/constants.hpp"
-#include "../common/logger.hpp"
-
 #include "mysql_connection.h"
 #include <array>
 #include <cppconn/driver.h>
@@ -20,21 +12,22 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
-#include "../repositories/db-repository.hpp"
+#include "../common/singleton.hpp"
 
 /**
  * TODO: questa classe deve essere un singleton
  */
 
-class DBConnect {
+class DBConnect : public Singleton<DBConnect>{
 
 private:
-
-    std::unordered_map<int, std::array<std::shared_ptr<sql::Connection>, 4>> connections_map;
-  std::array<int,3> indexes;
-  static DBConnect *instance;
+    friend class Singleton;
+    std::unordered_map<int, std::array<std::shared_ptr<sql::mysql::MySQL_Connection>, 4>> connections_map;
+  
+  std::array<int,4> indexes;
   DBConnect()  {
-      indexes = {0, 0, 0};
+     // ogni posizione in questo array indica l'utilizzo di una connessione per un determinato db
+      indexes = {0, 0, 0, 0};
   }
 
 public:
@@ -44,6 +37,6 @@ public:
   DBConnect &operator=(const DBConnect &) = delete; // assegnazione off
   DBConnect &operator=(DBConnect &&) = delete; // assegnazione movimento off
 
-  static std::shared_ptr<sql::Connection> getConnection(size_t db_selected);
+  static std::shared_ptr<sql::mysql::MySQL_Connection> getConnection(size_t db_selected);
 
 };

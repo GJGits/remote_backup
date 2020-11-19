@@ -1,16 +1,13 @@
 #pragma once
-#include "../common/utility.hpp"
 #include "../entities/chunk-entity.hpp"
-#include "../entities/db-connect.hpp"
-#include "../exceptions/exceptions.hpp"
+#include "../common/singleton.hpp"
+#include "repository.hpp"
 
-class ChunkRepository {
+
+class ChunkRepository: public Singleton<ChunkRepository> , public Repository{
 private:
-  static inline std::shared_ptr<ChunkRepository> instance{nullptr};
+    friend class Singleton;
 
 public:
   bool add_or_update_Chunk(const ChunkEntity &chunk);
-  bool get_Chunk(const ChunkEntity &chunk);
-  bool delete_chunks(const ChunkEntity &chunk);
-  static std::shared_ptr<ChunkRepository> getInstance();
 };

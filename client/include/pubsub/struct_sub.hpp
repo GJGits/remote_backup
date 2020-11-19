@@ -1,22 +1,19 @@
 #pragma once
 
-#include <iostream>
-#include <memory>
-#include <mutex>
+#include "../modules/module.hpp"
 
-#include "../filesystem/sync_structure.hpp"
-#include "broker.hpp"
-
-class StructSubscriber {
+class StructSubscriber : public Singleton<StructSubscriber>, public Module {
 private:
-  std::mutex m;
-  static inline std::shared_ptr<StructSubscriber> instance{nullptr};
-  StructSubscriber() {}
+  friend class Singleton;
+  std::mutex m1;
+  StructSubscriber();
 
 public:
-  static std::shared_ptr<StructSubscriber> getInstance();
-  void init();
-  void on_add_chunk(const Message &message);
-  void on_file_modified(const Message &message);
+  ~StructSubscriber();
+  void start();
+  void stop();
+  void init_sub_list();
+  void on_add_entry(const Message &message);
   void on_delete_entry(const Message &message);
+  void notify_news();
 };

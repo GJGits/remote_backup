@@ -1,0 +1,883 @@
+{
+	"info": {
+		"_postman_id": "c4f5a84c-72a5-49f2-b703-66ed1c996dbb",
+		"name": "remote_backup_auth",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "chunk_0",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "08ff6cdc-c322-42b0-a796-821776512896",
+						"exec": [
+							"var combinations     = pm.environment.get(\"combinations_chunk_0\");",
+							"var expected_results = pm.environment.get(\"expected_results_chunk_0\"); ",
+							"",
+							"if (!combinations) {",
+							"  // inizializzazione array di combinazioni da testare  ",
+							"  combinations = [",
+							"    \"get chunks\",",
+							"  ];",
+							"}",
+							"",
+							"if (!expected_results) {",
+							"  // inizializzazione array di risultati aspettati",
+							"  // l'ordine degli elementi in questo array deve",
+							"  // essere coerente con l'ordine dell'array delle",
+							"  // combinazioni. ",
+							"  expected_results = [",
+							"    { list: {",
+							"        entries: [",
+							"        {",
+							"            c_id: 0,",
+							"            c_lastmod: 1234,",
+							"            c_path: \"dGhyZWFkLnBkZg==\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 7",
+							"        },",
+							"        {",
+							"            c_id: 1,",
+							"            c_lastmod: 1234,",
+							"            c_path: \"dGhyZWFkLnBkZg==\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 7",
+							"        },",
+							"        {",
+							"            c_id: 2,",
+							"            c_lastmod: 1234,",
+							"            c_path: \"dGhyZWFkLnBkZg==\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 7",
+							"        },",
+							"        {",
+							"            c_id: 3,",
+							"            c_lastmod: 1234,",
+							"            c_path: \"dGhyZWFkLnBkZg==\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 7",
+							"        },",
+							"        {",
+							"            c_id: 4,",
+							"            c_lastmod: 1234,",
+							"            c_path: \"dGhyZWFkLnBkZg==\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 7",
+							"        },",
+							"        {",
+							"            c_id: 5,",
+							"            c_lastmod: 1234,",
+							"            c_path: \"dGhyZWFkLnBkZg==\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 7",
+							"        },",
+							"        {",
+							"            c_id: 6,",
+							"            c_lastmod: 1234,",
+							"            c_path: \"dGhyZWFkLnBkZg==\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 7",
+							"        },",
+							"        {",
+							"            c_id: 0,",
+							"            c_lastmod: 1234,",
+							"            c_path: \"Z2VuZXJhbGkucGRm\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 9",
+							"        },",
+							"        {",
+							"            c_id: 1,",
+							"            c_lastmod: 1234,",
+							"            c_path: \"Z2VuZXJhbGkucGRm\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 9",
+							"        },    ",
+							"    ],",
+							"    last_page: 0",
+							"    }",
+							"},",
+							"  ];",
+							"}",
+							"",
+							"// Combinazione testata e relativo risultato aspettato",
+							"var combination = combinations.shift();",
+							"var result      = expected_results.shift();",
+							"// eventuale body da passare sottoforma di stringa",
+							"pm.variables.set(\"combination_chunk_0\", JSON.stringify(combination));",
+							"// Set necessario affinche' le variabili siano accessibili",
+							"// da test scripts",
+							"pm.environment.set(\"combination_chunk_0\", combination);",
+							"pm.environment.set(\"result_chunk_0\", result);",
+							"pm.environment.set(\"left_chunk_0\", combinations.length);",
+							"// Aggiornamento delle variabili necessario altrimenti nel pre-script",
+							"// si rileggerebbe il valore iniziale ciclando all'infinito.",
+							"var combinations     = pm.environment.set(\"combinations_chunk_0\", combinations);",
+							"var expected_results = pm.environment.set(\"expected_results_chunk_0\", expected_results);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "9423c7c8-a9b0-424f-b2bb-b1af157bf2be",
+						"exec": [
+							"var body = pm.environment.get(\"combination_chunk_0\");",
+							"var expected_result = pm.environment.get(\"result_chunk_0\"); ",
+							"var left = pm.environment.get(\"left_chunk_0\"); ",
+							"",
+							"if(left > 0) {",
+							"  postman.setNextRequest(\"chunk_0\");",
+							"} else {",
+							"   postman.setNextRequest(\"filesystem_0\"); ",
+							"}",
+							"",
+							"  if ( pm.response.code === 400 ) {",
+							"    pm.test(\"Check error message\", function () {",
+							"        pm.expect(pm.response.json().error).to.be.eql(expected_result.error);",
+							"    });",
+							"  }",
+							"",
+							"  if (pm.response.code === 200 ) {",
+							"      pm.test(\"Check token\", function () {",
+							"        pm.expect(pm.response.json().list.entries[0].c_id).to.be.eql(expected_result.list.entries[0].c_id);",
+							"        pm.expect(pm.response.json().list.entries[0].c_lastmod).to.be.eql(expected_result.list.entries[0].c_lastmod); ",
+							"        pm.expect(pm.response.json().list.entries[0].c_path).to.be.eql(expected_result.list.entries[0].c_path); ",
+							"        pm.expect(pm.response.json().list.entries[0].c_username).to.be.eql(expected_result.list.entries[0].c_username);  ",
+							"        pm.expect(pm.response.json().list.entries[0].num_chunks).to.be.eql(expected_result.list.entries[0].num_chunks);  ",
+							"        pm.expect(pm.response.json().list.entries[1].c_id).to.be.eql(expected_result.list.entries[1].c_id);",
+							"        pm.expect(pm.response.json().list.entries[1].c_lastmod).to.be.eql(expected_result.list.entries[1].c_lastmod); ",
+							"        pm.expect(pm.response.json().list.entries[1].c_path).to.be.eql(expected_result.list.entries[1].c_path); ",
+							"        pm.expect(pm.response.json().list.entries[1].c_username).to.be.eql(expected_result.list.entries[1].c_username);  ",
+							"        pm.expect(pm.response.json().list.entries[1].num_chunks).to.be.eql(expected_result.list.entries[1].num_chunks); ",
+							"        pm.expect(pm.response.json().list.entries[2].c_id).to.be.eql(expected_result.list.entries[2].c_id);",
+							"        pm.expect(pm.response.json().list.entries[2].c_lastmod).to.be.eql(expected_result.list.entries[2].c_lastmod); ",
+							"        pm.expect(pm.response.json().list.entries[2].c_path).to.be.eql(expected_result.list.entries[2].c_path); ",
+							"        pm.expect(pm.response.json().list.entries[2].c_username).to.be.eql(expected_result.list.entries[2].c_username);  ",
+							"        pm.expect(pm.response.json().list.entries[2].num_chunks).to.be.eql(expected_result.list.entries[2].num_chunks);   ",
+							"        pm.expect(pm.response.json().list.entries[3].c_id).to.be.eql(expected_result.list.entries[3].c_id);",
+							"        pm.expect(pm.response.json().list.entries[3].c_lastmod).to.be.eql(expected_result.list.entries[3].c_lastmod); ",
+							"        pm.expect(pm.response.json().list.entries[3].c_path).to.be.eql(expected_result.list.entries[3].c_path); ",
+							"        pm.expect(pm.response.json().list.entries[3].c_username).to.be.eql(expected_result.list.entries[3].c_username);  ",
+							"        pm.expect(pm.response.json().list.entries[3].num_chunks).to.be.eql(expected_result.list.entries[3].num_chunks);  ",
+							"        pm.expect(pm.response.json().list.entries[4].c_id).to.be.eql(expected_result.list.entries[4].c_id);",
+							"        pm.expect(pm.response.json().list.entries[4].c_lastmod).to.be.eql(expected_result.list.entries[4].c_lastmod); ",
+							"        pm.expect(pm.response.json().list.entries[4].c_path).to.be.eql(expected_result.list.entries[4].c_path); ",
+							"        pm.expect(pm.response.json().list.entries[4].c_username).to.be.eql(expected_result.list.entries[4].c_username);  ",
+							"        pm.expect(pm.response.json().list.entries[4].num_chunks).to.be.eql(expected_result.list.entries[4].num_chunks);  ",
+							"        pm.expect(pm.response.json().list.entries[5].c_id).to.be.eql(expected_result.list.entries[5].c_id);",
+							"        pm.expect(pm.response.json().list.entries[5].c_lastmod).to.be.eql(expected_result.list.entries[5].c_lastmod); ",
+							"        pm.expect(pm.response.json().list.entries[5].c_path).to.be.eql(expected_result.list.entries[5].c_path); ",
+							"        pm.expect(pm.response.json().list.entries[5].c_username).to.be.eql(expected_result.list.entries[5].c_username);  ",
+							"        pm.expect(pm.response.json().list.entries[5].num_chunks).to.be.eql(expected_result.list.entries[5].num_chunks); ",
+							"        pm.expect(pm.response.json().list.entries[6].c_id).to.be.eql(expected_result.list.entries[6].c_id);",
+							"        pm.expect(pm.response.json().list.entries[6].c_lastmod).to.be.eql(expected_result.list.entries[6].c_lastmod); ",
+							"        pm.expect(pm.response.json().list.entries[6].c_path).to.be.eql(expected_result.list.entries[6].c_path); ",
+							"        pm.expect(pm.response.json().list.entries[6].c_username).to.be.eql(expected_result.list.entries[6].c_username);  ",
+							"        pm.expect(pm.response.json().list.entries[6].num_chunks).to.be.eql(expected_result.list.entries[6].num_chunks);   ",
+							"        pm.expect(pm.response.json().list.entries[7].c_id).to.be.eql(expected_result.list.entries[7].c_id);",
+							"        pm.expect(pm.response.json().list.entries[7].c_lastmod).to.be.eql(expected_result.list.entries[7].c_lastmod); ",
+							"        pm.expect(pm.response.json().list.entries[7].c_path).to.be.eql(expected_result.list.entries[7].c_path); ",
+							"        pm.expect(pm.response.json().list.entries[7].c_username).to.be.eql(expected_result.list.entries[7].c_username);  ",
+							"        pm.expect(pm.response.json().list.entries[7].num_chunks).to.be.eql(expected_result.list.entries[7].num_chunks);  ",
+							"        pm.expect(pm.response.json().list.entries[8].c_id).to.be.eql(expected_result.list.entries[8].c_id);",
+							"        pm.expect(pm.response.json().list.entries[8].c_lastmod).to.be.eql(expected_result.list.entries[8].c_lastmod); ",
+							"        pm.expect(pm.response.json().list.entries[8].c_path).to.be.eql(expected_result.list.entries[8].c_path); ",
+							"        pm.expect(pm.response.json().list.entries[8].c_username).to.be.eql(expected_result.list.entries[8].c_username);  ",
+							"        pm.expect(pm.response.json().list.entries[8].num_chunks).to.be.eql(expected_result.list.entries[8].num_chunks);  ",
+							"        pm.expect(pm.response.json().list.last_page).to.be.eql(expected_result.list.last_page);   ",
+							"      });",
+							"  }"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{{combination_chunk_0}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://0.0.0.0:3200/test/database/chunks/1/0",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "3200",
+					"path": [
+						"test",
+						"database",
+						"chunks",
+						"1",
+						"0"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "filesystem_0",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "6fae902d-f7e0-498a-b7fc-4a0a74fa1504",
+						"exec": [
+							"var combinations     = pm.environment.get(\"combinations_filesystem_0\");",
+							"var expected_results = pm.environment.get(\"expected_results_filesystem_0\"); ",
+							"",
+							"if (!combinations) {",
+							"  // inizializzazione array di combinazioni da testare  ",
+							"  combinations = [",
+							"    \"get chunks filesystem\",",
+							"  ];",
+							"}",
+							"",
+							"if (!expected_results) {",
+							"  // inizializzazione array di risultati aspettati",
+							"  // l'ordine degli elementi in questo array deve",
+							"  // essere coerente con l'ordine dell'array delle",
+							"  // combinazioni. ",
+							"  expected_results = [",
+							"    { list:{",
+							"        entries: [",
+							"        {",
+							"            c_id: 0,",
+							"            c_size: 65536,",
+							"        },",
+							"        {",
+							"            c_id: 1,",
+							"            c_size: 65536,",
+							"        },",
+							"        {",
+							"            c_id: 2,",
+							"            c_size: 65536,",
+							"        },",
+							"        {",
+							"            c_id: 3,",
+							"            c_size: 65536,",
+							"        },",
+							"        {",
+							"            c_id: 4,",
+							"            c_size: 65536,",
+							"        },",
+							"        {",
+							"            c_id: 5,",
+							"            c_size: 65536,",
+							"        },",
+							"        {",
+							"            c_id: 6,",
+							"            c_size: 48577,",
+							"        },",
+							"        {",
+							"            c_id: 7,",
+							"            c_size: 65536,",
+							"        },",
+							"        {",
+							"            c_id: 8,",
+							"            c_size: 65536,",
+							"        },",
+							"    ],",
+							"    last_page: 0",
+							"    }",
+							"},",
+							"  ];",
+							"}",
+							"",
+							"// Combinazione testata e relativo risultato aspettato",
+							"var combination = combinations.shift();",
+							"var result      = expected_results.shift();",
+							"// eventuale body da passare sottoforma di stringa",
+							"pm.variables.set(\"combination_filesystem_0\", JSON.stringify(combination));",
+							"// Set necessario affinche' le variabili siano accessibili",
+							"// da test scripts",
+							"pm.environment.set(\"combination_filesystem_0\", combination);",
+							"pm.environment.set(\"result_filesystem_0\", result);",
+							"pm.environment.set(\"left_filesystem_0\", combinations.length);",
+							"// Aggiornamento delle variabili necessario altrimenti nel pre-script",
+							"// si rileggerebbe il valore iniziale ciclando all'infinito.",
+							"var combinations     = pm.environment.set(\"combinations_filesystem_0\", combinations);",
+							"var expected_results = pm.environment.set(\"expected_results_filesystem_0\", expected_results);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "34dc4294-b35a-417b-8b6f-1bb8c78f8080",
+						"exec": [
+							"var body = pm.environment.get(\"combination_filesystem_0\");",
+							"var expected_result = pm.environment.get(\"result_filesystem_0\"); ",
+							"var left = pm.environment.get(\"left_filesystem_0\"); ",
+							"",
+							"if(left > 0) {",
+							"  postman.setNextRequest(\"filesystem_0\");",
+							"} else {",
+							"   postman.setNextRequest(\"filesystem_2_fewchunks\"); ",
+							"}",
+							"",
+							"  if ( pm.response.code === 400 ) {",
+							"    pm.test(\"Check error message\", function () {",
+							"        pm.expect(pm.response.json().error).to.be.eql(expected_result.error);",
+							"    });",
+							"  }",
+							"",
+							"  if (pm.response.code === 200 ) {",
+							"      pm.test(\"Check token\", function () {",
+							"        pm.expect(pm.response.json().list.entries[0].c_id).to.be.eql(expected_result.list.entries[0].c_id);",
+							"        pm.expect(pm.response.json().list.entries[0].c_size).to.be.eql(expected_result.list.entries[0].c_size); ",
+							"        pm.expect(pm.response.json().list.entries[1].c_id).to.be.eql(expected_result.list.entries[1].c_id); ",
+							"        pm.expect(pm.response.json().list.entries[1].c_size).to.be.eql(expected_result.list.entries[1].c_size); ",
+							"        pm.expect(pm.response.json().list.entries[2].c_id).to.be.eql(expected_result.list.entries[2].c_id);",
+							"        pm.expect(pm.response.json().list.entries[2].c_size).to.be.eql(expected_result.list.entries[2].c_size); ",
+							"        pm.expect(pm.response.json().list.entries[3].c_id).to.be.eql(expected_result.list.entries[3].c_id); ",
+							"        pm.expect(pm.response.json().list.entries[3].c_size).to.be.eql(expected_result.list.entries[3].c_size); ",
+							"        pm.expect(pm.response.json().list.entries[4].c_id).to.be.eql(expected_result.list.entries[4].c_id); ",
+							"        pm.expect(pm.response.json().list.entries[4].c_size).to.be.eql(expected_result.list.entries[4].c_size); ",
+							"        pm.expect(pm.response.json().list.entries[5].c_id).to.be.eql(expected_result.list.entries[5].c_id);",
+							"        pm.expect(pm.response.json().list.entries[5].c_size).to.be.eql(expected_result.list.entries[5].c_size);         ",
+							"        pm.expect(pm.response.json().list.entries[6].c_id).to.be.eql(expected_result.list.entries[6].c_id); ",
+							"        pm.expect(pm.response.json().list.entries[6].c_size).to.be.eql(expected_result.list.entries[6].c_size); ",
+							"        pm.expect(pm.response.json().list.last_page).to.be.eql(expected_result.list.last_page);   ",
+							"      });",
+							"  }"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{{combination_filesystem_0}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://0.0.0.0:3200/test/filesystem/renato/dGhyZWFkLnBkZg==/0",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "3200",
+					"path": [
+						"test",
+						"filesystem",
+						"renato",
+						"dGhyZWFkLnBkZg==",
+						"0"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "filesystem_2_fewchunks",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "1f8fce7d-9b0d-40a5-b8e8-e6bed21556d3",
+						"exec": [
+							"var combinations     = pm.environment.get(\"combinations_filesystem_2_fewchunks\");",
+							"var expected_results = pm.environment.get(\"expected_results_filesystem_2_fewchunks\"); ",
+							"",
+							"if (!combinations) {",
+							"  // inizializzazione array di combinazioni da testare  ",
+							"  combinations = [",
+							"    \"get chunks filesystem _2_fewchunks\",",
+							"  ];",
+							"}",
+							"",
+							"if (!expected_results) {",
+							"  // inizializzazione array di risultati aspettati",
+							"  // l'ordine degli elementi in questo array deve",
+							"  // essere coerente con l'ordine dell'array delle",
+							"  // combinazioni. ",
+							"  expected_results = [",
+							"    { list:{entries: [",
+							"        {",
+							"            c_id: 0,",
+							"            c_size: 65536,",
+							"        },",
+							"        {",
+							"            c_id: 1,",
+							"            c_size: 65536,",
+							"        },",
+							"    ],",
+							"    last_page: 0",
+							"    }",
+							"},",
+							"  ];",
+							"}",
+							"",
+							"// Combinazione testata e relativo risultato aspettato",
+							"var combination = combinations.shift();",
+							"var result      = expected_results.shift();",
+							"// eventuale body da passare sottoforma di stringa",
+							"pm.variables.set(\"combination_filesystem_2_fewchunks\", JSON.stringify(combination));",
+							"// Set necessario affinche' le variabili siano accessibili",
+							"// da test scripts",
+							"pm.environment.set(\"combination_filesystem_2_fewchunks\", combination);",
+							"pm.environment.set(\"result_filesystem_2_fewchunks\", result);",
+							"pm.environment.set(\"left_filesystem_2_fewchunks\", combinations.length);",
+							"// Aggiornamento delle variabili necessario altrimenti nel pre-script",
+							"// si rileggerebbe il valore iniziale ciclando all'infinito.",
+							"var combinations     = pm.environment.set(\"combinations_filesystem_2_fewchunks\", combinations);",
+							"var expected_results = pm.environment.set(\"expected_results_filesystem_2_fewchunks\", expected_results);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "b3e4e834-c8bb-41c2-818f-602cd14faafa",
+						"exec": [
+							"var body = pm.environment.get(\"combination_filesystem_2_fewchunks\");",
+							"var expected_result = pm.environment.get(\"result_filesystem_2_fewchunks\"); ",
+							"var left = pm.environment.get(\"left_filesystem_2_fewchunks\"); ",
+							"",
+							"if(left > 0) {",
+							"  postman.setNextRequest(\"filesystem_2_fewchunks\");",
+							"} else {",
+							"   postman.setNextRequest(\"delete_file\"); ",
+							"}",
+							"",
+							"  if ( pm.response.code === 400 ) {",
+							"    pm.test(\"Check error message\", function () {",
+							"        pm.expect(pm.response.json().error).to.be.eql(expected_result.error);",
+							"    });",
+							"  }",
+							"",
+							"  if (pm.response.code === 200 ) {",
+							"      pm.test(\"Check token\", function () {",
+							"        pm.expect(pm.response.json().list.entries[0].c_id).to.be.eql(expected_result.list.entries[0].c_id); ",
+							"        pm.expect(pm.response.json().list.entries[0].c_size).to.be.eql(expected_result.list.entries[0].c_size); ",
+							"        pm.expect(pm.response.json().list.entries[1].c_id).to.be.eql(expected_result.list.entries[1].c_id); ",
+							"        pm.expect(pm.response.json().list.entries[1].c_size).to.be.eql(expected_result.list.entries[1].c_size); ",
+							"        pm.expect(pm.response.json().list.last_page).to.be.eql(expected_result.list.last_page);   ",
+							"      });",
+							"  }"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{{combination_filesystem_2_fewchunks}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://0.0.0.0:3200/test/filesystem/renato/Z2VuZXJhbGkucGRm/0",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "3200",
+					"path": [
+						"test",
+						"filesystem",
+						"renato",
+						"Z2VuZXJhbGkucGRm",
+						"0"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "delete_file",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "96716f86-9276-4c18-9d70-26f54b1a36cd",
+						"exec": [
+							"postman.setNextRequest(\"chunk_0_deleted\");"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYiI6MSwiZGV2aWNlX2lkIjoxLCJleHAiOjE2MDQ4NDg2ODYsInN1YiI6InJlbmF0byJ9.eyJzaWduIjoiVkRKeWpjYlpnM2hFSERYQVZaMzJpNWZKb3FDQVZRPT0ifQ==",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://0.0.0.0:3200/file/dGhyZWFkLnBkZg==/5678",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "3200",
+					"path": [
+						"file",
+						"dGhyZWFkLnBkZg==",
+						"5678"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "chunk_0_deleted",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "a3c96e0e-e643-4230-96a3-1f215a82dd2b",
+						"exec": [
+							"var combinations     = pm.environment.get(\"combinations_chunk_0_deleted\");",
+							"var expected_results = pm.environment.get(\"expected_results_chunk_0_deleted\"); ",
+							"",
+							"if (!combinations) {",
+							"  // inizializzazione array di combinazioni da testare  ",
+							"  combinations = [",
+							"    \"get chunks\",",
+							"  ];",
+							"}",
+							"",
+							"if (!expected_results) {",
+							"  // inizializzazione array di risultati aspettati",
+							"  // l'ordine degli elementi in questo array deve",
+							"  // essere coerente con l'ordine dell'array delle",
+							"  // combinazioni. ",
+							"    expected_results = [",
+							"    { list: {",
+							"        entries: [",
+							"        {",
+							"            c_id: 0,",
+							"            c_lastmod: 5678,",
+							"            c_path: \"dGhyZWFkLnBkZg==\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 7",
+							"        },",
+							"        {",
+							"            c_id: 1,",
+							"            c_lastmod: 5678,",
+							"            c_path: \"dGhyZWFkLnBkZg==\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 7",
+							"        },",
+							"        {",
+							"            c_id: 2,",
+							"            c_lastmod: 5678,",
+							"            c_path: \"dGhyZWFkLnBkZg==\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 7",
+							"        },",
+							"        {",
+							"            c_id: 3,",
+							"            c_lastmod: 5678,",
+							"            c_path: \"dGhyZWFkLnBkZg==\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 7",
+							"        },",
+							"        {",
+							"            c_id: 4,",
+							"            c_lastmod: 5678,",
+							"            c_path: \"dGhyZWFkLnBkZg==\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 7",
+							"        },",
+							"        {",
+							"            c_id: 5,",
+							"            c_lastmod: 5678,",
+							"            c_path: \"dGhyZWFkLnBkZg==\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 7",
+							"        },",
+							"        {",
+							"            c_id: 6,",
+							"            c_lastmod: 5678,",
+							"            c_path: \"dGhyZWFkLnBkZg==\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 7",
+							"        },",
+							"        {",
+							"            c_id: 0,",
+							"            c_lastmod: 1234,",
+							"            c_path: \"Z2VuZXJhbGkucGRm\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 9",
+							"        },",
+							"        {",
+							"            c_id: 1,",
+							"            c_lastmod: 1234,",
+							"            c_path: \"Z2VuZXJhbGkucGRm\",",
+							"            c_username: \"renato\",",
+							"            num_chunks: 9",
+							"        },    ",
+							"    ],",
+							"    last_page: 0",
+							"    }",
+							"},",
+							"  ];",
+							"}",
+							"",
+							"// Combinazione testata e relativo risultato aspettato",
+							"var combination = combinations.shift();",
+							"var result      = expected_results.shift();",
+							"// eventuale body da passare sottoforma di stringa",
+							"pm.variables.set(\"combination_chunk_0_deleted\", JSON.stringify(combination));",
+							"// Set necessario affinche' le variabili siano accessibili",
+							"// da test scripts",
+							"pm.environment.set(\"combination_chunk_0_deleted\", combination);",
+							"pm.environment.set(\"result_chunk_0_deleted\", result);",
+							"pm.environment.set(\"left_chunk_0_deleted\", combinations.length);",
+							"// Aggiornamento delle variabili necessario altrimenti nel pre-script",
+							"// si rileggerebbe il valore iniziale ciclando all'infinito.",
+							"var combinations     = pm.environment.set(\"combinations_chunk_0_deleted\", combinations);",
+							"var expected_results = pm.environment.set(\"expected_results_chunk_0_deleted\", expected_results);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "37778a42-387d-4bcf-bac8-acc70b4aa4c7",
+						"exec": [
+							"var body = pm.environment.get(\"combination_chunk_0_deleted\");",
+							"var expected_result = pm.environment.get(\"result_chunk_0_deleted\"); ",
+							"var left = pm.environment.get(\"left_chunk_0_deleted\"); ",
+							"",
+							"if(left > 0) {",
+							"  postman.setNextRequest(\"chunk_0_deleted\");",
+							"} else {",
+							"   postman.setNextRequest(\"filesystem_0_deleted\"); ",
+							"}",
+							"",
+							"  if ( pm.response.code === 400 ) {",
+							"    pm.test(\"Check error message\", function () {",
+							"        pm.expect(pm.response.json().error).to.be.eql(expected_result.error);",
+							"    });",
+							"  }",
+							"",
+							"  if (pm.response.code === 200 ) {",
+							"      pm.test(\"Check token\", function () {",
+							"        pm.expect(pm.response.json().list.entries[0].c_id).to.be.eql(expected_result.list.entries[0].c_id);",
+							"        pm.expect(pm.response.json().list.entries[0].c_lastmod).to.be.eql(expected_result.list.entries[0].c_lastmod); ",
+							"        pm.expect(pm.response.json().list.entries[0].c_path).to.be.eql(expected_result.list.entries[0].c_path); ",
+							"        pm.expect(pm.response.json().list.entries[0].c_username).to.be.eql(expected_result.list.entries[0].c_username);  ",
+							"        pm.expect(pm.response.json().list.entries[0].num_chunks).to.be.eql(expected_result.list.entries[0].num_chunks);  ",
+							"        pm.expect(pm.response.json().list.entries[1].c_id).to.be.eql(expected_result.list.entries[1].c_id);",
+							"        pm.expect(pm.response.json().list.entries[1].c_lastmod).to.be.eql(expected_result.list.entries[1].c_lastmod); ",
+							"        pm.expect(pm.response.json().list.entries[1].c_path).to.be.eql(expected_result.list.entries[1].c_path); ",
+							"        pm.expect(pm.response.json().list.entries[1].c_username).to.be.eql(expected_result.list.entries[1].c_username);  ",
+							"        pm.expect(pm.response.json().list.entries[1].num_chunks).to.be.eql(expected_result.list.entries[1].num_chunks); ",
+							"        pm.expect(pm.response.json().last_page).to.be.eql(expected_result.last_page);   ",
+							"      });",
+							"  }"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{{combination_chunk_0_deleted}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://0.0.0.0:3200/test/database/chunks/1/0",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "3200",
+					"path": [
+						"test",
+						"database",
+						"chunks",
+						"1",
+						"0"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "filesystem_0_deleted",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "44c9bf6f-b3b3-431f-aa10-ef6f34caa66e",
+						"exec": [
+							"var combinations     = pm.environment.get(\"combinations_filesystem_0_deleted\");",
+							"var expected_results = pm.environment.get(\"expected_results_filesystem_0_deleted\"); ",
+							"",
+							"if (!combinations) {",
+							"  // inizializzazione array di combinazioni da testare  ",
+							"  combinations = [",
+							"    \"get chunks filesystem_deleted\",",
+							"  ];",
+							"}",
+							"",
+							"if (!expected_results) {",
+							"  // inizializzazione array di risultati aspettati",
+							"  // l'ordine degli elementi in questo array deve",
+							"  // essere coerente con l'ordine dell'array delle",
+							"  // combinazioni. ",
+							"  expected_results = [",
+							"    {list:{ entries: [",
+							"    ],",
+							"    last_page: 0",
+							"    }",
+							"},",
+							"  ];",
+							"}",
+							"",
+							"// Combinazione testata e relativo risultato aspettato",
+							"var combination = combinations.shift();",
+							"var result      = expected_results.shift();",
+							"// eventuale body da passare sottoforma di stringa",
+							"pm.variables.set(\"combination_filesystem_0\", JSON.stringify(combination));",
+							"// Set necessario affinche' le variabili siano accessibili",
+							"// da test scripts",
+							"pm.environment.set(\"combination_filesystem_0\", combination);",
+							"pm.environment.set(\"result_filesystem_0\", result);",
+							"pm.environment.set(\"left_filesystem_0\", combinations.length);",
+							"// Aggiornamento delle variabili necessario altrimenti nel pre-script",
+							"// si rileggerebbe il valore iniziale ciclando all'infinito.",
+							"var combinations     = pm.environment.set(\"combinations_filesystem_0\", combinations);",
+							"var expected_results = pm.environment.set(\"expected_results_filesystem_0\", expected_results);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "748454eb-0060-4441-8d59-31e2ad121186",
+						"exec": [
+							"var body = pm.environment.get(\"combination_filesystem_0\");",
+							"var expected_result = pm.environment.get(\"result_filesystem_0\"); ",
+							"var left = pm.environment.get(\"left_filesystem_0\"); ",
+							"",
+							"if(left > 0) {",
+							"  postman.setNextRequest(\"filesystem_0_deleted\");",
+							"} else {",
+							"   postman.setNextRequest(null); ",
+							"}",
+							"",
+							"  if ( pm.response.code === 400 ) {",
+							"    pm.test(\"Check error message\", function () {",
+							"        pm.expect(pm.response.json().error).to.be.eql(expected_result.error);",
+							"    });",
+							"  }",
+							"",
+							"  if (pm.response.code === 200 ) {",
+							"      pm.test(\"Check token\", function () {",
+							"        pm.expect(pm.response.json().last_page).to.be.eql(expected_result.last_page);   ",
+							"      });",
+							"  }"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{{combination_filesystem_0_deleted}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://0.0.0.0:3200/test/filesystem/renato/dGhyZWFkLnBkZg==/0",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "3200",
+					"path": [
+						"test",
+						"filesystem",
+						"renato",
+						"dGhyZWFkLnBkZg==",
+						"0"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

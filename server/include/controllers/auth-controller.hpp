@@ -4,22 +4,30 @@
 #include "../dtos/signin_dto.hpp"
 #include "../services/user-service.hpp"
 #include <regex>
+#include "../common/singleton.hpp"
 #include "../common/makereply.hpp"
 
 
 
 
-class AuthController : public Controller {
+class AuthController : public Controller, public Singleton<AuthController>{
 
 private:
-    static inline std::shared_ptr<AuthController> instance{nullptr};
-    std::shared_ptr<UserService> user_service;
+    friend class Singleton;
+    std::regex signin_rgx;
+    std::regex signup_rgx;
+    AuthController():
+    signin_rgx{std::move(std::regex{"^\\{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\",\\s?\"mac_address\":\\s?\"[0-9a-f:]{17}\"\\}$"})},
+    signup_rgx{std::move(std::regex{"^\\{\"username\":\\s?\"\\w+\",\\s?\"password\":\\s?\"\\w+\",\\s?\"password_confirm\":\\s?\"\\w+\",\\s?\"mac_address\":\\s?\"[0-9a-f:]{17}\"\\}$"})}
+    {}
+
 
 public:
-    static std::shared_ptr<AuthController> getInstance();
 
   virtual const http::server::reply handle(const http::server::request &req);
   const std::string post_signin(const SigninDTO &req);
   const std::string post_signup(const SignupDTO &req);
 
+  const std::regex get_signin_rgx();
+  const std::regex get_signup_rgx();
 };
