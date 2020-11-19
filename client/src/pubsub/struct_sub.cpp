@@ -39,18 +39,24 @@ void StructSubscriber::stop() {
 }
 
 void StructSubscriber::on_add_entry(const Message &message) {
+  DurationLogger log{"ADD_ENTRY"};
+  /*
   std::unique_lock lock{m1};
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   std::shared_ptr<FileEntry> entry = message.get_content();
   sync->add_entry(entry);
+  */
 }
 
 void StructSubscriber::on_delete_entry(const Message &message) {
+  DurationLogger log{"DELETE_ENTRY"};
+  /*
   std::unique_lock lock{m1};
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   std::shared_ptr<FileEntry> entry = message.get_content();
   std::clog << "count in struct: " << entry.use_count() << "\n";
   sync->remove_entry(entry);
+  */
 }
 
 void StructSubscriber::notify_news() {

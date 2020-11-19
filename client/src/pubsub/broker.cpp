@@ -13,12 +13,6 @@ Broker::Broker() : is_running{true} {
           if (!tasks.empty()) {
             mex = tasks.front();
             tasks.pop();
-            topic = mex.get_topic();
-            if (subs.find(topic) != subs.end()) {
-              for (auto const &call : subs[topic]) {
-                fns.push_back(std::bind(call, std::cref(mex)));
-              }
-            }
           } else {
             // publish(Message{TOPIC::TRANSFER_COMPLETE});
             ncv.wait(lk, [&]() { return !tasks.empty() || !is_running; });
@@ -29,22 +23,11 @@ Broker::Broker() : is_running{true} {
 
         try {
           resource_guard guard{};
-          for (size_t i = 0; i < fns.size(); i++) {
-            fns[i](mex);
-          }
-          switch (topic) {
-          case TOPIC::NEW_FILE: {
-            std::shared_ptr<FileEntry> entry{mex.get_content()};
-            publish(Message{TOPIC::ADD_ENTRY, entry});
-          } break;
-
-          case TOPIC::FILE_DELETED: {
-            std::shared_ptr<FileEntry> entry{mex.get_content()};
-            publish(Message{TOPIC::REMOVE_ENTRY, entry});
-          }
-
-          default:
-            break;
+          topic = mex.get_topic();
+          if (subs.find(topic) != subs.end()) {
+            for (auto const &call : subs[topic]) {
+              call(mex);
+            }
           }
         } catch (AuthFailed &ex) {
           std::clog << ex.what() << "\n";
@@ -106,7 +89,6 @@ void Broker::subscribe(const TOPIC &topic,
 
 void Broker::publish(const Message &message) {
   std::unique_lock{nm};
-  std::clog << "publish\n";
   tasks.push(message);
   ncv.notify_one();
 }

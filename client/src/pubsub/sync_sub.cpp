@@ -28,7 +28,7 @@ void SyncSubscriber::stop() {
 }
 
 void SyncSubscriber::on_new_file(const Message &message) {
-  //DurationLogger logger{"NEW_FILE"};
+  // DurationLogger logger{"NEW_FILE"};
   std::shared_ptr<FileEntry> fentry = message.get_content();
   entry_guard eguard{fentry};
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
@@ -37,6 +37,10 @@ void SyncSubscriber::on_new_file(const Message &message) {
       std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry->next_chunk();
       rest_client->post_chunk(chunk, fentry->to_string());
     }
+    broker->publish(Message{TOPIC::ADD_ENTRY,
+                            std::make_shared<FileEntry>(fentry->get_path(),
+                                                        fentry->get_producer(),
+                                                        fentry->get_status())});
   }
   if (fentry->get_producer() == entry_producer::server) {
     while (fentry->has_chunk()) {
@@ -49,18 +53,18 @@ void SyncSubscriber::on_new_file(const Message &message) {
     std::filesystem::create_directories(new_path.parent_path().string());
     std::filesystem::rename(tmp_path, new_path);
   }
-  fentry->set_status(entry_status::synced);
+  // fentry->set_status(entry_status::synced);
 }
 
 void SyncSubscriber::on_file_deleted(const Message &message) {
-  //DurationLogger logger{"FILE_DELETED"};
+  // DurationLogger logger{"FILE_DELETED"};
   std::shared_ptr<FileEntry> fentry = message.get_content();
-  std::clog << "count in sync: " << fentry.use_count() << "\n";
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   if (fentry->get_producer() == entry_producer::local) {
     rest_client->delete_file(fentry->get_path());
-    std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-    sync->remove_entry(fentry);
+    broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
+    // std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+    // sync->remove_entry(fentry);
   }
   if (fentry->get_producer() == entry_producer::server &&
       std::filesystem::exists(fentry->get_path())) {
@@ -73,8 +77,7 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
       std::filesystem::remove_all(parent_path);
     }
   }
-  fentry->set_status(entry_status::synced);
-  std::shared_ptr<SyncStructure> sync_struct = SyncStructure::getInstance();
-  sync_struct->remove_entry(fentry);
-
+  // fentry->set_status(entry_status::synced);
+  // std::shared_ptr<SyncStructure> sync_struct = SyncStructure::getInstance();
+  // sync_struct->remove_entry(fentry);
 }

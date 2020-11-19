@@ -149,9 +149,6 @@ void LinuxWatcher::handle_events() {
           const std::string path =
               wd_path_map[event->wd] + "/" + std::string{event->name};
 
-          // struct inotify_event evento{0, 256, 0, 0};
-          // strcpy(evento.name, path.c_str());
-          // std::clog << "evento nome: " << evento.name << "\n";
 
           timer = TIMER;
 
@@ -259,18 +256,10 @@ void LinuxWatcher::handle_events() {
             broker->publish(Message{TOPIC::NEW_FILE, entry});
           }
           if (mask == 64 || mask == 512) {
-            std::shared_ptr<SyncStructure> sync_structure =
-                SyncStructure::getInstance();
-            std::optional<std::shared_ptr<FileEntry>> fentry =
-                sync_structure->get_entry(path);
-            if (fentry.has_value()) {
-              std::shared_ptr<FileEntry> content = fentry.value();
-              content->set_status(entry_status::delete_);
-              content->set_producer(entry_producer::local);
-              Message m{TOPIC::FILE_DELETED, content};
-              broker->publish(m);
+            std::shared_ptr<FileEntry> entry{
+                new FileEntry{path, entry_producer::local, entry_status::delete_}};
+            broker->publish(Message{TOPIC::FILE_DELETED, entry});
             }
-          }
         }
 
         events.clear();

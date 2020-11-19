@@ -49,7 +49,7 @@ std::tuple<size_t, std::string> FileEntry::get_last_move() const {
 std::tuple<std::shared_ptr<char[]>, size_t> FileEntry::next_chunk() {
   DurationLogger log{"READ_CHUNK"};
   std::ifstream in{path, std::ios::binary};
-  in.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+  in.exceptions(std::ifstream::failbit | std::ifstream::badbit | std::ifstream::eofbit);
   // lazy init of infos
   if (buffer.get() == nullptr) {
     buffer = std::shared_ptr<char[]>{new char[CHUNK_SIZE]};
@@ -81,12 +81,6 @@ void FileEntry::retrieve_chunk() {
   std::vector<char> response = rest_client->get_chunk(target);
   out.write(response.data(), response.size());
   read_count++;
-  if (read_count == nchunks) {
-    // non aspettiamo di flushare il contenuto di out, questo perche'
-    // il file deve essere mosso poco dopo e con tanto carico
-    // di rischia di perdere dati altrimenti
-    out.flush();
-  }
 }
 
 json FileEntry::to_json() {
