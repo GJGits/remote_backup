@@ -4,7 +4,8 @@ const std::regex FileController::get_delete_rgx(){return delete_rgx;};
 
 const http::server::reply
 FileController::handle(const http::server::request &req) {
-  Subject sub = JWT::validateToken(req);
+  std::shared_ptr<JWT> jwt = JWT::getInstance();
+  Subject sub = jwt->validateToken(req);
   if (req.method == "DELETE") {
     std::smatch match;
     if (std::regex_search(req.uri.begin(), req.uri.end(), match, get_delete_rgx())) {

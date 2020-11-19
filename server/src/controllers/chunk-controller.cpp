@@ -5,7 +5,8 @@ const std::regex ChunkController::get_get_chunk_rgx(){return get_chunk_rgx;}
 
 const http::server::reply
 ChunkController::handle(const http::server::request &req) {
-  Subject sub = JWT::validateToken(req);
+  std::shared_ptr<JWT> jwt = JWT::getInstance();
+  Subject sub = jwt->validateToken(req);
 
   if (req.method == "POST") {
     std::smatch match;

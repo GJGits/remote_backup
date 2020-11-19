@@ -6,7 +6,8 @@ const std::regex StatusController::get_user_rgx_file(){return user_rgx_file;}
 
 const http::server::reply
 StatusController::handle(const http::server::request &req) {
-  Subject sub = JWT::validateToken(req);
+  std::shared_ptr<JWT> jwt = JWT::getInstance();
+  Subject sub = jwt->validateToken(req);
   if (req.method == "GET") {
     std::smatch match;
     if (std::regex_search(req.uri.begin(), req.uri.end(), match,
