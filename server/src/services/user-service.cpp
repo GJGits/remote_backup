@@ -17,8 +17,8 @@ std::string UserService::login(const SigninDTO &user) {
       device_id = abs(device_id);
     }
     Subject sub{user.getUsername(), user_returned.get_db_selected(), (size_t)device_id};
-
-    return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
+    std::shared_ptr<JWT> jwt = JWT::getInstance();
+    return jwt->generateToken(sub, jwt->getExpiration() + std::time(nullptr));
   } else
     throw CredentialsNotValidException();
 }
@@ -43,5 +43,6 @@ std::string UserService::signup(const SignupDTO &user) {
   user_to_insert.set_device_1_MAC(user.getMAC());
   size_t db_sel = user_repository->insertUser(user_to_insert);
   Subject sub{user.getUsername(), db_sel, 1};
-  return JWT::generateToken(sub, JWT::getExpiration() + std::time(nullptr));
+  std::shared_ptr<JWT> jwt = JWT::getInstance();
+  return jwt->generateToken(sub, jwt->getExpiration() + std::time(nullptr));
 }
