@@ -25,13 +25,17 @@ void SyncSubscriber::start() {
   sync->update_from_fs();
   sync->update_from_remote();
   for (const auto &entry : sync->get_entries()) {
-    if (entry->get_status() == entry_status::new_ && entry_producer::local)
+    if (entry->get_status() == entry_status::new_ &&
+        entry->get_producer() == entry_producer::local)
       new_from_local(entry);
-    if (entry->get_status() == entry_status::new_ && entry_producer::server)
+    if (entry->get_status() == entry_status::new_ &&
+        entry->get_producer() == entry_producer::server)
       new_from_remote(entry);
-    if (entry->get_status() == entry_status::delete_ && entry_producer::local)
+    if (entry->get_status() == entry_status::delete_ &&
+        entry->get_producer() == entry_producer::local)
       delete_from_local(entry);
-    if (entry->get_status() == entry_status::delete_ && entry_producer::server)
+    if (entry->get_status() == entry_status::delete_ &&
+        entry->get_producer() == entry_producer::server)
       delete_from_remote(entry);
   }
 }

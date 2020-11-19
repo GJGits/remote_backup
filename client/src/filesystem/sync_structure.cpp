@@ -7,7 +7,7 @@ SyncStructure::SyncStructure() : server_ack{false}, last_check{0} {
 SyncStructure::~SyncStructure() { std::clog << "sync_struct destroy...\n"; }
 
 void SyncStructure::store() {
-  if (!structure.empty() && server_ack) {
+  if (server_ack) {
     std::ofstream o{CLIENT_STRUCT};
     json jstru = {{"entries", json::array()},
                   {"last_check", (int)std::time(nullptr)}};
