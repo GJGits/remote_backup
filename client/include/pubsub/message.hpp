@@ -4,6 +4,7 @@
 #include "topics.hpp"
 #include <memory>
 
+
 class Message {
 private:
   TOPIC topic;

@@ -146,6 +146,8 @@ void GuiModule::on_connection_lost(const Message &message) {
 }
 
 void GuiModule::on_transfer(const Message &message) {
+  std::shared_ptr<FileEntry> entry = message.get_content();
+  std::clog << "count in gui_module: " << entry.use_count() << "\n";
   /*
   json transfer = message.get_content()->to_json();
   json mex = {{"code", "transfer"}, {"message", transfer}};

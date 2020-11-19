@@ -116,7 +116,7 @@ void LinuxWatcher::handle_events() {
       fds[0].events = POLLIN;
       fds[1].fd = pipe_[0];
       fds[1].events = POLLIN;
-      
+
       // poll until an event occurs.Timeout = -1 -> BLOCKING,
       // else timeout expressed in milliseconds
       poll_num = poll(fds, nfds, timer);
@@ -208,14 +208,11 @@ void LinuxWatcher::handle_events() {
 
           } break;
           }
-        
         }
       }
       if (poll_num == 0) {
 
         timer = WAIT;
-        std::clog << "loggati " << std::to_string(events.size()) << " eventi!\n";
-
         std::vector<LinuxEvent> eves{};
         for (const auto &[path, event] : events) {
           if (event.get_mask() != 1073741952)
@@ -257,21 +254,14 @@ void LinuxWatcher::handle_events() {
           }
           // 2. altro -> invio messaggio
           if (mask == 2 || mask == 128 || mask == 256) {
-            std::shared_ptr<FileEntry> content{
+            std::shared_ptr<FileEntry> entry{
                 new FileEntry{path, entry_producer::local, entry_status::new_}};
-            broker->publish(Message{TOPIC::NEW_FILE, content});
+            broker->publish(Message{TOPIC::NEW_FILE, entry});
           }
           if (mask == 64 || mask == 512) {
-            std::shared_ptr<SyncStructure> sync_structure =
-                SyncStructure::getInstance();
-            std::optional<std::shared_ptr<FileEntry>> fentry =
-                sync_structure->get_entry(path);
-            if (fentry.has_value()) {
-              std::shared_ptr<FileEntry> content = fentry.value();
-              content->set_status(entry_status::delete_);
-              content->set_producer(entry_producer::local);
-              broker->publish(Message{TOPIC::FILE_DELETED, content});
-            }
+            std::shared_ptr<FileEntry> entry{new FileEntry{
+                path, entry_producer::local, entry_status::delete_}};
+            broker->publish(Message{TOPIC::FILE_DELETED, entry});
           }
         }
 

@@ -8,7 +8,7 @@ StructSubscriber::~StructSubscriber() {
 
 void StructSubscriber::init_sub_list() {
   broker = Broker::getInstance();
-  broker->subscribe(TOPIC::NEW_FILE,
+  broker->subscribe(TOPIC::ADD_ENTRY,
                     std::bind(&StructSubscriber::on_add_entry, instance.get(),
                               std::placeholders::_1));
   broker->subscribe(TOPIC::REMOVE_ENTRY,
@@ -48,7 +48,9 @@ void StructSubscriber::on_add_entry(const Message &message) {
 void StructSubscriber::on_delete_entry(const Message &message) {
   std::unique_lock lock{m1};
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-  sync->remove_entry(message.get_content());
+  std::shared_ptr<FileEntry> entry = message.get_content();
+  std::clog << "count in struct: " << entry.use_count() << "\n";
+  sync->remove_entry(entry);
 }
 
 void StructSubscriber::notify_news() {
@@ -56,7 +58,6 @@ void StructSubscriber::notify_news() {
   for (const auto &entry : sync->get_entries()) {
     if (entry->get_status() == entry_status::new_) {
       broker->publish(Message{TOPIC::NEW_FILE, entry});
-      std::clog << "chiedere al server: " << entry->get_path() << "\n";
     }
     if (entry->get_status() == entry_status::delete_) {
       broker->publish(Message{TOPIC::FILE_DELETED, entry});

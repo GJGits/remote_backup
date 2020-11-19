@@ -4,15 +4,23 @@ Broker::Broker() : is_running{true} {
   for (ssize_t i = 0; i < 6; i++) {
     callers.emplace_back([&]() {
       while (is_running) {
-        std::function<void(void)> fn;
+        std::vector<std::function<void(const Message &)>> fns;
+        Message mex;
+        TOPIC topic;
         // sezione critica
         {
           std::unique_lock lk{nm};
           if (!tasks.empty()) {
-            fn = std::move(tasks.front());
+            mex = tasks.front();
             tasks.pop();
+            topic = mex.get_topic();
+            if (subs.find(topic) != subs.end()) {
+              for (auto const &call : subs[topic]) {
+                fns.push_back(std::bind(call, std::cref(mex)));
+              }
+            }
           } else {
-            //publish(Message{TOPIC::TRANSFER_COMPLETE});
+            // publish(Message{TOPIC::TRANSFER_COMPLETE});
             ncv.wait(lk, [&]() { return !tasks.empty() || !is_running; });
             continue;
           }
@@ -21,7 +29,23 @@ Broker::Broker() : is_running{true} {
 
         try {
           resource_guard guard{};
-          fn();
+          for (size_t i = 0; i < fns.size(); i++) {
+            fns[i](mex);
+          }
+          switch (topic) {
+          case TOPIC::NEW_FILE: {
+            std::shared_ptr<FileEntry> entry{mex.get_content()};
+            publish(Message{TOPIC::ADD_ENTRY, entry});
+          } break;
+
+          case TOPIC::FILE_DELETED: {
+            std::shared_ptr<FileEntry> entry{mex.get_content()};
+            publish(Message{TOPIC::REMOVE_ENTRY, entry});
+          }
+
+          default:
+            break;
+          }
         } catch (AuthFailed &ex) {
           std::clog << ex.what() << "\n";
           clear();
@@ -40,14 +64,14 @@ Broker::Broker() : is_running{true} {
           std::clog << ex.what() << "\n";
           clear();
           publish(Message{TOPIC::EASY_EXCEPTION});
-          //return;
+          // return;
         }
 
         catch (std::filesystem::filesystem_error &ex) {
           std::clog << ex.what() << "\n";
           clear();
           publish(Message{TOPIC::EASY_EXCEPTION});
-          //return;
+          // return;
         }
 
         catch (...) {
@@ -72,6 +96,7 @@ Broker::~Broker() {
 
 void Broker::subscribe(const TOPIC &topic,
                        const std::function<void(const Message &)> &callback) {
+  std::unique_lock{nm};
   if (subs.find(topic) == subs.end()) {
     subs.insert(std::pair{topic, std::list{callback}});
   } else {
@@ -80,18 +105,9 @@ void Broker::subscribe(const TOPIC &topic,
 }
 
 void Broker::publish(const Message &message) {
-  TOPIC topic = message.get_topic();
-  if (subs.find(topic) != subs.end()) {
-    for (auto const &call : subs[topic]) {
-      std::function<void(void)> fn = std::bind(call, message);
-      push(fn);
-    }
-  }
-}
-
-void Broker::push(const std::function<void(void)> &pack) {
   std::unique_lock{nm};
-  tasks.push(std::move(pack));
+  std::clog << "publish\n";
+  tasks.push(message);
   ncv.notify_one();
 }
 

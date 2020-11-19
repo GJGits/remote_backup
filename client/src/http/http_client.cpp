@@ -18,7 +18,7 @@ HTTPClient::~HTTPClient() { std::clog << "http_client destroy...\n"; }
 void HTTPClient::up_request(const http::request<http::vector_body<char>> &req) {
 
   try {
-    DurationLogger logger{"COMPLETE REQUEST"};
+   // DurationLogger logger{"COMPLETE REQUEST"};
     net::io_context ioc;
     tcp::resolver resolver{ioc};
     boost::asio::ip::basic_resolver_results<boost::asio::ip::tcp> results =
