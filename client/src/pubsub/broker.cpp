@@ -14,7 +14,6 @@ Broker::Broker() : is_running{true} {
             mex = tasks.front();
             tasks.pop();
           } else {
-            // publish(Message{TOPIC::TRANSFER_COMPLETE});
             ncv.wait(lk, [&]() { return !tasks.empty() || !is_running; });
             continue;
           }

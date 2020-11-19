@@ -4,7 +4,6 @@
 #include <boost/asio.hpp>
 #include <thread> // per debugging su thread
 #include "../filesystem/linux_watcher.hpp"
-#include "../pubsub/struct_sub.hpp"
 #include "../pubsub/sync_sub.hpp"
 #include "../modules/module.hpp"
 

@@ -7,6 +7,7 @@ SyncStructure::SyncStructure() : server_ack{false}, last_check{0} {
 SyncStructure::~SyncStructure() { std::clog << "sync_struct destroy...\n"; }
 
 void SyncStructure::store() {
+  std::unique_lock lk{mx};
   if (!structure.empty() && server_ack) {
     std::ofstream o{CLIENT_STRUCT};
     json jstru = {{"entries", json::array()},
@@ -20,6 +21,7 @@ void SyncStructure::store() {
 }
 
 void SyncStructure::restore() {
+  std::unique_lock lk{mx};
   std::ifstream i{CLIENT_STRUCT};
   i.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   json j;
@@ -52,6 +54,7 @@ void SyncStructure::restore() {
 }
 
 void SyncStructure::update_from_fs() {
+  std::unique_lock lk{mx};
   for (const auto &p :
        std::filesystem::recursive_directory_iterator(SYNC_ROOT)) {
     std::string path = p.path().string();
@@ -72,6 +75,7 @@ void SyncStructure::update_from_fs() {
 }
 
 void SyncStructure::update_from_remote() {
+  std::unique_lock lk{mx};
   int current_page = 0;
   int last_page = 0;
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
@@ -98,6 +102,7 @@ void SyncStructure::update_from_remote() {
 }
 
 void SyncStructure::add_entry(const std::shared_ptr<FileEntry> &entry) {
+  std::unique_lock lk{mx};
   std::string path = entry->get_path();
   if (structure.find(path) == structure.end()) {
     structure[path] = entry;
@@ -108,18 +113,20 @@ void SyncStructure::add_entry(const std::shared_ptr<FileEntry> &entry) {
 }
 
 void SyncStructure::remove_entry(const std::shared_ptr<FileEntry> &entry) {
-  std::unique_lock lk{m};
+  std::unique_lock lk{mx};
   structure.erase(entry->get_path());
 }
 
 std::optional<std::shared_ptr<FileEntry>>
 SyncStructure::get_entry(const std::string &path) {
+  std::unique_lock lk{mx};
   return structure.find(path) != structure.end()
              ? std::optional<std::shared_ptr<FileEntry>>{structure[path]}
              : std::nullopt;
 }
 
 std::vector<std::string> SyncStructure::get_paths() {
+  std::unique_lock lk{mx};
   std::vector<std::string> paths;
   for (const auto &[path, entry] : structure) {
     paths.push_back(path);
@@ -128,6 +135,7 @@ std::vector<std::string> SyncStructure::get_paths() {
 }
 
 std::vector<std::shared_ptr<FileEntry>> SyncStructure::get_entries() {
+  std::unique_lock lk{mx};
   std::vector<std::shared_ptr<FileEntry>> entries{};
   for (const auto &[key, entry] : structure) {
     entries.push_back(entry);
