@@ -108,8 +108,8 @@ void SyncStructure::add_entry(const std::shared_ptr<FileEntry> &entry) {
 }
 
 void SyncStructure::remove_entry(const std::shared_ptr<FileEntry> &entry) {
-  if (structure.find(entry->get_path()) != structure.end())
-    structure.erase(entry->get_path());
+  std::unique_lock lk{m};
+  structure.erase(entry->get_path());
 }
 
 std::optional<std::shared_ptr<FileEntry>>

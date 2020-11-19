@@ -34,7 +34,7 @@ void RestClient::fill_headers(http::request<http::vector_body<char>> &req,
 
 void RestClient::post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
                             const std::string &target) {
-  DurationLogger log{"POST_CHUNK"};
+  //DurationLogger log{"POST_CHUNK"};
   std::shared_ptr<HTTPClient> http_client = HTTPClient::getInstance();
   std::shared_ptr<char[]> buffer = std::get<0>(chunk);
   size_t size = std::get<1>(chunk);
