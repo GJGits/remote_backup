@@ -5,6 +5,8 @@
 #include "../include/pubsub/struct_sub.hpp"
 #include "../include/pubsub/sync_sub.hpp"
 
+// init commit-m
+
 void signalHandler(int signum) {
   // cleanup and close up stuff here
   // terminate program
