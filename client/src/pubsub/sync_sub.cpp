@@ -98,7 +98,8 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
       std::filesystem::exists(fentry->get_path())) {
     delete_from_remote(fentry);
   }
-
+  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+  sync->remove_entry(fentry);
 }
 
 void SyncSubscriber::delete_from_local(
@@ -120,7 +121,7 @@ void SyncSubscriber::delete_from_remote(
     if (std::filesystem::is_empty(parent_path)) {
       std::filesystem::remove_all(parent_path);
     }
-    std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-    sync->remove_entry(fentry);
+   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+  sync->remove_entry(fentry);
   }
 }

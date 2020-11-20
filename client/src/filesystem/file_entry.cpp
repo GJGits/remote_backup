@@ -22,7 +22,7 @@ FileEntry::FileEntry(const std::string &path, entry_producer producer,
   if (std::filesystem::exists(path)) {
     struct stat sb;
     stat(path.c_str(), &sb);
-    last_change = (size_t)sb.st_ctime;
+    //last_change = (size_t)sb.st_ctime;
     size = std::filesystem::file_size(path);
     nchunks = ceil((double)size / CHUNK_SIZE);
   }
