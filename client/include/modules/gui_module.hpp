@@ -7,6 +7,7 @@
 #include "../pubsub/sync_sub.hpp"
 #include "../modules/module.hpp"
 
+
 using boost::asio::ip::udp;
 
 class GuiModule : public Singleton<GuiModule>, public ModuleManager {

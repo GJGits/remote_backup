@@ -6,11 +6,11 @@
 #include <unordered_map>
 #include <queue>
 #include <vector>
-
 #include "../filesystem/resource_guard.hpp"
 #include "../exceptions/exceptions.hpp"
 #include "../common/singleton.hpp"
 #include "message.hpp"
+
 
 class Broker : public Singleton<Broker> {
 private:

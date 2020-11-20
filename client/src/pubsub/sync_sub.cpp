@@ -66,7 +66,7 @@ void SyncSubscriber::on_new_file(const Message &message) {
 void SyncSubscriber::new_from_local(const std::shared_ptr<FileEntry> &fentry) {
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
-  while (fentry->has_chunk()) {
+  while (fentry->has_chunk() && std::filesystem::exists(fentry->get_path())) {
     std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry->next_chunk();
     rest_client->post_chunk(chunk, fentry->to_string());
   }

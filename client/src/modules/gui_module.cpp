@@ -124,7 +124,10 @@ void GuiModule::handle_gui_message() {
 void GuiModule::on_easy_exception(const Message &message) {
   std::unique_lock lock{mu};
   for (size_t i = 0; i < modules.size(); i++)
-    modules[i]->restart();
+    modules[i]->stop();
+    
+   for (size_t i = 0; i < modules.size(); i++)
+    modules[i]->start();
 }
 
 void GuiModule::on_auth_failed(const Message &message) {
