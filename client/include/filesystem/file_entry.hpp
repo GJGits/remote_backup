@@ -68,7 +68,7 @@ public:
   std::string to_string() {
     return std::to_string(std::get<0>(last_move)) + "/" +
            std::get<1>(last_move) + "/" + std::to_string(nchunks) + "/" +
-           macaron::Base64::Encode(path) + "/" + std::to_string(last_change);
+           macaron::Base64::Encode(path);
   }
   void retrieve_chunk();
   void update_read_count() { read_count++; }

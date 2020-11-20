@@ -16,7 +16,7 @@ private:
   std::regex get_chunk_rgx;
   ChunkController()
       : post_chunk_rgx{std::move(std::regex{
-            "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+\\/[\\w]+$"})},
+            "^\\/chunk\\/[\\w]+\\/[\\w]+\\/[\\w]+\\/[\\w=+]+$"})},
         get_chunk_rgx{std::move(std::regex{"^\\/chunk\\/[\\w]+\\/[\\w=+]+$"})}
             {}
 
