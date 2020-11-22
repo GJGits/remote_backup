@@ -16,13 +16,16 @@ GuiModule::~GuiModule() {
 
 void GuiModule::init_sub_list() {
   broker = Broker::getInstance();
+  broker->subscribe(TOPIC::NEW_FILE,
+                    std::bind(&GuiModule::on_transfer, instance.get(),
+                              std::placeholders::_1));
+  broker->subscribe(TOPIC::FILE_DELETED,
+                    std::bind(&GuiModule::on_transfer, instance.get(),
+                              std::placeholders::_1));                            
   broker->subscribe(TOPIC::REMOVE_ENTRY,
                     std::bind(&GuiModule::on_transfer, instance.get(),
                               std::placeholders::_1));
   broker->subscribe(TOPIC::ADD_ENTRY,
-                    std::bind(&GuiModule::on_transfer, instance.get(),
-                              std::placeholders::_1));
-  broker->subscribe(TOPIC::TRANSFER_COMPLETE,
                     std::bind(&GuiModule::on_transfer, instance.get(),
                               std::placeholders::_1));
   broker->subscribe(TOPIC::EASY_EXCEPTION,

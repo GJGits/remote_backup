@@ -59,5 +59,13 @@ module.exports = class ClientConf {
         return true;
     }
 
+    get_info() {
+        const buff = Buffer.from(this.content.token.split(".")[1], "base64");
+        let dev = JSON.parse(buff.toLocaleString("ascii")).device_id;
+        dev = dev <= 2 ? dev : Math.log2(dev);
+        dev = "device" + dev;
+        return { user: this.content.username, device: dev };
+    }
+
 
 };

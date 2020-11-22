@@ -122,6 +122,8 @@ app.on('ready', () => {
     let conf = new ClientConf();
     if (conf.isValid()) {
       mb.window.webContents.send('status-changed', "logged");
+      let info = conf.get_info();
+      mb.window.webContents.send('info', info);
       client.send(Buffer.from([topics.get("START")]), 2800, client_ip, (err) => { console.log(err) });
     }
 

@@ -2,15 +2,14 @@
 
 Broker::Broker() : is_running{true} {
   for (ssize_t i = 0; i < 6; i++) {
-    callers.emplace_back([&]() {
+    callers.emplace_back([this]() {
       while (is_running) {
-        std::vector<std::function<void(const Message &)>> fns;
-        Message mex;
+        std::function<void(void)> fn;
         // sezione critica
         {
           std::unique_lock lk{nm};
           if (!tasks.empty()) {
-            mex = tasks.front();
+            fn = tasks.front();
             tasks.pop();
           } else {
             ncv.wait(lk, [&]() { return !tasks.empty() || !is_running; });
@@ -21,12 +20,7 @@ Broker::Broker() : is_running{true} {
 
         try {
           resource_guard guard{};
-          TOPIC topic = mex.get_topic();
-          if (subs.find(topic) != subs.end()) {
-            for (auto const &call : subs[topic]) {
-              call(mex);
-            }
-          }
+          fn();
         } catch (AuthFailed &ex) {
           std::clog << ex.what() << "\n";
           clear();
@@ -87,8 +81,14 @@ void Broker::subscribe(const TOPIC &topic,
 
 void Broker::publish(const Message &message) {
   std::unique_lock lk{nm};
-  tasks.push(message);
-  ncv.notify_one();
+  TOPIC topic = message.get_topic();
+  if (subs.find(topic) != subs.end()) {
+    for (auto const &call : subs[topic]) {
+      std::function<void(void)> fn = std::bind(call, message);
+      tasks.push(fn);
+      ncv.notify_one();
+    }
+  }
 }
 
 void Broker::clear() {

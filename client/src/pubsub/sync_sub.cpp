@@ -73,6 +73,7 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
       std::filesystem::exists(fentry->get_path())) {
     delete_from_remote(fentry);
   }
+  fentry->set_status(entry_status::synced);
   broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
 }
 

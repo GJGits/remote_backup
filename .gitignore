@@ -2,7 +2,8 @@
 node_modules/
 # non committare sync content
 */config/*
-*/sync/*
+./client/sync/*
+./client/sync2/*
 !sync/.gitkeep
 # non committare file con le seguenti estensioni
 *.txt

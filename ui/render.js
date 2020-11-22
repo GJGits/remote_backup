@@ -2,9 +2,9 @@ const { ipcRenderer } = require('electron');
 const du = require('du');
 const getMAC = require('getmac').default
 
-const CONFIG_SYNC = "../client/sync2/"
-//const mac = getMAC();
-const mac = "aa:bb:cc:dd:ee:ff"
+const CONFIG_SYNC = "../client/sync/"
+const mac = getMAC();
+//const mac = "aa:bb:cc:dd:ee:ff"
 
 var change_status = (status) => {
     let stats = ["login", "signup", "logged"];
@@ -34,6 +34,7 @@ var update_usage = () => {
 /* MESSAGES HANDLERS */
 
 ipcRenderer.on('transfer', (event, arg) => {
+    console.log(arg);
     if (arg.status === 0) {
         $("#loading").hide();
         $("#synced").show();
@@ -47,7 +48,6 @@ ipcRenderer.on('transfer', (event, arg) => {
 });
 
 ipcRenderer.on('background-message', (event, arg) => {
-    console.log("render receiced:", arg);
     $("#loading").hide();
     $("#synced").hide();
     $("#noconn").show();
@@ -57,6 +57,12 @@ ipcRenderer.on('status-changed', (event, arg) => {
     arg = arg.replace("\n", "");
     console.log("status changed:", arg);
     change_status(arg);
+});
+
+ipcRenderer.on('info', (event, arg) => {
+    console.log("info:", arg);
+    $("#name").text(arg.user);
+    $("#device").text(arg.device);
 });
 
 ipcRenderer.on('sync', (event, arg) => {
