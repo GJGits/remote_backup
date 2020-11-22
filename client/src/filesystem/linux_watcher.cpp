@@ -235,7 +235,7 @@ void LinuxWatcher::handle_events() {
                       return ev1.get_cookie() > ev2.get_cookie();
                     return ev1.get_mask() > ev2.get_mask();
                   });
-
+        std::clog << "eves size: " << eves.size() << "\n";
         for (auto it = eves.begin(); it != eves.end(); it++) {
           std::string path = it->get_path();
           uint32_t mask = it->get_mask();

@@ -125,12 +125,8 @@ void GuiModule::handle_gui_message() {
 }
 
 void GuiModule::on_easy_exception(const Message &message) {
-  std::unique_lock lock{mu};
   for (size_t i = 0; i < modules.size(); i++)
-    modules[i]->stop();
-
-  for (size_t i = 0; i < modules.size(); i++)
-    modules[i]->start();
+    modules[i]->restart();
 }
 
 void GuiModule::on_auth_failed(const Message &message) {
@@ -140,6 +136,7 @@ void GuiModule::on_auth_failed(const Message &message) {
       {"code", "auth-failed"},
       {"message", "autenticazione fallita o scaduta, procedere con il login"}};
   send_message(msg);
+  start_receive();
 }
 
 void GuiModule::on_connection_lost(const Message &message) {
@@ -149,6 +146,7 @@ void GuiModule::on_connection_lost(const Message &message) {
   json msg = {{"code", "connection-lost"},
               {"message", "connessione persa, ricconnettersi e riprovare"}};
   send_message(msg);
+  start_receive();
 }
 
 void GuiModule::on_transfer(const Message &message) {

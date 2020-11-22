@@ -1,8 +1,13 @@
 #pragma once
 
+#include "../dtos/subject.hpp"
+#include "../http/request.hpp"
 #include "base64.hpp"
+#include "duration.hpp"
 #include "hmac-sha256.hpp"
 #include "json.hpp"
+#include "jwt_cache_entry.hpp"
+#include "singleton.hpp"
 #include "utility.hpp"
 #include <ctime>
 #include <fstream>
@@ -11,11 +16,6 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
-#include "../http/request.hpp"
-#include "duration.hpp"
-#include "../dtos/subject.hpp"
-#include "jwt_cache_entry.hpp"
-#include "singleton.hpp"
 
 using json = nlohmann::json;
 inline static std::regex time_rgx{"^\\d+$"};
@@ -31,16 +31,15 @@ private:
   std::string secret;
   int expiration;
 
-  JWT () {
-      json config;
-      std::ifstream i("../config/server-struct.json");
-      i >> config;
-      json jwt_header = {{"alg", "HS256"}, {"typ", "JWT"}};
-      token_header = macaron::Base64::Encode(jwt_header.dump());
-      secret = config["token-conf"]["secret"];
-      expiration = config["token-conf"]["expiration"];
+  JWT() {
+    json config;
+    std::ifstream i("../config/server-struct.json");
+    i >> config;
+    json jwt_header = {{"alg", "HS256"}, {"typ", "JWT"}};
+    token_header = macaron::Base64::Encode(jwt_header.dump());
+    secret = config["token-conf"]["secret"];
+    expiration = config["token-conf"]["expiration"];
   }
-
 
 public:
   int getExpiration() { return getInstance()->expiration; }
@@ -65,12 +64,13 @@ public:
   }
 
   Subject validateToken(const http::server::request &req) {
-    //DurationLogger logger{"VALIDATION"};
+    // DurationLogger logger{"VALIDATION"};
     for (http::server::header h : req.headers) {
       if (h.name.compare("Authorization") == 0) {
         std::vector<std::string> tokens = Utility::split(h.value, ' ');
         if (tokens.size() == 2 && tokens[0].compare("Bearer") == 0) {
           std::string token = tokens[1];
+          std::clog << "token ricevuto:" << token << "\n";
           // inizialmente cerco nella cache
           if (getInstance()->tok_cache.find(token) !=
               getInstance()->tok_cache.end()) {
@@ -92,6 +92,8 @@ public:
                 json::parse(macaron::Base64::Decode(token_parts[2]))["sign"];
             std::string sign_calc = json::parse(macaron::Base64::Decode(
                 Utility::split(generateToken(sbj, exp), '.')[2]))["sign"];
+            std::clog << "sign: " << sign << "\n sign_calc: " << sign_calc
+                      << "\n";
             if (sign.compare(sign_calc) == 0) {
               JWTCacheEntry ce{sbj, exp};
               // todo: valutare politica di replace per evitare di intasare

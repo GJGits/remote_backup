@@ -7,6 +7,7 @@ const server = dgram.createSocket('udp4');
 const client = dgram.createSocket('udp4');
 const { ipcMain, app, Menu, Tray } = require('electron');
 const ClientConf = require('./modules/client-conf.js');
+const { Notification } = require('electron')
 
 const set_network_limit = () => {
   const id = execSync("docker exec remote_backup_client_1 cat /sys/class/net/eth0/iflink").toString().replace(/(\r\n|\n|\r)/gm, "");
@@ -77,6 +78,7 @@ app.on('ready', () => {
 
     ipcMain.on('config', (event, data) => {
       let conf = new ClientConf();
+      console.log("data:",data);
       conf.set(data);
       client.send(Buffer.from([topics.get("START")]), 2800, client_ip, (err) => { console.log(err) });
     });
@@ -104,6 +106,13 @@ app.on('ready', () => {
         mb.window.webContents.send('background-message', msg);
       }
       if (obj.code === "auth-failed") {
+        const notification = {
+          title: 'Authentication failed',
+          body: 'Please log in.'
+        }
+        let conf = new ClientConf();
+        conf.reset();
+        new Notification(notification).show();
         mb.window.webContents.send('status-changed', "login");
       }
 
