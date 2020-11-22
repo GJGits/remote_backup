@@ -6,7 +6,6 @@ Broker::Broker() : is_running{true} {
       while (is_running) {
         std::vector<std::function<void(const Message &)>> fns;
         Message mex;
-        TOPIC topic;
         // sezione critica
         {
           std::unique_lock lk{nm};
@@ -22,7 +21,7 @@ Broker::Broker() : is_running{true} {
 
         try {
           resource_guard guard{};
-          topic = mex.get_topic();
+          TOPIC topic = mex.get_topic();
           if (subs.find(topic) != subs.end()) {
             for (auto const &call : subs[topic]) {
               call(mex);
@@ -46,13 +45,14 @@ Broker::Broker() : is_running{true} {
           std::clog << ex.what() << "\n";
           clear();
           publish(Message{TOPIC::EASY_EXCEPTION});
+          return;
         }
 
         catch (std::filesystem::filesystem_error &ex) {
           std::clog << ex.what() << "\n";
           clear();
           publish(Message{TOPIC::EASY_EXCEPTION});
-          // return;
+          return;
         }
 
         catch (...) {
@@ -77,7 +77,7 @@ Broker::~Broker() {
 
 void Broker::subscribe(const TOPIC &topic,
                        const std::function<void(const Message &)> &callback) {
-  std::unique_lock{nm};
+  std::unique_lock lk{nm};
   if (subs.find(topic) == subs.end()) {
     subs.insert(std::pair{topic, std::list{callback}});
   } else {
@@ -86,13 +86,13 @@ void Broker::subscribe(const TOPIC &topic,
 }
 
 void Broker::publish(const Message &message) {
-  std::unique_lock{nm};
+  std::unique_lock lk{nm};
   tasks.push(message);
   ncv.notify_one();
 }
 
 void Broker::clear() {
-  std::unique_lock{nm};
+  std::unique_lock lk{nm};
   while (!tasks.empty()) {
     tasks.pop();
   }

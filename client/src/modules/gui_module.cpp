@@ -125,8 +125,8 @@ void GuiModule::on_easy_exception(const Message &message) {
   std::unique_lock lock{mu};
   for (size_t i = 0; i < modules.size(); i++)
     modules[i]->stop();
-    
-   for (size_t i = 0; i < modules.size(); i++)
+
+  for (size_t i = 0; i < modules.size(); i++)
     modules[i]->start();
 }
 
@@ -149,13 +149,10 @@ void GuiModule::on_connection_lost(const Message &message) {
 }
 
 void GuiModule::on_transfer(const Message &message) {
-  //std::shared_ptr<FileEntry> entry = message.get_content();
-  //std::clog << "count in gui_module: " << entry.use_count() << "\n";
-  /*
+  std::shared_ptr<FileEntry> entry = message.get_content();
   json transfer = message.get_content()->to_json();
   json mex = {{"code", "transfer"}, {"message", transfer}};
   send_message(mex);
-  */
 }
 
 void GuiModule::send_message(const json &message) {

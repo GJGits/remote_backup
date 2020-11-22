@@ -1,10 +1,9 @@
 #include <csignal>
 #include <iostream>
 #include "../include/filesystem/linux_watcher.hpp"
+#include "../include/modules/struct_module.hpp"
 #include "../include/modules/gui_module.hpp"
 #include "../include/pubsub/sync_sub.hpp"
-
-// init commit-m
 
 void signalHandler(int signum) {
   // cleanup and close up stuff here
@@ -19,6 +18,9 @@ int main() {
   // register signal SIGINT and signal handler
   signal(SIGTERM, signalHandler);
 
+  std::shared_ptr<StructModule> struct_module = StructModule::getInstance();
+  struct_module->init_sub_list();
+
   std::shared_ptr<SyncSubscriber> sync_sub = SyncSubscriber::getInstance();
   sync_sub->init_sub_list();
 
@@ -29,6 +31,7 @@ int main() {
   gui_module->init_sub_list();
 
   // registro moduli
+  gui_module->add_module(struct_module);
   gui_module->add_module(sync_sub);
   gui_module->add_module(watcher);
 
