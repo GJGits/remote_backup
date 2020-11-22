@@ -72,7 +72,6 @@ app.on('ready', () => {
 
     console.log('app is ready');
     mb.tray.setContextMenu(contextMenu);
-    console.log(mb.window);
 
     // MESSAGE HANDLERS
 
@@ -80,6 +79,8 @@ app.on('ready', () => {
       let conf = new ClientConf();
       console.log("data:",data);
       conf.set(data);
+      let info = conf.get_info();
+      mb.window.webContents.send('info', info);
       client.send(Buffer.from([topics.get("START")]), 2800, client_ip, (err) => { console.log(err) });
     });
 
@@ -142,7 +143,7 @@ app.on('ready', () => {
     }
 
     mb.window.webContents.send('sync', "synced");
-    //mb.window.openDevTools();
+    mb.window.openDevTools();
   });
 
 

@@ -9,7 +9,6 @@ RestClient::RestClient() {
                                                          "/some_target", 10};
   delete_prototype = http::request<http::vector_body<char>>{http::verb::delete_,
                                                             "/some_target", 10};
-  read_info();
   fill_headers(post_prototype);
   fill_headers(get_prototype);
   fill_headers(delete_prototype);

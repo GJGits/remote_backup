@@ -80,10 +80,12 @@ void GuiModule::handle_gui_message() {
         modules[i]->stop();
       break;
     case 1: // message start da gui
+      RestClient::getInstance()->read_info();
       for (size_t i = 0; i < modules.size(); i++)
         modules[i]->start();
       break;
     case 2: // message restart da gui
+      RestClient::getInstance()->read_info();
       for (size_t i = 0; i < modules.size(); i++)
         modules[i]->restart();
       break;
@@ -140,7 +142,6 @@ void GuiModule::on_auth_failed(const Message &message) {
 }
 
 void GuiModule::on_connection_lost(const Message &message) {
-  std::clog << "connection lost handled\n";
   for (size_t i = 0; i < modules.size(); i++)
     modules[i]->stop();
   json msg = {{"code", "connection-lost"},

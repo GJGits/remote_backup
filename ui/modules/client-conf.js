@@ -16,11 +16,7 @@ module.exports = class ClientConf {
     }
 
     write() {
-        fs.writeFileSync(CONFIG_ROOT, JSON.stringify(this.content), (err) => {
-            if (err) {
-                console.log("File read failed:", err)
-            }
-        });
+        fs.writeFileSync(CONFIG_ROOT, JSON.stringify(this.content));
     }
 
     set(config) {
