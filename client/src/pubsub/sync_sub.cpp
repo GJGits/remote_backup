@@ -9,10 +9,10 @@ SyncSubscriber::~SyncSubscriber() {
 
 void SyncSubscriber::init_sub_list() {
   broker = Broker::getInstance();
-  broker->subscribe(TOPIC::NEW_FILE,
+  broker->subscribe(TOPIC::NEW_FILE, PRIORITY::LOW,
                     std::bind(&SyncSubscriber::on_new_file, instance.get(),
                               std::placeholders::_1));
-  broker->subscribe(TOPIC::FILE_DELETED,
+  broker->subscribe(TOPIC::FILE_DELETED, PRIORITY::LOW,
                     std::bind(&SyncSubscriber::on_file_deleted, instance.get(),
                               std::placeholders::_1));
 }

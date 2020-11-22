@@ -6,6 +6,8 @@ const CONFIG_SYNC = "../client/sync/"
 const mac = getMAC();
 //const mac = "aa:bb:cc:dd:ee:ff"
 
+var transfers = [];
+
 var change_status = (status) => {
     let stats = ["login", "signup", "logged"];
     let index = stats.findIndex((el) => { return el === status; });
@@ -36,11 +38,17 @@ var update_usage = () => {
 ipcRenderer.on('transfer', (event, arg) => {
     console.log(arg);
     if (arg.status === 0) {
-        $("#loading").hide();
-        $("#synced").show();
-        $("#noconn").hide();
+        let index = transfers.findIndex((el) => { el.path === arg.path });
+        if (index)
+            transfers.splice(index, 1);
+        if (transfers.length === 0) {
+            $("#loading").hide();
+            $("#synced").show();
+            $("#noconn").hide();
+        }
         update_usage();
     } else {
+        transfers.push(arg);
         $("#loading").show();
         $("#synced").hide();
         $("#noconn").hide();

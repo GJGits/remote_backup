@@ -6,10 +6,10 @@ StructModule::~StructModule() { std::clog << "Struct module destroy...\n"; }
 
 void StructModule::init_sub_list() {
   broker = Broker::getInstance();
-  broker->subscribe(TOPIC::ADD_ENTRY,
+  broker->subscribe(TOPIC::ADD_ENTRY, PRIORITY::LOW,
                     std::bind(&StructModule::on_add_entry, instance.get(),
                               std::placeholders::_1));
-  broker->subscribe(TOPIC::REMOVE_ENTRY,
+  broker->subscribe(TOPIC::REMOVE_ENTRY, PRIORITY::LOW,
                     std::bind(&StructModule::on_delete_entry, instance.get(),
                               std::placeholders::_1));
 }
@@ -45,7 +45,7 @@ void StructModule::on_add_entry(const Message &message) {
 }
 
 void StructModule::on_delete_entry(const Message &message) {
-   std::unique_lock lock{m1};
+  std::unique_lock lock{m1};
   DurationLogger log{"DELETE_ENTRY"};
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   std::shared_ptr<FileEntry> entry = message.get_content();

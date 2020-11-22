@@ -69,13 +69,17 @@ Broker::~Broker() {
   std::clog << "broker destroy\n";
 }
 
-void Broker::subscribe(const TOPIC &topic,
+void Broker::subscribe(TOPIC topic, PRIORITY priority,
                        const std::function<void(const Message &)> &callback) {
   std::unique_lock lk{nm};
+  Callback cb{priority, callback};
   if (subs.find(topic) == subs.end()) {
-    subs.insert(std::pair{topic, std::list{callback}});
+    subs.insert(std::pair{topic, std::list{cb}});
   } else {
-    subs[topic].push_back(callback);
+    subs[topic].push_back(cb);
+    subs[topic].sort([&](const Callback &cb1, const Callback &cb2) {
+      return cb2.get_priority() < cb1.get_priority();
+    });
   }
 }
 
@@ -84,7 +88,7 @@ void Broker::publish(const Message &message) {
   TOPIC topic = message.get_topic();
   if (subs.find(topic) != subs.end()) {
     for (auto const &call : subs[topic]) {
-      std::function<void(void)> fn = std::bind(call, message);
+      std::function<void(void)> fn = std::bind(call.get_call(), message);
       tasks.push(fn);
       ncv.notify_one();
     }

@@ -16,25 +16,25 @@ GuiModule::~GuiModule() {
 
 void GuiModule::init_sub_list() {
   broker = Broker::getInstance();
-  broker->subscribe(TOPIC::NEW_FILE,
+  broker->subscribe(TOPIC::NEW_FILE, PRIORITY::HIGH,
                     std::bind(&GuiModule::on_transfer, instance.get(),
                               std::placeholders::_1));
-  broker->subscribe(TOPIC::FILE_DELETED,
-                    std::bind(&GuiModule::on_transfer, instance.get(),
-                              std::placeholders::_1));                            
-  broker->subscribe(TOPIC::REMOVE_ENTRY,
+  broker->subscribe(TOPIC::FILE_DELETED, PRIORITY::HIGH,
                     std::bind(&GuiModule::on_transfer, instance.get(),
                               std::placeholders::_1));
-  broker->subscribe(TOPIC::ADD_ENTRY,
+  broker->subscribe(TOPIC::REMOVE_ENTRY, PRIORITY::HIGH,
                     std::bind(&GuiModule::on_transfer, instance.get(),
                               std::placeholders::_1));
-  broker->subscribe(TOPIC::EASY_EXCEPTION,
+  broker->subscribe(TOPIC::ADD_ENTRY, PRIORITY::HIGH,
+                    std::bind(&GuiModule::on_transfer, instance.get(),
+                              std::placeholders::_1));
+  broker->subscribe(TOPIC::EASY_EXCEPTION, PRIORITY::HIGH,
                     std::bind(&GuiModule::on_easy_exception, instance.get(),
                               std::placeholders::_1));
-  broker->subscribe(TOPIC::AUTH_FAILED,
+  broker->subscribe(TOPIC::AUTH_FAILED, PRIORITY::HIGH,
                     std::bind(&GuiModule::on_auth_failed, instance.get(),
                               std::placeholders::_1));
-  broker->subscribe(TOPIC::CONNECTION_LOST,
+  broker->subscribe(TOPIC::CONNECTION_LOST, PRIORITY::HIGH,
                     std::bind(&GuiModule::on_connection_lost, instance.get(),
                               std::placeholders::_1));
 }
