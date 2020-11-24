@@ -50,10 +50,10 @@ void SyncSubscriber::new_from_local(const std::shared_ptr<FileEntry> &fentry) {
     std::tuple<std::shared_ptr<char[]>, size_t> chunk = fentry->next_chunk();
     rest_client->post_chunk(chunk, fentry->to_string());
   }
+
 }
 
 void SyncSubscriber::new_from_remote(const std::shared_ptr<FileEntry> &fentry) {
-  start_remote_sync();
   if(std::filesystem::exists(fentry->get_path()))
   	std::remove(fentry->get_path().c_str());
   while (fentry->has_chunk()) {
@@ -65,7 +65,8 @@ void SyncSubscriber::new_from_remote(const std::shared_ptr<FileEntry> &fentry) {
 void SyncSubscriber::on_file_deleted(const Message &message) {
   DurationLogger logger{"FILE_DELETED"};
   std::shared_ptr<FileEntry> fentry = message.get_content();
-  if (fentry->get_producer() == entry_producer::local) {
+  if (fentry->get_producer() == entry_producer::local || (fentry->get_producer() == entry_producer::server &&
+      !std::filesystem::exists(fentry->get_path())) ) {
     delete_from_local(fentry);
   }
   if (fentry->get_producer() == entry_producer::server &&
@@ -80,11 +81,12 @@ void SyncSubscriber::delete_from_local(
     const std::shared_ptr<FileEntry> &fentry) {
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   rest_client->delete_file(fentry->get_path());
+
 }
 
 void SyncSubscriber::delete_from_remote(
     const std::shared_ptr<FileEntry> &fentry) {
-  start_remote_sync();
+
   if (std::filesystem::exists(fentry->get_path())) {
     std::remove(fentry->get_path().c_str());
     std::filesystem::path parent_path =
@@ -108,6 +110,7 @@ void SyncSubscriber::end_remote_sync() {
   std::unique_lock lk{mx};
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   remote_transfer_count++;
+  std::clog << "get remote news: " <<sync->get_remote_news()<< " e " << remote_transfer_count << "\n";
   if (sync->get_remote_news() == remote_transfer_count) {
     sync->reset_remote_news();
     broker->publish(Message{TOPIC::FINISH_SERVER_SYNC});

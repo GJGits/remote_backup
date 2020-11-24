@@ -20,7 +20,7 @@ bool ChunkRepository::add_or_update_Chunk(const ChunkEntity &chunk) {
    // if( total_sum> 2147483648)
    // 	throw exceededSize();      	
     	
-   std::string query =
+    std::string query =
       "INSERT INTO chunks(c_username, c_id, c_path, "
       "c_size,c_lastmod,num_chunks, device_id) values('?'," +
       std::to_string(chunk.getIdChunk()) + ",'?'," +

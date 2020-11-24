@@ -16,7 +16,7 @@ void SyncStructure::store() {
       jstru["entries"].push_back(entry);
     }
     o << jstru << "\n";
-    structure.clear();
+
   }
 }
 
@@ -38,10 +38,12 @@ void SyncStructure::restore() {
         (!std::filesystem::exists(path) &&
          (entry_status)j["entries"][x]["status"].get<int>() ==
              entry_status::new_)) {
+
       status = (entry_status)j["entries"][x]["status"].get<int>();
     } else if (!std::filesystem::exists(path) &&
                (entry_status)j["entries"][x]["status"].get<int>() ==
                    entry_status::synced) {
+
       status = entry_status::delete_;
     }
 
@@ -64,11 +66,21 @@ void SyncStructure::update_from_fs() {
       // va a modificare esclusivamente il change_time dell'inode
       // riferito alla cartella, gli inode dei file rimangono invariati.
       if ((entry->get_last_change() > last_check &&
+           std::filesystem::file_size(path) > 0)){
+                      std::clog << "entry get last change: " << entry->get_last_change() << "  e last_check: " << last_check << "\n"; 
+           }
+           
+      if((structure.find(path) == structure.end() &&
+           std::filesystem::file_size(path) > 0))
+                                 std::clog << "NON C'E' NELLA STRUCT\n"; 
+      if ((entry->get_last_change() > last_check &&
            std::filesystem::file_size(path) > 0) ||
           (structure.find(path) == structure.end() &&
            std::filesystem::file_size(path) > 0)){
+
            std::clog << "LO RIPOSTO\n";
         add_entry(entry);
+
         }
     }
   }
