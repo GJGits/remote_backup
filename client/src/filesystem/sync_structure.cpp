@@ -43,7 +43,7 @@ void SyncStructure::restore() {
     } else if (!std::filesystem::exists(path) &&
                (entry_status)j["entries"][x]["status"].get<int>() ==
                    entry_status::synced) {
-
+      producer = entry_producer::local;
       status = entry_status::delete_;
     }
 
@@ -78,7 +78,7 @@ void SyncStructure::update_from_fs() {
           (structure.find(path) == structure.end() &&
            std::filesystem::file_size(path) > 0)){
 
-           std::clog << "LO RIPOSTO\n";
+
         add_entry(entry);
 
         }

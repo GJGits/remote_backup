@@ -65,14 +65,15 @@ void SyncSubscriber::new_from_remote(const std::shared_ptr<FileEntry> &fentry) {
 void SyncSubscriber::on_file_deleted(const Message &message) {
   DurationLogger logger{"FILE_DELETED"};
   std::shared_ptr<FileEntry> fentry = message.get_content();
-  if (fentry->get_producer() == entry_producer::local || (fentry->get_producer() == entry_producer::server &&
-      !std::filesystem::exists(fentry->get_path())) ) {
+  if (fentry->get_producer() == entry_producer::local ) {
     delete_from_local(fentry);
   }
-  if (fentry->get_producer() == entry_producer::server &&
-      std::filesystem::exists(fentry->get_path())) {
+  if ((fentry->get_producer() == entry_producer::server &&
+      std::filesystem::exists(fentry->get_path())) || (fentry->get_producer() == entry_producer::server &&
+      !std::filesystem::exists(fentry->get_path()) )) {
     delete_from_remote(fentry);
   }
+  
   fentry->set_status(entry_status::synced);
   broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
 }
@@ -91,7 +92,7 @@ void SyncSubscriber::delete_from_remote(
     std::remove(fentry->get_path().c_str());
     std::filesystem::path parent_path =
         std::filesystem::path(fentry->get_path()).parent_path();
-    if (std::filesystem::is_empty(parent_path)) {
+    if (std::filesystem::exists(parent_path) && std::filesystem::is_empty(parent_path)) {
       std::filesystem::remove_all(parent_path);
     }
   }
