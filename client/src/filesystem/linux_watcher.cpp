@@ -80,13 +80,19 @@ void LinuxWatcher::add_watch(const std::string &path) {
 }
 
 bool LinuxWatcher::remove_watch(const std::string &path) {
-  if (path_wd_map.find(path) == path_wd_map.end() ||
-      path.compare(root_to_watch) == 0)
-    return false;
-  inotify_rm_watch(inotify_descriptor, path_wd_map[path]);
-  wd_path_map.erase(path_wd_map[path]);
-  path_wd_map.erase(path);
-  return true;
+  if (path_wd_map.find(path) != path_wd_map.end()) {
+    int wd = inotify_rm_watch(inotify_descriptor, path_wd_map[path]);
+    wd_path_map.erase(path_wd_map[path]);
+    path_wd_map.erase(path);
+    path_wd_map[path] = wd;
+    wd_path_map[wd] = path;
+    for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
+      if (p.is_directory()) {
+        remove_watch(p.path().string());
+      }
+    }
+  }
+  return false;
 }
 
 void LinuxWatcher::handle_events() {
@@ -148,7 +154,6 @@ void LinuxWatcher::handle_events() {
 
           const std::string path =
               wd_path_map[event->wd] + "/" + std::string{event->name};
-
 
           timer = TIMER;
 
@@ -256,10 +261,10 @@ void LinuxWatcher::handle_events() {
             broker->publish(Message{TOPIC::NEW_FILE, entry});
           }
           if (mask == 64 || mask == 512) {
-            std::shared_ptr<FileEntry> entry{
-                new FileEntry{path, entry_producer::local, entry_status::delete_}};
+            std::shared_ptr<FileEntry> entry{new FileEntry{
+                path, entry_producer::local, entry_status::delete_}};
             broker->publish(Message{TOPIC::FILE_DELETED, entry});
-            }
+          }
         }
 
         events.clear();

@@ -135,6 +135,6 @@ std::vector<std::shared_ptr<FileEntry>> SyncStructure::get_entries() {
   return entries;
 }
 
+void SyncStructure::reset_remote_news() {server_news = 0;}
 size_t SyncStructure::get_remote_news() const {return server_news; }
-
 size_t SyncStructure::get_last_check() const { return last_check; }

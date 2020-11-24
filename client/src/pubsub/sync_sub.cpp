@@ -53,7 +53,7 @@ void SyncSubscriber::new_from_local(const std::shared_ptr<FileEntry> &fentry) {
 }
 
 void SyncSubscriber::new_from_remote(const std::shared_ptr<FileEntry> &fentry) {
-  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+  start_remote_sync();
   while (fentry->has_chunk()) {
     fentry->retrieve_chunk();
   }
@@ -82,7 +82,7 @@ void SyncSubscriber::delete_from_local(
 
 void SyncSubscriber::delete_from_remote(
     const std::shared_ptr<FileEntry> &fentry) {
-  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+  start_remote_sync();
   if (std::filesystem::exists(fentry->get_path())) {
     std::remove(fentry->get_path().c_str());
     std::filesystem::path parent_path =
@@ -97,7 +97,7 @@ void SyncSubscriber::delete_from_remote(
 void SyncSubscriber::start_remote_sync() {
   std::unique_lock lk{mx};
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-  if (sync->get_remote_news() == 0) {
+  if (remote_transfer_count == 0) {
     broker->publish(Message{TOPIC::INIT_SERVER_SYNC});
   }
 }
@@ -107,6 +107,7 @@ void SyncSubscriber::end_remote_sync() {
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   remote_transfer_count++;
   if (sync->get_remote_news() == remote_transfer_count) {
+    sync->reset_remote_news();
     broker->publish(Message{TOPIC::FINISH_SERVER_SYNC});
   }
 }

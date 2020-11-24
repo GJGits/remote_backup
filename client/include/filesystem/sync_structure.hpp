@@ -82,4 +82,9 @@ public:
    * Restituisce il numero di cambiamenti notificati dal server
    **/
   size_t get_remote_news() const;
+
+  /**
+   * Resetta il numero di cambiamenti
+   **/
+  void reset_remote_news();
 };
