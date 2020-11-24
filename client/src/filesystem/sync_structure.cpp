@@ -72,6 +72,10 @@ void SyncStructure::update_from_fs() {
         }
     }
   }
+  
+  
+
+  
 }
 
 void SyncStructure::update_from_remote() {

@@ -54,6 +54,8 @@ void SyncSubscriber::new_from_local(const std::shared_ptr<FileEntry> &fentry) {
 
 void SyncSubscriber::new_from_remote(const std::shared_ptr<FileEntry> &fentry) {
   start_remote_sync();
+  if(std::filesystem::exists(fentry->get_path()))
+  	std::remove(fentry->get_path().c_str());
   while (fentry->has_chunk()) {
     fentry->retrieve_chunk();
   }

@@ -89,7 +89,8 @@ void GuiModule::handle_gui_message() {
     case 1: // message start da gui
       RestClient::getInstance()->read_info();
       for (const auto &[name, module] : modules)
-        module->start();
+      	if(name.compare("watcher")!=0)
+        	module->start();
       break;
     case 2: // message restart da gui
       RestClient::getInstance()->read_info();

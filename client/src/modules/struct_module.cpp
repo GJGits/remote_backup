@@ -19,7 +19,7 @@ void StructModule::start() {
     running = true;
     std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
     sync->restore();
-        sync->update_from_remote();
+    sync->update_from_remote();
     sync->update_from_fs();
 
     notify_news();
@@ -55,6 +55,10 @@ void StructModule::on_delete_entry(const Message &message) {
 
 void StructModule::notify_news() {
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+  if(sync->get_entries().size()==0){
+      broker->publish(Message{TOPIC::FINISH_SERVER_SYNC});
+  }
+  else{
   for (const auto &entry : sync->get_entries()) {
     if (entry->get_status() == entry_status::new_) {
       broker->publish(Message{TOPIC::NEW_FILE, entry});
@@ -62,5 +66,6 @@ void StructModule::notify_news() {
     if (entry->get_status() == entry_status::delete_) {
       broker->publish(Message{TOPIC::FILE_DELETED, entry});
     }
+  }
   }
 }
