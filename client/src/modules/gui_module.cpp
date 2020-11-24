@@ -137,8 +137,13 @@ void GuiModule::handle_gui_message() {
 }
 
 void GuiModule::on_easy_exception(const Message &message) {
+
   for (const auto &[name, module] : modules)
-    module->restart();
+    module->stop();
+    
+  for (const auto &[name, module] : modules)
+    if(name.compare("watcher")!=0)
+    module->start();
 }
 
 void GuiModule::on_auth_failed(const Message &message) {

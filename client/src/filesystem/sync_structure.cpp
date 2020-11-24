@@ -7,6 +7,7 @@ SyncStructure::SyncStructure() : server_news{0}, server_ack{false}, last_check{0
 SyncStructure::~SyncStructure() { std::clog << "sync_struct destroy...\n"; }
 
 void SyncStructure::store() {
+
   if (server_ack) {
     std::ofstream o{CLIENT_STRUCT};
     json jstru = {{"entries", json::array()},
@@ -15,18 +16,27 @@ void SyncStructure::store() {
       json entry = fentry->to_json();
       jstru["entries"].push_back(entry);
     }
+    //std::clog << "LA STRUCTURE SIZE E': "<< structure.size() << "\n";
+    //std::clog << "LA ENTRIES jstru size e': " <<jstru["entries"].size() << "\n";
+    //std::clog << "SONO NELLA STOOOOOOORE\n";
     o << jstru << "\n";
-
+    
+    //std::clog << "IL FILE PATH E': " <<std::filesystem::file_size(CLIENT_STRUCT) << "\n";
   }
 }
 
-void SyncStructure::restore() {
+void SyncStructure::restore() { 
+
+
+  std::clog << "SONO DENTRO LA RESTORE\n";
   std::ifstream i{CLIENT_STRUCT};
   i.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   json j;
   i >> j;
   last_check = j["last_check"].get<int>();
+      std::clog << "LA SIZE E': " << j["entries"].size() << "\n";
   for (size_t x = 0; x < j["entries"].size(); x++) {
+    std::clog << "SONO NEL FORE\n";
     std::string path = j["entries"][x]["path"].get<std::string>();
     entry_producer producer =
         (entry_producer)j["entries"][x]["producer"].get<int>();
@@ -43,6 +53,7 @@ void SyncStructure::restore() {
     } else if (!std::filesystem::exists(path) &&
                (entry_status)j["entries"][x]["status"].get<int>() ==
                    entry_status::synced) {
+                   std::clog << "TI ELIMINEROOOOOOOOOOO : " << path << "\n";
       producer = entry_producer::local;
       status = entry_status::delete_;
     }
@@ -52,6 +63,7 @@ void SyncStructure::restore() {
         new FileEntry{path, producer, nchunks, last_change, status}};
     add_entry(entry);
   }
+  
 }
 
 void SyncStructure::update_from_fs() {
