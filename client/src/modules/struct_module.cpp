@@ -19,8 +19,9 @@ void StructModule::start() {
     running = true;
     std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
     sync->restore();
+        sync->update_from_remote();
     sync->update_from_fs();
-    sync->update_from_remote();
+
     notify_news();
     std::clog << "Struct module start...\n";
   }

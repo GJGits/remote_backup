@@ -173,7 +173,8 @@ void GuiModule::on_init_remote_sync(const Message &message) {
 
 void GuiModule::on_finish_remote_sync(const Message &message) {
   DurationLogger log{"FINISH_REMOTE_SYNC"};
-  modules["struct"]->restart();
+  //modules["struct"]->restart();
+  //modules["watcher"]->clear_events();
   modules["watcher"]->start();
 }
 

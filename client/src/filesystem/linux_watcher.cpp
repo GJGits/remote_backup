@@ -102,6 +102,7 @@ void LinuxWatcher::handle_events() {
               << "]\n";
     std::string tmp_path{TMP_PATH};
     std::string bin_path{BIN_PATH};
+    clear_events();
     while (running) {
       std::clog << "Wating for an event...\n";
       // Some systems cannot read integer variables if they are not

@@ -16,6 +16,7 @@ void SyncStructure::store() {
       jstru["entries"].push_back(entry);
     }
     o << jstru << "\n";
+    structure.clear();
   }
 }
 
@@ -65,8 +66,10 @@ void SyncStructure::update_from_fs() {
       if ((entry->get_last_change() > last_check &&
            std::filesystem::file_size(path) > 0) ||
           (structure.find(path) == structure.end() &&
-           std::filesystem::file_size(path) > 0))
+           std::filesystem::file_size(path) > 0)){
+           std::clog << "LO RIPOSTO\n";
         add_entry(entry);
+        }
     }
   }
 }
