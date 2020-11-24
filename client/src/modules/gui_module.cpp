@@ -1,14 +1,15 @@
 #include "../../include/modules/gui_module.hpp"
 
 GuiModule::GuiModule()
-    : running{false}, socket_(io_context, udp::endpoint(udp::v4(), 2800)) {
+    : transfer_count{0}, running{false},
+      socket_(io_context, udp::endpoint(udp::v4(), 2800)) {
   std::clog << "gui module init...\n";
 }
 
 GuiModule::~GuiModule() {
   if (running) {
-    for (size_t i = 0; i < modules.size(); i++)
-      modules[i]->stop();
+    for (const auto &[name, module] : modules)
+      module->stop();
   }
 
   std::clog << "gui module destroy...\n";
@@ -21,6 +22,12 @@ void GuiModule::init_sub_list() {
                               std::placeholders::_1));
   broker->subscribe(TOPIC::FILE_DELETED, PRIORITY::HIGH,
                     std::bind(&GuiModule::on_transfer, instance.get(),
+                              std::placeholders::_1));
+  broker->subscribe(TOPIC::INIT_SERVER_SYNC, PRIORITY::HIGH,
+                    std::bind(&GuiModule::on_init_remote_sync, instance.get(),
+                              std::placeholders::_1));
+  broker->subscribe(TOPIC::FINISH_SERVER_SYNC, PRIORITY::HIGH,
+                    std::bind(&GuiModule::on_finish_remote_sync, instance.get(),
                               std::placeholders::_1));
   broker->subscribe(TOPIC::REMOVE_ENTRY, PRIORITY::HIGH,
                     std::bind(&GuiModule::on_transfer, instance.get(),
@@ -39,8 +46,9 @@ void GuiModule::init_sub_list() {
                               std::placeholders::_1));
 }
 
-void GuiModule::add_module(const std::shared_ptr<Module> &module) {
-  modules.push_back(module);
+void GuiModule::add_module(const std::string &name,
+                           const std::shared_ptr<Module> &module) {
+  modules[name] = module;
 }
 
 void GuiModule::start() {
@@ -56,8 +64,8 @@ void GuiModule::close() {
   socket_.cancel();
   socket_.close();
   io_context.stop();
-  for (size_t i = 0; i < modules.size(); i++)
-    modules[i]->stop();
+  for (const auto &[name, module] : modules)
+    module->stop();
 }
 
 void GuiModule::start_receive() {
@@ -67,27 +75,26 @@ void GuiModule::start_receive() {
 }
 
 void GuiModule::handle_gui_message() {
-  int message = (int)recv_buffer_[0];
-  std::clog << "handle gui message: " << message << " [thread "
-            << std::this_thread::get_id() << "]"
-            << "\n";
   try {
+
     std::unique_lock lock{mu};
     resource_guard guard{};
+    int message = (int)recv_buffer_[0];
+
     switch (message) {
     case 0: // message stop da gui
-      for (size_t i = 0; i < modules.size(); i++)
-        modules[i]->stop();
+      for (const auto &[name, module] : modules)
+        module->stop();
       break;
     case 1: // message start da gui
       RestClient::getInstance()->read_info();
-      for (size_t i = 0; i < modules.size(); i++)
-        modules[i]->start();
+      for (const auto &[name, module] : modules)
+        module->start();
       break;
     case 2: // message restart da gui
       RestClient::getInstance()->read_info();
-      for (size_t i = 0; i < modules.size(); i++)
-        modules[i]->restart();
+      for (const auto &[name, module] : modules)
+        module->restart();
       break;
     case 3: // message exit da gui
       close();
@@ -96,10 +103,12 @@ void GuiModule::handle_gui_message() {
     default:
       break;
     }
+
     if (running) {
       std::clog << "attendo nuovo comando\n";
       start_receive();
     }
+
   } catch (AuthFailed &ex) {
     std::clog << ex.what() << "\n";
     on_auth_failed(Message{TOPIC::AUTH_FAILED});
@@ -127,13 +136,13 @@ void GuiModule::handle_gui_message() {
 }
 
 void GuiModule::on_easy_exception(const Message &message) {
-  for (size_t i = 0; i < modules.size(); i++)
-    modules[i]->restart();
+  for (const auto &[name, module] : modules)
+    module->restart();
 }
 
 void GuiModule::on_auth_failed(const Message &message) {
-  for (size_t i = 0; i < modules.size(); i++)
-    modules[i]->stop();
+  for (const auto &[name, module] : modules)
+    module->stop();
   json msg = {
       {"code", "auth-failed"},
       {"message", "autenticazione fallita o scaduta, procedere con il login"}};
@@ -142,8 +151,8 @@ void GuiModule::on_auth_failed(const Message &message) {
 }
 
 void GuiModule::on_connection_lost(const Message &message) {
-  for (size_t i = 0; i < modules.size(); i++)
-    modules[i]->stop();
+  for (const auto &[name, module] : modules)
+    module->stop();
   json msg = {{"code", "connection-lost"},
               {"message", "connessione persa, ricconnettersi e riprovare"}};
   send_message(msg);
@@ -155,6 +164,15 @@ void GuiModule::on_transfer(const Message &message) {
   json transfer = message.get_content()->to_json();
   json mex = {{"code", "transfer"}, {"message", transfer}};
   send_message(mex);
+}
+
+void GuiModule::on_init_remote_sync(const Message &message) {
+  modules["watcher"]->stop();
+}
+
+void GuiModule::on_finish_remote_sync(const Message &message) {
+  modules["struct"]->restart();
+  modules["watcher"]->start();
 }
 
 void GuiModule::send_message(const json &message) {

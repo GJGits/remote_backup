@@ -1,6 +1,8 @@
 #include "../../include/pubsub/sync_sub.hpp"
 
-SyncSubscriber::SyncSubscriber() { std::clog << "Sync module init...\n"; }
+SyncSubscriber::SyncSubscriber() : remote_transfer_count{0} {
+  std::clog << "Sync module init...\n";
+}
 
 SyncSubscriber::~SyncSubscriber() {
   running = false;
@@ -55,12 +57,7 @@ void SyncSubscriber::new_from_remote(const std::shared_ptr<FileEntry> &fentry) {
   while (fentry->has_chunk()) {
     fentry->retrieve_chunk();
   }
-  std::filesystem::path new_path{fentry->get_path()};
-  std::filesystem::path tmp_path{TMP_PATH + std::string{"/"} +
-                                 macaron::Base64::Encode(fentry->get_path()) +
-                                 std::string{".out"}};
-  std::filesystem::create_directories(new_path.parent_path().string());
-  std::filesystem::rename(tmp_path, new_path);
+  end_remote_sync();
 }
 
 void SyncSubscriber::on_file_deleted(const Message &message) {
@@ -85,14 +82,31 @@ void SyncSubscriber::delete_from_local(
 
 void SyncSubscriber::delete_from_remote(
     const std::shared_ptr<FileEntry> &fentry) {
+  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   if (std::filesystem::exists(fentry->get_path())) {
-    std::string new_path{BIN_PATH + std::string{"/a"}};
-    std::filesystem::rename(fentry->get_path(), new_path);
-    std::remove(new_path.c_str());
+    std::remove(fentry->get_path().c_str());
     std::filesystem::path parent_path =
         std::filesystem::path(fentry->get_path()).parent_path();
     if (std::filesystem::is_empty(parent_path)) {
       std::filesystem::remove_all(parent_path);
     }
+  }
+  end_remote_sync();
+}
+
+void SyncSubscriber::start_remote_sync() {
+  std::unique_lock lk{mx};
+  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+  if (sync->get_remote_news() == 0) {
+    broker->publish(Message{TOPIC::INIT_SERVER_SYNC});
+  }
+}
+
+void SyncSubscriber::end_remote_sync() {
+  std::unique_lock lk{mx};
+  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+  remote_transfer_count++;
+  if (sync->get_remote_news() == remote_transfer_count) {
+    broker->publish(Message{TOPIC::FINISH_SERVER_SYNC});
   }
 }

@@ -2,9 +2,9 @@ const { ipcRenderer } = require('electron');
 const du = require('du');
 const getMAC = require('getmac').default
 
-const CONFIG_SYNC = "../client/sync/"
-const mac = getMAC();
-//const mac = "aa:bb:cc:dd:ee:ff"
+const CONFIG_SYNC = "../client/sync2/"
+//const mac = getMAC();
+const mac = "aa:bb:cc:dd:ee:ff"
 
 var transfers = [];
 
@@ -117,10 +117,12 @@ $(document).ready(function () {
             ipcRenderer.send('config', { username: username, token: data.token });
             change_status("logged");
         }).fail(function (error) {
+            console.log(error);
             $(".alert.alert-danger.error").show();
             if (error.status === 404) {
                 $(".alert.alert-danger.error").text("server non raggiungibile");
             } else {
+                console.log("entro");
                 $(".alert.alert-danger.error").text(error.responseJSON.error);
             }
 

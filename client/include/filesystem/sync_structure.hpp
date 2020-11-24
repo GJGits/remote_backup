@@ -4,14 +4,13 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <unordered_map>
 #include <optional>
+#include <unordered_map>
 
 #include "../common/constants.hpp"
 #include "../common/json.hpp"
 #include "../common/singleton.hpp"
 #include "file_entry.hpp"
-
 
 using json = nlohmann::json;
 
@@ -19,6 +18,7 @@ class SyncStructure : public Singleton<SyncStructure> {
 
 private:
   friend class Singleton;
+  size_t server_news;
   bool server_ack;
   std::unordered_map<std::string, std::shared_ptr<FileEntry>> structure;
   size_t last_check;
@@ -77,4 +77,9 @@ public:
    * Restituisce lista file_entry contenuti in structure
    **/
   std::vector<std::shared_ptr<FileEntry>> get_entries();
+
+  /**
+   * Restituisce il numero di cambiamenti notificati dal server
+   **/
+  size_t get_remote_news() const;
 };

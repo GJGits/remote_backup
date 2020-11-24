@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "../exceptions/exceptions.hpp"
 #include "../common/constants.hpp"
 #include "../common/singleton.hpp"
@@ -31,11 +33,11 @@ public:
 class ModuleManager {
 protected:
   std::mutex mu;
-  std::vector<std::shared_ptr<Module>> modules;
+  std::unordered_map<std::string, std::shared_ptr<Module>> modules;
   std::shared_ptr<Broker> broker;
 public:
   ModuleManager() {}
-  virtual void add_module(const std::shared_ptr<Module> &module) = 0;
+  virtual void add_module(const std::string &name, const std::shared_ptr<Module> &module) = 0;
   virtual void start() = 0;
   virtual void close() = 0;
 };

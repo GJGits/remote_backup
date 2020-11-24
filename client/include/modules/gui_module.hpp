@@ -14,6 +14,7 @@ class GuiModule : public Singleton<GuiModule>, public ModuleManager {
 
 private:
   friend class Singleton;
+  int transfer_count;
   bool running;
   boost::asio::io_context io_context{};
   udp::socket socket_;
@@ -26,10 +27,12 @@ public:
   ~GuiModule();
   void init_sub_list();
   void on_transfer(const Message &message);
+  void on_init_remote_sync(const Message &message);
+  void on_finish_remote_sync(const Message &message);
   void on_easy_exception(const Message &message);
   void on_auth_failed(const Message &message);
   void on_connection_lost(const Message &message);
-  void add_module(const std::shared_ptr<Module> &module);
+  void add_module(const std::string &name, const std::shared_ptr<Module> &module);
   void start();
   void close();
   void start_receive();

@@ -5,11 +5,15 @@
 class SyncSubscriber : public Singleton<SyncSubscriber>, public Module {
 private:
   friend class Singleton;
+  std::mutex mx;
+  size_t remote_transfer_count;
   SyncSubscriber();
   void new_from_local(const std::shared_ptr<FileEntry> &fentry);
   void new_from_remote(const std::shared_ptr<FileEntry> &fentry);
   void delete_from_local(const std::shared_ptr<FileEntry> &fentry);
   void delete_from_remote(const std::shared_ptr<FileEntry> &fentry);
+  void start_remote_sync();
+  void end_remote_sync();
 
 public:
   ~SyncSubscriber();

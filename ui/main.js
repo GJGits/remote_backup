@@ -143,7 +143,7 @@ app.on('ready', () => {
     }
 
     mb.window.webContents.send('sync', "synced");
-    mb.window.openDevTools();
+    //mb.window.openDevTools();
   });
 
 

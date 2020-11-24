@@ -1,6 +1,6 @@
 #include "../../include/filesystem/sync_structure.hpp"
 
-SyncStructure::SyncStructure() : server_ack{false}, last_check{0} {
+SyncStructure::SyncStructure() : server_news{0}, server_ack{false}, last_check{0} {
   std::clog << "sync_struct init\n";
 }
 
@@ -91,6 +91,7 @@ void SyncStructure::update_from_remote() {
       std::shared_ptr<FileEntry> entry{new FileEntry{
           path, entry_producer::server, nchunks, last_change, status}};
       add_entry(entry);
+      server_news++;
     }
     current_page++;
   }
@@ -133,5 +134,7 @@ std::vector<std::shared_ptr<FileEntry>> SyncStructure::get_entries() {
   }
   return entries;
 }
+
+size_t SyncStructure::get_remote_news() const {return server_news; }
 
 size_t SyncStructure::get_last_check() const { return last_check; }
