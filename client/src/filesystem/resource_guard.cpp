@@ -19,10 +19,14 @@ resource_guard::~resource_guard() {
     std::clog << "RESETTO_EMPTY\n";
   }
 
-  if (!std::filesystem::exists(CLIENT_STRUCT) ||
-      std::filesystem::is_empty(CLIENT_STRUCT)) {
-    std::clog << "RESETTO\n";
-    reset_struct();
+  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+
+  if (sync->get_entries().empty()) {
+    if (!std::filesystem::exists(CLIENT_STRUCT) ||
+        std::filesystem::is_empty(CLIENT_STRUCT)) {
+      std::clog << "RESETTO\n";
+      reset_struct();
+    }
   }
 }
 

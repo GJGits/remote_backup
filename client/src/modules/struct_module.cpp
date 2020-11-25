@@ -5,7 +5,7 @@ StructModule::StructModule() { std::clog << "Struct module init...\n"; }
 StructModule::~StructModule() { std::clog << "Struct module destroy...\n"; }
 
 void StructModule::init_sub_list() {
-  // broker = Broker::getInstance();
+  broker = Broker::getInstance();
   // broker->subscribe(TOPIC::NEW_FILE, PRIORITY::HIGH,
   //                   std::bind(&StructModule::on_add_entry, instance.get(),
   //                             std::placeholders::_1));

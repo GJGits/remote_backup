@@ -44,7 +44,7 @@ void SyncStructure::restore() {
              entry_status::new_)) {
 
       status = (entry_status)j["entries"][x]["status"].get<int>();
-    } else if (!std::filesystem::exists(path) && (entry_status)j["entries"][x]["status"].get<int>()  == entry_status::synced) {
+    } else if (!std::filesystem::exists(path)) {
       producer = entry_producer::local;
       status = entry_status::delete_;
     }
@@ -52,6 +52,7 @@ void SyncStructure::restore() {
     size_t nchunks = (size_t)j["entries"][x]["nchunks"].get<int>();
     std::shared_ptr<FileEntry> entry{
         new FileEntry{path, producer, nchunks, last_change, status}};
+    std::clog << "restore: " << entry->to_json().dump() << "\n";
     add_entry(entry);
   }
 }
@@ -105,12 +106,8 @@ void SyncStructure::update_from_remote() {
 }
 
 void SyncStructure::add_entry(const std::shared_ptr<FileEntry> &entry) {
+  std::unique_lock lk{mx};
   std::string path = entry->get_path();
-
-  // if (!(!std::filesystem::exists(path) &&
-  //       entry->get_status() == entry_status::new_ &&
-  //       entry->get_producer() == entry_producer::local)) {
-  // }
   if (structure.find(path) == structure.end()) {
       structure[path] = entry;
     } else {
@@ -120,6 +117,7 @@ void SyncStructure::add_entry(const std::shared_ptr<FileEntry> &entry) {
 }
 
 void SyncStructure::remove_entry(const std::shared_ptr<FileEntry> &entry) {
+  std::unique_lock lk{mx};
   structure.erase(entry->get_path());
 }
 

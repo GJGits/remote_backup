@@ -34,7 +34,7 @@ ChunkController::handle(const http::server::request &req) {
 };
 
 void ChunkController::post_file_chunk(const PostChunkDTO &post_chunk) {
-  DurationLogger logger{"POST_CHUNK"};
+  // DurationLogger logger{"POST_CHUNK"};
   std::shared_ptr<ChunkService> chunk_service = ChunkService::getInstance();
   chunk_service->file_chunk_add(post_chunk);
 }

@@ -2,6 +2,7 @@
 
 #include "file_entry.hpp"
 #include "../common/constants.hpp"
+#include "sync_structure.hpp"
 
 
 class entry_guard {

@@ -37,13 +37,13 @@ void SyncSubscriber::on_new_file(const Message &message) {
   if (fentry->get_producer() == entry_producer::local && fentry->has_chunk()) {
     new_from_local(fentry);
     fentry->set_status(entry_status::synced);
-    sync->add_entry(fentry);
+    // sync->add_entry(fentry);
     broker->publish(Message{TOPIC::ADD_ENTRY, fentry});
   }
   if (fentry->get_producer() == entry_producer::server) {
     new_from_remote(fentry);
     fentry->set_status(entry_status::synced);
-    sync->add_entry(fentry);
+    // sync->add_entry(fentry);
     broker->publish(Message{TOPIC::ADD_ENTRY, fentry});
   }
 }
@@ -73,7 +73,7 @@ void SyncSubscriber::on_file_deleted(const Message &message) {
   if (fentry->get_producer() == entry_producer::local) {
     delete_from_local(fentry);
     sync->remove_entry(fentry);
-    broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
+    // broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
   }
   if ((fentry->get_producer() == entry_producer::server &&
        std::filesystem::exists(fentry->get_path())) ||

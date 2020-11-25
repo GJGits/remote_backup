@@ -5,6 +5,7 @@
 
 #include "../common/constants.hpp"
 #include "../common/json.hpp"
+#include "sync_structure.hpp"
 
 using json = nlohmann::json;
 

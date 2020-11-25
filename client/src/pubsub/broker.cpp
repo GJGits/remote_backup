@@ -4,13 +4,12 @@ Broker::Broker() : is_running{true} {
   for (ssize_t i = 0; i < 6; i++) {
     callers.emplace_back([this]() {
       while (is_running) {
-        // std::function<void(void)> fn;
-        Message msg;
+        std::function<void(void)> fn;
         // sezione critica
         {
           std::unique_lock lk{nm};
           if (!tasks.empty()) {
-            msg = tasks.front();
+            fn = tasks.front();
             tasks.pop();
           } else {
             ncv.wait(lk, [&]() { return !tasks.empty() || !is_running; });
@@ -21,11 +20,7 @@ Broker::Broker() : is_running{true} {
 
         try {
           resource_guard guard{};
-          TOPIC topic = msg.get_topic();
-          for (auto const &call : subs[topic]) {
-            std::function<void(void)> fn = std::bind(call.get_call(), msg);
-            fn();
-          }
+          fn();
         } catch (AuthFailed &ex) {
           std::clog << ex.what() << "\n";
           clear();
@@ -41,7 +36,7 @@ Broker::Broker() : is_running{true} {
         }
 
         catch (std::ifstream::failure &ex) {
-          std::clog << ex.what() << "\n";
+          std::clog << "ifstream (broker) " << ex.what() << "\n";
           clear();
           publish(Message{TOPIC::EASY_EXCEPTION});
           return;
@@ -91,26 +86,22 @@ void Broker::subscribe(TOPIC topic, PRIORITY priority,
 void Broker::publish(const Message &message) {
   std::unique_lock lk{nm};
   TOPIC topic = message.get_topic();
+  if (topic == TOPIC::EASY_EXCEPTION) {
+    std::clog << "PUB_CLEAR\n";
+  }
   if (subs.find(topic) != subs.end()) {
-    tasks.push(message);
-    ncv.notify_one();
-    // for (auto const &call : subs[topic]) {
-    //   std::function<void(void)> fn = std::bind(call.get_call(), message);
-    //   tasks.push(fn);
-    //   ncv.notify_one();
-    // }
+    for (auto const &call : subs[topic]) {
+      std::function<void(void)> fn = std::bind(call.get_call(), message);
+      tasks.push(fn);
+      ncv.notify_one();
+    }
   }
 }
 
 void Broker::clear() {
   std::unique_lock lk{nm};
-  bool done = false;
-  while (!done) {
-    TOPIC topic = tasks.front().get_topic();
-    done = true;
-    if (topic == TOPIC::NEW_FILE || topic == TOPIC::FILE_DELETED) {
-      tasks.pop();
-      done = false;
-    }
+  std::clog << "CLEAR\n";
+  while (!tasks.empty()) {
+    tasks.pop();
   }
 }

@@ -58,13 +58,13 @@ void GuiModule::start() {
 }
 
 void GuiModule::close() {
-  std::clog << "gui module closed...\n";
   running = false;
   socket_.cancel();
   socket_.close();
   io_context.stop();
   for (const auto &[name, module] : modules)
     module->stop();
+  std::clog << "gui module closed...\n";
 }
 
 void GuiModule::start_receive() {
@@ -137,6 +137,7 @@ void GuiModule::handle_gui_message() {
 
 void GuiModule::on_easy_exception(const Message &message) {
   std::unique_lock lk{mu};
+  DurationLogger log{"EASY_EXCEPTION"};
   for (const auto &[name, module] : modules)
     module->stop();
 
