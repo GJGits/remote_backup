@@ -61,8 +61,7 @@ void SyncStructure::update_from_fs() {
   for (const auto &p :
        std::filesystem::recursive_directory_iterator(SYNC_ROOT)) {
     std::string path = p.path().string();
-    if (!(path.rfind(TMP_PATH, 0) == 0) && !(path.rfind(BIN_PATH, 0) == 0) &&
-        p.is_regular_file()) {
+    if (p.is_regular_file()) {
       std::shared_ptr<FileEntry> entry{
           new FileEntry{path, entry_producer::local, entry_status::new_}};
       // secondo caso possibile solo per rename di cartella che

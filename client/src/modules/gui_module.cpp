@@ -176,11 +176,13 @@ void GuiModule::on_transfer(const Message &message) {
 }
 
 void GuiModule::on_init_remote_sync(const Message &message) {
+  std::unique_lock lk{mu};
   DurationLogger log{"START_REMOTE_SYNC"};
   modules["watcher"]->stop();
 }
 
 void GuiModule::on_finish_remote_sync(const Message &message) {
+  std::unique_lock lk{mu};
   DurationLogger log{"FINISH_REMOTE_SYNC"};
   modules["watcher"]->start();
 }

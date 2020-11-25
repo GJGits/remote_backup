@@ -37,21 +37,21 @@ void StructModule::stop() {
   }
 }
 
-void StructModule::on_add_entry(const Message &message) {
-  std::unique_lock lock{m1};
-  DurationLogger log{"ADD_ENTRY"};
-  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-  std::shared_ptr<FileEntry> entry = message.get_content();
-  sync->add_entry(entry);
-}
+// void StructModule::on_add_entry(const Message &message) {
+//   std::unique_lock lock{m1};
+//   DurationLogger log{"ADD_ENTRY"};
+//   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+//   std::shared_ptr<FileEntry> entry = message.get_content();
+//   sync->add_entry(entry);
+// }
 
-void StructModule::on_delete_entry(const Message &message) {
-  std::unique_lock lock{m1};
-  DurationLogger log{"DELETE_ENTRY"};
-  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-  std::shared_ptr<FileEntry> entry = message.get_content();
-  sync->remove_entry(entry);
-}
+// void StructModule::on_delete_entry(const Message &message) {
+//   std::unique_lock lock{m1};
+//   DurationLogger log{"DELETE_ENTRY"};
+//   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+//   std::shared_ptr<FileEntry> entry = message.get_content();
+//   sync->remove_entry(entry);
+// }
 
 void StructModule::notify_news() {
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
