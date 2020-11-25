@@ -1,8 +1,7 @@
 #include "../../include/modules/gui_module.hpp"
 
 GuiModule::GuiModule()
-    : transfer_count{0}, running{false},
-      socket_(io_context, udp::endpoint(udp::v4(), 2800)) {
+    : running{false}, socket_(io_context, udp::endpoint(udp::v4(), 2800)) {
   std::clog << "gui module init...\n";
 }
 
@@ -89,8 +88,8 @@ void GuiModule::handle_gui_message() {
     case 1: // message start da gui
       RestClient::getInstance()->read_info();
       for (const auto &[name, module] : modules)
-      	if(name.compare("watcher")!=0)
-        	module->start();
+        if (name.compare("watcher") != 0)
+          module->start();
       break;
     case 2: // message restart da gui
       RestClient::getInstance()->read_info();
@@ -137,13 +136,13 @@ void GuiModule::handle_gui_message() {
 }
 
 void GuiModule::on_easy_exception(const Message &message) {
-
+  std::unique_lock lk{mu};
   for (const auto &[name, module] : modules)
     module->stop();
-    
+
   for (const auto &[name, module] : modules)
-    if(name.compare("watcher")!=0)
-    module->start();
+    if (name.compare("watcher") != 0)
+      module->start();
 }
 
 void GuiModule::on_auth_failed(const Message &message) {
@@ -179,8 +178,6 @@ void GuiModule::on_init_remote_sync(const Message &message) {
 
 void GuiModule::on_finish_remote_sync(const Message &message) {
   DurationLogger log{"FINISH_REMOTE_SYNC"};
-  //modules["struct"]->restart();
-  //modules["watcher"]->clear_events();
   modules["watcher"]->start();
 }
 

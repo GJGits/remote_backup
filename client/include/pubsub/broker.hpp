@@ -16,7 +16,7 @@ private:
   friend class Singleton;
   std::mutex nm;
   std::condition_variable ncv;
-  std::queue<std::function<void(void)>> tasks;
+  std::queue<Message> tasks;
   std::vector<std::thread> callers;
   bool is_running;
   std::unordered_map<TOPIC, std::list<Callback>> subs;

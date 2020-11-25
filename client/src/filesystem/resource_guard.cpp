@@ -1,4 +1,5 @@
 #include "../../include/filesystem/resource_guard.hpp"
+#include <iostream>
 
 resource_guard::resource_guard(/* args */) {}
 
@@ -9,8 +10,18 @@ resource_guard::~resource_guard() {
   }
   std::filesystem::create_directory(TMP_PATH);
   std::filesystem::create_directory(BIN_PATH);
+
+  if (!std::filesystem::exists(CLIENT_STRUCT)) {
+    std::clog << "RESETTO_NON_ESISTE\n";
+  }
+
+  if (std::filesystem::is_empty(CLIENT_STRUCT)) {
+    std::clog << "RESETTO_EMPTY\n";
+  }
+
   if (!std::filesystem::exists(CLIENT_STRUCT) ||
       std::filesystem::is_empty(CLIENT_STRUCT)) {
+    std::clog << "RESETTO\n";
     reset_struct();
   }
 }

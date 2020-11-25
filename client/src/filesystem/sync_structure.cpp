@@ -1,6 +1,7 @@
 #include "../../include/filesystem/sync_structure.hpp"
 
-SyncStructure::SyncStructure() : server_news{0}, server_ack{false}, last_check{0} {
+SyncStructure::SyncStructure()
+    : server_news{0}, server_ack{false}, last_check{0} {
   std::clog << "sync_struct init\n";
 }
 
@@ -16,27 +17,20 @@ void SyncStructure::store() {
       json entry = fentry->to_json();
       jstru["entries"].push_back(entry);
     }
-    //std::clog << "LA STRUCTURE SIZE E': "<< structure.size() << "\n";
-    //std::clog << "LA ENTRIES jstru size e': " <<jstru["entries"].size() << "\n";
-    //std::clog << "SONO NELLA STOOOOOOORE\n";
     o << jstru << "\n";
-    
-    //std::clog << "IL FILE PATH E': " <<std::filesystem::file_size(CLIENT_STRUCT) << "\n";
   }
+  structure.clear();
+  server_ack = false;
 }
 
-void SyncStructure::restore() { 
+void SyncStructure::restore() {
 
-
-  std::clog << "SONO DENTRO LA RESTORE\n";
   std::ifstream i{CLIENT_STRUCT};
   i.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   json j;
   i >> j;
   last_check = j["last_check"].get<int>();
-      std::clog << "LA SIZE E': " << j["entries"].size() << "\n";
   for (size_t x = 0; x < j["entries"].size(); x++) {
-    std::clog << "SONO NEL FORE\n";
     std::string path = j["entries"][x]["path"].get<std::string>();
     entry_producer producer =
         (entry_producer)j["entries"][x]["producer"].get<int>();
@@ -50,10 +44,7 @@ void SyncStructure::restore() {
              entry_status::new_)) {
 
       status = (entry_status)j["entries"][x]["status"].get<int>();
-    } else if (!std::filesystem::exists(path) &&
-               (entry_status)j["entries"][x]["status"].get<int>() ==
-                   entry_status::synced) {
-                   std::clog << "TI ELIMINEROOOOOOOOOOO : " << path << "\n";
+    } else if (!std::filesystem::exists(path) && (entry_status)j["entries"][x]["status"].get<int>()  == entry_status::synced) {
       producer = entry_producer::local;
       status = entry_status::delete_;
     }
@@ -63,7 +54,6 @@ void SyncStructure::restore() {
         new FileEntry{path, producer, nchunks, last_change, status}};
     add_entry(entry);
   }
-  
 }
 
 void SyncStructure::update_from_fs() {
@@ -78,28 +68,13 @@ void SyncStructure::update_from_fs() {
       // va a modificare esclusivamente il change_time dell'inode
       // riferito alla cartella, gli inode dei file rimangono invariati.
       if ((entry->get_last_change() > last_check &&
-           std::filesystem::file_size(path) > 0)){
-                      std::clog << "entry get last change: " << entry->get_last_change() << "  e last_check: " << last_check << "\n"; 
-           }
-           
-      if((structure.find(path) == structure.end() &&
-           std::filesystem::file_size(path) > 0))
-                                 std::clog << "NON C'E' NELLA STRUCT\n"; 
-      if ((entry->get_last_change() > last_check &&
            std::filesystem::file_size(path) > 0) ||
           (structure.find(path) == structure.end() &&
-           std::filesystem::file_size(path) > 0)){
-
-
+           std::filesystem::file_size(path) > 0)) {
         add_entry(entry);
-
-        }
+      }
     }
   }
-  
-  
-
-  
 }
 
 void SyncStructure::update_from_remote() {
@@ -131,12 +106,17 @@ void SyncStructure::update_from_remote() {
 
 void SyncStructure::add_entry(const std::shared_ptr<FileEntry> &entry) {
   std::string path = entry->get_path();
+
+  // if (!(!std::filesystem::exists(path) &&
+  //       entry->get_status() == entry_status::new_ &&
+  //       entry->get_producer() == entry_producer::local)) {
+  // }
   if (structure.find(path) == structure.end()) {
-    structure[path] = entry;
-  } else {
-    if (entry->get_last_change() > structure[path]->get_last_change())
       structure[path] = entry;
-  }
+    } else {
+      if (entry->get_last_change() > structure[path]->get_last_change())
+        structure[path] = entry;
+    }
 }
 
 void SyncStructure::remove_entry(const std::shared_ptr<FileEntry> &entry) {
@@ -166,6 +146,6 @@ std::vector<std::shared_ptr<FileEntry>> SyncStructure::get_entries() {
   return entries;
 }
 
-void SyncStructure::reset_remote_news() {server_news = 0;}
-size_t SyncStructure::get_remote_news() const {return server_news; }
+void SyncStructure::reset_remote_news() { server_news = 0; }
+size_t SyncStructure::get_remote_news() const { return server_news; }
 size_t SyncStructure::get_last_check() const { return last_check; }

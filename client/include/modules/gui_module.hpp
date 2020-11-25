@@ -14,7 +14,6 @@ class GuiModule : public Singleton<GuiModule>, public ModuleManager {
 
 private:
   friend class Singleton;
-  int transfer_count;
   bool running;
   boost::asio::io_context io_context{};
   udp::socket socket_;

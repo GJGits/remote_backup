@@ -5,23 +5,23 @@ StructModule::StructModule() { std::clog << "Struct module init...\n"; }
 StructModule::~StructModule() { std::clog << "Struct module destroy...\n"; }
 
 void StructModule::init_sub_list() {
-  broker = Broker::getInstance();
-  broker->subscribe(TOPIC::ADD_ENTRY, PRIORITY::LOW,
-                    std::bind(&StructModule::on_add_entry, instance.get(),
-                              std::placeholders::_1));
-  broker->subscribe(TOPIC::REMOVE_ENTRY, PRIORITY::LOW,
-                    std::bind(&StructModule::on_delete_entry, instance.get(),
-                              std::placeholders::_1));
+  // broker = Broker::getInstance();
+  // broker->subscribe(TOPIC::NEW_FILE, PRIORITY::HIGH,
+  //                   std::bind(&StructModule::on_add_entry, instance.get(),
+  //                             std::placeholders::_1));
+  // broker->subscribe(TOPIC::REMOVE_ENTRY, PRIORITY::HIGH,
+  //                   std::bind(&StructModule::on_delete_entry, instance.get(),
+  //                             std::placeholders::_1));
 }
 
 void StructModule::start() {
   if (!running) {
     running = true;
+    std::unique_lock lock{m1};
     std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
     sync->restore();
     sync->update_from_remote();
     sync->update_from_fs();
-
     notify_news();
     std::clog << "Struct module start...\n";
   }
@@ -55,17 +55,15 @@ void StructModule::on_delete_entry(const Message &message) {
 
 void StructModule::notify_news() {
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-  
-  if(sync->get_remote_news()==0){
-  std::clog << "LO ACCENDOOOOOO\n";
-      broker->publish(Message{TOPIC::FINISH_SERVER_SYNC});
+
+  if (sync->get_remote_news() == 0) {
+    broker->publish(Message{TOPIC::FINISH_SERVER_SYNC});
   }
   for (const auto &entry : sync->get_entries()) {
     if (entry->get_status() == entry_status::new_) {
       broker->publish(Message{TOPIC::NEW_FILE, entry});
     }
     if (entry->get_status() == entry_status::delete_) {
-    std::clog << "CANELLO UN FILE\n";
       broker->publish(Message{TOPIC::FILE_DELETED, entry});
     }
   }
