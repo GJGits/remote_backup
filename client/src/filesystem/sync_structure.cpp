@@ -36,15 +36,15 @@ void SyncStructure::restore() {
         (entry_producer)j["entries"][x]["producer"].get<int>();
     size_t last_change = j["entries"][x]["last_change"].get<int>();
 
-    entry_status status = entry_status::synced;
+    entry_status status = (entry_status)j["entries"][x]["status"].get<int>();
 
-    if (std::filesystem::exists(path) ||
-        (!std::filesystem::exists(path) &&
-         (entry_status)j["entries"][x]["status"].get<int>() ==
-             entry_status::new_)) {
+    if (producer == entry_producer::server &&
+        (entry_status)j["entries"][x]["status"].get<int>() ==
+            entry_status::new_) {
+      server_news++;
+    }
 
-      status = (entry_status)j["entries"][x]["status"].get<int>();
-    } else if (!std::filesystem::exists(path)) {
+    if (!std::filesystem::exists(path)) {
       producer = entry_producer::local;
       status = entry_status::delete_;
     }
@@ -109,11 +109,11 @@ void SyncStructure::add_entry(const std::shared_ptr<FileEntry> &entry) {
   std::unique_lock lk{mx};
   std::string path = entry->get_path();
   if (structure.find(path) == structure.end()) {
+    structure[path] = entry;
+  } else {
+    if (entry->get_last_change() > structure[path]->get_last_change())
       structure[path] = entry;
-    } else {
-      if (entry->get_last_change() > structure[path]->get_last_change())
-        structure[path] = entry;
-    }
+  }
 }
 
 void SyncStructure::remove_entry(const std::shared_ptr<FileEntry> &entry) {

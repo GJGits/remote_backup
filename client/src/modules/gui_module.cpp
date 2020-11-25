@@ -106,6 +106,7 @@ void GuiModule::handle_gui_message() {
 
     if (running) {
       std::clog << "attendo nuovo comando\n";
+      lock.unlock();
       start_receive();
     }
 
@@ -147,25 +148,27 @@ void GuiModule::on_easy_exception(const Message &message) {
 }
 
 void GuiModule::on_auth_failed(const Message &message) {
+  std::unique_lock lk{mu};
   for (const auto &[name, module] : modules)
     module->stop();
   json msg = {
       {"code", "auth-failed"},
       {"message", "autenticazione fallita o scaduta, procedere con il login"}};
   send_message(msg);
-  start_receive();
 }
 
 void GuiModule::on_connection_lost(const Message &message) {
+  std::unique_lock lk{mu};
+  DurationLogger log{"CONNECTION_LOST"};
   for (const auto &[name, module] : modules)
     module->stop();
   json msg = {{"code", "connection-lost"},
               {"message", "connessione persa, ricconnettersi e riprovare"}};
   send_message(msg);
-  start_receive();
 }
 
 void GuiModule::on_transfer(const Message &message) {
+  std::unique_lock lk{mu};
   std::shared_ptr<FileEntry> entry = message.get_content();
   json transfer = message.get_content()->to_json();
   json mex = {{"code", "transfer"}, {"message", transfer}};

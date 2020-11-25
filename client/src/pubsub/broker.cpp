@@ -25,35 +25,35 @@ Broker::Broker() : is_running{true} {
           std::clog << ex.what() << "\n";
           clear();
           publish(Message{TOPIC::AUTH_FAILED});
-          return;
+          // return;
         }
 
         catch (ConnectionNotAvaible &ex) {
           std::clog << ex.what() << "\n";
           clear();
           publish(Message{TOPIC::CONNECTION_LOST});
-          return;
+          // return;
         }
 
         catch (std::ifstream::failure &ex) {
           std::clog << "ifstream (broker) " << ex.what() << "\n";
           clear();
           publish(Message{TOPIC::EASY_EXCEPTION});
-          return;
+          // return;
         }
 
         catch (std::filesystem::filesystem_error &ex) {
           std::clog << ex.what() << "\n";
           clear();
           publish(Message{TOPIC::EASY_EXCEPTION});
-          return;
+          // return;
         }
 
         catch (...) {
           std::clog << "The impossible happened (Broker)!\n";
           clear();
           publish(Message{TOPIC::EASY_EXCEPTION});
-          return;
+          // return;
         }
       }
     });
