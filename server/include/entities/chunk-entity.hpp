@@ -10,7 +10,7 @@ private:
     std::string path_file;
     std::string file_name;
     int num_chunks;
-    int chunk_size;
+
 
 public:
     ChunkEntity(const PostChunkDTO &post_chunk);
@@ -20,5 +20,5 @@ public:
     std::string getPathFile() const;
     std::string getFileName() const;
     int getNumChunks() const;
-    int getChunkSize() const;
+
 };
