@@ -52,7 +52,6 @@ void SyncStructure::restore() {
     size_t nchunks = (size_t)j["entries"][x]["nchunks"].get<int>();
     std::shared_ptr<FileEntry> entry{
         new FileEntry{path, producer, nchunks, last_change, status}};
-    std::clog << "restore: " << entry->to_json().dump() << "\n";
     add_entry(entry);
   }
 }

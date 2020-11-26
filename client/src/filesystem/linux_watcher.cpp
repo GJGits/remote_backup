@@ -205,8 +205,8 @@ void LinuxWatcher::handle_events() {
             //      !(path.rfind(bin_path, 0) == 0) &&
             //      (mask == 2 || mask == 64 || mask == 128 || mask == 256 ||
             //       mask == 512))) {
-              LinuxEvent ev{path, event->cookie, event->mask};
-              events[path] = ev;
+            LinuxEvent ev{path, event->cookie, event->mask};
+            events[path] = ev;
             // }
 
           } break;
@@ -225,9 +225,9 @@ void LinuxWatcher::handle_events() {
                  std::filesystem::recursive_directory_iterator(path)) {
               if (p.is_regular_file()) {
                 // if (!(path.rfind(tmp_path, 0) == 0)) {
-                  std::string f_path = p.path().string();
-                  LinuxEvent ev{f_path, 0, 128};
-                  eves.push_back(ev);
+                std::string f_path = p.path().string();
+                LinuxEvent ev{f_path, 0, 128};
+                eves.push_back(ev);
                 // }
               }
             }
@@ -259,12 +259,17 @@ void LinuxWatcher::handle_events() {
           if (mask == 2 || mask == 128 || mask == 256) {
             std::shared_ptr<FileEntry> entry{
                 new FileEntry{path, entry_producer::local, entry_status::new_}};
-            broker->publish(Message{TOPIC::NEW_FILE, entry});
+            broker->publish(Message{TOPIC::NEW_LIVE, entry});
           }
           if (mask == 64 || mask == 512) {
-            std::shared_ptr<FileEntry> entry{new FileEntry{
-                path, entry_producer::local, entry_status::delete_}};
-            broker->publish(Message{TOPIC::FILE_DELETED, entry});
+            std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+            std::optional<std::shared_ptr<FileEntry>> val =
+                sync->get_entry(path);
+            if (val.has_value()) {
+              std::shared_ptr<FileEntry> entry{new FileEntry{
+                  path, entry_producer::local, entry_status::delete_}};
+              broker->publish(Message{TOPIC::DELETE_LIVE, val.value()});
+            }
           }
         }
 

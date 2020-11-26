@@ -13,7 +13,7 @@ public:
   void start();
   void stop();
   void init_sub_list();
-  void on_add_entry(const Message &message);
+  void on_new_live(const Message &message);
   void on_delete_entry(const Message &message);
   void notify_news();
 };
