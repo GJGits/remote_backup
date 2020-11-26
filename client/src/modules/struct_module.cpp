@@ -15,6 +15,7 @@ void StructModule::init_sub_list() {
 }
 
 void StructModule::start() {
+  std::unique_lock lock{m1};
   if (!running) {
     running = true;
     std::unique_lock lock{m1};
@@ -28,9 +29,9 @@ void StructModule::start() {
 }
 
 void StructModule::stop() {
+  std::unique_lock lock{m1};
   if (running) {
     running = false;
-    std::unique_lock lock{m1};
     std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
     sync->store();
     std::clog << "Struct module stop...\n";

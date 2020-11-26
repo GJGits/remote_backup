@@ -7,7 +7,10 @@ const server = dgram.createSocket('udp4');
 const client = dgram.createSocket('udp4');
 const { ipcMain, app, Menu, Tray } = require('electron');
 const ClientConf = require('./modules/client-conf.js');
-const { Notification } = require('electron')
+const { Notification } = require('electron');
+var net = require('net');
+
+var connected = true;
 
 const set_network_limit = () => {
   const id = execSync("docker exec remote_backup_client_1 cat /sys/class/net/eth0/iflink").toString().replace(/(\r\n|\n|\r)/gm, "");
@@ -77,7 +80,7 @@ app.on('ready', () => {
 
     ipcMain.on('config', (event, data) => {
       let conf = new ClientConf();
-      console.log("data:",data);
+      console.log("data:", data);
       conf.set(data);
       let info = conf.get_info();
       mb.window.webContents.send('info', info);
@@ -104,7 +107,35 @@ app.on('ready', () => {
         mb.window.webContents.send('transfer', obj.message);
       }
       if (obj.code === "connection-lost") {
-        mb.window.webContents.send('background-message', msg);
+
+        if (connected) {
+          connected = false;
+          mb.window.webContents.send('background-message', msg);
+          var refreshId = setInterval(function testPort(port, host, cb) {
+            net.createConnection(3200, "0.0.0.0").on("connect", function (e) {
+              let conf = new ClientConf();
+              if (conf.isValid()) {
+                mb.window.webContents.send('status-changed', "logged");
+                let info = conf.get_info();
+                mb.window.webContents.send('info', info);
+                client.send(Buffer.from([topics.get("START")]), 2800, client_ip, (err) => { console.log(err) });
+                connected = true;
+              }
+              else {
+                mb.window.webContents.send('status-changed', "login");
+                client.send(Buffer.from([topics.get("STOP")]), 2800, client_ip, (err) => { console.log(err) });
+              }
+              // recuperata la connessione esco a prescindere da essere ancora loggati o meno
+              clearInterval(refreshId);
+            }).on("error", function (e) {
+              console.log("unreach");
+            });
+          }, 30000);
+        }
+
+
+
+
       }
       if (obj.code === "auth-failed") {
         const notification = {

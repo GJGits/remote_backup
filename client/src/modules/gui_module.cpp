@@ -113,11 +113,13 @@ void GuiModule::handle_gui_message() {
   } catch (AuthFailed &ex) {
     std::clog << ex.what() << "\n";
     on_auth_failed(Message{TOPIC::AUTH_FAILED});
+    start_receive();
   }
 
   catch (ConnectionNotAvaible &ex) {
     std::clog << ex.what() << "\n";
     on_connection_lost(Message{TOPIC::CONNECTION_LOST});
+    start_receive();
   }
 
   catch (std::ifstream::failure &ex) {

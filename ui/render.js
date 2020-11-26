@@ -2,9 +2,10 @@ const { ipcRenderer } = require('electron');
 const du = require('du');
 const getMAC = require('getmac').default
 
-const CONFIG_SYNC = "../client/sync/"
-const mac = getMAC();
-//const mac = "aa:bb:cc:dd:ee:ff"
+const CONFIG_SYNC = "../client/sync2/"
+//const mac = getMAC();
+const mac = "aa:bb:cc:dd:ee:ff"
+var timer; // timer usato per noconn
 
 var transfers = [];
 
@@ -19,6 +20,10 @@ var change_status = (status) => {
             $("#" + stats[i]).hide();
     }
     $(".alert.alert-danger.error").hide();
+    if (index === 2 && timer) {
+        clearInterval(timer);
+        timer = undefined;
+    }
 }
 
 var update_usage = () => {
@@ -59,6 +64,13 @@ ipcRenderer.on('background-message', (event, arg) => {
     $("#loading").hide();
     $("#synced").hide();
     $("#noconn").show();
+    let count = 30;
+    timer = setInterval(function () {
+        $("#timer").text("" + count);
+        count--;
+        if (count == 0)
+            count = 30;
+    }, 1000);
 });
 
 ipcRenderer.on('status-changed', (event, arg) => {
