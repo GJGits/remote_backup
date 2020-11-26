@@ -88,13 +88,13 @@ void SyncSubscriber::delete_from_remote(const Message &message) {
   end_remote_sync();
 }
 
-void SyncSubscriber::start_remote_sync() {
-  std::unique_lock lk{mx};
-  std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-  if (remote_transfer_count == 0) {
-    broker->publish(Message{TOPIC::INIT_SERVER_SYNC});
-  }
-}
+// void SyncSubscriber::start_remote_sync() {
+//   std::unique_lock lk{mx};
+//   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+//   if (remote_transfer_count == 0) {
+//     broker->publish(Message{TOPIC::INIT_SERVER_SYNC});
+//   }
+// }
 
 void SyncSubscriber::end_remote_sync() {
   std::unique_lock lk{mx};

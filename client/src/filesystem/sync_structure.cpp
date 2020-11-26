@@ -121,12 +121,14 @@ void SyncStructure::remove_entry(const std::shared_ptr<FileEntry> &entry) {
 
 std::optional<std::shared_ptr<FileEntry>>
 SyncStructure::get_entry(const std::string &path) {
+  std::unique_lock lk{mx};
   return structure.find(path) != structure.end()
              ? std::optional<std::shared_ptr<FileEntry>>{structure[path]}
              : std::nullopt;
 }
 
 std::vector<std::string> SyncStructure::get_paths() {
+  std::unique_lock lk{mx};
   std::vector<std::string> paths;
   for (const auto &[path, entry] : structure) {
     paths.push_back(path);
@@ -135,6 +137,7 @@ std::vector<std::string> SyncStructure::get_paths() {
 }
 
 std::vector<std::shared_ptr<FileEntry>> SyncStructure::get_entries() {
+  std::unique_lock lk{mx};
   std::vector<std::shared_ptr<FileEntry>> entries{};
   for (const auto &[key, entry] : structure) {
     entries.push_back(entry);

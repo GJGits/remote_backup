@@ -8,7 +8,7 @@ private:
   std::mutex mx;
   size_t remote_transfer_count;
   SyncSubscriber();
-  void start_remote_sync();
+  // void start_remote_sync();
   void end_remote_sync();
 
 public:

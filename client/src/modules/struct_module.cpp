@@ -9,7 +9,7 @@ void StructModule::init_sub_list() {
   broker->subscribe(TOPIC::NEW_LIVE, PRIORITY::HIGH,
                     std::bind(&StructModule::on_new_live, instance.get(),
                               std::placeholders::_1));
-  broker->subscribe(TOPIC::REMOVE_ENTRY, PRIORITY::HIGH,
+  broker->subscribe(TOPIC::REMOVE_ENTRY, PRIORITY::LOW,
                     std::bind(&StructModule::on_delete_entry, instance.get(),
                               std::placeholders::_1));
 }
@@ -55,7 +55,6 @@ void StructModule::on_delete_entry(const Message &message) {
 
 void StructModule::notify_news() {
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-
   if (sync->get_remote_news() == 0) {
     broker->publish(Message{TOPIC::FINISH_SERVER_SYNC});
   }

@@ -190,12 +190,6 @@ void LinuxWatcher::handle_events() {
 
           } break;
 
-            // to tmp -> non loggare ok
-            // from tmp -> non loggare, ma conserva cookie ok
-            // to sync -> loggo se from non da tmp
-            // rm tmp -> non loggare ok
-            // from sync -> loggo se to non bin
-
           default: {
 
             LinuxEvent ev{path, event->cookie, event->mask};
@@ -216,11 +210,9 @@ void LinuxWatcher::handle_events() {
             for (auto &p :
                  std::filesystem::recursive_directory_iterator(path)) {
               if (p.is_regular_file()) {
-                // if (!(path.rfind(tmp_path, 0) == 0)) {
                 std::string f_path = p.path().string();
                 LinuxEvent ev{f_path, 0, 128};
                 eves.push_back(ev);
-                // }
               }
             }
           }
