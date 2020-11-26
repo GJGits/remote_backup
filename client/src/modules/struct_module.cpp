@@ -18,7 +18,6 @@ void StructModule::start() {
   std::unique_lock lock{m1};
   if (!running) {
     running = true;
-    std::unique_lock lock{m1};
     std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
     sync->restore();
     sync->update_from_remote();

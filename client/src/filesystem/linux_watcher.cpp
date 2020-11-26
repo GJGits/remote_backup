@@ -198,16 +198,8 @@ void LinuxWatcher::handle_events() {
 
           default: {
 
-            // uint32_t mask = event->mask;
-            // if (((path.rfind(tmp_path, 0) == 0) && mask == 64) ||
-            //     ((path.rfind(bin_path, 0) == 0) && mask == 128) ||
-            //     (!(path.rfind(tmp_path, 0) == 0) &&
-            //      !(path.rfind(bin_path, 0) == 0) &&
-            //      (mask == 2 || mask == 64 || mask == 128 || mask == 256 ||
-            //       mask == 512))) {
             LinuxEvent ev{path, event->cookie, event->mask};
             events[path] = ev;
-            // }
 
           } break;
           }
@@ -233,29 +225,10 @@ void LinuxWatcher::handle_events() {
             }
           }
         }
-
-        // ordine descrescente (cookie, mask)
-        // std::sort(eves.begin(), eves.end(),
-        //           [&](const LinuxEvent &ev1, const LinuxEvent &ev2) {
-        //             if (ev1.get_cookie() != ev2.get_cookie())
-        //               return ev1.get_cookie() > ev2.get_cookie();
-        //             return ev1.get_mask() > ev2.get_mask();
-        //           });
         std::clog << "eves size: " << eves.size() << "\n";
         for (auto it = eves.begin(); it != eves.end(); it++) {
           std::string path = it->get_path();
           uint32_t mask = it->get_mask();
-          // 1. se to sync e from tmp or to bin from sync -> skippo
-          // if ((!(path.rfind(tmp_path, 0) == 0) &&
-          //      !(path.rfind(bin_path, 0) == 0) &&
-          //      (mask == 128 && (it + 1) != eves.end() &&
-          //       (it + 1)->get_mask() == 64 &&
-          //       (it + 1)->get_path().rfind(tmp_path, 0) == 0)) ||
-          //     (mask == 128 && path.rfind(bin_path, 0) == 0)) {
-          //   it++;
-          //   continue;
-          // }
-          // 2. altro -> invio messaggio
           if (mask == 2 || mask == 128 || mask == 256) {
             std::shared_ptr<FileEntry> entry{
                 new FileEntry{path, entry_producer::local, entry_status::new_}};

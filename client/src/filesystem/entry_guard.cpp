@@ -12,6 +12,4 @@ entry_guard::~entry_guard() {
       entry->set_status(entry_status::delete_);
     }
   }
-  // std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-  // sync->add_entry(entry);
 }
