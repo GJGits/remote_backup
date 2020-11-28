@@ -43,6 +43,7 @@ void SyncSubscriber::stop() {
 
 void SyncSubscriber::new_from_local(const Message &message) {
   std::shared_ptr<FileEntry> fentry = message.get_content();
+  entry_guard guard{fentry};
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   std::shared_ptr<RestClient> rest_client = RestClient::getInstance();
   while (fentry->has_chunk()) {
@@ -87,14 +88,6 @@ void SyncSubscriber::delete_from_remote(const Message &message) {
   broker->publish(Message{TOPIC::REMOVE_ENTRY, fentry});
   end_remote_sync();
 }
-
-// void SyncSubscriber::start_remote_sync() {
-//   std::unique_lock lk{mx};
-//   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-//   if (remote_transfer_count == 0) {
-//     broker->publish(Message{TOPIC::INIT_SERVER_SYNC});
-//   }
-// }
 
 void SyncSubscriber::end_remote_sync() {
   std::unique_lock lk{mx};

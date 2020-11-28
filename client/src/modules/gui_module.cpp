@@ -16,10 +16,22 @@ GuiModule::~GuiModule() {
 
 void GuiModule::init_sub_list() {
   broker = Broker::getInstance();
-  broker->subscribe(TOPIC::NEW_FILE, PRIORITY::HIGH,
+  broker->subscribe(TOPIC::NEW_LIVE, PRIORITY::HIGH,
                     std::bind(&GuiModule::on_transfer, instance.get(),
                               std::placeholders::_1));
-  broker->subscribe(TOPIC::FILE_DELETED, PRIORITY::HIGH,
+  broker->subscribe(TOPIC::NEW_OFFLINE, PRIORITY::HIGH,
+                    std::bind(&GuiModule::on_transfer, instance.get(),
+                              std::placeholders::_1));
+  broker->subscribe(TOPIC::NEW_SERVER, PRIORITY::HIGH,
+                    std::bind(&GuiModule::on_transfer, instance.get(),
+                              std::placeholders::_1));
+  broker->subscribe(TOPIC::DELETE_LIVE, PRIORITY::HIGH,
+                    std::bind(&GuiModule::on_transfer, instance.get(),
+                              std::placeholders::_1));
+  broker->subscribe(TOPIC::DELETE_OFFLINE, PRIORITY::HIGH,
+                    std::bind(&GuiModule::on_transfer, instance.get(),
+                              std::placeholders::_1));
+  broker->subscribe(TOPIC::DELETE_SERVER, PRIORITY::HIGH,
                     std::bind(&GuiModule::on_transfer, instance.get(),
                               std::placeholders::_1));
   broker->subscribe(TOPIC::INIT_SERVER_SYNC, PRIORITY::HIGH,

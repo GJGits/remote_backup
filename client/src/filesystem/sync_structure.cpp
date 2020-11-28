@@ -44,10 +44,14 @@ void SyncStructure::restore() {
       server_news++;
     }
 
-    if (!std::filesystem::exists(path)) {
-      producer = entry_producer::local;
+    if (!std::filesystem::exists(path) && producer == entry_producer::local) {
       status = entry_status::delete_;
     }
+
+    // if (!std::filesystem::exists(path) && producer == entry_producer::server) {
+    //   producer = entry_producer::local;
+    //   status = entry_status::delete_;
+    // }
 
     size_t nchunks = (size_t)j["entries"][x]["nchunks"].get<int>();
     std::shared_ptr<FileEntry> entry{
@@ -145,6 +149,12 @@ std::vector<std::shared_ptr<FileEntry>> SyncStructure::get_entries() {
   return entries;
 }
 
-void SyncStructure::reset_remote_news() { server_news = 0; }
-size_t SyncStructure::get_remote_news() const { return server_news; }
+void SyncStructure::reset_remote_news() {
+  std::unique_lock lk{mx};
+  server_news = 0;
+}
+size_t SyncStructure::get_remote_news() {
+  std::unique_lock lk{mx};
+  return server_news;
+}
 size_t SyncStructure::get_last_check() const { return last_check; }
