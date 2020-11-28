@@ -33,13 +33,13 @@ private:
   http::request<http::vector_body<char>> put_prototype;
   http::request<http::vector_body<char>> get_prototype;
   http::request<http::vector_body<char>> delete_prototype;
-  void read_info();
   void fill_headers(http::request<http::vector_body<char>> &req,
                     size_t size = 0);
   RestClient();
 
 public:
   ~RestClient();
+  void read_info();
   void post_chunk(std::tuple<std::shared_ptr<char[]>, size_t> &chunk,
                             const std::string &target);
   std::vector<char> get_chunk(const std::string &target);

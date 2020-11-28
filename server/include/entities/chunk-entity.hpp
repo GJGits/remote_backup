@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include "../dtos/post_chunk_dto.hpp"
-#include "../dtos/get_chunk_dto.hpp"
+
 
 class ChunkEntity {
 private:
@@ -9,8 +9,8 @@ private:
     int id_chunk;
     std::string path_file;
     std::string file_name;
-    int last_mod;
     int num_chunks;
+
 
 public:
     ChunkEntity(const PostChunkDTO &post_chunk);
@@ -19,7 +19,6 @@ public:
     int getIdChunk() const;
     std::string getPathFile() const;
     std::string getFileName() const;
-    int getLastMod() const;
     int getNumChunks() const;
 
 };

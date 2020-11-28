@@ -1,13 +1,15 @@
 #include "../../include/filesystem/sync_structure.hpp"
 
-SyncStructure::SyncStructure() : server_ack{false}, last_check{0} {
+SyncStructure::SyncStructure()
+    : server_news{0}, server_ack{false}, last_check{0} {
   std::clog << "sync_struct init\n";
 }
 
 SyncStructure::~SyncStructure() { std::clog << "sync_struct destroy...\n"; }
 
 void SyncStructure::store() {
-  if (!structure.empty() && server_ack) {
+
+  if (server_ack) {
     std::ofstream o{CLIENT_STRUCT};
     json jstru = {{"entries", json::array()},
                   {"last_check", (int)std::time(nullptr)}};
@@ -17,9 +19,12 @@ void SyncStructure::store() {
     }
     o << jstru << "\n";
   }
+  structure.clear();
+  server_ack = false;
 }
 
 void SyncStructure::restore() {
+
   std::ifstream i{CLIENT_STRUCT};
   i.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   json j;
@@ -31,18 +36,22 @@ void SyncStructure::restore() {
         (entry_producer)j["entries"][x]["producer"].get<int>();
     size_t last_change = j["entries"][x]["last_change"].get<int>();
 
-    entry_status status = entry_status::synced;
+    entry_status status = (entry_status)j["entries"][x]["status"].get<int>();
 
-    if (std::filesystem::exists(path) ||
-        (!std::filesystem::exists(path) &&
-         (entry_status)j["entries"][x]["status"].get<int>() ==
-             entry_status::new_)) {
-      status = (entry_status)j["entries"][x]["status"].get<int>();
-    } else if (!std::filesystem::exists(path) &&
-               (entry_status)j["entries"][x]["status"].get<int>() ==
-                   entry_status::synced) {
+    if (producer == entry_producer::server &&
+        (entry_status)j["entries"][x]["status"].get<int>() ==
+            entry_status::new_) {
+      server_news++;
+    }
+
+    if (!std::filesystem::exists(path) && producer == entry_producer::local) {
       status = entry_status::delete_;
     }
+
+    // if (!std::filesystem::exists(path) && producer == entry_producer::server) {
+    //   producer = entry_producer::local;
+    //   status = entry_status::delete_;
+    // }
 
     size_t nchunks = (size_t)j["entries"][x]["nchunks"].get<int>();
     std::shared_ptr<FileEntry> entry{
@@ -55,8 +64,7 @@ void SyncStructure::update_from_fs() {
   for (const auto &p :
        std::filesystem::recursive_directory_iterator(SYNC_ROOT)) {
     std::string path = p.path().string();
-    if (!(path.rfind(TMP_PATH, 0) == 0) && !(path.rfind(BIN_PATH, 0) == 0) &&
-        p.is_regular_file()) {
+    if (p.is_regular_file()) {
       std::shared_ptr<FileEntry> entry{
           new FileEntry{path, entry_producer::local, entry_status::new_}};
       // secondo caso possibile solo per rename di cartella che
@@ -65,8 +73,9 @@ void SyncStructure::update_from_fs() {
       if ((entry->get_last_change() > last_check &&
            std::filesystem::file_size(path) > 0) ||
           (structure.find(path) == structure.end() &&
-           std::filesystem::file_size(path) > 0))
+           std::filesystem::file_size(path) > 0)) {
         add_entry(entry);
+      }
     }
   }
 }
@@ -91,6 +100,7 @@ void SyncStructure::update_from_remote() {
       std::shared_ptr<FileEntry> entry{new FileEntry{
           path, entry_producer::server, nchunks, last_change, status}};
       add_entry(entry);
+      server_news++;
     }
     current_page++;
   }
@@ -98,6 +108,7 @@ void SyncStructure::update_from_remote() {
 }
 
 void SyncStructure::add_entry(const std::shared_ptr<FileEntry> &entry) {
+  std::unique_lock lk{mx};
   std::string path = entry->get_path();
   if (structure.find(path) == structure.end()) {
     structure[path] = entry;
@@ -108,18 +119,20 @@ void SyncStructure::add_entry(const std::shared_ptr<FileEntry> &entry) {
 }
 
 void SyncStructure::remove_entry(const std::shared_ptr<FileEntry> &entry) {
-  std::unique_lock lk{m};
+  std::unique_lock lk{mx};
   structure.erase(entry->get_path());
 }
 
 std::optional<std::shared_ptr<FileEntry>>
 SyncStructure::get_entry(const std::string &path) {
+  std::unique_lock lk{mx};
   return structure.find(path) != structure.end()
              ? std::optional<std::shared_ptr<FileEntry>>{structure[path]}
              : std::nullopt;
 }
 
 std::vector<std::string> SyncStructure::get_paths() {
+  std::unique_lock lk{mx};
   std::vector<std::string> paths;
   for (const auto &[path, entry] : structure) {
     paths.push_back(path);
@@ -128,6 +141,7 @@ std::vector<std::string> SyncStructure::get_paths() {
 }
 
 std::vector<std::shared_ptr<FileEntry>> SyncStructure::get_entries() {
+  std::unique_lock lk{mx};
   std::vector<std::shared_ptr<FileEntry>> entries{};
   for (const auto &[key, entry] : structure) {
     entries.push_back(entry);
@@ -135,4 +149,12 @@ std::vector<std::shared_ptr<FileEntry>> SyncStructure::get_entries() {
   return entries;
 }
 
+void SyncStructure::reset_remote_news() {
+  std::unique_lock lk{mx};
+  server_news = 0;
+}
+size_t SyncStructure::get_remote_news() {
+  std::unique_lock lk{mx};
+  return server_news;
+}
 size_t SyncStructure::get_last_check() const { return last_check; }

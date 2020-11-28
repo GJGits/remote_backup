@@ -7,9 +7,11 @@ int DBRepository::getDBbyUsername(const std::string &username) {
   std::list<std::string> entries_of_query;
   entries_of_query.push_back(username);
   res = select_query(query, entries_of_query, 0);
-  res->next();
+  if(res->next()){
   int db_selected = res->getInt("db");
   return db_selected;
+  }
+  throw CredentialsNotValidException(); 
 }
 
 size_t DBRepository::insertUsernameInDB(const std::string &username) {

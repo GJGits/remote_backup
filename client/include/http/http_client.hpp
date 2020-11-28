@@ -31,11 +31,6 @@ private:
   friend class Singleton;
   const char *host = "remote_backup_nginx-server_1";
   const char *port = "80";
-  //std::mutex mu;
-  //net::io_context ioc;
-  //tcp::resolver resolver{ioc};
-  //beast::tcp_stream stream{ioc};
-  //boost::asio::ip::basic_resolver_results<boost::asio::ip::tcp> results;
 
   HTTPClient();
 

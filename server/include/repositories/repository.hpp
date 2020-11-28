@@ -4,6 +4,7 @@
 #include <string>
 #include "../common/utility.hpp"
 #include "../entities/db-connect.hpp"
+#include "../exceptions/exceptions.hpp"
 
 class Repository {
 private:
@@ -13,6 +14,7 @@ private:
       std::unique_ptr<sql::Statement> stmt;
       std::shared_ptr<sql::mysql::MySQL_Connection> mysqlConn =
               DBConnect::getConnection(db_selected);
+
       int i, size = entries_of_query.size();
       for (i = 0; i < size; i++) {
           entries_of_query.push_back(
@@ -30,13 +32,19 @@ private:
           size--;
       }
       query = query + query_splitted[i];
+
       return std::unique_ptr<sql::Statement>{std::move(mysqlConn->createStatement())};
   }
+  
+  
+  
+
 
 protected:
   bool update_query(std::string &query,
                     std::list<std::string> &entries_of_query,
                     size_t db_selected) {
+                                  
       std::unique_ptr<sql::Statement> stmt = common_preparation_query(query, entries_of_query, db_selected);
       stmt->execute(query);
       return true;
@@ -45,8 +53,11 @@ protected:
   std::unique_ptr<sql::ResultSet>
   select_query(std::string &query, std::list<std::string> &entries_of_query,
                size_t db_selected) {
+
       std::unique_ptr<sql::Statement> stmt = common_preparation_query(query, entries_of_query, db_selected);
-      return std::unique_ptr<sql::ResultSet>{
-              std::move(stmt->executeQuery(query))};
+      std::unique_ptr<sql::ResultSet> res = std::unique_ptr<sql::ResultSet>{std::move(stmt->executeQuery(query))};
+
+      return res;  
   }
+
 };

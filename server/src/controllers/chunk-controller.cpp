@@ -5,7 +5,8 @@ const std::regex ChunkController::get_get_chunk_rgx(){return get_chunk_rgx;}
 
 const http::server::reply
 ChunkController::handle(const http::server::request &req) {
-  Subject sub = JWT::validateToken(req);
+  std::shared_ptr<JWT> jwt = JWT::getInstance();
+  Subject sub = jwt->validateToken(req);
 
   if (req.method == "POST") {
     std::smatch match;
@@ -33,7 +34,7 @@ ChunkController::handle(const http::server::request &req) {
 };
 
 void ChunkController::post_file_chunk(const PostChunkDTO &post_chunk) {
-  DurationLogger logger{"POST_CHUNK"};
+  // DurationLogger logger{"POST_CHUNK"};
   std::shared_ptr<ChunkService> chunk_service = ChunkService::getInstance();
   chunk_service->file_chunk_add(post_chunk);
 }

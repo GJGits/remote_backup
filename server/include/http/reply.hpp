@@ -26,6 +26,7 @@ namespace server {
 struct reply {
   /// The status of the reply.
   enum status_type {
+    surplus = 139,
     ok = 200,
     created = 201,
     accepted = 202,
@@ -38,6 +39,7 @@ struct reply {
     unauthorized = 401,
     forbidden = 403,
     not_found = 404,
+    size_exceeded = 413,
     internal_server_error = 500,
     not_implemented = 501,
     bad_gateway = 502,

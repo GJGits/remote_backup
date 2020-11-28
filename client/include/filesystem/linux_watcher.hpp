@@ -75,6 +75,10 @@ public:
    * stop del modulo specifico
    */
   void stop();
+  
+  void clear_events(){
+  events.clear();
+  }
 
   ~LinuxWatcher();
 };

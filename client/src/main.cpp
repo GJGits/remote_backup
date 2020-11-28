@@ -1,9 +1,9 @@
-#include <csignal>
-#include <iostream>
 #include "../include/filesystem/linux_watcher.hpp"
 #include "../include/modules/gui_module.hpp"
-#include "../include/pubsub/struct_sub.hpp"
+#include "../include/modules/struct_module.hpp"
 #include "../include/pubsub/sync_sub.hpp"
+#include <csignal>
+#include <iostream>
 
 void signalHandler(int signum) {
   // cleanup and close up stuff here
@@ -18,9 +18,8 @@ int main() {
   // register signal SIGINT and signal handler
   signal(SIGTERM, signalHandler);
 
-  std::shared_ptr<StructSubscriber> struct_sub =
-      StructSubscriber::getInstance();
-  struct_sub->init_sub_list();
+  std::shared_ptr<StructModule> struct_module = StructModule::getInstance();
+  struct_module->init_sub_list();
 
   std::shared_ptr<SyncSubscriber> sync_sub = SyncSubscriber::getInstance();
   sync_sub->init_sub_list();
@@ -32,9 +31,9 @@ int main() {
   gui_module->init_sub_list();
 
   // registro moduli
-  gui_module->add_module(struct_sub);
-  gui_module->add_module(sync_sub);
-  gui_module->add_module(watcher);
+  gui_module->add_module("struct", struct_module);
+  gui_module->add_module("sync", sync_sub);
+  gui_module->add_module("watcher", watcher);
 
   // azione bloccante, questo modulo rimane in vita per tutta
   // la durata dell'applicazione, idealmente infatti e' il client

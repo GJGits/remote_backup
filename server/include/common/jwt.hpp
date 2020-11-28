@@ -1,8 +1,13 @@
 #pragma once
 
+#include "../dtos/subject.hpp"
+#include "../http/request.hpp"
 #include "base64.hpp"
+#include "duration.hpp"
 #include "hmac-sha256.hpp"
 #include "json.hpp"
+#include "jwt_cache_entry.hpp"
+#include "singleton.hpp"
 #include "utility.hpp"
 #include <ctime>
 #include <fstream>
@@ -11,43 +16,35 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
-#include "../http/request.hpp"
-#include "duration.hpp"
-#include "../dtos/subject.hpp"
-#include "jwt_cache_entry.hpp"
 
 using json = nlohmann::json;
 inline static std::regex time_rgx{"^\\d+$"};
 
-class JWT {
+class JWT : public Singleton<JWT> {
 
 private:
+  friend class Singleton;
   std::unordered_map<std::string, JWTCacheEntry> tok_cache;
   inline static std::regex raw_tok_rgx{
       "^[a-zA-Z0-9+=\\/]+\\.[a-zA-Z0-9+=\\/]+\\.[a-zA-Z0-9+=\\/]+$"};
   std::string token_header;
-  inline static JWT *instance = nullptr;
   std::string secret;
   int expiration;
 
-  static JWT *getInstance() {
-    if (instance == nullptr) {
-      instance = new JWT{};
-      json config;
-      std::ifstream i("../config/server-struct.json");
-      i >> config;
-      json jwt_header = {{"alg", "HS256"}, {"typ", "JWT"}};
-      instance->token_header = macaron::Base64::Encode(jwt_header.dump());
-      instance->secret = config["token-conf"]["secret"];
-      instance->expiration = config["token-conf"]["expiration"];
-    }
-    return instance;
+  JWT() {
+    json config;
+    std::ifstream i("../config/server-struct.json");
+    i >> config;
+    json jwt_header = {{"alg", "HS256"}, {"typ", "JWT"}};
+    token_header = macaron::Base64::Encode(jwt_header.dump());
+    secret = config["token-conf"]["secret"];
+    expiration = config["token-conf"]["expiration"];
   }
 
 public:
-  static int getExpiration() { return getInstance()->expiration; }
+  int getExpiration() { return getInstance()->expiration; }
 
-  static std::string generateToken(const Subject &sub, int expiration) {
+  std::string generateToken(const Subject &sub, int expiration) {
     json jwt_payload = {{"sub", sub.get_sub()},
                         {"db", sub.get_db_id()},
                         {"device_id", sub.get_device_id()},
@@ -66,8 +63,8 @@ public:
     return getInstance()->token_header + "." + payload + "." + sign;
   }
 
-  static Subject validateToken(const http::server::request &req) {
-    //DurationLogger logger{"VALIDATION"};
+  Subject validateToken(const http::server::request &req) {
+    // DurationLogger logger{"VALIDATION"};
     for (http::server::header h : req.headers) {
       if (h.name.compare("Authorization") == 0) {
         std::vector<std::string> tokens = Utility::split(h.value, ' ');

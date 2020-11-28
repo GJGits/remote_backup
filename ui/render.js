@@ -5,6 +5,9 @@ const getMAC = require('getmac').default
 const CONFIG_SYNC = "../client/sync2/"
 //const mac = getMAC();
 const mac = "aa:bb:cc:dd:ee:ff"
+var timer; // timer usato per noconn
+
+var transfers = [];
 
 var change_status = (status) => {
     let stats = ["login", "signup", "logged"];
@@ -17,6 +20,10 @@ var change_status = (status) => {
             $("#" + stats[i]).hide();
     }
     $(".alert.alert-danger.error").hide();
+    if (index === 2 && timer) {
+        clearInterval(timer);
+        timer = undefined;
+    }
 }
 
 var update_usage = () => {
@@ -34,12 +41,19 @@ var update_usage = () => {
 /* MESSAGES HANDLERS */
 
 ipcRenderer.on('transfer', (event, arg) => {
+    console.log(arg);
     if (arg.status === 0) {
-        $("#loading").hide();
-        $("#synced").show();
-        $("#noconn").hide();
+        let index = transfers.findIndex((el) => { el.path === arg.path });
+        if (index)
+            transfers.splice(index, 1);
+        if (transfers.length === 0) {
+            $("#loading").hide();
+            $("#synced").show();
+            $("#noconn").hide();
+        }
         update_usage();
     } else {
+        transfers.push(arg);
         $("#loading").show();
         $("#synced").hide();
         $("#noconn").hide();
@@ -47,16 +61,28 @@ ipcRenderer.on('transfer', (event, arg) => {
 });
 
 ipcRenderer.on('background-message', (event, arg) => {
-    console.log("render receiced:", arg);
     $("#loading").hide();
     $("#synced").hide();
     $("#noconn").show();
+    let count = 30;
+    timer = setInterval(function () {
+        $("#timer").text("" + count);
+        count--;
+        if (count == 0)
+            count = 30;
+    }, 1000);
 });
 
 ipcRenderer.on('status-changed', (event, arg) => {
     arg = arg.replace("\n", "");
     console.log("status changed:", arg);
     change_status(arg);
+});
+
+ipcRenderer.on('info', (event, arg) => {
+    console.log("info:", arg);
+    $("#name").text(arg.user);
+    $("#device").text(arg.device);
 });
 
 ipcRenderer.on('sync', (event, arg) => {
@@ -103,10 +129,12 @@ $(document).ready(function () {
             ipcRenderer.send('config', { username: username, token: data.token });
             change_status("logged");
         }).fail(function (error) {
+            console.log(error);
             $(".alert.alert-danger.error").show();
             if (error.status === 404) {
                 $(".alert.alert-danger.error").text("server non raggiungibile");
             } else {
+                console.log("entro");
                 $(".alert.alert-danger.error").text(error.responseJSON.error);
             }
 

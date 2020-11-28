@@ -15,6 +15,12 @@ struct CredentialsNotValidException : public std::exception {
   }
 };
 
+struct exceededSize : public std::exception {
+  const char *what() const throw() {
+    return "Exceded maximum allowed space";
+  }
+};
+
 struct WrongRquestFormat : public std::exception {
   const char *what() const throw() {
     Logger::log("The format of the request is wrong!");

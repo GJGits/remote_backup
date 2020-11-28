@@ -29,16 +29,27 @@ void request_handler::handle_request(const request &req, reply &rep) {
     return;
 
   } catch (CredentialsNotValidException &e) {
+    std::clog << e.what() << "\n";
     rep = MakeReply::make_1line_jsonReply<std::string>(
         "error", e.what(), http::server::reply::bad_request);
     return;
 
-  } catch (WrongRquestFormat &e) {
+  } 
+  catch (exceededSize &e) {
+    std::clog << e.what() << "\n";
+    rep = MakeReply::make_1line_jsonReply<std::string>(
+        "error", e.what(), http::server::reply::size_exceeded);
+    return;
+
+  }
+  catch (WrongRquestFormat &e) {
+    std::clog << e.what() << "\n";
     rep = MakeReply::make_1line_jsonReply<std::string>(
         "error", e.what(), http::server::reply::bad_request);
     return;
 
   } catch (CredentialsExpired &e) {
+    std::clog << e.what() << "\n";
     rep = MakeReply::make_1line_jsonReply<std::string>(
         "error", e.what(), http::server::reply::internal_server_error);
     return;
@@ -65,14 +76,17 @@ void request_handler::handle_request(const request &req, reply &rep) {
         "error", e.what(), http::server::reply::internal_server_error);
     return;
   } catch (nlohmann::json::exception &e) {
+    std::clog << e.what() << "\n";
     rep = MakeReply::make_1line_jsonReply<std::string>(
         "error", e.what(), http::server::reply::internal_server_error);
     return;
   } catch (InvalidJWT &e) {
+    std::clog << e.what() << "\n";
     rep = MakeReply::make_1line_jsonReply<std::string>(
         "error", e.what(), http::server::reply::unauthorized);
     return;
   } catch (Base64DecodeFailed &e) {
+    std::clog << e.what() << "\n";
     rep = MakeReply::make_1line_jsonReply<std::string>(
         "error", e.what(), http::server::reply::internal_server_error);
     return;
@@ -81,6 +95,7 @@ void request_handler::handle_request(const request &req, reply &rep) {
         "error", e.what(), http::server::reply::internal_server_error);
     return;
   } catch (MissingElementInDB &e) {
+    std::clog << e.what() << "\n";
     rep = MakeReply::make_1line_jsonReply<std::string>(
         "error", e.what(), http::server::reply::internal_server_error);
     return;

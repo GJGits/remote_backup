@@ -7,7 +7,6 @@ std::string PostChunkDTO::getchunk_hash() const { return chunk_hash; }
 int PostChunkDTO::getnum_chunks() const { return num_chunks; }
 std::string PostChunkDTO::getfile_path() const { return file_path; }
 std::string PostChunkDTO::getfile_name() const { return file_name; }
-int PostChunkDTO::gettimestamp_locale() const { return timestamp_locale; }
 std::shared_ptr<std::vector<char>> PostChunkDTO::getchunk_body() const {
   return chunk_body;
 }
@@ -20,7 +19,6 @@ const void PostChunkDTO::fill(const http::server::request &req, size_t ck_size) 
   num_chunks = std::stoi(uri_elements[4]);
   file_name = std::move(uri_elements[5]);
   file_path = "../../filesystem/" + get_subject().get_sub() + "/" + file_name;
-  timestamp_locale = std::stoi(uri_elements[6]);
   std::move(req.body.get()->begin(), req.body.get()->end(),
             std::back_inserter(*chunk_body));
 }

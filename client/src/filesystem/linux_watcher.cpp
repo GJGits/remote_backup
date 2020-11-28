@@ -80,13 +80,19 @@ void LinuxWatcher::add_watch(const std::string &path) {
 }
 
 bool LinuxWatcher::remove_watch(const std::string &path) {
-  if (path_wd_map.find(path) == path_wd_map.end() ||
-      path.compare(root_to_watch) == 0)
-    return false;
-  inotify_rm_watch(inotify_descriptor, path_wd_map[path]);
-  wd_path_map.erase(path_wd_map[path]);
-  path_wd_map.erase(path);
-  return true;
+  if (path_wd_map.find(path) != path_wd_map.end()) {
+    int wd = inotify_rm_watch(inotify_descriptor, path_wd_map[path]);
+    wd_path_map.erase(path_wd_map[path]);
+    path_wd_map.erase(path);
+    path_wd_map[path] = wd;
+    wd_path_map[wd] = path;
+    for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
+      if (p.is_directory()) {
+        remove_watch(p.path().string());
+      }
+    }
+  }
+  return false;
 }
 
 void LinuxWatcher::handle_events() {
@@ -94,8 +100,9 @@ void LinuxWatcher::handle_events() {
   watcher = std::move(std::thread{[&]() {
     std::clog << "Start monitoring... [thread " << std::this_thread::get_id()
               << "]\n";
-    std::string tmp_path{TMP_PATH};
-    std::string bin_path{BIN_PATH};
+    // std::string tmp_path{TMP_PATH};
+    // std::string bin_path{BIN_PATH};
+    clear_events();
     while (running) {
       std::clog << "Wating for an event...\n";
       // Some systems cannot read integer variables if they are not
@@ -149,7 +156,6 @@ void LinuxWatcher::handle_events() {
           const std::string path =
               wd_path_map[event->wd] + "/" + std::string{event->name};
 
-
           timer = TIMER;
 
           // eventi non presenti in inotify:
@@ -184,24 +190,10 @@ void LinuxWatcher::handle_events() {
 
           } break;
 
-            // to tmp -> non loggare ok
-            // from tmp -> non loggare, ma conserva cookie ok
-            // to sync -> loggo se from non da tmp
-            // rm tmp -> non loggare ok
-            // from sync -> loggo se to non bin
-
           default: {
 
-            uint32_t mask = event->mask;
-            if (((path.rfind(tmp_path, 0) == 0) && mask == 64) ||
-                ((path.rfind(bin_path, 0) == 0) && mask == 128) ||
-                (!(path.rfind(tmp_path, 0) == 0) &&
-                 !(path.rfind(bin_path, 0) == 0) &&
-                 (mask == 2 || mask == 64 || mask == 128 || mask == 256 ||
-                  mask == 512))) {
-              LinuxEvent ev{path, event->cookie, event->mask};
-              events[path] = ev;
-            }
+            LinuxEvent ev{path, event->cookie, event->mask};
+            events[path] = ev;
 
           } break;
           }
@@ -218,48 +210,32 @@ void LinuxWatcher::handle_events() {
             for (auto &p :
                  std::filesystem::recursive_directory_iterator(path)) {
               if (p.is_regular_file()) {
-                if (!(path.rfind(tmp_path, 0) == 0)) {
-                  std::string f_path = p.path().string();
-                  LinuxEvent ev{f_path, 0, 128};
-                  eves.push_back(ev);
-                }
+                std::string f_path = p.path().string();
+                LinuxEvent ev{f_path, 0, 128};
+                eves.push_back(ev);
               }
             }
           }
         }
-
-        // ordine descrescente (cookie, mask)
-        std::sort(eves.begin(), eves.end(),
-                  [&](const LinuxEvent &ev1, const LinuxEvent &ev2) {
-                    if (ev1.get_cookie() != ev2.get_cookie())
-                      return ev1.get_cookie() > ev2.get_cookie();
-                    return ev1.get_mask() > ev2.get_mask();
-                  });
-
+        std::clog << "eves size: " << eves.size() << "\n";
         for (auto it = eves.begin(); it != eves.end(); it++) {
           std::string path = it->get_path();
           uint32_t mask = it->get_mask();
-          // 1. se to sync e from tmp or to bin from sync -> skippo
-          if ((!(path.rfind(tmp_path, 0) == 0) &&
-               !(path.rfind(bin_path, 0) == 0) &&
-               (mask == 128 && (it + 1) != eves.end() &&
-                (it + 1)->get_mask() == 64 &&
-                (it + 1)->get_path().rfind(tmp_path, 0) == 0)) ||
-              (mask == 128 && path.rfind(bin_path, 0) == 0)) {
-            it++;
-            continue;
-          }
-          // 2. altro -> invio messaggio
           if (mask == 2 || mask == 128 || mask == 256) {
             std::shared_ptr<FileEntry> entry{
                 new FileEntry{path, entry_producer::local, entry_status::new_}};
-            broker->publish(Message{TOPIC::NEW_FILE, entry});
+            broker->publish(Message{TOPIC::NEW_LIVE, entry});
           }
           if (mask == 64 || mask == 512) {
-            std::shared_ptr<FileEntry> entry{
-                new FileEntry{path, entry_producer::local, entry_status::delete_}};
-            broker->publish(Message{TOPIC::FILE_DELETED, entry});
+            std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+            std::optional<std::shared_ptr<FileEntry>> val =
+                sync->get_entry(path);
+            if (val.has_value()) {
+              std::shared_ptr<FileEntry> entry{new FileEntry{
+                  path, entry_producer::local, entry_status::delete_}};
+              broker->publish(Message{TOPIC::DELETE_LIVE, val.value()});
             }
+          }
         }
 
         events.clear();
