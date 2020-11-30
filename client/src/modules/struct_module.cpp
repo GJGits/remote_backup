@@ -21,8 +21,11 @@ void StructModule::start() {
     std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
     sync->restore();
     sync->update_from_remote();
+    std::clog << "a1\n";
     sync->update_from_fs();
+    std::clog << "a2\n";
     notify_news();
+    std::clog << "a3\n";
     std::clog << "Struct module start...\n";
   }
 }
@@ -56,7 +59,7 @@ void StructModule::on_delete_entry(const Message &message) {
 void StructModule::notify_news() {
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   if (sync->get_remote_news() == 0) {
-    broker->publish(Message{TOPIC::FINISH_SERVER_SYNC});
+    broker->signal(SIGNAL::FINISH_SERVER_SYNC);
   }
   for (const auto &entry : sync->get_entries()) {
     if (entry->get_status() == entry_status::new_ &&

@@ -38,6 +38,8 @@ protected:
 public:
   ModuleManager() {}
   virtual void add_module(const std::string &name, const std::shared_ptr<Module> &module) = 0;
+  virtual void init_sub_list() = 0;
+  virtual void register_signal() = 0;
   virtual void start() = 0;
   virtual void close() = 0;
 };

@@ -25,12 +25,13 @@ private:
 public:
   ~GuiModule();
   void init_sub_list();
+  void register_signal();
   void on_transfer(const Message &message);
-  void on_init_remote_sync(const Message &message);
-  void on_finish_remote_sync(const Message &message);
-  void on_easy_exception(const Message &message);
-  void on_auth_failed(const Message &message);
-  void on_connection_lost(const Message &message);
+  void on_init_remote_sync();
+  void on_finish_remote_sync();
+  void on_easy_exception();
+  void on_auth_failed();
+  void on_connection_lost();
   void add_module(const std::string &name, const std::shared_ptr<Module> &module);
   void start();
   void close();

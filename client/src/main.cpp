@@ -29,6 +29,7 @@ int main() {
 
   std::shared_ptr<GuiModule> gui_module = GuiModule::getInstance();
   gui_module->init_sub_list();
+  gui_module->register_signal();
 
   // registro moduli
   gui_module->add_module("struct", struct_module);

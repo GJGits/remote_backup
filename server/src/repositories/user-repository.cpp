@@ -109,25 +109,43 @@ json UserRepository::get_status_file(const Subject &subject, int page_num,
 
   size_t db_selected = subject.get_db_id();
   std::unique_ptr<sql::ResultSet> res;
-  std::string query =
-      "select t1.c_path, t1.num_chunks, t1.c_lastmod, t2.last_page, case when "
-      "t1.check1 = 0  then 'deleted' else 'updated' end as command from "
-      "(select distinct c_path, num_chunks, c_lastmod, device_id as check1 "
-      "from chunks where c_username = '?' AND (device_id != " +
-      std::to_string(subject.get_device_id()) + ") AND c_lastmod > " +
-      std::to_string(last_check) +
-      " "
-      "limit " +
-      std::to_string(page_num * ENTRIES_PAGE) + ", " +
-      std::to_string((page_num + 1) * ENTRIES_PAGE) +
-      ") as t1, (select(ceil((count(distinct c_path) / " +
-      std::to_string(ENTRIES_PAGE) +
-      "))) -1 as "
-      "last_page from chunks where c_username = '?' AND (device_id != " +
-      std::to_string(subject.get_device_id()) +
-      ") AND "
-      "c_lastmod > " +
-      std::to_string(last_check) + ") as t2;";
+  std::string query = "";
+
+  if (last_check == 0) {
+    query =
+        "select t1.c_path, t1.num_chunks, t1.c_lastmod, t2.last_page, case "
+        "when "
+        "t1.check1 = 0  then 'deleted' else 'updated' end as command from "
+        "(select distinct c_path, num_chunks, c_lastmod, device_id as check1 "
+        "from chunks where c_username = '?' AND device_id != 0 limit " +
+        std::to_string(page_num * ENTRIES_PAGE) + ", " +
+        std::to_string((page_num + 1) * ENTRIES_PAGE) +
+        ") as t1, (select(ceil((count(distinct c_path) / " +
+        std::to_string(ENTRIES_PAGE) +
+        "))) -1 as last_page from chunks where c_username = '?' AND (device_id "
+        "!= 0 )) as t2;";
+  } else {
+    query =
+        "select t1.c_path, t1.num_chunks, t1.c_lastmod, t2.last_page, case "
+        "when "
+        "t1.check1 = 0  then 'deleted' else 'updated' end as command from "
+        "(select distinct c_path, num_chunks, c_lastmod, device_id as check1 "
+        "from chunks where c_username = '?' AND (device_id != " +
+        std::to_string(subject.get_device_id()) + ") AND c_lastmod > " +
+        std::to_string(last_check) +
+        " "
+        "limit " +
+        std::to_string(page_num * ENTRIES_PAGE) + ", " +
+        std::to_string((page_num + 1) * ENTRIES_PAGE) +
+        ") as t1, (select(ceil((count(distinct c_path) / " +
+        std::to_string(ENTRIES_PAGE) +
+        "))) -1 as "
+        "last_page from chunks where c_username = '?' AND (device_id != " +
+        std::to_string(subject.get_device_id()) +
+        ") AND "
+        "c_lastmod > " +
+        std::to_string(last_check) + ") as t2;";
+  }
 
   std::list<std::string> entries_of_query;
   entries_of_query.push_back(subject.get_sub());
@@ -153,5 +171,6 @@ json UserRepository::get_status_file(const Subject &subject, int page_num,
     }
   } else
     j["last_page"] = 0;
+  std::clog << "res dump: " << j.dump() << "\n";
   return j;
 }
