@@ -100,9 +100,6 @@ void LinuxWatcher::handle_events() {
   watcher = std::move(std::thread{[&]() {
     std::clog << "Start monitoring... [thread " << std::this_thread::get_id()
               << "]\n";
-    // std::string tmp_path{TMP_PATH};
-    // std::string bin_path{BIN_PATH};
-    clear_events();
     while (running) {
       std::clog << "Wating for an event...\n";
       // Some systems cannot read integer variables if they are not
@@ -156,90 +153,73 @@ void LinuxWatcher::handle_events() {
           const std::string path =
               wd_path_map[event->wd] + "/" + std::string{event->name};
 
-          timer = TIMER;
-
-          // eventi non presenti in inotify:
-          // 1073742080 -> copia incolla cartella da gui da fuori sync (con file
-          // e sotto cartelle) 1073741888 -> eliminazione cartella da gui (con
-          // file e sotto cartelle) 1073742336 -> eliminazione cartella da
-          // command line 1073741952 -> move da linea di comando riguardante una
-          // cartella 1073741888 -> move from cartella da terminale 1073741952
-          // -> move to cartella da terminale
-
-          switch (event->mask) {
-
-          case 1073742080: {
-            add_watch(path);
-          } break;
-
-          case 1073741952: {
-            add_watch(path);
-            LinuxEvent ev{path, 0, 1073741952};
-            events[path] = ev;
-          } break;
-
-          case 1073741888:
-          case 1073742336: {
-            std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-            for (std::string &sync_path : sync->get_paths()) {
-              if (!std::filesystem::exists(sync_path)) {
-                LinuxEvent ev{sync_path, 0, 64};
-                events[sync_path] = ev;
-              }
-            }
-
-          } break;
-
-          default: {
-
-            LinuxEvent ev{path, event->cookie, event->mask};
-            events[path] = ev;
-
-          } break;
-          }
+          strcpy((char *)event->name, path.c_str());
+          on_event(event);
         }
       }
       if (poll_num == 0) {
-
-        timer = WAIT;
-        std::vector<LinuxEvent> eves{};
-        for (const auto &[path, event] : events) {
-          if (event.get_mask() != 1073741952)
-            eves.push_back(event);
-          else {
-            for (auto &p :
-                 std::filesystem::recursive_directory_iterator(path)) {
-              if (p.is_regular_file()) {
-                std::string f_path = p.path().string();
-                LinuxEvent ev{f_path, 0, 128};
-                eves.push_back(ev);
-              }
-            }
-          }
-        }
-        std::clog << "eves size: " << eves.size() << "\n";
-        for (auto it = eves.begin(); it != eves.end(); it++) {
-          std::string path = it->get_path();
-          uint32_t mask = it->get_mask();
-          if (mask == 2 || mask == 128 || mask == 256) {
-            std::shared_ptr<FileEntry> entry{
-                new FileEntry{path, entry_producer::local, entry_status::new_}};
-            broker->publish(Message{TOPIC::NEW_LIVE, entry});
-          }
-          if (mask == 64 || mask == 512) {
-            std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
-            std::optional<std::shared_ptr<FileEntry>> val =
-                sync->get_entry(path);
-            if (val.has_value()) {
-              std::shared_ptr<FileEntry> entry{new FileEntry{
-                  path, entry_producer::local, entry_status::delete_}};
-              broker->publish(Message{TOPIC::DELETE_LIVE, val.value()});
-            }
-          }
-        }
-
-        events.clear();
+        on_timeout();
       }
     }
   }});
+}
+
+void LinuxWatcher::on_event(const struct inotify_event *event) {
+  timer = TIMER;
+  switch (event->mask) {
+  case (IN_CREATE | IN_ISDIR): {
+    add_watch(event->name);
+  } break;
+  case (IN_MOVED_TO | IN_ISDIR): {
+    add_watch(event->name);
+    LinuxEvent ev{event->name, 0, (IN_MOVED_TO | IN_ISDIR)};
+    events[event->name] = ev;
+  } break;
+  case (IN_MOVED_FROM | IN_ISDIR):
+  case (IN_DELETE | IN_ISDIR): {
+    std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+    for (std::string &sync_path : sync->get_paths()) {
+      if (!std::filesystem::exists(sync_path)) {
+        LinuxEvent ev{sync_path, 0, IN_MOVED_FROM};
+        events[sync_path] = ev;
+      }
+    }
+  } break;
+  default: {
+    LinuxEvent ev{event->name, event->cookie, event->mask};
+    events[event->name] = ev;
+  } break;
+  }
+}
+
+void LinuxWatcher::on_timeout() {
+  timer = WAIT;
+  for (const auto &[path, event] : events) {
+    uint32_t mask = event.get_mask();
+    if (mask == (IN_MOVED_TO | IN_ISDIR)) {
+      for (auto &p : std::filesystem::recursive_directory_iterator(path)) {
+        if (p.is_regular_file()) {
+          std::string f_path = p.path().string();
+          std::shared_ptr<FileEntry> entry{
+              new FileEntry{f_path, entry_producer::local, entry_status::new_}};
+          broker->publish(Message{TOPIC::NEW_LIVE, entry});
+        }
+      }
+    }
+    if (mask == IN_MODIFY || mask == IN_MOVED_TO || mask == IN_CREATE) {
+      std::shared_ptr<FileEntry> entry{
+          new FileEntry{path, entry_producer::local, entry_status::new_}};
+      broker->publish(Message{TOPIC::NEW_LIVE, entry});
+    }
+    if (mask == IN_MOVED_FROM || mask == IN_DELETE) {
+      std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
+      std::optional<std::shared_ptr<FileEntry>> val = sync->get_entry(path);
+      if (val.has_value()) {
+        std::shared_ptr<FileEntry> entry{
+            new FileEntry{path, entry_producer::local, entry_status::delete_}};
+        broker->publish(Message{TOPIC::DELETE_LIVE, val.value()});
+      }
+    }
+  }
+  events.clear();
 }

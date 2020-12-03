@@ -1,7 +1,7 @@
 #include "../../include/pubsub/broker.hpp"
 
 Broker::Broker()
-    : last_signal{SIGNAL::TASKS_EMPTY}, is_running{true}, working{false} {
+    : last_signal{SIGNAL::TASKS_EMPTY}, is_running{true} {
   for (ssize_t i = 0; i < 6; i++) {
     callers.emplace_back([this]() {
       while (is_running) {
@@ -103,7 +103,6 @@ void Broker::publish(const Message &message) {
 
 void Broker::signal(SIGNAL signal) {
   std::unique_lock lk{mu_task};
-  std::clog << "signal\n";
   // non voglio inviare due volte di seguito lo stesso segnale
   // ogni segnale inoltre va gestito in maniera sincrona
   if (signal != last_signal) {

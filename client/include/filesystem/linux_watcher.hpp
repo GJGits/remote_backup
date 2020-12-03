@@ -31,6 +31,9 @@ private:
   std::unordered_map<std::string, LinuxEvent> events;
   LinuxWatcher();
 
+  void on_event(const struct inotify_event* event);
+  void on_timeout();
+
 public:
   /**
    * Permette di aggiungere o modificare un watch all'inotify descriptor.
@@ -76,9 +79,5 @@ public:
    */
   void stop();
   
-  void clear_events(){
-  events.clear();
-  }
-
   ~LinuxWatcher();
 };
