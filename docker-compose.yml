@@ -1,13 +1,16 @@
 version: '3.1'
 services: 
     db:
-        image: mysql
+        image: mysql:5.7
         command: --default-authentication-plugin=mysql_native_password
         restart: always
         environment:
             MYSQL_ROOT_PASSWORD: example
         security_opt:
             - seccomp:unconfined
+        #command: --init-file /data/application/init.sql
+        volumes: 
+            - './db/init.sql:/data/application/init.sql'
     server:
         build: ./server
         ports: 

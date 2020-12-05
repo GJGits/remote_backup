@@ -21,11 +21,8 @@ void StructModule::start() {
     std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
     sync->restore();
     sync->update_from_remote();
-    std::clog << "a1\n";
     sync->update_from_fs();
-    std::clog << "a2\n";
     notify_news();
-    std::clog << "a3\n";
     std::clog << "Struct module start...\n";
   }
 }
