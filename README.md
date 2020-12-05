@@ -22,13 +22,12 @@ L'applicazione ha il compito di fornire un sistema di incremental backup del con
 * [Team](#Team)
 * [Environment(Docker)](#Environment)
     * [Aggiungere docker ad un gruppo (Linux)](Aggiungere_docker_ad_un_gruppo_(Linux))
-    * [Utilizzare la bash di docker per interagire col Server](#Utilizzare_bash_con_Server)
+    * [Interagire con un servizio](#interagire_con_servizio)
     * [Utilizzare MySQL con Docker](#Utilizzare_MySQL_con_Docker)
 * [Architettura applicazione](#Architettura_applicazione)
     * [Architettura Frontend](#Architettura_Frontend)
     * [Architettura Backend](#Architettura_Backend)
     * [Architettura DB](#Architettura_DB)
-* [Descrizione della directory della repository](#Descrizione_della_directory_della_repository)
 * [REST API](#REST_API)
 * [Descrizione processi](#Descrizione_processi) 
     * [Autenticazione](#Autenticazione)
@@ -36,9 +35,6 @@ L'applicazione ha il compito di fornire un sistema di incremental backup del con
          * [Utilizzare interfaccia grafica](#Utilizzare_interfaccia_grafica)
          * [Eseguire servizi Docker](#Eseguire_servizi_Docker)
     * [Eventi da monitorare](#Eventi_da_monitorare)
-         * [Creazione file](#Creazione_file)
-         * [Aggiornamento file](#Aggiornamento_file)
-         * [Eliminazione file](#Eliminazione_file)
 ## Team <a name="Team"></a>
 
 - <img src="imgs/marco_nanci_clemente.png" width="32" height="32"/> Marco Nanci Clemente      
@@ -71,17 +67,17 @@ Per utilizzare comodamente docker su Linux può risultare utile aggiungere docke
 
 4. Testare eseguendo il comando: `docker run hello-world`.
 
-### Utilizzare la bash di docker per interagire col Server <a name="Utilizzare_bash_con_Server"></a>
+### Utilizzare la bash di docker per interagire con un servizio <a name="interagire_con_servizio"></a>
 
 Dopo aver lanciato i vari servizi aprire una finestra di terminale ed eseguire il seguente comando:
 
-`docker exec -it remote_backup_server_1 /bin/bash`
+`docker exec -it remote_backup_<nome_servizio>_<id_progressivo_servizio> /bin/bash`
 
 ### Utilizzare MySQL con Docker <a name="Utilizzare_MySQL_con_Docker"></a>
 
 Dopo aver lanciato i vari servizi aprire una finestra di terminale ed eseguire i seguenti comandi in ordine:
 
-1. `docker exec -it remote_backup_db_1 /bin/bash`. Questo comando permette di utilizzare in maniera interattiva (tramite console) il container specificato. Se l'operazione va a buon fine l'username della console dovrebbe risultare qualcosa del tipo: `root@xxxxxxxxxxxx:`. Alle volte docker aggiunge un pedice alla fine del nome di un servizio, si consiglia di verificare il nome effettivo in caso di problemi eseguendo il comando `docker container ls`.
+1. `docker exec -it remote_backup_db_<id_progressivo_db> /bin/bash`.
 
 2. Una volta entrati all'interno del container, loggarsi tramite il comando `mysql -u root -p`. A questo punto verrà richiesta la password che nel nostro caso è `example`. 
 
@@ -101,66 +97,16 @@ Dopo aver lanciato i vari servizi aprire una finestra di terminale ed eseguire i
 
 ## Architettura applicazione<a name="Architettura_applicazione"></a>
 
-L'archetettura ad alto livello delle componenti che compongono l'applicazione è la seguente. Per ulteriori informazioni si rimanda alla sezione opportuna.
-
-![](imgs/design.png)
-
-Il supporto C++ alle varie componenti dell'applicazione viene fornito dalle librerie standard e da [boost](https://www.boost.org/), di conseguenza dove possibile viene preferita un'implementazione già fornita all'interno di questa collezione di librerie piuttosto che una custom. Le comunicazioni tra client e server avvengono tramite TCP/IP e le comunicazioni a livello applicativo avvengono tramite HTTP con preferenza JSON per la rappresentazione dei messaggi. La scelta ricade su queste tecnologie in quanto ormai sono di fatto uno standard ed ampiamente utilizzate in diversi contesti applicativi, oltre assere semplici, versatili e portabili. Il server a tale scopo espone un API con tutti i metodi necessari, descritti nel seguente paragrafo, ad erogare il servizio di sincronizzazione. Un ultimo modulo che troviamo è un DB che serve per memorizzare informazioni relative agli utenti, allo stato dei file ecc. (si rimanda per i dettagli alla sezione sul DB).
 
 ### Architettura Frontend<a name="Architettura_Frontend"></a>
-
-L'applicativo lato client presenta una serie di  processi. Il primo processo, detto `launcher` serve esclusivamente a lanciare due sottoprocessi: `UI` e `core-client` che rappresentano rispettivamente l'interfaccia utente e la core application che serve al client per le operazioni di sincronizzazione. Una volta eseguito il suo compito il launcher si distacca rendendo indipendenti i processi figli. L'interfaccia utente è una tray app realizzata con il framework [Electron](https://www.electronjs.org/), un framework che permette di realizzare desktop app utilizzando un paradigma web (HTML, CSS, JS). Questo processo a sua volta è suddiviso in due sottoprocessi, detti `main` e `render`. Il primo sottoprocesso ha il compito di lanciare l'applicazione, ricevere e inviare messaggi da/a l'interfaccia e di interagire con l'esterno. Il secondo sottoprocesso invece ha il compito di effettuare il rendering dell'interfaccia. I due processi sono in grado di comunicare tramite tecniche di IPC basate su eventi ([ipc main](https://www.electronjs.org/docs/api/ipc-main), [ipc render](https://www.electronjs.org/docs/api/ipc-renderer)). Il `core-client` è il processo nel quale risiede la maggior parte della logica client. Questo ha il compito di comunicare con il processo `main` tramite un semplice protocollo custom basato su messaggi UDP e con il load-balancer tramite richieste HTTP. Inoltre è questo il processo che effettua il monitoring del filesystem dell'utente.
 
 > **Link utili per gestione IPC e tray app:** [menubar](https://github.com/maxogden/menubar), [electron tray](https://www.electronjs.org/docs/api/tray), [ipc main](https://www.electronjs.org/docs/api/ipc-main), [ipc render](https://www.electronjs.org/docs/api/ipc-renderer).
 
 ### Architettura Backend<a name="Architettura_Backend"></a>
 
-Il primo e unico contatto del client è rappresentato dal `load-balancer` che assume quindi funzionalità di reverse gateway. Questo riceve le richieste, esponendo un'apposita REST API, da parte dell'utente e le smista ad un apposito server di backend per poi aspettare una risposta da consegnare al client.
-Il load-balancer tiene memoria di quali server memorizzano le cartelle di un determinato utente, in questo modo può facilmente smistare le richieste in maniera opportuna. Per motivi di robustezza e consistenza il load-balncer inoltra le richieste anche al server adibito come backup per una determinata cartella  di un utente. La seconda richiesta partirà con priorità più bassa rispetto a quella destinata al server primario, venendo quindi servita nei momenti di idle. Alle spalle del load-balancer troviamo una serie di server che sono divisi in `server-primari` e `server-secondari`. I primi contengono le cartelle degli utenti ed interagiscono con il db, i secondi servono da backup.
 
 
 ### Architettura DB<a name="Architettura_DB"></a>
-
-Il Database sarà costituito da una implementazione tramite MySql, e consta di due diversi database:
-* **Database primario** che interagirà direttamente coi server preposti a comunicare col client.  
-* **Database secondario** che interagirà unicamente col **database primario** nell'ottica di garantire un mirror di quest'ultimo e quindi la sicurezza dei dati da perdite accidentali.  
-
-La scelta di utilizzare un DB come meccanismo di storage ha le seguenti motivazioni:
-
-- **backup più robusto:** avendo a disposizione un secondo DB con funzionalità puramente di backup, nei momenti di idle il contenuto del DB primario verrà dubplicato nel DB secondario, garantendo quindi un mirror, con le relative garanzie di sicurezza in caso di fault del database primario
-- **allegerimento carico server:** evitando uno storage completo a carico del server, questi sarà soggetto a meno lavoro, e tale feature impatterà positivamente nei momenti di massimo stress.  
-- **resilienza(ACID):** la totalità delle operazioni avrà garanzia di atomicity, consistency, isolation, e durability, elementi non integrabili senza errori nel caso di un interazione custom coi dati tramite files.
-
-Il db utilizzato si chiama: **db_utenti**  
-
-Le tabelle all'interno del DBMS sono le seguenti:
-
-**users:** In questa collection troviamo un id interno che rappresenta un utente, un username scelto dall'utente stesso, la password memorizzata memorizzata tramite hash, il sale.
-
-| username | hashed_password | salt | hashed_status |
-| :---: | :---: | :---: | :---: |
-myuser | pass_hash_value | 3 | hash_folder |
-
-## Descrizione della directory della repository<a name="Descrizione_della_directory_della_repository"></a>
-
-La repository presenta una suddivisione dei files che si ripete rispettando una gerarchia delle cartelle fisso e definito:
-
-* (server/client)/
-  * config/
-    * server-struct.json
-  * src/
-    * lib/ : *files header (.hpp) richiamati dal codice principale e dai test*
-      * mysql/
-        * **db-connect.hpp**
-      * **test.hpp**
-    * mysql/
-      * **db-connect.cpp** : *logica di connessione al database mysql*
-    * test/
-      * **test.cpp** : *codice dei test, il cui metodo può essere inserito e lanciato nel main.cpp*
-    * **main.cpp** : *codice della cartella di livello superiore (server,client,load-balancer) a cui fa riferimento*
-    * server-up
-  * Dockerfile : *file di configurazione del container docker utilizzato*
-
 
 ## REST API<a name="REST_API"></a>
 
@@ -236,68 +182,7 @@ La repository presenta una suddivisione dei files che si ripete rispettando una 
 
 ### Autenticazione<a name="Autenticazione"></a>
 
-L'autenticazione all'interno dell'applicazione si basa su [JWT](https://jwt.io/introduction/). Le informazioni relative all'autenticazione vengono memorizzate sia lato client che lato backend. Lato client viene memorizzato il token in un apposito file **invisibile** `client-conf.json` che si presenta nel seguente modo:
-
-```json
-{   
-    ...,
-    "access_token":"xxxxx.yyyyy.zzzzz",
-    ...
-}
-```
-Nel server, nel file di configurazione `token-conf.json`:
-
-```json
-{
-    ...,
-    "token-conf":
-    {
-    "kd_alg":"hmac-sha256",
-    "expiration":172800000,
-    "secret":"key_here"
-    },
-    ...
-}
-
-```
-
- L'autenticazione avviene solamente in due casi, al momento della registrazione e quando un token scade e va rinnovato. Per registrarsi un utente inserisce le informazioni necessarie ed invia il comando `/signup` al server.
-
-![](imgs/signup.png)
-
-Una volta ottenuto un token dal server, il client ha la possibilità di sfruttare i comandi offerti dal server. Una generica richiesta del client viene autenticata nel seguente modo.
-
-![](imgs/tok-req.png)
-
-Se il client ha già effettuato la registrazione, ma possiede un token scaduto allora esso dovrà procedere con l'autenticazione. Da console inserirà quindi username e password ed invierà una richiesta `/signin` al server. Questo dovrà verificare le credenziali ricevute interrogando un database e se l'autenticazione va a buon fine esso invierà un token all'utente.
-
-![](imgs/sign-in.png)
-
-Per verificare le credenziali del client, il server recupera l'hash, ed il sale con cui è stato calcolato dal db, e procede a calcolare l'hash tramite algoritmo sha-256 e il sale recuperato; se le due stringhe coincidono allora l'utente è da considerarsi autenticato ed il server procederà con la generazione di un token.
-
 ### Startup<a name="Startup"></a>
-
-All'avvio dell'applicativo client se l'utente non è già registrato allora si procede con la registrazione. Se invece l'utente ha già un account le possibilità sono due: l'utente possiede un token valido oppure l'utente possiede un token scaduto. Nel secondo caso l'utente procede con il login. Una volta ottenuto un token valido, tramite registrazione oppure tramite login, il client inizia la sua fase di sincronizzazione (dopo avere selezionato la cartella da sincronizzare nel caso di registrazione). Il client verifica la giusta corrispondenza tra struttura della cartella da sincronizzare e il file `client-struct.json` in qunato potrebbero esserci state delle modifica ad applicazione spenta. Una volta aggiornato il file `client-struct.json` se il file è stato modificato si procede con il ricalcolare l'hash complessivo del file. A questo punto il client chiede l'hash di status al server tramite il comando `GET /status`. Se l'hash ricevuto dal server non corrisponde con quello locale il client chiede le informazioni relative alla struttura remota al server che verrà presentata nel seguente modo. File `server-struct.json`:
-
-```json
-    "hashed_status": "XXXXXXXXX",
-    "entries": [   
-        
-        {"path":"file1_path_here", "hash":"file1_hash_here", "last_mod":"timestamp_milliseconds", "chunks":["hash_a","hash_b"], "dim_last_chunk":1024},
-        
-        {"path":"file2_path_here", "hash":"file2_hash_here", "last_mod":"timestamp_milliseconds"}
-    
-    ]
-
-```
-
-- **hashed_status:** hash calcolato sul file `(server/client)-struct.json`
-- **path:** path relativo del file all'interno della cartella da sincronizzare
-- **last_mod:** timestamp che indica l'ultima modifica effettuata su un file **lato client**.
-- **chunks:** array che contiene gli hash calcolati su un chunk che a sua volta rappresenta una porzione del file di dimensione fissa (0.5MB).
-- **dim_last_chunk:** dimensione ultimo chunk
-
-A questo punto si procede con il confronto tra i timestamp prediligendo il timestamp più recente, se il server possiede la copia più aggiornata del file, allora il client richiede tramite il comando `GET /file/{chunk_id}/{chunksize}/{file_pathBASE64}` il file aggiornato, se è invece il client a possedere la versione aggiornata allora si procede con il comando `PUT /file/{chunk_id}/{chunksize}/{file_pathBASE64}`. La scelta di lavorare per chunk risiede nel voler minimizzare il traffico e alleggerire il server. Qualora infatti dei 100 chunk di un file, solo il quinto e il ventesimo risultano avere un hash differente, il client provvederà a inviare SOLO questi ultimi, evitando di dover inviare l'intero file.
 
 #### Utilizzare_interfaccia_grafica <a name="Utilizzare_interfaccia_grafica"></a>
 
@@ -311,7 +196,9 @@ Una volta verificati i prerequisiti posizionarsi nella cartella `ui` ed accertar
 
 #### Eseguire servizi Docker <a name="Eseguire_servizi_Docker"></a>
 
-Una volta posizionati nella cartella relativa al progetto tramite terminale, eseguire `docker-compose up --build --scale db=3`. Questo comando permette di eseguire i vari servizi che compongono l'applicativo. La terminazione può essere fatta tranquillamente in maniera ordinata con il comando `CTRL+C`.
+Una volta posizionati nella cartella relativa al progetto tramite terminale, eseguire `docker-compose up --build`. Questo comando permette di eseguire i vari servizi che compongono l'applicativo. La terminazione può essere fatta tranquillamente in maniera ordinata con il comando `CTRL+C`. Nel caso si voglia rendere un servizio scalabile si può apporre un opzione `--scale <nome_servizio>=<num_repliche>` per ogni servizio che si vuole replicare.
+
+> **N.B:** al primo avvio nel file docker-compose, nel servizio di mysql, è necessario commentare l'opzione `command` riguardante il plugin di autenticazione con password e lasciare semplicemnte l'opzione `command` che fa riferimento all'inizializzazione dei db, a questo punto spegnere tramite `CTRL+C` e riavviare con le opzioni invertite (init off e plugin on).
 
 ### Eventi da monitorare (ad applicazione accesa)<a name="Eventi_da_monitorare"></a>
 
@@ -322,44 +209,3 @@ Gli eventi da monitorare sono:
 - Eliminazione file esistente
 - Rinominazione file
 - Error su FileWatcher
-
-- [link fileWatcher C++](https://solarianprogrammer.com/2019/01/13/cpp-17-filesystem-write-file-watcher-monitor/)
-- [link fileWatcher Windows](https://docs.microsoft.com/en-us/dotnet/api/system.io.filesystemwatcher?view=netcore-3.1)
-
-#### Creazione file<a name="Creazione_file"></a>
-
-La creazione di un file genera le seguenti azioni.
-
-1. aggiornare il file `client-struct.json` aggiungendo un entry per il file creato
-
-2. ricalcolare hash totale cartella.
-
-3. lanciare una serie di comandi `POST file/{chunk_id}/{chunk_size}/{file_pathBASE64}` con body il contenuto del file. Nella richiesta viene specificato anche il path del file, in questo modo se il path sul server non esiste viene creato. Questo permette di evitare di gestire espliciti comandi per la creazione di directory.
-
-Nel caso il file venga creato offline, oppure si perde la connessione durante il trasferimento, allora la procedura avviene a tempo di startup (forzata quando il client riesce a riconnetersi); se invece il file viene creato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::created`. 
-
-#### Aggiornamento file<a name="Aggiornamento_file"></a>
-
-L'aggiornamento di un file è simile alla creazione. Anche in questo caso vanno eseguiti i punti da 1 a 3 con le seguenti modifiche:
-
-1. aggiornare il file `client-struct.json` 
-
-2. ricalcolare hash totale cartella.
-
-3. lanciare una serie di comandi `PUT file/{chunk_id}/{chunk_size}/{file_pathBASE64}` con body i dati che riguardano i chunk modificati.
-
-Nel caso il file venga modificato offline, oppure si perde la connessione durante il trasferimento, allora la procedura avviene a tempo di startup; se invece il file viene modificato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::changed`. I punti 2 e 3 in questo caso vengono eseguiti soltanto se `last_mod` è più recente rispetto al valore presente in `client-struct.json` perché un utente potrebbe chiudere senza modificare il file.
-
-#### Eliminazione file<a name="Eliminazione_file"></a>
-
-L'eliminazione consiste nei seguenti passaggi
-
-1. aggiornare il file `client-struct.json` 
-
-2. ricalcolare hash totale cartella.
-
-3. lanciare il comando `DELETE file/`.
-
-Nel caso il file venga eliminato offline allora la procedura avviene a tempo di startup; se invece il file viene eliminato ad applicazione attiva allora la procedura viene triggerata da un directory watcher, nello specifico l'evento è `FileStatus::deleted`.
-
-
