@@ -56,7 +56,7 @@ void StructModule::on_delete_entry(const Message &message) {
 void StructModule::notify_news() {
   std::shared_ptr<SyncStructure> sync = SyncStructure::getInstance();
   if (sync->get_remote_news() == 0) {
-    broker->publish(Message{TOPIC::FINISH_SERVER_SYNC});
+    broker->signal(SIGNAL::FINISH_SERVER_SYNC);
   }
   for (const auto &entry : sync->get_entries()) {
     if (entry->get_status() == entry_status::new_ &&

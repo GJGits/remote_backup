@@ -14,9 +14,11 @@
 class Broker : public Singleton<Broker> {
 private:
   friend class Singleton;
-  std::mutex nm;
-  std::condition_variable ncv;
+  SIGNAL last_signal;
+  std::mutex mu_task;
+  std::condition_variable cv_task;
   std::queue<std::function<void(void)>> tasks;
+  std::unordered_map<SIGNAL, std::list<std::function<void(void)>>> sig_handlers;
   std::vector<std::thread> callers;
   bool is_running;
   std::unordered_map<TOPIC, std::list<Callback>> subs;
@@ -24,8 +26,10 @@ private:
 
 public:
   ~Broker();
+  void register_signal(SIGNAL signal, const std::function<void(void)> &callback);
   void subscribe(TOPIC topic, PRIORITY priority,
                  const std::function<void(const Message &)> &callback);
   void publish(const Message &message);
+  void signal(SIGNAL signal);
   void clear();
 };

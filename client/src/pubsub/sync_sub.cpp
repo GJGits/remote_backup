@@ -95,6 +95,6 @@ void SyncSubscriber::end_remote_sync() {
   remote_transfer_count++;
   if (sync->get_remote_news() == remote_transfer_count) {
     sync->reset_remote_news();
-    broker->publish(Message{TOPIC::FINISH_SERVER_SYNC});
+    broker->signal(SIGNAL::FINISH_SERVER_SYNC);
   }
 }

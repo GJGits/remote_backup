@@ -34,27 +34,31 @@ void GuiModule::init_sub_list() {
   broker->subscribe(TOPIC::DELETE_SERVER, PRIORITY::HIGH,
                     std::bind(&GuiModule::on_transfer, instance.get(),
                               std::placeholders::_1));
-  broker->subscribe(TOPIC::INIT_SERVER_SYNC, PRIORITY::HIGH,
-                    std::bind(&GuiModule::on_init_remote_sync, instance.get(),
-                              std::placeholders::_1));
-  broker->subscribe(TOPIC::FINISH_SERVER_SYNC, PRIORITY::HIGH,
-                    std::bind(&GuiModule::on_finish_remote_sync, instance.get(),
-                              std::placeholders::_1));
+
   broker->subscribe(TOPIC::REMOVE_ENTRY, PRIORITY::HIGH,
                     std::bind(&GuiModule::on_transfer, instance.get(),
                               std::placeholders::_1));
   broker->subscribe(TOPIC::ADD_ENTRY, PRIORITY::HIGH,
                     std::bind(&GuiModule::on_transfer, instance.get(),
                               std::placeholders::_1));
-  broker->subscribe(TOPIC::EASY_EXCEPTION, PRIORITY::HIGH,
-                    std::bind(&GuiModule::on_easy_exception, instance.get(),
-                              std::placeholders::_1));
-  broker->subscribe(TOPIC::AUTH_FAILED, PRIORITY::HIGH,
-                    std::bind(&GuiModule::on_auth_failed, instance.get(),
-                              std::placeholders::_1));
-  broker->subscribe(TOPIC::CONNECTION_LOST, PRIORITY::HIGH,
-                    std::bind(&GuiModule::on_connection_lost, instance.get(),
-                              std::placeholders::_1));
+}
+
+void GuiModule::register_signal() {
+  broker->register_signal(
+      SIGNAL::INIT_SERVER_SYNC,
+      std::bind(&GuiModule::on_init_remote_sync, instance.get()));
+  broker->register_signal(
+      SIGNAL::FINISH_SERVER_SYNC,
+      std::bind(&GuiModule::on_finish_remote_sync, instance.get()));
+  broker->register_signal(
+      SIGNAL::EASY_EXCEPTION,
+      std::bind(&GuiModule::on_easy_exception, instance.get()));
+  broker->register_signal(
+      SIGNAL::AUTH_FAILED,
+      std::bind(&GuiModule::on_auth_failed, instance.get()));
+  broker->register_signal(
+      SIGNAL::CONNECTION_LOST,
+      std::bind(&GuiModule::on_connection_lost, instance.get()));
 }
 
 void GuiModule::add_module(const std::string &name,
@@ -124,34 +128,34 @@ void GuiModule::handle_gui_message() {
 
   } catch (AuthFailed &ex) {
     std::clog << ex.what() << "\n";
-    on_auth_failed(Message{TOPIC::AUTH_FAILED});
+    on_auth_failed();
     start_receive();
   }
 
   catch (ConnectionNotAvaible &ex) {
     std::clog << ex.what() << "\n";
-    on_connection_lost(Message{TOPIC::CONNECTION_LOST});
+    on_connection_lost();
     start_receive();
   }
 
   catch (std::ifstream::failure &ex) {
     std::clog << ex.what() << "\n";
-    on_easy_exception(Message{TOPIC::EASY_EXCEPTION});
+    on_easy_exception();
   }
 
   catch (std::filesystem::filesystem_error &ex) {
     std::clog << ex.what() << "\n";
-    on_easy_exception(Message{TOPIC::EASY_EXCEPTION});
+    on_easy_exception();
   }
 
   catch (...) {
     std::clog << "The impossible happened! (GuiModule)\n";
-    on_easy_exception(Message{TOPIC::EASY_EXCEPTION});
+    on_easy_exception();
   }
 }
 
-void GuiModule::on_easy_exception(const Message &message) {
-  std::unique_lock lk{mu};
+void GuiModule::on_easy_exception() {
+  // std::unique_lock lk{mu};
   DurationLogger log{"EASY_EXCEPTION"};
   for (const auto &[name, module] : modules)
     module->stop();
@@ -161,8 +165,8 @@ void GuiModule::on_easy_exception(const Message &message) {
       module->start();
 }
 
-void GuiModule::on_auth_failed(const Message &message) {
-  std::unique_lock lk{mu};
+void GuiModule::on_auth_failed() {
+  // std::unique_lock lk{mu};
   for (const auto &[name, module] : modules)
     module->stop();
   json msg = {
@@ -171,8 +175,8 @@ void GuiModule::on_auth_failed(const Message &message) {
   send_message(msg);
 }
 
-void GuiModule::on_connection_lost(const Message &message) {
-  std::unique_lock lk{mu};
+void GuiModule::on_connection_lost() {
+  // std::unique_lock lk{mu};
   DurationLogger log{"CONNECTION_LOST"};
   for (const auto &[name, module] : modules)
     module->stop();
@@ -189,14 +193,14 @@ void GuiModule::on_transfer(const Message &message) {
   send_message(mex);
 }
 
-void GuiModule::on_init_remote_sync(const Message &message) {
-  std::unique_lock lk{mu};
+void GuiModule::on_init_remote_sync() {
+  // std::unique_lock lk{mu};
   DurationLogger log{"START_REMOTE_SYNC"};
   modules["watcher"]->stop();
 }
 
-void GuiModule::on_finish_remote_sync(const Message &message) {
-  std::unique_lock lk{mu};
+void GuiModule::on_finish_remote_sync() {
+  // std::unique_lock lk{mu};
   DurationLogger log{"FINISH_REMOTE_SYNC"};
   modules["watcher"]->start();
 }
