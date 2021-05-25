@@ -11,6 +11,7 @@ services:
         #command: --init-file /data/application/init.sql
         volumes: 
             - './db/init.sql:/data/application/init.sql'
+            - './db/PremierLeague.sql:/data/application/PremierLeague.sql'
     server:
         build: ./server
         ports: 

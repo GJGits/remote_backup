@@ -8,7 +8,7 @@ import { Subject } from 'rxjs';
 export class IpcRenderService {
 
   private ipcRenderer: IpcRenderer | undefined;
-  private subjectsMap = new Map();
+  private subjectsMap = new Map<string,Subject<any>>();
 
   constructor() {
     if ((<any>window).require) {
