@@ -1,27 +1,28 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { AuthRoutingModule } from './auth/auth-routing.module';
+import { AuthModule } from './auth/auth.module';
 import { DummyComponentsModule } from './dummy-components/dummy-components.module';
-import { FooterInfosComponent } from './dummy-components/footer-infos/footer-infos.component';
-import { ToolBarComponent } from './dummy-components/tool-bar/tool-bar.component';
-import { SyncingStatusComponent } from './syncing-status/syncing-status.component';
+import { LoggedModule } from './logged/logged.module';
+import { IpcRenderService } from './services/ipc-render.service';
+import { ipcFactory } from './services/services.module';
 
 @NgModule({
   declarations: [
     AppComponent,
-    SyncingStatusComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
+    AuthModule,
+    LoggedModule,
     DummyComponentsModule,
-    AuthRoutingModule
   ],
-  providers: [],
-  exports: [SyncingStatusComponent],
+  providers: [{
+    provide: IpcRenderService,
+    useFactory: ipcFactory,
+  }],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

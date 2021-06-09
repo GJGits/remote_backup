@@ -8,27 +8,45 @@
     <p class="text-center mt-4 fw-bold">Login to RemoteBackup</p>
 
 
-    <form id="supf" class="offset-2 col-8 gap-2">
-      <div class="form-group">
-        <input type="text" class="form-control" id="username2" aria-describedby="emailHelp" placeholder="Username..."
-          pattern="\w+" required>
+    <form id="supf" name="signupForm" class="offset-2 col-8" #f="ngForm" (ngSubmit)="onSubmit(f)" novalidate>
+      <div class="form-group mb-2">
+        <input type="text" class="form-control" id="username2" name="signUpUsername" placeholder="Username..."
+          pattern="\w+" required [(ngModel)]="newUser.username" #name="ngModel">
+          <div *ngIf="name.touched && name.errors?.required" class="text-danger">
+            Name is required.
+          </div>
+          <div *ngIf="name.touched && name.errors?.pattern" class="text-danger">
+            Name must contains only letters or numbers
+          </div>
       </div>
-      <div class="form-group">
-        <input type="password" class="form-control" id="password2" placeholder="Password" pattern="\w+" required>
+      <div class="form-group mb-2">
+        <input type="password" class="form-control" id="password2" name="signUpPassword" placeholder="Password" pattern="\w+" required
+        [(ngModel)]="newUser.password" #password="ngModel">
+        <div *ngIf="password.touched && password.errors?.required" class="text-danger">
+          A password is required.
+        </div>
+        <div *ngIf="password.touched && password.errors?.pattern" class="text-danger">
+          Password must contains only letters or numbers
+        </div>
       </div>
-      <div class="form-group">
-        <input type="password" class="form-control" id="rip-password" placeholder="Ripeti password" pattern="\w+"
-          required>
+      <div class="form-group mb-2">
+        <input type="password" class="form-control" id="rip-password" name="signUpRepeatPassword" placeholder="Ripeti password"
+          required [(ngModel)]="newUser.password_confirm" #repeatPasswod="ngModel" [pattern]="newUser.password">
+          <div *ngIf="repeatPasswod.touched && repeatPasswod.invalid" class="text-danger">
+            Passwords don't match
+          </div>
+        </div>
+      <div class="d-grid gap-2">
+        <button class="btn btn-primary" type="submit">Registrati</button>
       </div>
-      <button type="button" class="btn btn-primary btn-block" id="signup-btn">Registrati</button>
     </form>
 
-    <div id="error-sup" class="alert alert-danger error text-center mt-3" role="alert">
-
+    <div id="error-sup" class="alert alert-danger error text-center mt-3" role="alert" *ngIf="serverError">
+      {{serverError}}
     </div>
 
     <div class="row mt-3 ">
-      <span class="col-12 text-center">Hai gi&agrave; un account ? <a href="#" class="col-12 text-center"
+      <span class="col-12 text-center">Hai gi&agrave; un account ? <a routerLink="../signin" class="col-12 text-center"
           id="accedi">Accedi</a></span>
     </div>
 

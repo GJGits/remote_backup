@@ -1,21 +1,23 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MainComponent } from './main/main.component';
-import { ToolBarComponent } from '../dummy-components/tool-bar/tool-bar.component';
-import { FooterInfosComponent } from '../dummy-components/footer-infos/footer-infos.component';
-import { SyncingStatusComponent } from '../syncing-status/syncing-status.component';
+import { DummyComponentsModule } from '../dummy-components/dummy-components.module';
+import { SyncingStatusComponent } from './syncing-status/syncing-status.component';
+import { LoggedRoutingModule } from './logged-routing.module';
+import { InfosComponent } from './infos/infos.component';
 
 
 
 @NgModule({
   declarations: [
-    MainComponent
+    MainComponent,
+    SyncingStatusComponent,
+    InfosComponent
   ],
   imports: [
     CommonModule,
-    ToolBarComponent,
-    FooterInfosComponent,
-    SyncingStatusComponent
+    DummyComponentsModule,
+    LoggedRoutingModule,
   ]
 })
 export class LoggedModule { }
