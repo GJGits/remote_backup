@@ -1,4 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { Observable, of } from 'rxjs';
+import { AuthService } from 'src/app/auth/auth.service';
+import { UserInfo } from 'src/app/auth/dtos';
 
 @Component({
   selector: 'app-main',
@@ -7,7 +10,11 @@ import { Component, OnInit } from '@angular/core';
 })
 export class MainComponent implements OnInit {
 
-  constructor() { }
+  userInfo$: Observable<UserInfo> = of<UserInfo>({user: '', device: ''});
+
+  constructor(private authService: AuthService) { 
+    this.userInfo$ = this.authService.getUserInfo();
+  }
 
   ngOnInit(): void {
   }

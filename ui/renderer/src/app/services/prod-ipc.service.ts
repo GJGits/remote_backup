@@ -38,7 +38,7 @@ export class ProdIpcService implements IpcRenderService{
     return undefined;
   }
 
-  public send(channel: string, data: any) {
+  public send(channel: string, data?: any) {
     this.ipcRenderer?.send(channel, data);
   }
 

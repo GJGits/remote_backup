@@ -1,13 +1,16 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
+    <div>
       
       <img src="./assets/user_icon.png" height="50" alt="" srcset="">
       
-      <b>FirstName LastName</b>
+      <b class="mx-3">{{userDetails?.user + " " + userDetails?.device}}</b>
 
+      <span style="margin-left: 150px">
       <img src="./assets/play_button_active.png" alt="">
-      <img src="./assets/pause_button_inactive.png" alt="">
-      <img src="./assets/settings.png" alt="">
+      <img class="mx-2" src="./assets/pause_button_inactive.png" alt="">
+      <img class="mx-2" src="./assets/settings.png" alt="">
+      </span>
+      
 
     </div>
   </nav>

@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
+import { UserInfo } from 'src/app/auth/dtos';
 
 @Component({
   selector: 'app-tool-bar',
@@ -6,6 +7,8 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./tool-bar.component.css']
 })
 export class ToolBarComponent implements OnInit {
+
+  @Input() userDetails: UserInfo | null = {user: '', device: ''};
 
   constructor() { }
 

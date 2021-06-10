@@ -1,27 +1,44 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { SigninDTO, SignupDTO } from './dtos';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { IpcRenderService } from '../services/ipc-render.service';
+import { UserInfo } from './dtos';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
-  baseURL = "0.0.0.0:3200";
+  private userInfo: BehaviorSubject<UserInfo> = new BehaviorSubject({user: '', device: ''});
 
-  constructor(private httpClient: HttpClient) { }
+  constructor(private ipcService: IpcRenderService) {
+    this.ipcService?.on('credentials_expired')?.subscribe(() => this.credentialsExpired());
+    this.ipcService?.on('user_info')?.subscribe((userInfo) => this.setCredentials(userInfo));
+   }
 
-  public isLoggedIn() {
-    return false;
+  private credentialsExpired(): void {
+    this.clearCredentials();
+  }
+  
+  private clearCredentials(): void {
+    this.userInfo.next({user: '', device: ''});
   }
 
-  public signup(singupDTO: SignupDTO): Observable<any> {
-    return this.httpClient.post(this.baseURL + "/signup", singupDTO);
+  public setCredentials(userInfo: UserInfo): void {
+    this.userInfo.next(userInfo);
   }
 
-  public signin(signinDTO: SigninDTO): Observable<any> {
-    return this.httpClient.post(this.baseURL + "/signin", signinDTO);
+  public getUserInfo(): Observable<UserInfo> {
+    return this.userInfo.asObservable();
+  }
+
+  public isLoggedIn(): Observable<boolean> {
+    return this.userInfo.asObservable().pipe(map(u => u.user !== ''));
+  }
+
+  public logOff(): void {
+    this.clearCredentials();
+    this.ipcService.send('logoff');
   }
 
 }

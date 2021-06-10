@@ -8,3 +8,8 @@ export interface SigninDTO {
     username: string;
     password: string;
 }
+
+export interface UserInfo {
+    user: string;
+    device: string;
+}

@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { NgForm } from '@angular/forms';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { Router } from '@angular/router';
 import { IpcRenderService } from 'src/app/services/ipc-render.service';
+import { AuthService } from '../auth.service';
 import { SignupDTO } from '../dtos';
 
 @Component({
@@ -14,7 +15,7 @@ export class SignupComponent implements OnInit {
   newUser: SignupDTO = { username: '', password: '', password_confirm: '' };
   serverError = '';
 
-  constructor(private ipcService: IpcRenderService) { }
+  constructor(private ipcService: IpcRenderService, private authService: AuthService, private router: Router) { }
 
   ngOnInit(): void {
   }
@@ -26,10 +27,10 @@ export class SignupComponent implements OnInit {
         // On error  : {error}
         if (data.error) {
           this.serverError = data.error
-          console.log(data.error);
+        } else {
+          this.authService.setCredentials(data);
+          this.router.navigate(['/app']);
         }
-        // todo: publish new received info
-        // todo: redirect to app/main
       });
     }
 
