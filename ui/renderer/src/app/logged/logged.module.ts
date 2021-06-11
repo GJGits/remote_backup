@@ -5,6 +5,7 @@ import { DummyComponentsModule } from '../dummy-components/dummy-components.modu
 import { SyncingStatusComponent } from './syncing-status/syncing-status.component';
 import { LoggedRoutingModule } from './logged-routing.module';
 import { InfosComponent } from './infos/infos.component';
+import { ConnectionLostComponent } from './connection-lost/connection-lost.component';
 
 
 
@@ -12,7 +13,8 @@ import { InfosComponent } from './infos/infos.component';
   declarations: [
     MainComponent,
     SyncingStatusComponent,
-    InfosComponent
+    InfosComponent,
+    ConnectionLostComponent
   ],
   imports: [
     CommonModule,

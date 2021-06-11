@@ -1,10 +1,9 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-        
-        <p>1MB/2GB (x.yy%)</p>
-        <div class="progress" style="height: 20px;">
-            <div class="progress-bar" role="progressbar" style="width: 100px" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
-          </div>
 
-    </div>
-  </nav>
+  <p class="mx-1 mb-1 fw-bold">{{usageInfo | usage}}</p>
+
+  <div class="my-progress">
+  <div class="my-progress-bar bg-primary" [style.width]="(usageInfo?.current_byte_used! / usageInfo?.total_byte_allowed!) | percent"></div>
+  </div>
+
+</nav>
