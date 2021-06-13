@@ -1,6 +1,7 @@
 const { menubar } = require('../renderer/node_modules/menubar/lib');
 const { ipcMain, app, Menu, Tray } = require('electron');
-const { openStdin } = require('process');
+const udpStackManager = require('./udp_stack');
+const auth_module = require('./modules/auth');
 
 function on_open(menutItem, browserWindow, event) {
     mb.showWindow();
@@ -9,6 +10,7 @@ function on_open(menutItem, browserWindow, event) {
 
 function on_close(menutItem, browserWindow, event) {
     // client.send(Buffer.from([topics.get("EXIT")]), 2800, client_ip, (err) => { console.log(err) });
+    udpStackManager.stop();
     mb.app.quit();
 }
 
@@ -30,19 +32,23 @@ const mb = menubar(
         tooltip: "show",
         browserWindow: {
             width: 450,
-            height: 400,
-            webPreferences: { 
+            height: 420,
+            webPreferences: {
                 nodeIntegration: true,
-                contextIsolation: false, 
+                contextIsolation: false,
             }
         }
     });
 
 mb.on('ready', () => {
+
     console.log('app is ready');
     mb.tray.setContextMenu(contextMenu);
-    
-    ipcMain.on('ping', (event, data) => {
-        event.returnValue = "pong";
-    });
+
+    udpStackManager.run();
+
+});
+
+mb.on('after-create-window', () => {
+    auth_module.run(mb.window.webContents);
 });

@@ -170,7 +170,7 @@ void GuiModule::on_auth_failed() {
   for (const auto &[name, module] : modules)
     module->stop();
   json msg = {
-      {"code", "auth-failed"},
+      {"code", "auth_failed"},
       {"message", "autenticazione fallita o scaduta, procedere con il login"}};
   send_message(msg);
 }
@@ -180,7 +180,7 @@ void GuiModule::on_connection_lost() {
   DurationLogger log{"CONNECTION_LOST"};
   for (const auto &[name, module] : modules)
     module->stop();
-  json msg = {{"code", "connection-lost"},
+  json msg = {{"code", "connection_lost"},
               {"message", "connessione persa, ricconnettersi e riprovare"}};
   send_message(msg);
 }
