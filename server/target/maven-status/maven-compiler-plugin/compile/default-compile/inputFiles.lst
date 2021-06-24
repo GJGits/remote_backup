@@ -1,0 +1,6 @@
+/workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/filters/RequestLoggingFilterConfig.java
+/workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/controllers/FileController.java
+/workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/BackendApplication.java
+/workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/controllers/ChunkController.java
+/workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/controllers/AuthController.java
+/workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/controllers/StatusController.java
