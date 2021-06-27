@@ -1,7 +1,6 @@
 package com.remotebackup.backend;
 
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
-import static org.springframework.restdocs.mockmvc.RestDocumentationResultHandler.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.HashMap;
@@ -10,26 +9,21 @@ import java.util.Map.Entry;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.remotebackup.backend.controllers.AuthController;
+import com.remotebackup.backend.dtos.ErrorDTO;
+import com.remotebackup.backend.dtos.JWToken;
 import com.remotebackup.backend.dtos.SigninDTO;
 import com.remotebackup.backend.dtos.SignupDTO;
+import com.remotebackup.backend.exceptions.UserAlreadyExsistException;
+import com.remotebackup.backend.services.UserService;
 
-import static org.springframework.restdocs.payload.PayloadDocumentation.*;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.*;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.*;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-import org.springframework.restdocs.JUnitRestDocumentation;
+import org.mockito.Mockito;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 
 @WebMvcTest(AuthController.class)
 @AutoConfigureRestDocs
@@ -42,10 +36,7 @@ public class AuthTests {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private SignupDTO mockSignupDTO;
-
-    @MockBean
-    private SigninDTO mockSigninDTO;
+    private UserService userService;
 
     private final String SIGNUP_URL = "/auth/signup";
     private final String SIGNIN_URL = "/auth/signin";
@@ -72,25 +63,39 @@ public class AuthTests {
 
     /**
      * Check that signup input is successfully serialized into a Java Object
+     * 
      * @throws Exception
      */
 
     @Test
     public void checkSerializationSignupRequest() throws Exception {
         SignupDTO user = new SignupDTO("pinco", "123456", "123456", "aa:bb:cc:dd:ee:aa");
-        this.mockMvc.perform(post(SIGNUP_URL).contentType("application/json").content(objectMapper.writeValueAsString(user))).andExpect(status().isOk());
+        this.mockMvc
+                .perform(
+                        post(SIGNUP_URL).contentType("application/json").content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isOk());
     }
 
     /**
      * Check that signin input is successfully serialized into a Java Object
+     * 
      * @throws Exception
      */
 
     @Test
     public void checkSerializationSigninRequest() throws Exception {
         SigninDTO user = new SigninDTO("pinco", "123456", "aa:bb:cc:dd:ee:aa");
-        this.mockMvc.perform(post(SIGNIN_URL).contentType("application/json").content(objectMapper.writeValueAsString(user))).andExpect(status().isOk());
+        this.mockMvc
+                .perform(
+                        post(SIGNIN_URL).contentType("application/json").content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isOk());
     }
+
+    /**
+     * Check constraints on SignupDTO object
+     * 
+     * @throws Exception
+     */
 
     @Test
     public void checkValiditySignupRequest() throws Exception {
@@ -110,13 +115,30 @@ public class AuthTests {
         dtos.put(new SignupDTO("pinco", "!!", "123456", "aa:bb:cc:dd:ee:aa"), status().isBadRequest());
         dtos.put(new SignupDTO("pinco", "123456", "12", "aa:bb:cc:dd:ee:aa"), status().isBadRequest());
         dtos.put(new SignupDTO("pinco", "123456", "123456", "a"), status().isBadRequest());
-        // good request
-        dtos.put(new SignupDTO("pinco", "123456", "123456", "aa:bb:cc:dd:ee:aa"), status().isOk());
 
         for (Entry<SignupDTO, ResultMatcher> testCase : dtos.entrySet()) {
-            this.mockMvc.perform(post(SIGNUP_URL).contentType("application/json").content(objectMapper.writeValueAsString(testCase.getKey()))).andExpect(testCase.getValue());
+            this.mockMvc
+                    .perform(post(SIGNUP_URL).contentType("application/json")
+                            .content(objectMapper.writeValueAsString(testCase.getKey())))
+                    .andExpect(testCase.getValue());
         }
     }
 
+    @Test
+    public void signupCheck() throws Exception {
+        SignupDTO validDTO = new SignupDTO("tizio", "123456", "123456", "aa:bb:cc:dd:ee:aa");
+        SignupDTO duplicateDTO = new SignupDTO("tizio", "123456", "123456", "aa:bb:cc:dd:ee:aa");
+        Mockito.when(userService.signup(validDTO)).thenReturn(new JWToken("arg0"));
+        this.mockMvc.perform(
+                post(SIGNUP_URL).contentType("application/json").content(objectMapper.writeValueAsString(validDTO)))
+                .andExpect(status().isOk());
+        Mockito.when(userService.signup(duplicateDTO)).thenThrow(new UserAlreadyExsistException());
+        this.mockMvc
+                .perform(post(SIGNUP_URL).contentType("application/json")
+                        .content(objectMapper.writeValueAsString(duplicateDTO)))
+                .andExpect(status().isBadRequest()).andExpect(content().contentType("application/json"))
+                .andExpect(content().json(objectMapper
+                        .writeValueAsString(new ErrorDTO("An account with this username already exsists"))));
+    }
 
 }

@@ -2,9 +2,12 @@ package com.remotebackup.backend.controllers;
 
 import javax.validation.Valid;
 
+import com.remotebackup.backend.dtos.JWToken;
 import com.remotebackup.backend.dtos.SigninDTO;
 import com.remotebackup.backend.dtos.SignupDTO;
+import com.remotebackup.backend.services.UserService;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,16 +16,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AuthController {
 
-    // TODO: on signup return token
+    @Autowired
+    UserService userService;
+
     @PostMapping("/auth/signup")
-    public ResponseEntity<String> signup(@Valid @RequestBody SignupDTO signupDTO) {
-        return ResponseEntity.ok("signup");
+    public ResponseEntity<JWToken> signup(@Valid @RequestBody SignupDTO signupDTO) {
+        JWToken token = userService.signup(signupDTO);
+        return ResponseEntity.ok(token);
     }
 
-    // TODO: on sigin return token
     @PostMapping("/auth/signin")
-    public ResponseEntity<String> signin(@Valid @RequestBody SigninDTO signinDTO) {
-        return ResponseEntity.ok("signin");
+    public ResponseEntity<JWToken> signin(@Valid @RequestBody SigninDTO signinDTO) {
+        JWToken token = userService.signin(signinDTO);
+        return ResponseEntity.ok(token);
     }
 
 }
