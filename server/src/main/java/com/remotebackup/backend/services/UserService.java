@@ -1,21 +1,30 @@
 package com.remotebackup.backend.services;
 
-import com.remotebackup.backend.dtos.JWToken;
-import com.remotebackup.backend.dtos.SigninDTO;
-import com.remotebackup.backend.dtos.SignupDTO;
-import com.remotebackup.backend.exceptions.UserAlreadyExsistException;
+import java.util.ArrayList;
+import java.util.List;
 
+import com.remotebackup.backend.entities.UserEntity;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
-    public JWToken signup(SignupDTO signupDTO) throws UserAlreadyExsistException {
-        return new JWToken("base64 token here...");
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // TODO Auto-generated method stub
+        // return new UserEntity(username, "some password");
+        return null;
     }
 
-    public JWToken signin(SigninDTO signinDTO) {
-        return new JWToken("base64 token here...");
+    // TODO: REFACTOR THIS!!! 
+    public List<String> getUserRoles() {
+        // List<String> roles = new ArrayList<>();
+        // roles.add("USER");
+        // return roles;
+        return null;
     }
-    
+
 }

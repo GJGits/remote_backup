@@ -5,7 +5,7 @@ import javax.validation.Valid;
 import com.remotebackup.backend.dtos.JWToken;
 import com.remotebackup.backend.dtos.SigninDTO;
 import com.remotebackup.backend.dtos.SignupDTO;
-import com.remotebackup.backend.services.UserService;
+import com.remotebackup.backend.services.AuthService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,17 +17,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     @Autowired
-    UserService userService;
+    AuthService authService;
 
     @PostMapping("/auth/signup")
     public ResponseEntity<JWToken> signup(@Valid @RequestBody SignupDTO signupDTO) {
-        JWToken token = userService.signup(signupDTO);
+        JWToken token = authService.signup(signupDTO);
         return ResponseEntity.ok(token);
     }
 
     @PostMapping("/auth/signin")
     public ResponseEntity<JWToken> signin(@Valid @RequestBody SigninDTO signinDTO) {
-        JWToken token = userService.signin(signinDTO);
+        JWToken token = authService.signin(signinDTO);
         return ResponseEntity.ok(token);
     }
 

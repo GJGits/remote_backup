@@ -2,13 +2,17 @@
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/dtos/SigninDTO.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/services/UserService.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/dtos/JWToken.java
+/workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/configurations/SecurityConfiguration.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/validators/FieldsValueMatchValidator.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/controllers/FileController.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/BackendApplication.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/controllers/ChunkController.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/controllers/AuthController.java
+/workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/entities/UserEntity.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/controllers/StatusController.java
+/workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/services/AuthService.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/validators/FieldsValueMatch.java
+/workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/services/JwtTokenService.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/filters/RequestLoggingFilterConfig.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/exceptions/ExceptionHandlingConfiguration.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/dtos/ValidationErrorResponseDTO.java
