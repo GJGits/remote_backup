@@ -16,6 +16,7 @@
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/filters/RequestLoggingFilterConfig.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/exceptions/ExceptionHandlingConfiguration.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/dtos/ValidationErrorResponseDTO.java
+/workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/configurations/MyAuthenticationManager.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/dtos/Violation.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/exceptions/UserAlreadyExsistException.java
 /workspaces/remote_backup/server/src/main/java/com/remotebackup/backend/dtos/ErrorDTO.java

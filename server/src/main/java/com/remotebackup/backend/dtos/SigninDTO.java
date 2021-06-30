@@ -5,12 +5,14 @@ import javax.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashCode.Include;
 
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Data
 @AllArgsConstructor
 public class SigninDTO {
 
+    @Include
     @NotNull(message = "Username cannot be empty")
     private String username;
 

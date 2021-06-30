@@ -24,6 +24,7 @@ public class AuthService {
     UserService userService;
 
     public JWToken signup(SignupDTO signupDTO) throws UserAlreadyExsistException {
+        // TODO: check if a user with a given username already exists
         return new JWToken(jwtTokenService.createToken(signupDTO.getUsername(), userService.getUserRoles()));
     }
 

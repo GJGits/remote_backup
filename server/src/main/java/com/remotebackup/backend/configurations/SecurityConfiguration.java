@@ -18,28 +18,20 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Autowired
     UserService userService;
 
-    @Autowired
-    PasswordEncoder passwordEncoder;
-
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests().antMatchers("/auth/**").permitAll().and().csrf().disable();
     }
 
-    @Override
-    public void configure(AuthenticationManagerBuilder builder) throws Exception {
-        builder.userDetailsService(userService).passwordEncoder(passwordEncoder);
-    }
-
-    @Override
-    @Bean
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
-    }
-
     @Bean
     public PasswordEncoder getPasswordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return new MyAuthenticationManager();
     }
 
 }

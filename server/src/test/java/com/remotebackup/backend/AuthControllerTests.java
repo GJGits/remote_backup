@@ -25,18 +25,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.hibernate.validator.internal.util.logging.Log_.logger;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 @WebMvcTest(AuthController.class)
 @AutoConfigureRestDocs
-public class AuthTests {
+public class AuthControllerTests {
 
         @Autowired
         private MockMvc mockMvc;
@@ -160,6 +158,20 @@ public class AuthTests {
                                 .andExpect(status().isBadRequest()).andExpect(content().contentType("application/json"))
                                 .andExpect(content().json(objectMapper.writeValueAsString(
                                                 new ErrorDTO("An account with this username already exsists"))));
+        }
+
+        @Test
+        public void signinCheck() throws Exception {
+                SigninDTO validCredentials = new SigninDTO("tizio", "123456", "aa:bb:cc:dd:ee:aa");
+                SigninDTO invalidPassword = new SigninDTO("tizio", "23456", "aa:bb:cc:dd:ee:aa");
+                Mockito.when(authService.signin(validCredentials)).thenReturn(new JWToken("arg0"));
+                this.mockMvc.perform(post(SIGNIN_URL).contentType("application/json")
+                                .content(objectMapper.writeValueAsString(validCredentials))).andExpect(status().isOk());
+                Mockito.when(authService.signin(invalidPassword)).thenThrow(new BadCredentialsException("msg"));
+                this.mockMvc.perform(post(SIGNIN_URL).contentType("application/json")
+                                .content(objectMapper.writeValueAsString(invalidPassword)))
+                                .andExpect(status().isBadRequest());
+                
         }
 
 }

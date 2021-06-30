@@ -1,4 +1,4 @@
 /workspaces/remote_backup/server/src/test/java/com/remotebackup/backend/BackendApplicationTests.java
 /workspaces/remote_backup/server/src/test/java/com/remotebackup/backend/MyResultHandlerConfiguration.java
+/workspaces/remote_backup/server/src/test/java/com/remotebackup/backend/AuthControllerTests.java
 /workspaces/remote_backup/server/src/test/java/com/remotebackup/backend/MyRestDocsConfiguration.java
-/workspaces/remote_backup/server/src/test/java/com/remotebackup/backend/AuthTests.java
