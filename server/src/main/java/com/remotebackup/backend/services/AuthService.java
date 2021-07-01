@@ -24,14 +24,19 @@ public class AuthService {
     UserService userService;
 
     public JWToken signup(SignupDTO signupDTO) throws UserAlreadyExsistException {
-        // TODO: check if a user with a given username already exists
-        return new JWToken(jwtTokenService.createToken(signupDTO.getUsername(), userService.getUserRoles()));
+        if (this.userService.loadUserByUsername(signupDTO.getUsername()) == null) {
+            // TODO: store user
+            return new JWToken(jwtTokenService.createToken(signupDTO.getUsername(), userService.getUserRoles()));
+        }
+
+        throw new UserAlreadyExsistException();
     }
 
     public JWToken signin(SigninDTO signinDTO) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signinDTO.getUsername(), signinDTO.getPassword()));
         UserEntity userEntity = (UserEntity) userService.loadUserByUsername(signinDTO.getUsername());
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(signinDTO.getUsername(), signinDTO.getPassword()));
         return new JWToken(jwtTokenService.createToken(userEntity.getUsername(), userEntity.getRoles()));
     }
-    
+
 }

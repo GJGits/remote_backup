@@ -1,4 +1,4 @@
-package com.remotebackup.backend;
+package com.remotebackup.backend.controllers;
 
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.remotebackup.backend.configurations.SecurityConfiguration;
-import com.remotebackup.backend.controllers.AuthController;
 import com.remotebackup.backend.dtos.ErrorDTO;
 import com.remotebackup.backend.dtos.JWToken;
 import com.remotebackup.backend.dtos.SigninDTO;
