@@ -10,7 +10,7 @@
   "author": "GJCode",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^9.1.0"
+    "electron": "^18.3.7"
   },
   "dependencies": {
     "du": "^1.0.0",
